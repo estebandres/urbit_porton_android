@@ -16,12 +16,15 @@
 
 package com.urbit_iot.onekey.tasks;
 
-import com.urbit_iot.onekey.data.Task;
-import com.urbit_iot.onekey.data.source.TasksRepository;
-import com.urbit_iot.onekey.tasks.domain.usecase.ActivateTask;
-import com.urbit_iot.onekey.tasks.domain.usecase.ClearCompleteTasks;
-import com.urbit_iot.onekey.tasks.domain.usecase.CompleteTask;
-import com.urbit_iot.onekey.tasks.domain.usecase.GetTasks;
+import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.source.UModsRepository;
+import com.urbit_iot.onekey.umods.UModsFilterType;
+import com.urbit_iot.onekey.umods.domain.usecase.ClearAlienUMods;
+import com.urbit_iot.onekey.umods.domain.usecase.DisableUModNotification;
+import com.urbit_iot.onekey.umods.domain.usecase.EnableUModNotification;
+import com.urbit_iot.onekey.umods.domain.usecase.GetUMods;
+import com.urbit_iot.onekey.umods.UModsContract;
+import com.urbit_iot.onekey.umods.UModsPresenter;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.onekey.util.schedulers.ImmediateSchedulerProvider;
 import com.google.common.collect.Lists;
@@ -40,21 +43,21 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for the implementation of {@link TasksPresenter}
+ * Unit tests for the implementation of {@link UModsPresenter}
  */
 public class TasksPresenterTest {
 
-    private static List<Task> TASKS;
+    private static List<UMod> TASKS;
 
     @Mock
-    private TasksRepository mTasksRepository;
+    private UModsRepository mTasksRepository;
 
     @Mock
-    private TasksContract.View mTasksView;
+    private UModsContract.View mTasksView;
 
     private BaseSchedulerProvider mSchedulerProvider;
 
-    private TasksPresenter mTasksPresenter;
+    private UModsPresenter mTasksPresenter;
 
     @Before
     public void setupTasksPresenter() {
@@ -69,20 +72,20 @@ public class TasksPresenterTest {
         mTasksPresenter = givenTasksPresenter();
 
         // The presenter won't update the view unless it's active.
-        when(mTasksView.isActive()).thenReturn(true);
+        when(mTasksView.isNotificationDisabled()).thenReturn(true);
 
         // We subscribe the tasks to 3, with one active and two completed
-        TASKS = Lists.newArrayList(new Task("Title1", "Description1"),
-                new Task("Title2", "Description2", true), new Task("Title3", "Description3", true));
+        TASKS = Lists.newArrayList(new UMod("Title1", "Description1"),
+                new UMod("Title2", "Description2", true), new UMod("Title3", "Description3", true));
     }
 
-    private TasksPresenter givenTasksPresenter() {
-        GetTasks getTasks = new GetTasks(mTasksRepository, mSchedulerProvider);
-        CompleteTask completeTask = new CompleteTask(mTasksRepository, mSchedulerProvider);
-        ActivateTask activateTask = new ActivateTask(mTasksRepository, mSchedulerProvider);
-        ClearCompleteTasks clearCompleteTasks = new ClearCompleteTasks(mTasksRepository, mSchedulerProvider);
+    private UModsPresenter givenTasksPresenter() {
+        GetUMods getUMods = new GetUMods(mTasksRepository, mSchedulerProvider);
+        EnableUModNotification enableUModNotification = new EnableUModNotification(mTasksRepository, mSchedulerProvider);
+        DisableUModNotification disableUModNotification = new DisableUModNotification(mTasksRepository, mSchedulerProvider);
+        ClearAlienUMods clearAlienUMods = new ClearAlienUMods(mTasksRepository, mSchedulerProvider);
 
-        return new TasksPresenter(mTasksView, getTasks, completeTask, activateTask, clearCompleteTasks);
+        return new UModsPresenter(mTasksView, getUMods, enableUModNotification, disableUModNotification, clearAlienUMods);
     }
 
     @Test
@@ -90,8 +93,8 @@ public class TasksPresenterTest {
         // Given an initialized TasksPresenter with initialized tasks
         when(mTasksRepository.getTasks()).thenReturn(Observable.just(TASKS));
         // When loading of Tasks is requested
-        mTasksPresenter.setFiltering(TasksFilterType.ALL_TASKS);
-        mTasksPresenter.loadTasks(true);
+        mTasksPresenter.setFiltering(UModsFilterType.ALL_TASKS);
+        mTasksPresenter.loadUMods(true);
 
         // Then progress indicator is shown
         verify(mTasksView).setLoadingIndicator(true);
@@ -104,8 +107,8 @@ public class TasksPresenterTest {
         // Given an initialized TasksPresenter with initialized tasks
         when(mTasksRepository.getTasks()).thenReturn(Observable.just(TASKS));
         // When loading of Tasks is requested
-        mTasksPresenter.setFiltering(TasksFilterType.ACTIVE_TASKS);
-        mTasksPresenter.loadTasks(true);
+        mTasksPresenter.setFiltering(UModsFilterType.ACTIVE_TASKS);
+        mTasksPresenter.loadUMods(true);
 
         // Then progress indicator is hidden and active tasks are shown in UI
         verify(mTasksView).setLoadingIndicator(false);
@@ -116,8 +119,8 @@ public class TasksPresenterTest {
         // Given an initialized TasksPresenter with initialized tasks
         when(mTasksRepository.getTasks()).thenReturn(Observable.just(TASKS));
         // When loading of Tasks is requested
-        mTasksPresenter.setFiltering(TasksFilterType.COMPLETED_TASKS);
-        mTasksPresenter.loadTasks(true);
+        mTasksPresenter.setFiltering(UModsFilterType.COMPLETED_TASKS);
+        mTasksPresenter.loadUMods(true);
 
         // Then progress indicator is hidden and completed tasks are shown in UI
         verify(mTasksView).setLoadingIndicator(false);
@@ -126,65 +129,65 @@ public class TasksPresenterTest {
     @Test
     public void clickOnFab_ShowsAddTaskUi() {
         // When adding a new task
-        mTasksPresenter.addNewTask();
+        mTasksPresenter.addNewUMod();
 
         // Then add task UI is shown
-        verify(mTasksView).showAddTask();
+        verify(mTasksView).showAddUMod();
     }
 
     @Test
     public void clickOnTask_ShowsDetailUi() {
         // Given a stubbed active task
-        Task requestedTask = new Task("Details Requested", "For this task");
+        UMod requestedTask = new UMod("Details Requested", "For this task");
 
         // When open task details is requested
-        mTasksPresenter.openTaskDetails(requestedTask);
+        mTasksPresenter.openUModDetails(requestedTask);
 
         // Then task detail UI is shown
-        verify(mTasksView).showTaskDetailsUi(any(String.class));
+        verify(mTasksView).showUModConfigUi(any(String.class));
     }
 
     @Test
     public void completeTask_ShowsTaskMarkedComplete() {
         // Given a stubbed task
-        Task task = new Task("Details Requested", "For this task");
+        UMod task = new UMod("Details Requested", "For this task");
         // And no tasks available in the repository
-        when(mTasksRepository.getTasks()).thenReturn(Observable.<List<Task>>empty());
+        when(mTasksRepository.getTasks()).thenReturn(Observable.<List<UMod>>empty());
 
         // When task is marked as complete
-        mTasksPresenter.completeTask(task);
+        mTasksPresenter.enableUModNotification(task);
 
         // Then repository is called and task marked complete UI is shown
         verify(mTasksRepository).completeTask(task.getId());
-        verify(mTasksView).showTaskMarkedComplete();
+        verify(mTasksView).showUModNotificationEnabled();
     }
 
     @Test
     public void activateTask_ShowsTaskMarkedActive() {
         // Given a stubbed completed task
-        Task task = new Task("Details Requested", "For this task", true);
+        UMod task = new UMod("Details Requested", "For this task", true);
         // And no tasks available in the repository
-        when(mTasksRepository.getTasks()).thenReturn(Observable.<List<Task>>empty());
-        mTasksPresenter.loadTasks(true);
+        when(mTasksRepository.getTasks()).thenReturn(Observable.<List<UMod>>empty());
+        mTasksPresenter.loadUMods(true);
 
         // When task is marked as activated
-        mTasksPresenter.activateTask(task);
+        mTasksPresenter.disableUModNotification(task);
 
         // Then repository is called and task marked active UI is shown
         verify(mTasksRepository).activateTask(task.getId());
-        verify(mTasksView).showTaskMarkedActive();
+        verify(mTasksView).showUModNotificationDisabled();
     }
 
     @Test
     public void unavailableTasks_ShowsError() {
         // Given that no tasks are available in the repository
-        when(mTasksRepository.getTasks()).thenReturn(Observable.<List<Task>>error(new Exception()));
+        when(mTasksRepository.getTasks()).thenReturn(Observable.<List<UMod>>error(new Exception()));
 
         // When tasks are loaded
-        mTasksPresenter.setFiltering(TasksFilterType.ALL_TASKS);
-        mTasksPresenter.loadTasks(true);
+        mTasksPresenter.setFiltering(UModsFilterType.ALL_TASKS);
+        mTasksPresenter.loadUMods(true);
 
         // Then an error message is shown
-        verify(mTasksView).showLoadingTasksError();
+        verify(mTasksView).showLoadingUModsError();
     }
 }

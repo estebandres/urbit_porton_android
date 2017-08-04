@@ -25,18 +25,21 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:name="com.urbit_iot.onekey.ToDoApplication">
+        android:name="com.urbit_iot.onekey.OneKeyApplication">
         <activity
-            android:name="com.urbit_iot.onekey.tasks.TasksActivity"
+            android:name="com.urbit_iot.onekey.umods.UModsActivity"
             android:theme="@style/AppTheme.OverlapSystemBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.urbit_iot.onekey.taskdetail.TaskDetailActivity" />
-        <activity android:name="com.urbit_iot.onekey.addedittask.AddEditTaskActivity" />
+
+        <activity android:name="com.urbit_iot.onekey.appuser.AppUserActivity" />
+        <activity android:name="com.urbit_iot.onekey.umodinfo.UModInfoActivity" />
+        <activity android:name="com.urbit_iot.onekey.umodconfig.UModConfigActivity" />
         <activity android:name="com.urbit_iot.onekey.statistics.StatisticsActivity" />
+        <activity android:name="com.urbit_iot.onekey.usersxumod.UModUsersActivity" />
     </application>
 
 </manifest>

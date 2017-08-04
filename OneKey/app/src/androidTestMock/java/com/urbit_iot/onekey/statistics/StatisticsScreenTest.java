@@ -23,10 +23,10 @@ import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 
 import com.urbit_iot.onekey.R;
-import com.urbit_iot.onekey.ToDoApplication;
-import com.urbit_iot.onekey.data.Task;
-import com.urbit_iot.onekey.data.source.TasksRepository;
-import com.urbit_iot.onekey.taskdetail.TaskDetailActivity;
+import com.urbit_iot.onekey.OneKeyApplication;
+import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.umodinfo.UModInfoActivity;
+import com.urbit_iot.onekey.data.source.UModsRepository;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -58,7 +58,7 @@ public class StatisticsScreenTest {
             new ActivityTestRule<>(StatisticsActivity.class, true, false);
 
     /**
-     * Setup your test fixture with a fake task id. The {@link TaskDetailActivity} is started with
+     * Setup your test fixture with a fake task id. The {@link UModInfoActivity} is started with
      * a particular task id, which is then loaded from the service API.
      *
      * <p>
@@ -69,12 +69,12 @@ public class StatisticsScreenTest {
     @Before
     public void intentWithStubbedTaskId() {
         // Given some tasks
-        TasksRepository repository = ((ToDoApplication) InstrumentationRegistry.getTargetContext()
-                .getApplicationContext()).getTasksRepositoryComponent()
-                .getTasksRepository();
-        repository.deleteAllTasks();
-        repository.saveTask(new Task("Title1", "", false));
-        repository.saveTask(new Task("Title2", "", true));
+        UModsRepository repository = ((OneKeyApplication) InstrumentationRegistry.getTargetContext()
+                .getApplicationContext()).getUModsRepositoryComponent()
+                .getUModsRepository();
+        repository.deleteAllUMods();
+        repository.saveUMod(new UMod("Title1", "", false));
+        repository.saveUMod(new UMod("Title2", "", true));
 
         // Lazily start the Activity from the ActivityTestRule
         Intent startIntent = new Intent();

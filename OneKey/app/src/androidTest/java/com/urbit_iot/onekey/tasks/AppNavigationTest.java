@@ -39,9 +39,10 @@ import static android.support.test.espresso.matcher.ViewMatchers.withContentDesc
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static com.urbit_iot.onekey.TestUtils.getToolbarNavigationContentDescription;
 import static com.urbit_iot.onekey.custom.action.NavigationViewActions.navigateTo;
+import com.urbit_iot.onekey.umods.UModsActivity;
 
 /**
- * Tests for the {@link DrawerLayout} layout component in {@link TasksActivity} which manages
+ * Tests for the {@link DrawerLayout} layout component in {@link UModsActivity} which manages
  * navigation within the app.
  */
 @RunWith(AndroidJUnit4.class)
@@ -56,8 +57,8 @@ public class AppNavigationTest {
      * blocks of Junit tests.
      */
     @Rule
-    public ActivityTestRule<TasksActivity> mActivityTestRule =
-            new ActivityTestRule<>(TasksActivity.class);
+    public ActivityTestRule<UModsActivity> mActivityTestRule =
+            new ActivityTestRule<>(UModsActivity.class);
 
     @Test
     public void clickOnStatisticsNavigationItem_ShowsStatisticsScreen() {
@@ -95,7 +96,7 @@ public class AppNavigationTest {
                 .perform(navigateTo(R.id.list_navigation_menu_item));
 
         // Check that Tasks Activity was opened.
-        onView(withId(R.id.tasksContainer)).check(matches(isDisplayed()));
+        onView(withId(R.id.umods_container)).check(matches(isDisplayed()));
     }
 
     @Test

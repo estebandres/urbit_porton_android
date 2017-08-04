@@ -26,8 +26,9 @@ import android.widget.ListView;
 
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.TestUtils;
-import com.urbit_iot.onekey.ToDoApplication;
-import com.urbit_iot.onekey.data.source.TasksDataSource;
+import com.urbit_iot.onekey.OneKeyApplication;
+import com.urbit_iot.onekey.umods.UModsActivity;
+import com.urbit_iot.onekey.data.source.UModsDataSource;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -77,20 +78,20 @@ public class TasksScreenTest {
      * blocks of Junit tests.
      */
     @Rule
-    public ActivityTestRule<TasksActivity> mTasksActivityTestRule =
-            new ActivityTestRule<TasksActivity>(TasksActivity.class) {
+    public ActivityTestRule<UModsActivity> mTasksActivityTestRule =
+            new ActivityTestRule<UModsActivity>(UModsActivity.class) {
 
                 /**
                  * To avoid a long list of tasks and the need to scroll through the list to find a
-                 * task, we call {@link TasksDataSource#deleteAllTasks()} before each test.
+                 * task, we call {@link UModsDataSource#deleteAllTasks()} before each test.
                  */
                 @Override
                 protected void beforeActivityLaunched() {
                     super.beforeActivityLaunched();
                     // Doing this in @Before generates a race condition.
-                    ((ToDoApplication) InstrumentationRegistry.getTargetContext()
-                            .getApplicationContext()).getTasksRepositoryComponent()
-                            .getTasksRepository().deleteAllTasks();
+                    ((OneKeyApplication) InstrumentationRegistry.getTargetContext()
+                            .getApplicationContext()).getUModsRepositoryComponent()
+                            .getUModsRepository().deleteAllTasks();
                 }
             };
 
@@ -258,7 +259,7 @@ public class TasksScreenTest {
 
         // Click clear completed in menu
         openActionBarOverflowOrOptionsMenu(getTargetContext());
-        onView(withText(R.string.menu_clear)).perform(click());
+        onView(withText(R.string.menu_clear_umods)).perform(click());
 
         //Verify that completed tasks are not shown
         onView(withItemText(TITLE1)).check(matches(not(isDisplayed())));
@@ -318,7 +319,7 @@ public class TasksScreenTest {
         onView(withContentDescription(getToolbarNavigationContentDescription())).perform(click());
 
         // Check that the task is marked as completed
-        onView(allOf(withId(R.id.complete),
+        onView(allOf(withId(R.id.umod_notif_enabler),
                 hasSibling(withText(TITLE1)))).check(matches(isChecked()));
     }
 
@@ -340,7 +341,7 @@ public class TasksScreenTest {
         onView(withContentDescription(getToolbarNavigationContentDescription())).perform(click());
 
         // Check that the task is marked as active
-        onView(allOf(withId(R.id.complete),
+        onView(allOf(withId(R.id.umod_notif_enabler),
                 hasSibling(withText(TITLE1)))).check(matches(not(isChecked())));
     }
 
@@ -364,7 +365,7 @@ public class TasksScreenTest {
         onView(withContentDescription(getToolbarNavigationContentDescription())).perform(click());
 
         // Check that the task is marked as active
-        onView(allOf(withId(R.id.complete),
+        onView(allOf(withId(R.id.umod_notif_enabler),
                 hasSibling(withText(TITLE1)))).check(matches(not(isChecked())));
     }
 
@@ -389,7 +390,7 @@ public class TasksScreenTest {
         onView(withContentDescription(getToolbarNavigationContentDescription())).perform(click());
 
         // Check that the task is marked as active
-        onView(allOf(withId(R.id.complete),
+        onView(allOf(withId(R.id.umod_notif_enabler),
                 hasSibling(withText(TITLE1)))).check(matches(isChecked()));
     }
 
@@ -431,22 +432,22 @@ public class TasksScreenTest {
 
         // then nothing changes
         onView(withText(TITLE1)).check(matches(isDisplayed()));
-        onView(withText(R.string.label_completed)).check(matches(isDisplayed()));
+        onView(withText(R.string.label_umods_completed)).check(matches(isDisplayed()));
     }
 
     private void viewAllTasks() {
-        onView(withId(R.id.menu_filter)).perform(click());
-        onView(withText(R.string.nav_all)).perform(click());
+        onView(withId(R.id.menu_filter_umods)).perform(click());
+        onView(withText(R.string.nav_all_umods)).perform(click());
     }
 
     private void viewActiveTasks() {
-        onView(withId(R.id.menu_filter)).perform(click());
-        onView(withText(R.string.nav_active)).perform(click());
+        onView(withId(R.id.menu_filter_umods)).perform(click());
+        onView(withText(R.string.nav_active_umods)).perform(click());
     }
 
     private void viewCompletedTasks() {
-        onView(withId(R.id.menu_filter)).perform(click());
-        onView(withText(R.string.nav_completed)).perform(click());
+        onView(withId(R.id.menu_filter_umods)).perform(click());
+        onView(withText(R.string.nav_completed_umods)).perform(click());
     }
 
     private void createTask(String title, String description) {
@@ -464,7 +465,7 @@ public class TasksScreenTest {
     }
 
     private void clickCheckBoxForTask(String title) {
-        onView(allOf(withId(R.id.complete), hasSibling(withText(title)))).perform(click());
+        onView(allOf(withId(R.id.umod_notif_enabler), hasSibling(withText(title)))).perform(click());
     }
 
     private String getText(int stringId) {

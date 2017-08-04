@@ -3,12 +3,11 @@
 buildscript {
     repositories {
         jcenter()
+        google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.2'
+        classpath 'com.android.tools.build:gradle:3.0.0'
 
-        // Better IDE support for annotations (so Android Studio interacts better with Dagger)
-        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -17,6 +16,7 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+        google()
     }
 }
 
@@ -27,7 +27,7 @@ task clean(type: Delete) {
 // Define versions in a single place
 ext {
     // Sdk and tools
-    minSdkVersion = 10
+    minSdkVersion = 18
     targetSdkVersion = 24
     compileSdkVersion = 24
     buildToolsVersion = '24.0.2'
@@ -45,6 +45,9 @@ ext {
     rxjavaVersion = '1.1.8'
     rxandroidVersion = '1.2.1'
     sqlbriteVersion = '0.7.0'
-    daggerVersion = '2.2'
+    daggerVersion = '2.13'
     dexmakerVersion = '1.2'
+    gsonVersion = '2.8.1'
+    DNSSDVersion = '0.9.1'
+    rxDNSSDVersion = '0.9.1'
 }

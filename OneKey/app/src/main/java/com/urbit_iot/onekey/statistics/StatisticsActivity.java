@@ -29,8 +29,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
 import com.urbit_iot.onekey.R;
-import com.urbit_iot.onekey.ToDoApplication;
-import com.urbit_iot.onekey.tasks.TasksActivity;
+import com.urbit_iot.onekey.OneKeyApplication;
+import com.urbit_iot.onekey.umods.UModsActivity;
 import com.urbit_iot.onekey.util.ActivityUtils;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
 
@@ -68,18 +68,18 @@ public class StatisticsActivity extends AppCompatActivity {
         }
 
         StatisticsFragment statisticsFragment = (StatisticsFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.contentFrame);
+                .findFragmentById(R.id.appuser_content_frame);
         if (statisticsFragment == null) {
             statisticsFragment = StatisticsFragment.newInstance();
             ActivityUtils.addFragmentToActivity(getSupportFragmentManager(),
-                    statisticsFragment, R.id.contentFrame);
+                    statisticsFragment, R.id.appuser_content_frame);
         }
 
-        ToDoApplication toDoApplication = (ToDoApplication) getApplication();
+        OneKeyApplication oneKeyApplication = (OneKeyApplication) getApplication();
         DaggerStatisticsComponent.builder()
                 .statisticsPresenterModule(new StatisticsPresenterModule(statisticsFragment))
-                .tasksRepositoryComponent(toDoApplication.getTasksRepositoryComponent())
-                .schedulerProviderComponent(toDoApplication.getSchedulerProviderComponent())
+                .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponent())
+                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponent())
                 .build().inject(this);
     }
 
@@ -102,7 +102,7 @@ public class StatisticsActivity extends AppCompatActivity {
                         switch (menuItem.getItemId()) {
                             case R.id.list_navigation_menu_item:
                                 Intent intent =
-                                        new Intent(StatisticsActivity.this, TasksActivity.class);
+                                        new Intent(StatisticsActivity.this, UModsActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                                         | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);

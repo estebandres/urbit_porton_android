@@ -16,8 +16,8 @@
 
 package com.urbit_iot.onekey.statistics;
 
-import com.urbit_iot.onekey.data.Task;
-import com.urbit_iot.onekey.data.source.TasksRepository;
+import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.statistics.domain.usecase.GetStatistics;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.onekey.util.schedulers.ImmediateSchedulerProvider;
@@ -40,10 +40,10 @@ import static org.mockito.Mockito.when;
  */
 public class StatisticsPresenterTest {
 
-    private static List<Task> TASKS;
+    private static List<UMod> TASKS;
 
     @Mock
-    private TasksRepository mTasksRepository;
+    private UModsRepository mTasksRepository;
 
     @Mock
     private StatisticsContract.View mStatisticsView;
@@ -68,8 +68,8 @@ public class StatisticsPresenterTest {
         when(mStatisticsView.isActive()).thenReturn(true);
 
         // We subscribe the tasks to 3, with one active and two completed
-        TASKS = Lists.newArrayList(new Task("Title1", "Description1"),
-                new Task("Title2", "Description2", true), new Task("Title3", "Description3", true));
+        TASKS = Lists.newArrayList(new UMod("Title1", "Description1"),
+                new UMod("Title2", "Description2", true), new UMod("Title3", "Description3", true));
     }
 
     @Test
@@ -126,11 +126,11 @@ public class StatisticsPresenterTest {
         return new StatisticsPresenter(mStatisticsView, getStatistics);
     }
 
-    private void setTasksAvailable(List<Task> tasks) {
+    private void setTasksAvailable(List<UMod> tasks) {
         when(mTasksRepository.getTasks()).thenReturn(Observable.just(tasks));
     }
 
     private void setTasksNotAvailable() {
-        when(mTasksRepository.getTasks()).thenReturn(Observable.<List<Task>>error(new Exception()));
+        when(mTasksRepository.getTasks()).thenReturn(Observable.<List<UMod>>error(new Exception()));
     }
 }

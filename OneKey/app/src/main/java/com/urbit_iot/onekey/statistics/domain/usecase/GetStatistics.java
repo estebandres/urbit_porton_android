@@ -4,8 +4,8 @@ import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
-import com.urbit_iot.onekey.data.Task;
-import com.urbit_iot.onekey.data.source.TasksRepository;
+import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.statistics.domain.model.Statistics;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -19,14 +19,14 @@ import rx.functions.Func1;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Calculate statistics of active and completed Tasks {@link Task} in the {@link TasksRepository}.
+ * Calculate statistics of active and completed Tasks {@link UMod} in the {@link UModsRepository}.
  */
 public class GetStatistics extends SimpleUseCase<GetStatistics.RequestValues, GetStatistics.ResponseValues> {
 
-    private final TasksRepository mTasksRepository;
+    private final UModsRepository mTasksRepository;
 
     @Inject
-    public GetStatistics(@NonNull TasksRepository tasksRepository,
+    public GetStatistics(@NonNull UModsRepository tasksRepository,
                          @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mTasksRepository = tasksRepository;
@@ -34,15 +34,15 @@ public class GetStatistics extends SimpleUseCase<GetStatistics.RequestValues, Ge
 
     @Override
     public Observable<ResponseValues> buildUseCase(RequestValues requestValues) {
-        return mTasksRepository.getTasks().map(new Func1<List<Task>, ResponseValues>() {
+        return mTasksRepository.getUMods().map(new Func1<List<UMod>, ResponseValues>() {
             @Override
-            public ResponseValues call(List<Task> tasks) {
+            public ResponseValues call(List<UMod> tasks) {
                 int activeTasks = 0;
                 int completedTasks = 0;
 
                 // We calculate number of active and completed tasks
-                for (Task task : tasks) {
-                    if (task.isCompleted()) {
+                for (UMod task : tasks) {
+                    if (task.isNotificationEnabled()) {
                         completedTasks += 1;
                     } else {
                         activeTasks += 1;

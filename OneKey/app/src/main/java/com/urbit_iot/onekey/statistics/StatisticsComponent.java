@@ -1,21 +1,21 @@
 package com.urbit_iot.onekey.statistics;
 
-import com.urbit_iot.onekey.ToDoApplication;
-import com.urbit_iot.onekey.data.source.TasksRepositoryComponent;
-import com.urbit_iot.onekey.util.FragmentScoped;
+import com.urbit_iot.onekey.OneKeyApplication;
+import com.urbit_iot.onekey.util.dagger.FragmentScoped;
 import com.urbit_iot.onekey.util.schedulers.SchedulerProviderComponent;
+import com.urbit_iot.onekey.data.source.UModsRepositoryComponent;
 
 import dagger.Component;
 
 /**
- * This is a Dagger component. Refer to {@link ToDoApplication} for the list of Dagger components
+ * This is a Dagger component. Refer to {@link OneKeyApplication} for the list of Dagger components
  * used in this application.
  * <P>
- * Because this component depends on the {@link TasksRepositoryComponent}, which is a singleton, a
+ * Because this component depends on the {@link UModsRepositoryComponent}, which is a singleton, a
  * scope must be specified. All fragment components use a custom scope for this purpose.
  */
 @FragmentScoped
-@Component(dependencies = {TasksRepositoryComponent.class, SchedulerProviderComponent.class},
+@Component(dependencies = {UModsRepositoryComponent.class, SchedulerProviderComponent.class},
         modules = StatisticsPresenterModule.class)
 public interface StatisticsComponent {
 

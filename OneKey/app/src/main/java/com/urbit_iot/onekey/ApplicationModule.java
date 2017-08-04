@@ -8,7 +8,7 @@ import dagger.Provides;
 /**
  * This is a Dagger module. We use this to pass in the Context dependency to the
  * {@link
- * com.urbit_iot.onekey.data.source.TasksRepositoryComponent}.
+ * com.urbit_iot.onekey.data.source.UModsRepositoryComponent}.
  */
 @Module
 public final class ApplicationModule {

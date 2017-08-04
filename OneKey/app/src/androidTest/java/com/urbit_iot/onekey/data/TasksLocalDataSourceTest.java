@@ -20,11 +20,11 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 
-import com.urbit_iot.onekey.data.source.TasksDataSource;
-import com.urbit_iot.onekey.data.source.local.TasksDbHelper;
-import com.urbit_iot.onekey.data.source.local.TasksLocalDataSource;
+import com.urbit_iot.onekey.data.source.local.UModsLocalDataSource;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.onekey.util.schedulers.ImmediateSchedulerProvider;
+import com.urbit_iot.onekey.data.source.UModsDataSource;
+import com.urbit_iot.onekey.data.source.local.UModsDbHelper;
 
 import org.junit.After;
 import org.junit.Before;
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 /**
- * Integration test for the {@link TasksDataSource}, which uses the {@link TasksDbHelper}.
+ * Integration test for the {@link UModsDataSource}, which uses the {@link UModsDbHelper}.
  */
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -56,13 +56,13 @@ public class TasksLocalDataSourceTest {
 
     private BaseSchedulerProvider mSchedulerProvider;
 
-    private TasksLocalDataSource mLocalDataSource;
+    private UModsLocalDataSource mLocalDataSource;
 
     @Before
     public void setup() {
         mSchedulerProvider = new ImmediateSchedulerProvider();
 
-        mLocalDataSource = new TasksLocalDataSource(
+        mLocalDataSource = new UModsLocalDataSource(
                 InstrumentationRegistry.getTargetContext(), mSchedulerProvider);
     }
 
@@ -79,13 +79,13 @@ public class TasksLocalDataSourceTest {
     @Test
     public void saveTask_retrievesTask() {
         // Given a new task
-        final Task newTask = new Task(TITLE, "");
+        final UMod newTask = new UMod(TITLE, "");
 
         // When saved into the persistent repository
         mLocalDataSource.saveTask(newTask);
 
         // Then the task can be retrieved from the persistent repository
-        TestSubscriber<Task> testSubscriber = new TestSubscriber<>();
+        TestSubscriber<UMod> testSubscriber = new TestSubscriber<>();
         mLocalDataSource.getTask(newTask.getId()).subscribe(testSubscriber);
         testSubscriber.assertValue(newTask);
     }
@@ -93,24 +93,24 @@ public class TasksLocalDataSourceTest {
     @Test
     public void completeTask_retrievedTaskIsComplete() {
         // Given a new task in the persistent repository
-        final Task newTask = new Task(TITLE, "");
+        final UMod newTask = new UMod(TITLE, "");
         mLocalDataSource.saveTask(newTask);
 
         // When completed in the persistent repository
         mLocalDataSource.completeTask(newTask);
 
         // Then the task can be retrieved from the persistent repository and is complete
-        TestSubscriber<Task> testSubscriber = new TestSubscriber<>();
+        TestSubscriber<UMod> testSubscriber = new TestSubscriber<>();
         mLocalDataSource.getTask(newTask.getId()).subscribe(testSubscriber);
         testSubscriber.assertValueCount(1);
-        Task result = testSubscriber.getOnNextEvents().get(0);
+        UMod result = testSubscriber.getOnNextEvents().get(0);
         assertThat(result.isCompleted(), is(true));
     }
 
     @Test
     public void activateTask_retrievedTaskIsActive() {
         // Given a new completed task in the persistent repository
-        final Task newTask = new Task(TITLE, "");
+        final UMod newTask = new UMod(TITLE, "");
         mLocalDataSource.saveTask(newTask);
         mLocalDataSource.completeTask(newTask);
 
@@ -118,10 +118,10 @@ public class TasksLocalDataSourceTest {
         mLocalDataSource.activateTask(newTask);
 
         // Then the task can be retrieved from the persistent repository and is active
-        TestSubscriber<Task> testSubscriber = new TestSubscriber<>();
+        TestSubscriber<UMod> testSubscriber = new TestSubscriber<>();
         mLocalDataSource.getTask(newTask.getId()).subscribe(testSubscriber);
         testSubscriber.assertValueCount(1);
-        Task result = testSubscriber.getOnNextEvents().get(0);
+        UMod result = testSubscriber.getOnNextEvents().get(0);
         assertThat(result.isActive(), is(true));
         assertThat(result.isCompleted(), is(false));
     }
@@ -129,53 +129,53 @@ public class TasksLocalDataSourceTest {
     @Test
     public void clearCompletedTask_taskNotRetrievable() {
         // Given 2 new completed tasks and 1 active task in the persistent repository
-        final Task newTask1 = new Task(TITLE, "");
+        final UMod newTask1 = new UMod(TITLE, "");
         mLocalDataSource.saveTask(newTask1);
         mLocalDataSource.completeTask(newTask1);
-        final Task newTask2 = new Task(TITLE2, "");
+        final UMod newTask2 = new UMod(TITLE2, "");
         mLocalDataSource.saveTask(newTask2);
         mLocalDataSource.completeTask(newTask2);
-        final Task newTask3 = new Task(TITLE3, "");
+        final UMod newTask3 = new UMod(TITLE3, "");
         mLocalDataSource.saveTask(newTask3);
 
         // When completed tasks are cleared in the repository
         mLocalDataSource.clearCompletedTasks();
 
         // Then the completed tasks cannot be retrieved and the active one can
-        TestSubscriber<List<Task>> testSubscriber = new TestSubscriber<>();
+        TestSubscriber<List<UMod>> testSubscriber = new TestSubscriber<>();
         mLocalDataSource.getTasks().subscribe(testSubscriber);
-        List<Task> result = testSubscriber.getOnNextEvents().get(0);
+        List<UMod> result = testSubscriber.getOnNextEvents().get(0);
         assertThat(result, not(hasItems(newTask1, newTask2)));
     }
 
     @Test
     public void deleteAllTasks_emptyListOfRetrievedTask() {
         // Given a new task in the persistent repository and a mocked callback
-        Task newTask = new Task(TITLE, "");
+        UMod newTask = new UMod(TITLE, "");
         mLocalDataSource.saveTask(newTask);
 
         // When all tasks are deleted
         mLocalDataSource.deleteAllTasks();
 
         // Then the retrieved tasks is an empty list
-        TestSubscriber<List<Task>> testSubscriber = new TestSubscriber<>();
+        TestSubscriber<List<UMod>> testSubscriber = new TestSubscriber<>();
         mLocalDataSource.getTasks().subscribe(testSubscriber);
-        List<Task> result = testSubscriber.getOnNextEvents().get(0);
+        List<UMod> result = testSubscriber.getOnNextEvents().get(0);
         assertThat(result.isEmpty(), is(true));
     }
 
     @Test
     public void getTasks_retrieveSavedTasks() {
         // Given 2 new tasks in the persistent repository
-        final Task newTask1 = new Task(TITLE, "");
+        final UMod newTask1 = new UMod(TITLE, "");
         mLocalDataSource.saveTask(newTask1);
-        final Task newTask2 = new Task(TITLE, "");
+        final UMod newTask2 = new UMod(TITLE, "");
         mLocalDataSource.saveTask(newTask2);
 
         // Then the tasks can be retrieved from the persistent repository
-        TestSubscriber<List<Task>> testSubscriber = new TestSubscriber<>();
+        TestSubscriber<List<UMod>> testSubscriber = new TestSubscriber<>();
         mLocalDataSource.getTasks().subscribe(testSubscriber);
-        List<Task> result = testSubscriber.getOnNextEvents().get(0);
+        List<UMod> result = testSubscriber.getOnNextEvents().get(0);
         assertThat(result, hasItems(newTask1, newTask2));
     }
 
@@ -183,7 +183,7 @@ public class TasksLocalDataSourceTest {
     public void getTask_whenTaskNotSaved() {
         //Given that no task has been saved
         //When querying for a task, null is returned.
-        TestSubscriber<Task> testSubscriber = new TestSubscriber<>();
+        TestSubscriber<UMod> testSubscriber = new TestSubscriber<>();
         mLocalDataSource.getTask("1").subscribe(testSubscriber);
         testSubscriber.assertValue(null);
     }
