@@ -80,5 +80,7 @@ public interface UModsContract {
         UModsFilterType getFiltering();
 
         void openCloseUMod(UMod uMod);
+
+        void requestAccess(UMod uMod);
     }
 }

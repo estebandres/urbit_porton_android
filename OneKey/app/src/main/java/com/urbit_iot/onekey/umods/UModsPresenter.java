@@ -7,14 +7,14 @@ import android.util.Log;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UMod;
-import com.urbit_iot.onekey.data.commands.OpenCloseCmd;
+import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.umods.domain.usecase.ClearAlienUMods;
 import com.urbit_iot.onekey.umods.domain.usecase.DisableUModNotification;
 import com.urbit_iot.onekey.umods.domain.usecase.EnableUModNotification;
 import com.urbit_iot.onekey.umods.domain.usecase.GetUMods;
 import com.urbit_iot.onekey.umods.domain.usecase.GetUModsOneByOne;
-import com.urbit_iot.onekey.umods.domain.usecase.OpenCloseUMod;
+import com.urbit_iot.onekey.umods.domain.usecase.TriggerUMod;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
 
 import java.util.List;
@@ -37,7 +37,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     private final EnableUModNotification mEnableUModNotification;
     private final DisableUModNotification mDisableUModNotification;
     private final ClearAlienUMods mClearAlienUMods;
-    private final OpenCloseUMod mOpenCloseUMod;
+    private final TriggerUMod mTriggerUMod;
     private final GetUModsOneByOne mGetUModsOneByOne;
 
     private UModsFilterType mCurrentFiltering = UModsFilterType.ALL_UMODS;
@@ -51,7 +51,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                           @NonNull EnableUModNotification enableUModNotification,
                           @NonNull DisableUModNotification disableUModNotification,
                           @NonNull ClearAlienUMods clearAlienUMods,
-                          @NonNull OpenCloseUMod openCloseUMod) {
+                          @NonNull TriggerUMod triggerUMod) {
         mUModsView = checkNotNull(umodsView, "tasksView cannot be null!");
         mGetUModsOneByOne = checkNotNull(getUModsOneByOne, "getUModsOneByOne cannot be null!");
         mGetUMods = checkNotNull(getUMods, "getUMod cannot be null!");
@@ -59,7 +59,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         mDisableUModNotification = checkNotNull(disableUModNotification, "disableUModNotification cannot be null!");
         mClearAlienUMods = checkNotNull(clearAlienUMods,
                 "clearAlienUMods cannot be null!");
-        mOpenCloseUMod = checkNotNull(openCloseUMod, "openCloseUMod cannot be null!");
+        mTriggerUMod = checkNotNull(triggerUMod, "triggerUMod cannot be null!");
     }
 
     /**
@@ -162,6 +162,7 @@ public class UModsPresenter implements UModsContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 Log.e("umods_pr", e.getMessage());
+                mUModsView.setLoadingIndicator(false);
                 mUModsView.showLoadingUModsError();
             }
 
@@ -317,9 +318,9 @@ public class UModsPresenter implements UModsContract.Presenter {
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
-        mOpenCloseUMod.unsubscribe();
-        OpenCloseUMod.RequestValues requestValue = new OpenCloseUMod.RequestValues(uMod);
-        mOpenCloseUMod.execute(requestValue, new Subscriber<OpenCloseUMod.ResponseValues>() {
+        mTriggerUMod.unsubscribe();
+        TriggerUMod.RequestValues requestValue = new TriggerUMod.RequestValues(uMod);
+        mTriggerUMod.execute(requestValue, new Subscriber<TriggerUMod.ResponseValues>() {
             @Override
             public void onCompleted() {
                 mUModsView.setLoadingIndicator(false);
@@ -331,12 +332,18 @@ public class UModsPresenter implements UModsContract.Presenter {
             }
 
             @Override
-            public void onNext(OpenCloseUMod.ResponseValues responseValues) {
-                OpenCloseCmd.Response response = responseValues.getResponse();
-                Log.d("ModsPresenter", "Command is " + response.getCommandCode());
+            public void onNext(TriggerUMod.ResponseValues responseValues) {
+                TriggerRPC.SuccessResponse response = responseValues.getResponse();
+                Log.d("ModsPresenter", "RPC is " + response.getCallTag());
                 mUModsView.showOpenCloseSuccess();
             }
         });
+    }
+
+    @Override
+    public void requestAccess(UMod uMod) {
+        mUModsView.showSuccessfullySavedMessage();
+        return;
     }
 
 }

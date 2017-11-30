@@ -27,9 +27,10 @@ import com.squareup.sqlbrite.BriteDatabase;
 import com.squareup.sqlbrite.SqlBrite;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.commands.ApproveUserCmd;
-import com.urbit_iot.onekey.data.commands.DeleteUserCmd;
-import com.urbit_iot.onekey.data.commands.OpenCloseCmd;
+import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
+import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
+import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.data.source.local.UModsPersistenceContract.UModEntry;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
@@ -45,7 +46,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Concrete implementation of a data source as a db.
  */
-public class UModsLocalDataSource implements UModsDataSource {
+public class UModsLocalDBDataSource implements UModsDataSource {
 
     @NonNull
     private final BriteDatabase mDatabaseHelper;
@@ -53,8 +54,8 @@ public class UModsLocalDataSource implements UModsDataSource {
     @NonNull
     private Func1<Cursor, UMod> mTaskMapperFunction;
 
-    public UModsLocalDataSource(@NonNull Context context,
-                                @NonNull BaseSchedulerProvider schedulerProvider) {
+    public UModsLocalDBDataSource(@NonNull Context context,
+                                  @NonNull BaseSchedulerProvider schedulerProvider) {
         checkNotNull(context, "context cannot be null");
         checkNotNull(schedulerProvider, "scheduleProvider cannot be null");
         UModsDbHelper dbHelper = new UModsDbHelper(context);
@@ -178,17 +179,22 @@ public class UModsLocalDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<OpenCloseCmd.Response> openCloseUMod(@NonNull UMod uMod, @NonNull OpenCloseCmd.CommandRequest commandRequest) {
+    public Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<ApproveUserCmd.Response> approveUModUser(@NonNull UModUser uModUser) {
+    public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<DeleteUserCmd.Response> deleteUModUser(@NonNull UModUser uModUser) {
+    public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+        return null;
+    }
+
+    @Override
+    public Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
         return null;
     }
 

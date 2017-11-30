@@ -1,10 +1,13 @@
 package com.urbit_iot.onekey.umods.domain.usecase;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
@@ -22,6 +25,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValues, GetUModsOneByOne.ResponseValues> {
 
     private final UModsRepository mUModsRepository;
+    private UMod streamUMod;
 
     @Inject
     public GetUModsOneByOne(@NonNull UModsRepository tasksRepository,
@@ -30,13 +34,48 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
         mUModsRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
     }
 
+    public UMod getStreamUMod() {
+        return streamUMod;
+    }
+
+    public void setStreamUMod(UMod streamUMod) {
+        this.streamUMod = streamUMod;
+    }
+
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
+
         if (values.isForceUpdate()) {
             mUModsRepository.refreshUMods();
         }
 
         return mUModsRepository.getUModsOneByOne()
+                .filter(new Func1<UMod, Boolean>() {
+                    @Override
+                    public Boolean call(UMod uMod) {
+                        return (uMod.isOpen() || uMod.belongsToAppUser() || uMod.isInAPMode());
+                    }
+                })
+                .flatMap(new Func1<UMod, Observable<UMod>>() {
+                    @Override
+                    public Observable<UMod> call(UMod uMod) {
+                        if(uMod.getAppUserStatus() == UModUser.UModUserStatus.PENDING && ! uMod.isInAPMode()){
+                            Log.d("GetUM1x1", "PENDING detected");
+                            setStreamUMod(uMod);
+                            GetMyUserLevelRPC.Request request = new GetMyUserLevelRPC.Request(new GetMyUserLevelRPC.Arguments(),uMod.getUUID());
+                            return mUModsRepository.getUserLevel(uMod,request)
+                                    .flatMap(new Func1<GetMyUserLevelRPC.SuccessResponse, Observable<UMod>>() {
+                                        @Override
+                                        public Observable<UMod> call(GetMyUserLevelRPC.SuccessResponse successResponse) {
+                                            getStreamUMod().setAppUserStatus(successResponse.getResponseResult().getLevel());
+                                            return Observable.just(getStreamUMod());
+                                        }
+                                    });
+                        } else {
+                            return Observable.just(uMod);
+                        }
+                    }
+                })
                 .filter(new Func1<UMod, Boolean>() {
                     @Override
                     public Boolean call(UMod uMod) {

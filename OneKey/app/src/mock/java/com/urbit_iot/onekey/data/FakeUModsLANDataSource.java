@@ -20,9 +20,10 @@ import android.support.annotation.NonNull;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.urbit_iot.onekey.data.commands.ApproveUserCmd;
-import com.urbit_iot.onekey.data.commands.DeleteUserCmd;
-import com.urbit_iot.onekey.data.commands.OpenCloseCmd;
+import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
+import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
+import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 
 import java.util.Iterator;
@@ -161,37 +162,23 @@ public class FakeUModsLANDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<OpenCloseCmd.Response> openCloseUMod(@NonNull UMod uMod, @NonNull OpenCloseCmd.CommandRequest commandRequest) {
-        final OpenCloseCmd.Response response = new OpenCloseCmd.Response(123456789,"OK");
-        if(response != null) {
-            return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
-        } else {
-            return Observable.empty();
-        }
+    public Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
+        return null;
     }
 
     @Override
-    public Observable<ApproveUserCmd.Response> approveUModUser(@NonNull UModUser uModUser) {
-        //Hardcoded interaction doesn't need an actual request to be constructed and sent.
-        //Command.CommandRequest request = new ApproveUserCmd.Request(6666666,"asdf","lkjh");
-        final ApproveUserCmd.Response response = new ApproveUserCmd.Response(123456789,"OK");
-        if(response != null) {
-            return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
-        } else {
-            return Observable.empty();
-        }
+    public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
+        return null;
     }
 
     @Override
-    public Observable<DeleteUserCmd.Response> deleteUModUser(@NonNull UModUser uModUser) {
-        //Hardcoded interaction doesn't need an actual request to be constructed and sent.
-        //Command.CommandRequest request = new DeleteUserCmd.Request(6666666,"asdf","lkjh");
-        final DeleteUserCmd.Response response = new DeleteUserCmd.Response(123456789,"OK");
-        if(response != null) {
-            return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
-        } else {
-            return Observable.empty();
-        }
+    public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+        return null;
+    }
+
+    @Override
+    public Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
+        return null;
     }
 
     @Override

@@ -20,7 +20,7 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 
-import com.urbit_iot.onekey.data.source.local.UModsLocalDataSource;
+import com.urbit_iot.onekey.data.source.local.UModsLocalDBDataSource;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.onekey.util.schedulers.ImmediateSchedulerProvider;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
@@ -56,13 +56,13 @@ public class TasksLocalDataSourceTest {
 
     private BaseSchedulerProvider mSchedulerProvider;
 
-    private UModsLocalDataSource mLocalDataSource;
+    private UModsLocalDBDataSource mLocalDataSource;
 
     @Before
     public void setup() {
         mSchedulerProvider = new ImmediateSchedulerProvider();
 
-        mLocalDataSource = new UModsLocalDataSource(
+        mLocalDataSource = new UModsLocalDBDataSource(
                 InstrumentationRegistry.getTargetContext(), mSchedulerProvider);
     }
 

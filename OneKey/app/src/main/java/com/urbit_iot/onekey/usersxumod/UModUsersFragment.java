@@ -1,7 +1,11 @@
 package com.urbit_iot.onekey.usersxumod;
 
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -10,6 +14,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.PopupMenu;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -211,16 +217,6 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
         showMessage(getString(R.string.open_close_fail_message));
     }
 
-    /**
-     * Listener for clicks on tasks in the ListView.
-     */
-    UModUserItemListener mItemListener = new UModUserItemListener() {
-        @Override
-        public void onActionButtonClick(UModUser actedUModUser) {
-            mPresenter.approveUser(actedUModUser);
-        }
-    };
-
     @Override
     public void setLoadingIndicator(final boolean active) {
 
@@ -324,6 +320,21 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
         Snackbar.make(getView(), message, Snackbar.LENGTH_LONG).show();
     }
 
+    /**
+     * Listener for clicks on UModUsers in the ListView.
+     */
+    UModUserItemListener mItemListener = new UModUserItemListener() {
+        @Override
+        public void onActionButtonClick(UModUser actedUModUser) {
+            mPresenter.authorizeUser(actedUModUser);
+        }
+
+        @Override
+        public void onIsAdminCBClick(UModUser uModUser, boolean toAdmin) {
+            mPresenter.UpDownAdminLevel(uModUser, toAdmin);
+        }
+    };
+
     @Override
     public boolean isActive() {
         return isAdded();
@@ -364,7 +375,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
         }
 
         @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
+        public View getView(int i, final View view, ViewGroup viewGroup) {
             View rowView = view;
             if (rowView == null) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
@@ -372,11 +383,22 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
             }
 
             final UModUser uModUser = getItem(i);
+            //TODO: After an admin upgrade or downgrade is performed the users checkbox state should be updated acordingly.
+            final int viewIndex = i;
 
             TextView titleTV = (TextView) rowView.findViewById(R.id.umod_user_title);
-            titleTV.setText(uModUser.getNameForList());
+            titleTV.setText(uModUser.getUserAlias());
+            //titleTV.setText(getContactNameFromPhoneNumber(uModUser.getPhoneNumber()));
 
             Button actionButton = (Button) rowView.findViewById(R.id.umod_user_action_button);
+
+            final CheckBox isAdminCB = (CheckBox) rowView.findViewById(R.id.umod_user_is_admin_checkbox);
+
+            if(uModUser.isAdmin()){
+                isAdminCB.setChecked(true);
+            } else {
+                isAdminCB.setChecked(false);
+            }
 
             actionButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -388,6 +410,14 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
                     }
                 }
             });
+            //TODO: Potential bug, customer could play with the checkbox so many times the actual umod may hang or reboot.
+            // Analyse the posibility of changing default checkbox behavior to long click!!
+            isAdminCB.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mItemListener.onIsAdminCBClick(uModUser, isAdminCB.isChecked());
+                }
+            });
 
             return rowView;
         }
@@ -396,6 +426,28 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
     public interface UModUserItemListener {
 
         void onActionButtonClick(UModUser actedUModUser);
+
+        void onIsAdminCBClick(UModUser uModUser, boolean toAdmin);
     }
 
+    //TODO: Make this function compatible with Android 6.0 with on run time permission grant.
+    //This will fail for Android >= 6.0 given the new permissions policies.
+    @Override
+    public String getContactNameFromPhoneNumber(String phoneNumber){
+        String displayName = phoneNumber;
+        Context context = this.getContext();
+        Uri lookupUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber));
+        Cursor c = context.getContentResolver().query(lookupUri, new String[]{ContactsContract.Data.DISPLAY_NAME},null,null,null);
+        try {
+            if(c.moveToFirst()) {
+                displayName = c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                //displayName = c.getString(0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally{
+            c.close();
+        }
+        return displayName;
+    }
 }

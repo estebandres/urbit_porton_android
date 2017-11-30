@@ -1,6 +1,9 @@
 package com.urbit_iot.onekey.umods;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.NavigationView;
@@ -21,6 +24,8 @@ import com.urbit_iot.onekey.statistics.StatisticsActivity;
 import com.urbit_iot.onekey.util.ActivityUtils;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
 
+import java.security.PrivateKey;
+
 import javax.inject.Inject;
 
 /**
@@ -39,9 +44,11 @@ public class UModsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.umods_act);
-
+        //TODO implement conditional running of appuser activity
+        /*
         Intent intent = new Intent(UModsActivity.this, AppUserActivity.class);
         startActivity(intent);
+        */
 
         // Set up the toolbar.
         Toolbar toolbar = (Toolbar) findViewById(R.id.umods_toolbar);
@@ -82,7 +89,10 @@ public class UModsActivity extends AppCompatActivity {
                     (UModsFilterType) savedInstanceState.getSerializable(CURRENT_FILTERING_KEY);
             mUModsPresenter.setFiltering(currentFiltering);
         }
+
     }
+
+
 
     @Override
     public void onSaveInstanceState(Bundle outState) {

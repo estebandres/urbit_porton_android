@@ -42,17 +42,20 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     private final SaveUMod mSaveUMod;
 
     @Nullable
-    private String mTaskId;
+    private UMod uModToConfig;
+
+    @Nullable
+    private String mUModUUID;
 
     /**
      * Dagger strictly enforces that arguments not marked with {@code @Nullable} are not injected
      * with {@code @Nullable} values.
      */
     @Inject
-    public UModConfigPresenter(@Nullable String taskId,
+    public UModConfigPresenter(@Nullable String umodUUID,
                                @NonNull UModConfigContract.View addTaskView,
                                @NonNull GetUMod getUMod, @NonNull SaveUMod saveUMod) {
-        mTaskId = taskId;
+        mUModUUID = umodUUID;
         mAddTaskView = addTaskView;
         mGetUMod = getUMod;
         mSaveUMod = saveUMod;
@@ -69,7 +72,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
     @Override
     public void subscribe() {
-        if (mTaskId != null) {
+        if (mUModUUID != null) {
             populateUMod();
         }
     }
@@ -91,14 +94,12 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
     @Override
     public void populateUMod() {
-        if (mTaskId == null) {
+        if (mUModUUID == null) {
             throw new RuntimeException("populateUMod() was called but task is new.");
         }
-        mGetUMod.execute(new GetUMod.RequestValues(mTaskId), new Subscriber<GetUMod.ResponseValues>() {
+        mGetUMod.execute(new GetUMod.RequestValues(mUModUUID), new Subscriber<GetUMod.ResponseValues>() {
             @Override
-            public void onCompleted() {
-
-            }
+            public void onCompleted() {}
 
             @Override
             public void onError(Throwable e) {
@@ -107,18 +108,19 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
             @Override
             public void onNext(GetUMod.ResponseValues response) {
-                showTask(response.getUMod());
+                uModToConfig = response.getUMod();
+                showTask(uModToConfig);
             }
         });
     }
 
     @Override
     public void adminUModUsers() {
-        if (Strings.isNullOrEmpty(mTaskId)) {
+        if (Strings.isNullOrEmpty(mUModUUID)) {
             mAddTaskView.showEmptyUModError();
             return;
         }
-        mAddTaskView.showEditUModUsers(mTaskId);
+        mAddTaskView.showEditUModUsers(mUModUUID);
     }
 
     private void showTask(UMod task) {
@@ -141,7 +143,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     }
 
     private boolean isNewTask() {
-        return mTaskId == null;
+        return mUModUUID == null;
     }
 
     private void createTask(String title, String description) {
@@ -169,7 +171,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     }
 
     private void updateTask(String title, String description) {
-        if (mTaskId == null) {
+        if (mUModUUID == null) {
             throw new RuntimeException("updateTask() was called but task is new.");
         }
         UMod newTask = new UMod(title, description, true);

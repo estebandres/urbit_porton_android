@@ -23,9 +23,10 @@ import android.util.Log;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.commands.ApproveUserCmd;
-import com.urbit_iot.onekey.data.commands.DeleteUserCmd;
-import com.urbit_iot.onekey.data.commands.OpenCloseCmd;
+import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
+import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.TriggerRPC;
+import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.Remote;
 
@@ -146,6 +147,7 @@ public class UModsRepository implements UModsDataSource {
                     @Override
                     public void call(UMod uMod) {
                         if(uMod.belongsToAppUser()){
+                            //TODO should make only an update over the DB entry: connectionAddress and updateDate only.
                             mUModsLocalDataSource.saveUMod(uMod);
                         }
                         mCachedUMods.put(uMod.getUUID(),uMod);
@@ -376,23 +378,28 @@ public class UModsRepository implements UModsDataSource {
     }
 
     @Override
-    public Observable<OpenCloseCmd.Response> openCloseUMod(@NonNull UMod uMod, @NonNull OpenCloseCmd.CommandRequest commandRequest) {
-        return mUModsLANDataSource.openCloseUMod(uMod,commandRequest);
+    public Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
+        return mUModsLANDataSource.getUserLevel(uMod, request);
+    }
+
+    @Override
+    public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
+        return mUModsLANDataSource.triggerUMod(uMod,request);
+    }
+
+    @Override
+    public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+        return mUModsLANDataSource.updateUModUser(uMod,request);
+    }
+
+    @Override
+    public Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
+        return null;
     }
 
     @Override
     public Observable<List<UModUser>> getUModUsers(@NonNull String uModUUID) {
         return mUModsLANDataSource.getUModUsers(uModUUID);
-    }
-
-    @Override
-    public Observable<ApproveUserCmd.Response> approveUModUser(@NonNull UModUser uModUser) {
-        return mUModsLANDataSource.approveUModUser(uModUser);
-    }
-
-    @Override
-    public Observable<DeleteUserCmd.Response> deleteUModUser(@NonNull UModUser uModUser) {
-        return mUModsLANDataSource.deleteUModUser(uModUser);
     }
 
     @Nullable

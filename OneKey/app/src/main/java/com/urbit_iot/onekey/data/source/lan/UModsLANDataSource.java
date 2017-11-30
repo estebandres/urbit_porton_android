@@ -23,9 +23,10 @@ import com.google.common.collect.Multimap;
 import com.urbit_iot.onekey.data.FakeUModsLANDataSource;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.commands.ApproveUserCmd;
-import com.urbit_iot.onekey.data.commands.DeleteUserCmd;
-import com.urbit_iot.onekey.data.commands.OpenCloseCmd;
+import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
+import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.TriggerRPC;
+import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 
 import java.util.Iterator;
@@ -67,8 +68,8 @@ public class UModsLANDataSource implements UModsDataSource {
 
     static {
         UMODS_USERS_SERVICE_DATA = ArrayListMultimap.create();
-        addUModUser("0000SADFSE00", "3874623893");
-        addUModUser("2225FFX13000", "3874624009");
+        addUModUser("0000SADFSE00", "3875382229");
+        addUModUser("2225FFX13000", "3875088339");
         addUModUser("2225FFX13000", "3874402010");
     }
     @Inject
@@ -185,8 +186,19 @@ public class UModsLANDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<OpenCloseCmd.Response> openCloseUMod(@NonNull UMod uMod, @NonNull OpenCloseCmd.CommandRequest commandRequest) {
-        final OpenCloseCmd.Response response = new OpenCloseCmd.Response(123456789,"OK");
+    public Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
+        //GetMyUserLevelRPC.Request request = new GetMyUserLevelRPC.Request(
+        //        new GetMyUserLevelRPC.Arguments(), uMod.getUUID());
+        GetMyUserLevelRPC.SuccessResponse response = new GetMyUserLevelRPC.SuccessResponse(
+                new GetMyUserLevelRPC.Result(UModUser.UModUserStatus.AUTHORIZED),
+                request.getCallTag());
+
+        return Observable.just(response).delay(300, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
+        final TriggerRPC.SuccessResponse response = new TriggerRPC.SuccessResponse(new TriggerRPC.Result(),request.getCallTag());
         if(response != null) {
             return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
         } else {
@@ -195,27 +207,14 @@ public class UModsLANDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<ApproveUserCmd.Response> approveUModUser(@NonNull UModUser uModUser) {
-        //Hardcoded interaction doesn't need an actual request to be constructed and sent.
-        //Command.CommandRequest request = new ApproveUserCmd.Request(6666666,"asdf","lkjh");
-        final ApproveUserCmd.Response response = new ApproveUserCmd.Response(123456789,"OK");
-        if(response != null) {
-            return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
-        } else {
-            return Observable.empty();
-        }
+    public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+        UpdateUserRPC.SuccessResponse defaultResponse = new UpdateUserRPC.SuccessResponse(new UpdateUserRPC.Result(),"STEVE MOCK RESPONSE");
+        return Observable.just(defaultResponse).delay(850,TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public Observable<DeleteUserCmd.Response> deleteUModUser(@NonNull UModUser uModUser) {
-        //Hardcoded interaction doesn't need an actual request to be constructed and sent.
-        //Command.CommandRequest request = new DeleteUserCmd.Request(6666666,"asdf","lkjh");
-        final DeleteUserCmd.Response response = new DeleteUserCmd.Response(123456789,"OK");
-        if(response != null) {
-            return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
-        } else {
-            return Observable.empty();
-        }
+    public Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
+        return null;
     }
 
     @Override

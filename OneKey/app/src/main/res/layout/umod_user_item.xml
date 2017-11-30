@@ -24,6 +24,11 @@
     android:paddingBottom="@dimen/list_item_padding"
     android:paddingTop="@dimen/list_item_padding">
 
+    <CheckBox
+        android:id="@+id/umod_user_is_admin_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical" />
 
     <TextView
         android:id="@+id/umod_user_title"

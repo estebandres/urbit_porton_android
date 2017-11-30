@@ -20,9 +20,10 @@ import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.commands.ApproveUserCmd;
-import com.urbit_iot.onekey.data.commands.DeleteUserCmd;
-import com.urbit_iot.onekey.data.commands.OpenCloseCmd;
+import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
+import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
+import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 
 import java.util.Iterator;
@@ -145,17 +146,22 @@ public class UModsRemoteDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<OpenCloseCmd.Response> openCloseUMod(@NonNull UMod uMod, @NonNull OpenCloseCmd.CommandRequest commandRequest) {
+    public Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<ApproveUserCmd.Response> approveUModUser(@NonNull UModUser uModUser) {
+    public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<DeleteUserCmd.Response> deleteUModUser(@NonNull UModUser uModUser) {
+    public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+        return null;
+    }
+
+    @Override
+    public Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
         return null;
     }
 

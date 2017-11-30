@@ -84,4 +84,9 @@ public class UModUser {
     public boolean isAdmin(){
         return this.userStatus == UModUserStatus.ADMINISTRATOR;
     }
+
+    @Override
+    public String toString() {
+        return "[" + getPhoneNumber() + " - " + getUserAlias() + "]";
+    }
 }

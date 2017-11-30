@@ -1,6 +1,7 @@
 package com.urbit_iot.onekey.umods;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -26,12 +27,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.urbit_iot.onekey.R;
+import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.UModConfigFragment;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -205,30 +209,6 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         showMessage(getString(R.string.open_close_fail_message));
     }
 
-    /**
-     * Listener for clicks on tasks in the ListView.
-     */
-    UModItemListener mItemListener = new UModItemListener() {
-        @Override
-        public void onUModClick(UMod clickedUMod) {
-            mPresenter.openUModDetails(clickedUMod);
-        }
-
-        @Override
-        public void onCompleteUModClick(UMod completedUMod) {
-            mPresenter.enableUModNotification(completedUMod);
-        }
-
-        @Override
-        public void onActivateUModClick(UMod activatedUMod) {
-            mPresenter.disableUModNotification(activatedUMod);
-        }
-
-        @Override
-        public void onActionButtonClick(UMod actedUMod) {
-            mPresenter.openCloseUMod(actedUMod);
-        }
-    };
 
     @Override
     public void setLoadingIndicator(final boolean active) {
@@ -368,6 +348,37 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         return isAdded();
     }
 
+    /**
+     * Listener for clicks on tasks in the ListView.
+     */
+    UModItemListener mItemListener = new UModItemListener() {
+        @Override
+        public void onUModClick(UMod clickedUMod) {
+            mPresenter.openUModDetails(clickedUMod);
+        }
+
+        @Override
+        public void onCompleteUModClick(UMod completedUMod) {
+            mPresenter.enableUModNotification(completedUMod);
+        }
+
+        @Override
+        public void onActivateUModClick(UMod activatedUMod) {
+            mPresenter.disableUModNotification(activatedUMod);
+        }
+
+        @Override
+        public void onActionButtonClick(UMod actedUMod) {
+            mPresenter.openCloseUMod(actedUMod);
+        }
+
+        @Override
+        public void onRequestAccess(UMod requestedUMod) {
+            mPresenter.requestAccess(requestedUMod);
+        }
+
+    };
+
     private static class UModsAdapter extends BaseAdapter {
 
         private List<UMod> mUMods;
@@ -388,9 +399,23 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         }
 
         public void addItem(UMod uMod){
-            if(!mUMods.contains(uMod)){
+            //refreshList();
+            if( ! mUMods.contains(uMod)){
                 mUMods.add(uMod);
                 notifyDataSetChanged();
+            } else {
+                UMod currentUMod = mUMods.get(mUMods.indexOf(uMod));
+                currentUMod.updatemLANIPAddress(uMod.getLANIPAddress());
+                currentUMod.updateBleHwAddress(uMod.getBleHwAddress());
+            }
+        }
+
+        public void refreshList(){
+            for (UMod uMod: mUMods) {
+                Long minutesOld = TimeUnit.MILLISECONDS.toMinutes((new Date()).getTime() - uMod.getLastUpdateDate().getTime());
+                if (minutesOld > 5L){
+                    mUMods.remove(uMod);
+                }
             }
         }
 
@@ -426,8 +451,24 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
             Button actionButton = (Button) rowView.findViewById(R.id.umod_action_button);
 
-            // Active/completed task UI
+            if(uMod.getuModState() == UMod.UModState.AP_MODE){
+                actionButton.setVisibility(View.INVISIBLE);
+            }
+            if (uMod.getuModState() == UMod.UModState.STATION_MODE){
+                actionButton.setVisibility(View.VISIBLE);
+                //TODO add button text versions as String resource.
+                if(uMod.belongsToAppUser()){
+                    actionButton.setText(R.string.umod_action_button_when_owned);
+                } else {
+                    actionButton.setText(R.string.umod_action_button_when_open_alien);
+                }
+
+            }
+
+            // NotifEnabled cehckbox state
             completeCB.setChecked(uMod.isNotificationEnabled());
+
+            /* NO SE QUE HACE ESTO??
             if (uMod.isNotificationEnabled()) {
                 rowView.setBackgroundDrawable(viewGroup.getContext()
                         .getResources().getDrawable(R.drawable.list_completed_touch_feedback));
@@ -435,6 +476,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 rowView.setBackgroundDrawable(viewGroup.getContext()
                         .getResources().getDrawable(R.drawable.touch_feedback));
             }
+            */
 
             completeCB.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -450,10 +492,10 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             actionButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (!uMod.isNotificationEnabled()) {
+                    if (uMod.belongsToAppUser()) {
                         mItemListener.onActionButtonClick(uMod);
                     } else {
-                        mItemListener.onActionButtonClick(uMod);
+                        mItemListener.onRequestAccess(uMod);
                     }
                 }
             });
@@ -479,6 +521,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         void onActivateUModClick(UMod activatedUMod);
 
         void onActionButtonClick(UMod actedUMod);
+
+        void onRequestAccess(UMod requestedUMod);
     }
 
 }

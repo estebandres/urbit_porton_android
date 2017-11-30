@@ -8,7 +8,7 @@ import com.polidea.rxandroidble.RxBleClient;
 import com.urbit_iot.onekey.data.source.lan.UModsBLEScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsDNSSDScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsLANDataSource;
-import com.urbit_iot.onekey.data.source.local.UModsLocalDataSource;
+import com.urbit_iot.onekey.data.source.local.UModsLocalDBDataSource;
 import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.Remote;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
@@ -42,8 +42,8 @@ public class UModsRepositoryModule {
     @Singleton
     @Provides
     @Local
-    UModsDataSource provideUModsLocalDataSource(Context context, BaseSchedulerProvider schedulerProvider) {
-        return new UModsLocalDataSource(context, schedulerProvider);
+    UModsDataSource provideUModsLocalDBDataSource(Context context, BaseSchedulerProvider schedulerProvider) {
+        return new UModsLocalDBDataSource(context, schedulerProvider);
     }
 
     @Singleton

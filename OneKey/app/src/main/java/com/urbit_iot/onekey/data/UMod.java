@@ -35,7 +35,9 @@ public final class UMod {
         IDLE(1),
         IN_OPERATION(2),
         OTA_UPDATE(3),
-        DEATH(4);
+        DEATH(4),
+        STATION_MODE(5),
+        BLE_MODE(6);
         private final Integer stateID;
         private static SparseArray<UModState> map = new SparseArray<>();
 
@@ -69,18 +71,18 @@ public final class UMod {
     private String mLANIPAddress;
 
     @Nullable
+    private String bleHwAddress;
+
+    @Nullable
     private String mWiFiSSID;
 
     @Nullable
     private String mWiFiPassword;
 
-    @Nullable
-    private boolean isInAPMode;
-
     @NonNull
     private UModUser.UModUserStatus appUserStatus;
 
-    @Nullable
+    @NonNull
     private UModState uModState;
 
     @Nullable
@@ -104,14 +106,31 @@ public final class UMod {
     private Date lastUpdateDate;
 
     /**
-     * Use this constructor to create a new umod when the data is retrieve from dns-sd but TXT field is absent.
+     * Use this constructor to create a new umod when the data is retrieve from dns-sd and TXT contains isOpen.
      * @param mUUID
      * @param mLANIPAddress
      */
-    public UMod(@NonNull String mUUID, String mLANIPAddress) {
+    public UMod(@NonNull String mUUID, String mLANIPAddress, @NonNull Boolean isOpen) {
         this.mUUID = mUUID;
         this.mLANIPAddress = mLANIPAddress;
-        this.isInAPMode = false;
+        this.uModState = UModState.STATION_MODE;
+        this.appUserStatus = UModUser.UModUserStatus.UNAUTHORIZED;
+        this.isOpen = isOpen;
+        this.lastUpdateDate = new Date();
+    }
+
+    /**
+     * Use this constructor to create a new umod when the data is retrieve from BLE scanning.
+     * @param mUUID
+     * @param bleHwAddress
+     */
+    public UMod(@NonNull String mUUID, String bleHwAddress) {
+        this.mUUID = mUUID;
+        this.bleHwAddress = bleHwAddress;
+        this.uModState = UModState.AP_MODE;
+        this.appUserStatus = UModUser.UModUserStatus.UNAUTHORIZED;
+        this.isOpen = true;
+        this.lastUpdateDate = new Date();
     }
 
     /**
@@ -125,21 +144,7 @@ public final class UMod {
         this.mHWVersion = hwVersion;
         this.mSWVersion = swVersion;
 
-        this.isInAPMode = true;
         this.lastUpdateDate = new Date();
-    }
-
-    /**
-     * Use only for old mocked execution
-     * @param mUUID
-     * @param mLANIPAddress
-     * @param isOpen
-     */
-
-    public UMod(@NonNull String mUUID, String mLANIPAddress, @NonNull boolean isOpen) {
-        this.mUUID = mUUID;
-        this.mLANIPAddress = mLANIPAddress;
-        this.isOpen = isOpen;
     }
 
     /**
@@ -175,7 +180,6 @@ public final class UMod {
         this.mHWVersion = mHWVersion;
         this.mSWVersion = mSWVersion;
         this.isOpen = isOpen;
-        this.isInAPMode = false;
         this.lastUpdateDate = new Date();
     }
 
@@ -224,6 +228,27 @@ public final class UMod {
         this.mLANIPAddress = mLANIPAddress;
     }
 
+    public void updatemLANIPAddress(@Nullable String mLANIPAddress) {
+        if(mLANIPAddress != null){
+            this.mLANIPAddress = mLANIPAddress;
+        }
+    }
+
+    @Nullable
+    public String getBleHwAddress() {
+        return bleHwAddress;
+    }
+
+    public void setBleHwAddress(@Nullable String bleHwAddress) {
+            this.bleHwAddress = bleHwAddress;
+    }
+
+    public void updateBleHwAddress(@Nullable String bleHwAddress) {
+        if(bleHwAddress != null){
+            this.bleHwAddress = bleHwAddress;
+        }
+    }
+
     @Nullable
     public String getmWiFiSSID() {
         return mWiFiSSID;
@@ -261,11 +286,10 @@ public final class UMod {
     }
     @Nullable
     public boolean isInAPMode() {
-        return isInAPMode;
+        return this.getuModState() == UModState.AP_MODE;
     }
 
     public void setInAPMode(@Nullable boolean inAPMode) {
-        isInAPMode = inAPMode;
     }
 
     @NonNull

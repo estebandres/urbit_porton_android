@@ -41,6 +41,7 @@ public class UModsBLEScanner {
                                 .build(),
                         new ScanFilter.Builder()
                                 .build())
+                        .take(10)
                         .distinct()
                         .doOnError(new Action1<Throwable>() {
                             @Override
@@ -51,15 +52,15 @@ public class UModsBLEScanner {
                         .doOnNext(new Action1<ScanResult>() {
                             @Override
                             public void call(ScanResult scanResult) {
-                                Log.d("STEVEE_ble",scanResult.toString());
+                                Log.d("ble_scan",scanResult.toString());
                             }
                         })
-                        //.timeout(5, TimeUnit.SECONDS)
+                        //.timeout(5, TimeUnit.SECONDS)//used to stop the stream
                         //.onErrorResumeNext(Observable.<ScanResult>empty())
                         .filter(new Func1<ScanResult, Boolean>() {
                             @Override
                             public Boolean call(ScanResult scanResult) {
-                                return scanResult.getBleDevice().getName().contains("urbit");
+                                return scanResult.getBleDevice().getName() != null && scanResult.getBleDevice().getName().contains("urbit");
                             }
                         })
                         .map(new Func1<ScanResult, UMod>() {

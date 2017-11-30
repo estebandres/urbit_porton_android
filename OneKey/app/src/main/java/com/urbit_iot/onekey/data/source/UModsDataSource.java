@@ -20,9 +20,10 @@ import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.commands.ApproveUserCmd;
-import com.urbit_iot.onekey.data.commands.DeleteUserCmd;
-import com.urbit_iot.onekey.data.commands.OpenCloseCmd;
+import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
+import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.TriggerRPC;
+import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 
 import java.util.List;
 
@@ -58,13 +59,23 @@ public interface UModsDataSource {
 
     void deleteUMod(@NonNull String uModUUID);
 
-    //Observable<Command.CommandResponse> postCommand(@NonNull Command.CommandRequest commandRequest);
+    //Observable<RPC.CommandResponse> postCommand(@NonNull RPC.CommandRequest commandRequest);
 
-    Observable<OpenCloseCmd.Response> openCloseUMod(@NonNull UMod uMod, @NonNull OpenCloseCmd.CommandRequest commandRequest);
+    Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod,
+                                                               @NonNull GetMyUserLevelRPC.Request request);
 
-    Observable<ApproveUserCmd.Response> approveUModUser(@NonNull UModUser uModUser);
+    Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod,
+                                                       @NonNull TriggerRPC.Request request);
 
-    Observable<DeleteUserCmd.Response> deleteUModUser(@NonNull UModUser uModUser);
+    Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod,
+                                                             @NonNull UpdateUserRPC.Request request);
+
+    Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod,
+                                                             @NonNull DeleteUserRPC.Request request);
+
+    //Observable<UpdateUserRPC.Response> approveUModUser(@NonNull UModUser uModUser);
+
+    //Observable<DeleteUserRPC.Response> deleteUModUser(@NonNull UModUser uModUser);
 
     Observable<List<UModUser>> getUModUsers(@NonNull String uModUUID);
 }

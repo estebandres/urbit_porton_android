@@ -1,4 +1,4 @@
-package com.urbit_iot.onekey.data.commands;
+package com.urbit_iot.onekey.data.rpc;
 
 /**
  * Created by andresteve07 on 8/11/17.

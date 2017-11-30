@@ -2,19 +2,19 @@ package com.urbit_iot.onekey;
 
 import android.app.Application;
 
-import com.github.druk.rxdnssd.RxDnssd;
-import com.github.druk.rxdnssd.RxDnssdBindable;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepositoryComponent;
-import com.urbit_iot.onekey.appuser.data.source.DaggerAppUserRepositoryComponent;
-import com.urbit_iot.onekey.data.source.DaggerUModsRepositoryComponent;
 import com.urbit_iot.onekey.umodconfig.UModConfigComponent;
 import com.urbit_iot.onekey.data.source.UModsRepositoryComponent;
 import com.urbit_iot.onekey.statistics.StatisticsComponent;
 import com.urbit_iot.onekey.umodinfo.UModInfoComponent;
 import com.urbit_iot.onekey.umods.UModsComponent;
-import com.urbit_iot.onekey.util.schedulers.DaggerSchedulerProviderComponent;
+
 import com.urbit_iot.onekey.util.schedulers.SchedulerProviderComponent;
 import com.urbit_iot.onekey.util.schedulers.SchedulerProviderModule;
+
+import com.urbit_iot.onekey.appuser.data.source.DaggerAppUserRepositoryComponent;
+import com.urbit_iot.onekey.util.schedulers.DaggerSchedulerProviderComponent;
+import com.urbit_iot.onekey.data.source.DaggerUModsRepositoryComponent;
 
 /**
  * Even though Dagger2 allows annotating a {@link dagger.Component} as a singleton, the code itself
@@ -45,13 +45,6 @@ public class OneKeyApplication extends Application {
 
         mSchedulerProviderComponent = DaggerSchedulerProviderComponent.builder()
                 .schedulerProviderModule(new SchedulerProviderModule()).build();
-
-        /*
-        mUModsRepositoryComponent = DaggerTasksRepositoryComponent.builder()
-                .applicationModule(new ApplicationModule((getApplicationContext())))
-                .schedulerProviderComponent(mSchedulerProviderComponent)
-                .build();
-        */
 
         mUModsRepositoryComponent = DaggerUModsRepositoryComponent.builder()
                 .applicationModule(new ApplicationModule((getApplicationContext())))

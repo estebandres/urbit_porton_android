@@ -26,6 +26,8 @@ public class UModsDNSSDScanner {
         this.rxDnssd = rxDnssd;
     }
 
+    //TODO as proof of concept we should try send a regular DNS query(A) to 224.0.0.251:5353 as the DNS server
+    //there are several java android libraries that could work well.
     public Observable<UMod> browseLANForUMods(){
         return Observable.defer(new Func0<Observable<UMod>>() {
             @Override
@@ -33,6 +35,7 @@ public class UModsDNSSDScanner {
                 return rxDnssd.browse("_http._tcp.","local.")
                         .compose(rxDnssd.resolve())
                         .compose(rxDnssd.queryRecords())
+                        .take(10)
                         .distinct()
                         .doOnError(new Action1<Throwable>() {
                             @Override
@@ -43,7 +46,7 @@ public class UModsDNSSDScanner {
                         .doOnNext(new Action1<BonjourService>() {
                             @Override
                             public void call(BonjourService bonjourService) {
-                                Log.d("STEVEE_dns",bonjourService.toString());
+                                Log.d("dns-sd_sca",bonjourService.toString());
                             }
                         })
                         //.timeout(5, TimeUnit.SECONDS)
@@ -51,13 +54,14 @@ public class UModsDNSSDScanner {
                         .filter(new Func1<BonjourService, Boolean>() {
                             @Override
                             public Boolean call(BonjourService bonjourService) {
-                                return bonjourService.getHostname().contains("mos");
+                                return bonjourService.getHostname() != null && bonjourService.getHostname().contains("mos");
                             }
                         })
                         .map(new Func1<BonjourService,UMod>(){
                             public UMod call(BonjourService discovery){
                                 return new UMod(discovery.getHostname(),
-                                        discovery.getInet4Address().toString());
+                                        discovery.getInet4Address().toString(),
+                                        true);
                             }
                         });
             }

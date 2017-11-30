@@ -4,19 +4,17 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
+import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.commands.ApproveUserCmd;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.umods.UModsFragment;
-import com.urbit_iot.onekey.umods.domain.usecase.ClearAlienUMods;
-import com.urbit_iot.onekey.umods.domain.usecase.DisableUModNotification;
-import com.urbit_iot.onekey.umods.domain.usecase.EnableUModNotification;
-import com.urbit_iot.onekey.umods.domain.usecase.OpenCloseUMod;
-import com.urbit_iot.onekey.usersxumod.domain.usecase.ApproveUModUser;
+import com.urbit_iot.onekey.usersxumod.domain.usecase.AuthorizeUModUser;
 import com.urbit_iot.onekey.usersxumod.domain.usecase.DeleteUModUser;
 import com.urbit_iot.onekey.usersxumod.domain.usecase.GetUModUsers;
+import com.urbit_iot.onekey.usersxumod.domain.usecase.UpDownAdminLevel;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
 
 import java.util.List;
@@ -36,36 +34,33 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
 
     private final UModUsersContract.View mUModsView;
     private final GetUModUsers getUModUsers;
-    private final EnableUModNotification mEnableUModNotification;
-    private final DisableUModNotification mDisableUModNotification;
-    private final ClearAlienUMods mClearAlienUMods;
-    private final OpenCloseUMod mOpenCloseUMod;
-    private final ApproveUModUser mApproveUModUser;
+    private final AuthorizeUModUser mAuthorizeUModUser;
     private final DeleteUModUser mDeleteUModUser;
+    private final UpDownAdminLevel upDownAdminLevel;
 
     private UModUsersFilterType mCurrentFiltering = UModUsersFilterType.ALL_UMOD_USERS;
     private String uModUUID;
 
     private boolean mFirstLoad = true;
 
+    private boolean contactsAccessGranted = false;
+
     @Inject
     public UModUsersPresenter(@NonNull UModUsersContract.View umodsView,
                               @NonNull GetUModUsers getUModUsers,
-                              @NonNull EnableUModNotification enableUModNotification,
-                              @NonNull DisableUModNotification disableUModNotification,
-                              @NonNull ClearAlienUMods clearAlienUMods,
-                              @NonNull OpenCloseUMod openCloseUMod,
-                              @NonNull ApproveUModUser approveUModUser,
-                              @NonNull DeleteUModUser deleteUModUser) {
+                              @NonNull AuthorizeUModUser authorizeUModUser,
+                              @NonNull DeleteUModUser deleteUModUser,
+                              @NonNull UpDownAdminLevel upDownAdminLevel) {
         mUModsView = checkNotNull(umodsView, "tasksView cannot be null!");
         this.getUModUsers = checkNotNull(getUModUsers, "getUMod cannot be null!");
-        mEnableUModNotification = checkNotNull(enableUModNotification, "enableUModNotification cannot be null!");
-        mDisableUModNotification = checkNotNull(disableUModNotification, "disableUModNotification cannot be null!");
-        mClearAlienUMods = checkNotNull(clearAlienUMods,
-                "clearAlienUMods cannot be null!");
-        mOpenCloseUMod = checkNotNull(openCloseUMod, "openCloseUMod cannot be null!");
-        mApproveUModUser = checkNotNull(approveUModUser, "approveUModUser cannot be null!");
+        mAuthorizeUModUser = checkNotNull(authorizeUModUser, "authorizeUModUser cannot be null!");
         mDeleteUModUser = checkNotNull(deleteUModUser, "deleteUModUser cannot be null!");
+        this.upDownAdminLevel = checkNotNull(upDownAdminLevel, "upDownAdminLevel cannot be null!");
+    }
+
+    @Override
+    public void setContactsAccessGranted(boolean contactsAccessGranted) {
+        this.contactsAccessGranted = contactsAccessGranted;
     }
 
     public void setUModUUID(String uModUUID){
@@ -93,10 +88,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
     @Override
     public void unsubscribe() {
         getUModUsers.unsubscribe();
-        mEnableUModNotification.unsubscribe();
-        mDisableUModNotification.unsubscribe();
-        mClearAlienUMods.unsubscribe();
-        mApproveUModUser.unsubscribe();
+        mAuthorizeUModUser.unsubscribe();
         mDeleteUModUser.unsubscribe();
     }
 
@@ -141,14 +133,26 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
 
             @Override
             public void onError(Throwable e) {
+                Log.e("umods_pr", e.getMessage());
                 mUModsView.showLoadingUModUsersError();
             }
 
             @Override
             public void onNext(GetUModUsers.ResponseValues values) {
+                tryGetFriendlyAliasForUsers(values.getUModUsers());
                 processTasks(values.getUModUsers());
             }
         });
+    }
+
+    private void tryGetFriendlyAliasForUsers(List<UModUser> uModUsers){
+        for(UModUser uModUser : uModUsers){
+            if(this.contactsAccessGranted){
+                uModUser.setUserAlias(mUModsView.getContactNameFromPhoneNumber(uModUser.getPhoneNumber()));
+            } else {
+                uModUser.setUserAlias(uModUser.getPhoneNumber());
+            }
+        }
     }
 
     private void processTasks(List<UModUser> uModUsers) {
@@ -240,14 +244,14 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
     }
 
     @Override
-    public void approveUser(UModUser uModUser) {
+    public void authorizeUser(UModUser uModUser) {
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
-        mApproveUModUser.unsubscribe();
-        ApproveUModUser.RequestValues requestValue = new ApproveUModUser.RequestValues(uModUser);
-        mApproveUModUser.execute(requestValue, new Subscriber<ApproveUModUser.ResponseValues>() {
+        mAuthorizeUModUser.unsubscribe();
+        AuthorizeUModUser.RequestValues requestValue = new AuthorizeUModUser.RequestValues(uModUser);
+        mAuthorizeUModUser.execute(requestValue, new Subscriber<AuthorizeUModUser.ResponseValues>() {
             @Override
             public void onCompleted() {
                 mUModsView.setLoadingIndicator(false);
@@ -259,9 +263,9 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
             }
 
             @Override
-            public void onNext(ApproveUModUser.ResponseValues responseValues) {
-                ApproveUserCmd.Response response = responseValues.getResponse();
-                Log.d("ModsPresenter", "Command is " + response.getCommandCode());
+            public void onNext(AuthorizeUModUser.ResponseValues responseValues) {
+                UpdateUserRPC.SuccessResponse response = responseValues.getResponse();
+                Log.d("um_usrs_pr", "RPC is " + response.getCallTag());
                 mUModsView.showUserApprovalSuccess();
             }
         });
@@ -273,9 +277,9 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
-        mApproveUModUser.unsubscribe();
-        ApproveUModUser.RequestValues requestValue = new ApproveUModUser.RequestValues(uModUser);
-        mApproveUModUser.execute(requestValue, new Subscriber<ApproveUModUser.ResponseValues>() {
+        mDeleteUModUser.unsubscribe();
+        DeleteUModUser.RequestValues requestValue = new DeleteUModUser.RequestValues(uModUser);
+        mDeleteUModUser.execute(requestValue, new Subscriber<DeleteUModUser.ResponseValues>() {
             @Override
             public void onCompleted() {
                 mUModsView.setLoadingIndicator(false);
@@ -287,9 +291,38 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
             }
 
             @Override
-            public void onNext(ApproveUModUser.ResponseValues responseValues) {
-                ApproveUserCmd.Response response = responseValues.getResponse();
-                Log.d("ModsPresenter", "Command is " + response.getCommandCode());
+            public void onNext(DeleteUModUser.ResponseValues responseValues) {
+                DeleteUserRPC.SuccessResponse response = responseValues.getResponse();
+                Log.d("um_usrs_pr", "RPC is " + response.getCallTag());
+                mUModsView.showUserApprovalSuccess();
+            }
+        });
+    }
+
+    @Override
+    public void UpDownAdminLevel(UModUser uModUser, boolean toAdmin) {
+        // The network request might be handled in a different thread so make sure Espresso knows
+        // that the app is busy until the response is handled.
+        EspressoIdlingResource.increment(); // App is busy until further notice
+
+        this.upDownAdminLevel.unsubscribe();
+        UpDownAdminLevel.RequestValues requestValue = new UpDownAdminLevel.RequestValues(uModUser, toAdmin);
+        this.upDownAdminLevel.execute(requestValue, new Subscriber<UpDownAdminLevel.ResponseValues>() {
+            @Override
+            public void onCompleted() {
+                mUModsView.showSuccessfullySavedMessage();
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.e("um_usrs_pr", e.getMessage());
+                mUModsView.showLoadingUModUsersError();
+            }
+
+            @Override
+            public void onNext(UpDownAdminLevel.ResponseValues responseValues) {
+                UpdateUserRPC.SuccessResponse response = responseValues.getResponse();
+                Log.d("um_usrs_pr", "RPC is " + response.getCallTag());
                 mUModsView.showUserApprovalSuccess();
             }
         });

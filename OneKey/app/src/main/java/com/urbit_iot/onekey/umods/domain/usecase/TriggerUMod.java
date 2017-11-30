@@ -21,8 +21,8 @@ import android.support.annotation.NonNull;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
-import com.urbit_iot.onekey.data.commands.Command;
-import com.urbit_iot.onekey.data.commands.OpenCloseCmd;
+import com.urbit_iot.onekey.data.rpc.RPC;
+import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -36,13 +36,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Fetches the list of tasks.
  */
-public class OpenCloseUMod extends SimpleUseCase<OpenCloseUMod.RequestValues, OpenCloseUMod.ResponseValues> {
+public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, TriggerUMod.ResponseValues> {
 
     private final UModsRepository mUModsRepository;
 
     @Inject
-    public OpenCloseUMod(@NonNull UModsRepository uModsRepository,
-                         @NonNull BaseSchedulerProvider schedulerProvider) {
+    public TriggerUMod(@NonNull UModsRepository uModsRepository,
+                       @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(uModsRepository, "uModsRepository cannot be null!");
     }
@@ -54,11 +54,25 @@ public class OpenCloseUMod extends SimpleUseCase<OpenCloseUMod.RequestValues, Op
             mUModsRepository.refreshUMods();
         }
         */
-        Command.CommandRequest request = new OpenCloseCmd.Request(6666666,"asdf","lkjh");
-        return mUModsRepository.openCloseUMod(values.getUMod(), request)
-                .map(new Func1<OpenCloseCmd.Response, ResponseValues>() {
+
+        final TriggerRPC.Request request = new TriggerRPC.Request(new TriggerRPC.Arguments(),
+                "SteveTriggered",666);
+        return mUModsRepository.triggerUMod(values.getUMod(), request)
+                .onErrorResumeNext(new Func1<Throwable, Observable<TriggerRPC.SuccessResponse>>() {
                     @Override
-                    public ResponseValues call(OpenCloseCmd.Response response) {
+                    public Observable<TriggerRPC.SuccessResponse> call(Throwable throwable) {
+                        return mUModsRepository.getUMod(values.getUMod().getUUID())
+                                .flatMap(new Func1<UMod, Observable<TriggerRPC.SuccessResponse>>() {
+                                    @Override
+                                    public Observable<TriggerRPC.SuccessResponse> call(UMod uMod) {
+                                        return mUModsRepository.triggerUMod(values.getUMod(),request);
+                                    }
+                                });
+                    }
+                })
+                .map(new Func1<TriggerRPC.SuccessResponse, ResponseValues>() {
+                    @Override
+                    public ResponseValues call(TriggerRPC.SuccessResponse response) {
                         return new ResponseValues(response);
                     }
                 });
@@ -79,13 +93,13 @@ public class OpenCloseUMod extends SimpleUseCase<OpenCloseUMod.RequestValues, Op
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private final OpenCloseCmd.Response response;
+        private final TriggerRPC.SuccessResponse response;
 
-        public ResponseValues(@NonNull OpenCloseCmd.Response response) {
+        public ResponseValues(@NonNull TriggerRPC.SuccessResponse response) {
             this.response = checkNotNull(response, "response cannot be null!");
         }
 
-        public OpenCloseCmd.Response getResponse() {
+        public TriggerRPC.SuccessResponse getResponse() {
             return response;
         }
     }

@@ -1,6 +1,10 @@
 package com.urbit_iot.onekey.usersxumod;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 import android.support.test.espresso.IdlingResource;
 import android.support.v7.app.ActionBar;
@@ -23,6 +27,7 @@ import javax.inject.Inject;
 
 public class UModUsersActivity extends AppCompatActivity {
     private static final String CURRENT_FILTERING_KEY = "CURRENT_FILTERING_KEY";
+    private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
 
     @Inject
     UModUsersPresenter uModUsersPresenter;
@@ -64,6 +69,28 @@ public class UModUsersActivity extends AppCompatActivity {
             UModUsersFilterType currentFiltering =
                     (UModUsersFilterType) savedInstanceState.getSerializable(CURRENT_FILTERING_KEY);
             uModUsersPresenter.setFiltering(currentFiltering);
+        }
+
+        //TODO: Check if this works correctly.
+        // Check the SDK version and whether the permission is already granted or not.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
+            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+        } else {
+            uModUsersPresenter.setContactsAccessGranted(true);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission is granted
+                uModUsersPresenter.setContactsAccessGranted(true);
+            } else {
+                uModUsersPresenter.setContactsAccessGranted(false);
+            }
         }
     }
 

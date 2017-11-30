@@ -72,5 +72,7 @@
     <string name="umod_users_label_not_admins">Normal Users</string>
     <string name="app_user_phone_tag">Numero Celular</string>
     <string name="app_user_phone_hint">0387-154623893</string>
+    <string name="umod_action_button_when_owned">O/C</string>
+    <string name="umod_action_button_when_open_alien">REQ</string>
 
 </resources>

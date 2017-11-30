@@ -50,4 +50,5 @@ ext {
     gsonVersion = '2.8.1'
     DNSSDVersion = '0.9.1'
     rxDNSSDVersion = '0.9.1'
+    libphonenumber = '8.2.0'
 }

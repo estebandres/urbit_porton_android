@@ -59,6 +59,8 @@ public interface UModUsersContract {
         void showUserApprovalSuccess();
 
         void showUserApprovalFail();
+
+        String getContactNameFromPhoneNumber(String phoneNumber);
     }
 
     interface Presenter extends BasePresenter {
@@ -82,8 +84,12 @@ public interface UModUsersContract {
 
         UModUsersFilterType getFiltering();
 
-        void approveUser(UModUser uModUser);
+        void authorizeUser(UModUser uModUser);
 
         void deleteUser(UModUser uModUser);
+
+        void UpDownAdminLevel(UModUser uModUser, boolean toAdmin);
+
+        void setContactsAccessGranted(boolean contactsAccessGranted);
     }
 }
