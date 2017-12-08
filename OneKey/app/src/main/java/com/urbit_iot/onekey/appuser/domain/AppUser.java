@@ -3,36 +3,41 @@ package com.urbit_iot.onekey.appuser.domain;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * Created by andresteve07 on 8/11/17.
  */
 
 public class AppUser {
     @NonNull
+    @SerializedName("phone_number")
     private final String phoneNumber;
+
     @NonNull
+    @SerializedName("app_uuid")
     private final String appUUID;
+
     @Nullable
+    @SerializedName("user_alias")
     private String alias;
+
     @Nullable
+    @SerializedName("first_name")
     private String firstName;
+
     @Nullable
+    @SerializedName("last_name")
     private String lastName;
+
     @Nullable
+    @SerializedName("email_address")
     private String emailAddress;
+
     @Nullable
+    @SerializedName("action_password")
     private String actionPassword;
     //TODO what if I want to use my lock screen as actionPassword?
-
-
-    public AppUser(@NonNull String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-        this.appUUID = calculateAppUUID();
-    }
-
-    private String calculateAppUUID() {
-        return "123456789012345678901234567890";
-    }
 
     public AppUser(@NonNull String phoneNumber, @NonNull String appUUID) {
         this.phoneNumber = phoneNumber;
@@ -44,7 +49,7 @@ public class AppUser {
         return phoneNumber;
     }
 
-    @NonNull
+    @Nullable
     public String getAppUUID() {
         return appUUID;
     }
@@ -93,5 +98,9 @@ public class AppUser {
     public void setActionPassword(@Nullable String actionPassword) {
         this.actionPassword = actionPassword;
     }
-}
 
+    @Override
+    public String toString() {
+        return "[" + this.getPhoneNumber() + " ; " + this.getAppUUID() + "]" ;
+    }
+}

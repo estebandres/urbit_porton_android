@@ -68,9 +68,9 @@ public class UModsLANDataSource implements UModsDataSource {
 
     static {
         UMODS_USERS_SERVICE_DATA = ArrayListMultimap.create();
-        addUModUser("0000SADFSE00", "3875382229");
-        addUModUser("2225FFX13000", "3875088339");
-        addUModUser("2225FFX13000", "3874402010");
+        addUModUser("0000SADFSE00", "0387 538-2229");
+        addUModUser("2225FFX13000", "0387 508-8339");
+        addUModUser("2225FFX13000", "0387 440-2010");
     }
     @Inject
     public UModsLANDataSource(@NonNull UModsDNSSDScanner uModsDNSSDScanner,

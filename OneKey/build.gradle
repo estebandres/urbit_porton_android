@@ -51,4 +51,5 @@ ext {
     DNSSDVersion = '0.9.1'
     rxDNSSDVersion = '0.9.1'
     libphonenumber = '8.2.0'
+    rxPreferences = '2.0.0-RC3'
 }

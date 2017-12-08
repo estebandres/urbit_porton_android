@@ -29,7 +29,7 @@
         android:theme="@style/AppTheme"
         android:name="com.urbit_iot.onekey.OneKeyApplication">
         <activity
-            android:name="com.urbit_iot.onekey.umods.UModsActivity"
+            android:name="com.urbit_iot.onekey.InvisibleChooserActivity"
             android:theme="@style/AppTheme.OverlapSystemBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -37,6 +37,7 @@
             </intent-filter>
         </activity>
 
+        <activity android:name="com.urbit_iot.onekey.umods.UModsActivity"/>
         <activity android:name="com.urbit_iot.onekey.appuser.AppUserActivity" />
         <activity android:name="com.urbit_iot.onekey.umodinfo.UModInfoActivity" />
         <activity android:name="com.urbit_iot.onekey.umodconfig.UModConfigActivity" />

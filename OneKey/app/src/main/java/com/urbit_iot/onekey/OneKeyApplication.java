@@ -39,20 +39,24 @@ public class OneKeyApplication extends Application {
 
     private AppUserRepositoryComponent mAppUserRepositoryComponent;
 
+    private ApplicationModule applicationModule;
+
     @Override
     public void onCreate() {
         super.onCreate();
+
+        this.applicationModule = new ApplicationModule((getApplicationContext()));
 
         mSchedulerProviderComponent = DaggerSchedulerProviderComponent.builder()
                 .schedulerProviderModule(new SchedulerProviderModule()).build();
 
         mUModsRepositoryComponent = DaggerUModsRepositoryComponent.builder()
-                .applicationModule(new ApplicationModule((getApplicationContext())))
+                .applicationModule(applicationModule)
                 .schedulerProviderComponent(mSchedulerProviderComponent)
                 .build();
 
         mAppUserRepositoryComponent = DaggerAppUserRepositoryComponent.builder()
-                .applicationModule(new ApplicationModule(getApplicationContext()))
+                .applicationModule(applicationModule)
                 .schedulerProviderComponent(mSchedulerProviderComponent)
                 .build();
 
@@ -68,6 +72,10 @@ public class OneKeyApplication extends Application {
 
     public AppUserRepositoryComponent getAppUserRepositoryComponent(){
         return mAppUserRepositoryComponent;
+    }
+
+    public ApplicationModule getApplicationModule(){
+        return this.applicationModule;
     }
 
 }

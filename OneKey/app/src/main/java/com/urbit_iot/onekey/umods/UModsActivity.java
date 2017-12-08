@@ -1,9 +1,6 @@
 package com.urbit_iot.onekey.umods;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.NavigationView;
@@ -15,16 +12,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
-import com.github.druk.rxdnssd.RxDnssd;
-import com.github.druk.rxdnssd.RxDnssdBindable;
+
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.OneKeyApplication;
-import com.urbit_iot.onekey.appuser.AppUserActivity;
 import com.urbit_iot.onekey.statistics.StatisticsActivity;
 import com.urbit_iot.onekey.util.ActivityUtils;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
-
-import java.security.PrivateKey;
 
 import javax.inject.Inject;
 

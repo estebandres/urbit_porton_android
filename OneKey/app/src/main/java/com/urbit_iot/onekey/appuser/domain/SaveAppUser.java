@@ -29,7 +29,7 @@ import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import javax.inject.Inject;
 
 import rx.Observable;
-import rx.Subscriber;
+import rx.functions.Func1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -41,28 +41,31 @@ public class SaveAppUser extends SimpleUseCase<SaveAppUser.RequestValues, SaveAp
     private final AppUserRepository appUserRepository;
 
     @Inject
-    public SaveAppUser(@NonNull AppUserRepository tasksRepository,
+    public SaveAppUser(@NonNull AppUserRepository appUserRepository,
                        @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
-        appUserRepository = tasksRepository;
+        this.appUserRepository = appUserRepository;
     }
 
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
-        return Observable.create(new Observable.OnSubscribe<ResponseValues>() {
-            @Override
-            public void call(Subscriber<? super ResponseValues> subscriber) {
-                try {
-                    AppUserViewModel appUserViewModel = values.getAppUserViewModel();
-                    AppUser appUser = new AppUser(appUserViewModel.getPhoneNumber());
-                    appUserRepository.saveAppUser(appUser);
-                    subscriber.onNext(new ResponseValues(appUser));
-                    subscriber.onCompleted();
-                } catch (Exception e) {
-                    subscriber.onError(e);
-                }
-            }
-        });
+        return appUserRepository.getAppUUID()
+                .flatMap(new Func1<String, Observable<AppUser>>() {
+                    @Override
+                    public Observable<AppUser> call(String appUUID) {
+                        //TODO when I log the value of appUUID the function works :(
+                        //Log.e("saveAU_UC", appUUID);
+                        AppUserViewModel appUserViewModel = values.getAppUserViewModel();
+                        AppUser appUser = new AppUser(appUserViewModel.getPhoneNumber(), appUUID);
+                        return appUserRepository.saveAppUser(appUser);
+                    }
+                })
+                .map(new Func1<AppUser, ResponseValues>() {
+                    @Override
+                    public ResponseValues call(AppUser appUser) {
+                        return new ResponseValues(appUser);
+                    }
+                });
     }
 
     public static final class RequestValues implements RxUseCase.RequestValues {
