@@ -6,6 +6,7 @@ import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
@@ -40,7 +41,9 @@ public class UpDownAdminLevel extends SimpleUseCase<UpDownAdminLevel.RequestValu
         */
         UModUser.UModUserStatus newUserLevel;
         UpDownAdminLevel.ResponseValues defaultResponse = new UpDownAdminLevel.ResponseValues(
-                new UpdateUserRPC.SuccessResponse(new UpdateUserRPC.Result(),"STEVE DEFAULT"));
+                new UpdateUserRPC.SuccessResponse(new UpdateUserRPC.Result(),
+                        "STEVE DEFAULT",
+                        new RPC.ResponseError(null,null)));
 
         if(values.isUModUserToBeAdmin()){
             //If for some reason app tries to ADMIN an ADMIN

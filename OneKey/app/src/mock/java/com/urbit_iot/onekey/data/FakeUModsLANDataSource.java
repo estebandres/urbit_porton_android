@@ -21,6 +21,7 @@ import android.support.annotation.NonNull;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
@@ -186,5 +187,10 @@ public class FakeUModsLANDataSource implements UModsDataSource {
         return Observable.from(UMODS_USERS_SERVICE_DATA.get(uModUUID)).
                 delay(700,TimeUnit.MILLISECONDS).
                 toList();
+    }
+
+    @Override
+    public Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+        return null;
     }
 }

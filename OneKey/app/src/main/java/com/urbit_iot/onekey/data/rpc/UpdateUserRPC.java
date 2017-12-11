@@ -2,13 +2,14 @@ package com.urbit_iot.onekey.data.rpc;
 
 import com.google.gson.annotations.SerializedName;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 /**
  * Created by andresteve07 on 8/11/17.
  */
 
 public class UpdateUserRPC extends RPC {
-    public static class Arguments extends RPC.Arguments{
+    public static class Arguments{
 
         @SerializedName("user_name")
         private String userID;
@@ -38,28 +39,50 @@ public class UpdateUserRPC extends RPC {
     }
 
     public static class Request extends RPC.Request{
+        @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
+        private UpdateUserRPC.Arguments methodArguments;
 
         public Request(Arguments args, String uModTag, int id) {
-            super("UpdateUser",args,uModTag,id);
+            super("UpdateUser",uModTag,id);
+            this.methodArguments = args;
         }
 
-        public Arguments getMethodArguments(){
-            return (Arguments) super.getMethodArguments();
+        public Arguments getMethodArguments() {
+            return methodArguments;
+        }
+
+        public void setMethodArguments(Arguments methodArguments) {
+            this.methodArguments = methodArguments;
         }
     }
 
-    public static class Result extends RPC.Result{
+    public static class Result{
         public Result(){}
     }
 
     public static class SuccessResponse extends RPC.SuccessResponse{
+        @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
+        private UpdateUserRPC.Result responseResult;
 
-        public SuccessResponse(Result result, String callTag) {
-            super(result, callTag);
+        public SuccessResponse(Result result, String callTag, ResponseError responseError) {
+            super(callTag, responseError);
+            this.responseResult = result;
         }
 
-        public Result getResponseResult(){
-            return (Result) super.getResponseResult();
+        public Result getResponseResult() {
+            return responseResult;
+        }
+
+        public void setResponseResult(Result responseResult) {
+            this.responseResult = responseResult;
+        }
+
+        @Override
+        public String toString() {
+            return "SuccessResponse{" +
+                    "callTag=" + this.getCallTag() + ", " +
+                    "responseResult=" + responseResult +
+                    '}';
         }
     }
 }

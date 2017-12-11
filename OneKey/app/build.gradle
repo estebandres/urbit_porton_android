@@ -96,8 +96,13 @@ dependencies {
     implementation "com.google.dagger:dagger:$rootProject.daggerVersion"
     //libphonenumber
     implementation "com.googlecode.libphonenumber:libphonenumber:$rootProject.libphonenumber"
-    //rx-preferences
+    //rx-preferences -> Forces RxJava2.x
     implementation "com.f2prateek.rx.preferences2:rx-preferences:$rootProject.rxPreferences"
+    //retrofit
+    implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofit"
+    implementation "com.burgstaller:okhttp-digest:$rootProject.okhttpDigest"
+    implementation "com.squareup.retrofit2:converter-gson:$rootProject.retrofitConverterGson"
+    implementation "com.squareup.retrofit2:adapter-rxjava:$rootProject.retrofitAdapterRxJava"
 
     // Dependencies for local unit tests
     testImplementation "junit:junit:$rootProject.ext.junitVersion"

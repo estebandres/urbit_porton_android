@@ -24,13 +24,13 @@ import rx.Observable;
 public class AppUserLocalFileDataSource implements AppUserDataSource {
 
     @NonNull
-    RxSharedPreferences rxSharedPreferences;
+    private RxSharedPreferences rxSharedPreferences;
     @NonNull
-    Gson gson;
+    private Gson gson;
 
     //Preference<Boolean> userRegistered;
-    Preference<String> serializedAppUserPref;
-    Preference<String> appUUIDPref;
+    private Preference<String> serializedAppUserPref;
+    private Preference<String> appUUIDPref;
 
     @Inject
     public AppUserLocalFileDataSource(@NonNull RxSharedPreferences rxSharedPreferences,

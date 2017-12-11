@@ -71,7 +71,7 @@ public class UModConfigPresenterTest {
         mUModConfigPresenter = givenEditTaskPresenter("1");
 
         // When the presenter is asked to save a task
-        mUModConfigPresenter.saveTask("New Task Title", "Some Task Description");
+        mUModConfigPresenter.saveUMod("New Task Title", "Some Task Description");
 
         // Then a task is saved in the repository and the view updated
         verify(mTasksRepository).saveTask(any(UMod.class)); // saved to the model
@@ -85,7 +85,7 @@ public class UModConfigPresenterTest {
         mUModConfigPresenter = givenEditTaskPresenter(null);
 
         // When the presenter is asked to save an empty task
-        mUModConfigPresenter.saveTask("", "");
+        mUModConfigPresenter.saveUMod("", "");
 
         // Then an empty not error is shown in the UI
         verify(mAddEditTaskView).showEmptyUModError();
@@ -97,7 +97,7 @@ public class UModConfigPresenterTest {
         mUModConfigPresenter = givenEditTaskPresenter("1");
 
         // When the presenter is asked to save an existing task
-        mUModConfigPresenter.saveTask("New Task Title", "Some Task Description");
+        mUModConfigPresenter.saveUMod("New Task Title", "Some Task Description");
 
         // Then a task is saved in the repository and the view updated
         verify(mTasksRepository).saveTask(any(UMod.class)); // saved to the model

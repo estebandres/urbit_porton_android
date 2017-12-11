@@ -25,9 +25,13 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.RPC;
+import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
+import com.urbit_iot.onekey.util.dagger.DigestAuth;
+import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -37,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import retrofit2.Retrofit;
 import rx.Observable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -51,6 +56,12 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @NonNull
     private UModsBLEScanner mUModsBLEScanner;
+
+    @NonNull
+    private UModsService uModsService;
+
+    @NonNull
+    private UrlHostSelectionInterceptor urlHostSelectionInterceptor;
 
     private static FakeUModsLANDataSource INSTANCE;
 
@@ -74,9 +85,13 @@ public class UModsLANDataSource implements UModsDataSource {
     }
     @Inject
     public UModsLANDataSource(@NonNull UModsDNSSDScanner uModsDNSSDScanner,
-                              @NonNull UModsBLEScanner uModsBLEScanner) {
+                              @NonNull UModsBLEScanner uModsBLEScanner,
+                              @NonNull @DigestAuth UModsService uModsService,
+                              @NonNull @DigestAuth UrlHostSelectionInterceptor urlHostSelectionInterceptor) {
         mUModsDNSSDScanner = checkNotNull(uModsDNSSDScanner,"uModsDNSSDScanner should not be null.");
         mUModsBLEScanner = checkNotNull(uModsBLEScanner, " uModsBLEScanner should not be null.");
+        this.uModsService = checkNotNull(uModsService, " uModsService should not be null.");
+        this.urlHostSelectionInterceptor = checkNotNull(urlHostSelectionInterceptor, " urlHostSelectionInterceptor should not be null.");
     }
 
     private static void addUMod(String uModUUID, String onLANIPAddress) {
@@ -191,14 +206,17 @@ public class UModsLANDataSource implements UModsDataSource {
         //        new GetMyUserLevelRPC.Arguments(), uMod.getUUID());
         GetMyUserLevelRPC.SuccessResponse response = new GetMyUserLevelRPC.SuccessResponse(
                 new GetMyUserLevelRPC.Result(UModUser.UModUserStatus.AUTHORIZED),
-                request.getCallTag());
+                request.getCallTag(),
+                new RPC.ResponseError(null,null));
 
         return Observable.just(response).delay(300, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
-        final TriggerRPC.SuccessResponse response = new TriggerRPC.SuccessResponse(new TriggerRPC.Result(),request.getCallTag());
+        final TriggerRPC.SuccessResponse response = new TriggerRPC.SuccessResponse(new TriggerRPC.Result(),
+                request.getCallTag(),
+                new RPC.ResponseError(null,null));
         if(response != null) {
             return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
         } else {
@@ -208,7 +226,9 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
-        UpdateUserRPC.SuccessResponse defaultResponse = new UpdateUserRPC.SuccessResponse(new UpdateUserRPC.Result(),"STEVE MOCK RESPONSE");
+        UpdateUserRPC.SuccessResponse defaultResponse = new UpdateUserRPC.SuccessResponse(new UpdateUserRPC.Result(),
+                "STEVE MOCK RESPONSE",
+                new RPC.ResponseError(null,null));
         return Observable.just(defaultResponse).delay(850,TimeUnit.MILLISECONDS);
     }
 
@@ -222,5 +242,11 @@ public class UModsLANDataSource implements UModsDataSource {
         return Observable.from(UMODS_USERS_SERVICE_DATA.get(uModUUID)).
                 delay(700,TimeUnit.MILLISECONDS).
                 toList();
+    }
+
+    @Override
+    public Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+        this.urlHostSelectionInterceptor.setHost(uMod.getLANIPAddress());
+        return uModsService.getSystemInfo(request);
     }
 }

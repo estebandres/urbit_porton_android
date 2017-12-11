@@ -46,7 +46,7 @@ public class UModsDNSSDScanner {
                         .doOnNext(new Action1<BonjourService>() {
                             @Override
                             public void call(BonjourService bonjourService) {
-                                Log.d("dns-sd_sca",bonjourService.toString());
+                                Log.d("dns-sd_sca",bonjourService.getHostname() + " - " + bonjourService.getInet4Address().getHostAddress());
                             }
                         })
                         //.timeout(5, TimeUnit.SECONDS)
@@ -60,7 +60,7 @@ public class UModsDNSSDScanner {
                         .map(new Func1<BonjourService,UMod>(){
                             public UMod call(BonjourService discovery){
                                 return new UMod(discovery.getHostname(),
-                                        discovery.getInet4Address().toString(),
+                                        discovery.getInet4Address().getHostAddress(),
                                         true);
                             }
                         });

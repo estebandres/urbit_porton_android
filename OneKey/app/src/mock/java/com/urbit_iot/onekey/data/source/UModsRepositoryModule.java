@@ -8,9 +8,12 @@ import com.polidea.rxandroidble.RxBleClient;
 import com.urbit_iot.onekey.data.source.lan.UModsBLEScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsDNSSDScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsLANDataSource;
+import com.urbit_iot.onekey.data.source.lan.UModsService;
 import com.urbit_iot.onekey.data.source.local.UModsLocalDBDataSource;
+import com.urbit_iot.onekey.util.dagger.DigestAuth;
 import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.Remote;
+import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Singleton;
@@ -50,7 +53,9 @@ public class UModsRepositoryModule {
     @Provides
     @Remote
     UModsDataSource provideUModsRemoteDataSource(UModsDNSSDScanner uModsDNSSDScanner,
-                                                 UModsBLEScanner uModsBLEScanner) {
-        return new UModsLANDataSource(uModsDNSSDScanner, uModsBLEScanner);
+                                                 UModsBLEScanner uModsBLEScanner,
+                                                 @DigestAuth UModsService uModsService,
+                                                 @DigestAuth UrlHostSelectionInterceptor urlHostSelectionInterceptor) {
+        return new UModsLANDataSource(uModsDNSSDScanner, uModsBLEScanner, uModsService, urlHostSelectionInterceptor);
     }
 }

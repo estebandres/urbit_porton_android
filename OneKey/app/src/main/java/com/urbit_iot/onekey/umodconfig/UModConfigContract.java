@@ -40,11 +40,13 @@ public interface UModConfigContract {
     }
 
     interface Presenter extends BasePresenter {
-
-        void saveTask(String title, String description);
+        //TODO save umod config: is it possible to separate umod from umod config??
+        void saveUMod(String title, String description);//saveUModConfig
 
         void populateUMod();
 
         void adminUModUsers();
+
+        void getUModSystemInfo(String uModUUID);
     }
 }

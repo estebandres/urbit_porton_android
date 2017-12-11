@@ -8,21 +8,16 @@ import com.google.gson.annotations.SerializedName;
 
 public class RPC {
 
-    public static abstract class Arguments{}
-
     public static class Request {
         @SerializedName("method")
         private String methodName;
-        @SerializedName("args")
-        private Arguments methodArguments;
         @SerializedName("tag")
         private String callTag;
         @SerializedName("id")
         private int callID;
 
-        public Request(String methodName, Arguments methodArguments, String callTag, int callID) {
+        public Request(String methodName, String callTag, int callID) {
             this.methodName = methodName;
-            this.methodArguments = methodArguments;
             this.callTag = callTag;
             this.callID = callID;
         }
@@ -33,14 +28,6 @@ public class RPC {
 
         public void setMethodName(String methodName) {
             this.methodName = methodName;
-        }
-
-        public Arguments getMethodArguments() {
-            return methodArguments;
-        }
-
-        public void setMethodArguments(Arguments methodArguments) {
-            this.methodArguments = methodArguments;
         }
 
         public String getCallTag() {
@@ -60,25 +47,20 @@ public class RPC {
         }
     }
 
-    public static abstract class Result{}
+    public static class Result{}
 
     public static class SuccessResponse {
-        @SerializedName("result")
-        private Result responseResult;
+
         @SerializedName("tag")
         private String callTag;
 
-        public SuccessResponse(Result responseResult, String callTag) {
-            this.responseResult = responseResult;
+        //TODO the ESP returns always a successful response even when an error occurs.
+        @SerializedName("error")
+        private ResponseError responseError;
+
+        public SuccessResponse(String callTag, ResponseError responseError) {
             this.callTag = callTag;
-        }
-
-        public Result getResponseResult() {
-            return responseResult;
-        }
-
-        public void setResponseResult(Result responseResult) {
-            this.responseResult = responseResult;
+            this.responseError = responseError;
         }
 
         public String getCallTag() {
@@ -88,15 +70,31 @@ public class RPC {
         public void setCallTag(String callTag) {
             this.callTag = callTag;
         }
+
+        public ResponseError getResponseError() {
+            return responseError;
+        }
+
+        public void setResponseError(ResponseError responseError) {
+            this.responseError = responseError;
+        }
+
+        @Override
+        public String toString() {
+            return "SuccessResponse{" +
+                    "callTag='" + callTag + '\'' +
+                    ", responseError=" + responseError +
+                    '}';
+        }
     }
 
-    public static class FailureResponse {
+    public static class ResponseError {
         @SerializedName("code")
-        private int errorCode;
-        @SerializedName("tag")
+        private Integer errorCode;
+        @SerializedName("message")
         private String errorMessage;
 
-        public FailureResponse(int errorCode, String errorMessage) {
+        public ResponseError(Integer errorCode, String errorMessage) {
             this.errorCode = errorCode;
             this.errorMessage = errorMessage;
         }
@@ -115,6 +113,14 @@ public class RPC {
 
         public void setErrorMessage(String errorMessage) {
             this.errorMessage = errorMessage;
+        }
+
+        @Override
+        public String toString() {
+            return "ResponseError{" +
+                    "errorCode=" + errorCode +
+                    ", errorMessage='" + errorMessage + '\'' +
+                    '}';
         }
     }
 }

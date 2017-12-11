@@ -18,14 +18,20 @@ package com.urbit_iot.onekey.umodconfig;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.google.common.base.Strings;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUMod;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModSystemInfo;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.SaveUMod;
 import com.urbit_iot.onekey.data.UMod;
 
+import java.io.IOException;
+
 import javax.inject.Inject;
 
+
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Subscriber;
 
 /**
@@ -41,6 +47,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
     private final SaveUMod mSaveUMod;
 
+    private final GetUModSystemInfo getUModSystemInfo;
+
     @Nullable
     private UMod uModToConfig;
 
@@ -54,11 +62,14 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     @Inject
     public UModConfigPresenter(@Nullable String umodUUID,
                                @NonNull UModConfigContract.View addTaskView,
-                               @NonNull GetUMod getUMod, @NonNull SaveUMod saveUMod) {
+                               @NonNull GetUMod getUMod,
+                               @NonNull SaveUMod saveUMod,
+                               @NonNull GetUModSystemInfo getUModSystemInfo) {
         mUModUUID = umodUUID;
         mAddTaskView = addTaskView;
         mGetUMod = getUMod;
         mSaveUMod = saveUMod;
+        this.getUModSystemInfo = getUModSystemInfo;
     }
 
     /**
@@ -81,10 +92,11 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     public void unsubscribe() {
         mGetUMod.unsubscribe();
         mSaveUMod.unsubscribe();
+        this.getUModSystemInfo.unsubscribe();
     }
 
     @Override
-    public void saveTask(String title, String description) {
+    public void saveUMod(String title, String description) {
         if (isNewTask()) {
             createTask(title, description);
         } else {
@@ -192,5 +204,41 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                 mAddTaskView.showUModsList();
             }
         });
+    }
+
+    @Override
+    public void getUModSystemInfo(String uModUUID) {
+
+        this.getUModSystemInfo.execute(new GetUModSystemInfo.RequestValues(uModUUID), new Subscriber<GetUModSystemInfo.ResponseValues>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d("config_pr", "RESPUESTA: " + e.getMessage() + " TIPO : " + e.getClass());
+                if(e instanceof HttpException){
+                    if(((HttpException) e).response().errorBody() != null){
+                        try {
+                            Log.e("config_pr", ((HttpException) e).response().errorBody().string());
+                        } catch (IOException e1) {
+                            e1.printStackTrace();
+                        }
+                        Log.e("config_pr", " " + ((HttpException) e).response().code());
+                        Log.e("config_pr", " " + ((HttpException) e).response().message());
+                        Log.e("config_pr", " " + ((HttpException) e).response().toString());
+                        //((HttpException) e).response().toString();
+                    }
+                }
+                showEmptyTaskError();
+            }
+
+            @Override
+            public void onNext(GetUModSystemInfo.ResponseValues responseValues) {
+                Log.d("config_pr", "RESPUESTA: \n" + responseValues.getRPCResponse());
+            }
+        });
+
     }
 }

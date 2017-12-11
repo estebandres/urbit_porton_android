@@ -79,7 +79,8 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPresenter.saveTask(mTitle.getText().toString(), mDescription.getText().toString());
+                //mPresenter.saveUMod(mTitle.getText().toString(), mDescription.getText().toString());
+                mPresenter.getUModSystemInfo(mTitle.getText().toString());
             }
         });
 

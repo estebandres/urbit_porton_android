@@ -22,6 +22,7 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 
@@ -78,4 +79,7 @@ public interface UModsDataSource {
     //Observable<DeleteUserRPC.Response> deleteUModUser(@NonNull UModUser uModUser);
 
     Observable<List<UModUser>> getUModUsers(@NonNull String uModUUID);
+
+    Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod,
+                                                            @NonNull SysGetInfoRPC.Request request);
 }

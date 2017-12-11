@@ -21,6 +21,7 @@ import android.support.annotation.NonNull;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
@@ -167,6 +168,11 @@ public class UModsRemoteDataSource implements UModsDataSource {
 
     @Override
     public Observable<List<UModUser>> getUModUsers(@NonNull String uModUUID) {
+        return null;
+    }
+
+    @Override
+    public Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
         return null;
     }
 }
