@@ -3,6 +3,7 @@ package com.urbit_iot.onekey;
 import android.app.Application;
 
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepositoryComponent;
+import com.urbit_iot.onekey.data.source.UModsRepositoryModule;
 import com.urbit_iot.onekey.umodconfig.UModConfigComponent;
 import com.urbit_iot.onekey.data.source.UModsRepositoryComponent;
 import com.urbit_iot.onekey.statistics.StatisticsComponent;
@@ -48,11 +49,7 @@ public class OneKeyApplication extends Application {
         this.applicationModule = new ApplicationModule((getApplicationContext()));
 
         mSchedulerProviderComponent = DaggerSchedulerProviderComponent.builder()
-                .schedulerProviderModule(new SchedulerProviderModule()).build();
-
-        mUModsRepositoryComponent = DaggerUModsRepositoryComponent.builder()
-                .applicationModule(applicationModule)
-                .schedulerProviderComponent(mSchedulerProviderComponent)
+                .schedulerProviderModule(new SchedulerProviderModule())
                 .build();
 
         mAppUserRepositoryComponent = DaggerAppUserRepositoryComponent.builder()
@@ -62,15 +59,26 @@ public class OneKeyApplication extends Application {
 
     }
 
-    public UModsRepositoryComponent getUModsRepositoryComponent() {
-        return mUModsRepositoryComponent;
+    public UModsRepositoryComponent createUModsRepositoryComponentSingleton(String appUserPhoneNumber, String appUUIDHash) {
+        if (this.mUModsRepositoryComponent == null){
+            this.mUModsRepositoryComponent = DaggerUModsRepositoryComponent.builder()
+                    .applicationModule(applicationModule)
+                    .schedulerProviderComponent(mSchedulerProviderComponent)
+                    .uModsRepositoryModule(new UModsRepositoryModule(appUserPhoneNumber, appUUIDHash))
+                    .build();
+        }
+        return this.mUModsRepositoryComponent;
     }
 
-    public SchedulerProviderComponent getSchedulerProviderComponent() {
+    public UModsRepositoryComponent getUModsRepositoryComponentSingleton() {
+        return this.mUModsRepositoryComponent;
+    }
+
+    public SchedulerProviderComponent getSchedulerProviderComponentSingleton() {
         return mSchedulerProviderComponent;
     }
 
-    public AppUserRepositoryComponent getAppUserRepositoryComponent(){
+    public AppUserRepositoryComponent getAppUserRepositoryComponentSingleton(){
         return mAppUserRepositoryComponent;
     }
 

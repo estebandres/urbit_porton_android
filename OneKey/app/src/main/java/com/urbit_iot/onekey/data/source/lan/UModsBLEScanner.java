@@ -30,6 +30,7 @@ public class UModsBLEScanner {
         this.mRxBleClient = mRxBleClient;
     }
 
+    //Scans for BLE devices for 4 seconds.
     public Observable<UMod> bleScanForUMods(){
         return Observable.defer(new Func0<Observable<UMod>>() {
             @Override
@@ -41,7 +42,7 @@ public class UModsBLEScanner {
                                 .build(),
                         new ScanFilter.Builder()
                                 .build())
-                        .take(10)
+                        .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
                         .distinct()
                         .doOnError(new Action1<Throwable>() {
                             @Override
@@ -55,8 +56,6 @@ public class UModsBLEScanner {
                                 Log.d("ble_scan",scanResult.toString());
                             }
                         })
-                        //.timeout(5, TimeUnit.SECONDS)//used to stop the stream
-                        //.onErrorResumeNext(Observable.<ScanResult>empty())
                         .filter(new Func1<ScanResult, Boolean>() {
                             @Override
                             public Boolean call(ScanResult scanResult) {

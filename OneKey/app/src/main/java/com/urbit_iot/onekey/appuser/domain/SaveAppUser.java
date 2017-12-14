@@ -49,17 +49,7 @@ public class SaveAppUser extends SimpleUseCase<SaveAppUser.RequestValues, SaveAp
 
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
-        return appUserRepository.getAppUUID()
-                .flatMap(new Func1<String, Observable<AppUser>>() {
-                    @Override
-                    public Observable<AppUser> call(String appUUID) {
-                        //TODO when I log the value of appUUID the function works :(
-                        //Log.e("saveAU_UC", appUUID);
-                        AppUserViewModel appUserViewModel = values.getAppUserViewModel();
-                        AppUser appUser = new AppUser(appUserViewModel.getPhoneNumber(), appUUID);
-                        return appUserRepository.saveAppUser(appUser);
-                    }
-                })
+        return appUserRepository.createAppUser(values.getAppUserViewModel().getPhoneNumber())
                 .map(new Func1<AppUser, ResponseValues>() {
                     @Override
                     public ResponseValues call(AppUser appUser) {

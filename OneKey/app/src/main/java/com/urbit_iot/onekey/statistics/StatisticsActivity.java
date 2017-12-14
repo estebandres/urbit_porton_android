@@ -78,8 +78,8 @@ public class StatisticsActivity extends AppCompatActivity {
         OneKeyApplication oneKeyApplication = (OneKeyApplication) getApplication();
         DaggerStatisticsComponent.builder()
                 .statisticsPresenterModule(new StatisticsPresenterModule(statisticsFragment))
-                .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponent())
-                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponent())
+                .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponentSingleton())
+                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .build().inject(this);
     }
 

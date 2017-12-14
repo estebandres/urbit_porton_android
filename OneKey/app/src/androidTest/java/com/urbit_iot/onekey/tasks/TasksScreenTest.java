@@ -90,7 +90,7 @@ public class TasksScreenTest {
                     super.beforeActivityLaunched();
                     // Doing this in @Before generates a race condition.
                     ((OneKeyApplication) InstrumentationRegistry.getTargetContext()
-                            .getApplicationContext()).getUModsRepositoryComponent()
+                            .getApplicationContext()).getUModsRepositoryComponentSingleton()
                             .getUModsRepository().deleteAllTasks();
                 }
             };

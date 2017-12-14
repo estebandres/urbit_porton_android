@@ -3,7 +3,9 @@ package com.urbit_iot.onekey.appuser.data.source;
 import android.content.Context;
 
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.urbit_iot.onekey.appuser.data.source.localfile.AppUserLocalFileDataSource;
 import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.dagger.Local;
@@ -20,6 +22,14 @@ import dagger.Provides;
  */
 @Module
 public class AppUserRepositoryModule {
+
+    @Provides
+    @Singleton
+    Gson provideGsonInstance(){
+        return  new GsonBuilder()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create();
+    }
 
     @Singleton
     @Provides

@@ -98,7 +98,7 @@ public class TaskDetailScreenTest {
     private void startActivityWithWithStubbedTask(UMod task) {
         // Add a task stub to the fake service api layer.
         ((OneKeyApplication) InstrumentationRegistry.getTargetContext()
-                .getApplicationContext()).getUModsRepositoryComponent()
+                .getApplicationContext()).getUModsRepositoryComponentSingleton()
                 .getUModsRepository()
                 .saveTask(task);
 

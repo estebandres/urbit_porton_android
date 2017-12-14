@@ -21,7 +21,7 @@ import dagger.Component;
  * OneKeyApplication}.
  */
 @Singleton
-@Component(dependencies = SchedulerProviderComponent.class,
+@Component(dependencies = {SchedulerProviderComponent.class},
         modules = {AppUserRepositoryModule.class, ApplicationModule.class})
 public interface AppUserRepositoryComponent {
 

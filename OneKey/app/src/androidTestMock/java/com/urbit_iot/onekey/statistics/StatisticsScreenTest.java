@@ -70,7 +70,7 @@ public class StatisticsScreenTest {
     public void intentWithStubbedTaskId() {
         // Given some tasks
         UModsRepository repository = ((OneKeyApplication) InstrumentationRegistry.getTargetContext()
-                .getApplicationContext()).getUModsRepositoryComponent()
+                .getApplicationContext()).getUModsRepositoryComponentSingleton()
                 .getUModsRepository();
         repository.deleteAllUMods();
         repository.saveUMod(new UMod("Title1", "", false));

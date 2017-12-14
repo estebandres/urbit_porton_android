@@ -30,6 +30,8 @@ import java.util.Date;
  */
 public final class UMod {
 
+    private final long OUTDATED_THRESHOLD = 86400000L;
+
     public enum UModState{
         AP_MODE(0),
         IDLE(1),
@@ -101,7 +103,7 @@ public final class UMod {
     private boolean isOpen;//It could be determined by the umodule state. Can an umodule respond to a request while updating??
 
     //private boolean admitsRinging;
-
+    //TODO change to LocalDate when java8 is supported
     @NonNull
     private Date lastUpdateDate;
 
@@ -181,6 +183,14 @@ public final class UMod {
         this.mSWVersion = mSWVersion;
         this.isOpen = isOpen;
         this.lastUpdateDate = new Date();
+    }
+
+    /**
+     * Evaluates if the lastUpdateDate is older than a Day
+     * @return true if older then a Day (24hs)
+     */
+    public boolean isOldRegister(){
+        return Math.abs((new Date()).getTime() - this.lastUpdateDate.getTime()) >= OUTDATED_THRESHOLD;
     }
 
     @NonNull

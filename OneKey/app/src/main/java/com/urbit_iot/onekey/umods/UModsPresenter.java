@@ -312,7 +312,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     }
 
     @Override
-    public void openCloseUMod(UMod uMod) {
+    public void triggerUMod(UMod uMod) {
 
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.

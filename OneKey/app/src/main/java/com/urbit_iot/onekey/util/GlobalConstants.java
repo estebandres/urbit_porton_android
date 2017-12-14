@@ -7,6 +7,8 @@ package com.urbit_iot.onekey.util;
 public final class GlobalConstants {
     public static final String SP_SERIALIZED_APPUSER_KEY = "serialized_app_user";
     public static final String SP_APP_UUID_KEY = "app_uuid";
+    public static final String SP_APP_UUID_HASH_KEY = "app_uuid_hash";
+
 
     public static final String LAN_DEFAULT_URL = "http://urbit.local/rpc/";
 

@@ -11,7 +11,7 @@ import com.urbit_iot.onekey.appuser.AppUserContract;
 public interface AppUserContract {
     interface View extends BaseView<AppUserContract.Presenter> {
 
-        void showUModsList();
+        void showUModsList(String userPhoneNumber, String appUUIDHash);
 
         void setAppUserFirstName(String firstName);
 

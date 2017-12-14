@@ -5,6 +5,10 @@ import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 /**
  * Created by andresteve07 on 8/11/17.
  */
@@ -17,6 +21,10 @@ public class AppUser {
     @NonNull
     @SerializedName("app_uuid")
     private final String appUUID;
+
+    @Nullable
+    @SerializedName("appuid_hash")
+    private String appUUIDHash;
 
     @Nullable
     @SerializedName("user_alias")
@@ -39,9 +47,19 @@ public class AppUser {
     private String actionPassword;
     //TODO what if I want to use my lock screen as actionPassword?
 
-    public AppUser(@NonNull String phoneNumber, @NonNull String appUUID) {
+    public AppUser(@NonNull String phoneNumber, @NonNull String appUUID, @NonNull String appUUIDHash) {
         this.phoneNumber = phoneNumber;
         this.appUUID = appUUID;
+        this.appUUIDHash = appUUIDHash;
+    }
+
+    @Nullable
+    public String getAppUUIDHash(){
+        return this.appUUIDHash;
+    }
+
+    public void setAppUUIDHash(@Nullable String appUUIDHash) {
+        this.appUUIDHash = appUUIDHash;
     }
 
     @NonNull

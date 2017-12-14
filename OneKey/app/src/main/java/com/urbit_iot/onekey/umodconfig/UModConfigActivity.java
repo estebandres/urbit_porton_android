@@ -79,8 +79,8 @@ public class UModConfigActivity extends AppCompatActivity {
         // Create the presenter
         DaggerUModConfigComponent.builder()
                 .uModConfigPresenterModule(new UModConfigPresenterModule(uModConfigFragment, taskId))
-                .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponent())
-                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponent())
+                .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponentSingleton())
+                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .build()
                 .inject(this);
     }

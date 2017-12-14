@@ -1,6 +1,9 @@
 package com.urbit_iot.onekey.umods;
 
 import com.urbit_iot.onekey.OneKeyApplication;
+import com.urbit_iot.onekey.appuser.AppUserComponent;
+import com.urbit_iot.onekey.appuser.data.source.AppUserRepositoryComponent;
+import com.urbit_iot.onekey.appuser.domain.AppUser;
 import com.urbit_iot.onekey.data.source.UModsRepositoryComponent;
 import com.urbit_iot.onekey.util.dagger.FragmentScoped;
 import com.urbit_iot.onekey.util.schedulers.SchedulerProviderComponent;

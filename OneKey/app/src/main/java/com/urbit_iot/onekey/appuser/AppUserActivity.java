@@ -7,8 +7,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
-import com.github.druk.rxdnssd.RxDnssd;
-import com.github.druk.rxdnssd.RxDnssdBindable;
 import com.urbit_iot.onekey.OneKeyApplication;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.util.ActivityUtils;
@@ -53,8 +51,8 @@ public class AppUserActivity extends AppCompatActivity {
         //Create Presenter and solve dependencies
         DaggerAppUserComponent.builder()
                 .appUserPresenterModule(new AppUserPresenterModule(appUserFragment))
-                .appUserRepositoryComponent(oneKeyApplication.getAppUserRepositoryComponent())
-                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponent())
+                .appUserRepositoryComponent(oneKeyApplication.getAppUserRepositoryComponentSingleton())
+                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .build()
                 .inject(this);
     }

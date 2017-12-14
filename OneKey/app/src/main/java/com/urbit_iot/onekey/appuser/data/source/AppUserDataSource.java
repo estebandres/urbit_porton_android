@@ -9,7 +9,12 @@ import rx.Observable;
  */
 
 public interface AppUserDataSource {
-    Observable<AppUser> saveAppUser(AppUser appUser);
-    Observable<AppUser> getAppUser();
-    Observable<String> getAppUUID();
+    Observable<AppUser> createAppUser(AppUser AppUser);//POST
+    Observable<AppUser> createAppUser(String appUserPhoneNumber);//POST
+    //Observable<AppUser> updateAppUser(AppUser appUser);//PUT
+    Observable<AppUser> partiallyUpdateAppUser(AppUser appUser);//PATCH
+    //Observable<AppUser> saveAppUser(AppUser appUser);
+    Observable<AppUser> getAppUser();//GET /users/MY-USER-ID
+    //Observable<String> getAppUUID();
+    //Observable<String> getAppUUIDHash();
 }

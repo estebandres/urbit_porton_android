@@ -18,6 +18,7 @@ package com.urbit_iot.onekey.data.source.lan;
 
 import android.support.annotation.NonNull;
 
+import com.burgstaller.okhttp.digest.Credentials;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.urbit_iot.onekey.data.FakeUModsLANDataSource;
@@ -40,8 +41,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import retrofit2.Retrofit;
 import rx.Observable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -58,10 +59,16 @@ public class UModsLANDataSource implements UModsDataSource {
     private UModsBLEScanner mUModsBLEScanner;
 
     @NonNull
-    private UModsService uModsService;
+    private UModsService defaultUModsService;
+
+    @NonNull
+    private UModsService appUserUModsService;
 
     @NonNull
     private UrlHostSelectionInterceptor urlHostSelectionInterceptor;
+
+    @NonNull
+    private Credentials digestAuthCredentials;
 
     private static FakeUModsLANDataSource INSTANCE;
 
@@ -86,12 +93,15 @@ public class UModsLANDataSource implements UModsDataSource {
     @Inject
     public UModsLANDataSource(@NonNull UModsDNSSDScanner uModsDNSSDScanner,
                               @NonNull UModsBLEScanner uModsBLEScanner,
-                              @NonNull @DigestAuth UModsService uModsService,
-                              @NonNull @DigestAuth UrlHostSelectionInterceptor urlHostSelectionInterceptor) {
+                              @NonNull UrlHostSelectionInterceptor urlHostSelectionInterceptor,
+                              @NonNull @Named("default") UModsService defaultUModsService,
+                              @NonNull @Named("app_user") UModsService AppUserUModsService){ //@NonNull @DigestAuth Credentials digestAuthCredentials) {
         mUModsDNSSDScanner = checkNotNull(uModsDNSSDScanner,"uModsDNSSDScanner should not be null.");
         mUModsBLEScanner = checkNotNull(uModsBLEScanner, " uModsBLEScanner should not be null.");
-        this.uModsService = checkNotNull(uModsService, " uModsService should not be null.");
+        this.defaultUModsService = checkNotNull(defaultUModsService, " defaultUModsService should not be null.");
+        this.appUserUModsService = checkNotNull(AppUserUModsService, " AppUserUModsService should not be null.");
         this.urlHostSelectionInterceptor = checkNotNull(urlHostSelectionInterceptor, " urlHostSelectionInterceptor should not be null.");
+        //this.digestAuthCredentials = checkNotNull(digestAuthCredentials, " digestAuthCredentials should not be null.");
     }
 
     private static void addUMod(String uModUUID, String onLANIPAddress) {
@@ -134,12 +144,7 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<UMod> getUMod(@NonNull String uModUUID) {
-        final UMod uMod = UMODS_SERVICE_DATA.get(uModUUID);
-        if(uMod != null) {
-            return Observable.just(uMod).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
-        } else {
-            return Observable.empty();
-        }
+        return mUModsDNSSDScanner.browseLANForUMod(uModUUID);
     }
 
     @Override
@@ -247,6 +252,6 @@ public class UModsLANDataSource implements UModsDataSource {
     @Override
     public Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
         this.urlHostSelectionInterceptor.setHost(uMod.getLANIPAddress());
-        return uModsService.getSystemInfo(request);
+        return defaultUModsService.getSystemInfo(request);
     }
 }

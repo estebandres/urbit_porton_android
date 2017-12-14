@@ -19,18 +19,24 @@ public class AppUserRepository implements AppUserDataSource {
     public AppUserRepository(@Local AppUserDataSource fileDataSource){
         mFileDataSource = fileDataSource;
     }
+
     @Override
-    public Observable<AppUser> saveAppUser(AppUser appUser) {
-        return mFileDataSource.saveAppUser(appUser);
+    public Observable<AppUser> createAppUser(AppUser appUser) {
+        return mFileDataSource.createAppUser(appUser);
+    }
+
+    @Override
+    public Observable<AppUser> createAppUser(String appUserPhoneNumber) {
+        return mFileDataSource.createAppUser(appUserPhoneNumber);
+    }
+
+    @Override
+    public Observable<AppUser> partiallyUpdateAppUser(AppUser appUser) {
+        return mFileDataSource.partiallyUpdateAppUser(appUser);
     }
 
     @Override
     public Observable<AppUser> getAppUser() {
         return mFileDataSource.getAppUser();
-    }
-
-    @Override
-    public Observable<String> getAppUUID() {
-        return mFileDataSource.getAppUUID();
     }
 }

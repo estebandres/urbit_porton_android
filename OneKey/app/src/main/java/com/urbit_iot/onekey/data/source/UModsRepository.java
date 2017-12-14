@@ -35,7 +35,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -316,40 +315,48 @@ public class UModsRepository implements UModsDataSource {
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
         checkNotNull(uModUUID);
 
-        final UMod cachedUMod = getUModWithUUID(uModUUID);
+        //final UMod cachedUMod = getUModWithUUID(uModUUID);
+        UMod cachedUMod;
 
         // Respond immediately with cache if available
-        if (cachedUMod != null) {
-            return Observable.just(cachedUMod);
+        if (!mCacheIsDirty && mCachedUMods!=null &&
+                !mCachedUMods.isEmpty() && mCachedUMods.containsKey(uModUUID)){
+            cachedUMod = mCachedUMods.get(uModUUID);
+            if (cachedUMod != null){//&& !cachedUMod.isOldRegister()
+                return Observable.just(cachedUMod);
+            }
         }
 
-        // Load from server/persisted if needed.
+        final Observable<UMod> localDBUModObs = mUModsLocalDataSource.getUMod(uModUUID);
+        Observable<UMod> lanUModObs = mUModsLANDataSource.getUMod(uModUUID);
 
-        // Do in memory cache update to keep the app UI up to date
-        if (mCachedUMods == null) {
-            mCachedUMods = new LinkedHashMap<>();
-        }
-
-        // Is the task in the local data source? If not, query the network.
-        Observable<UMod> localUMod = getTaskWithIdFromLocalRepository(uModUUID);
-        Observable<UMod> remoteUMod = mUModsLANDataSource
-                .getUMod(uModUUID)
-                .doOnNext(new Action1<UMod>() {
+        // If lanUmodsDataSource produces a result
+        return lanUModObs
+                .filter(new Func1<UMod, Boolean>() {
                     @Override
-                    public void call(UMod uMod) {
-                        mUModsLocalDataSource.saveUMod(uMod);
-                        mCachedUMods.put(uMod.getUUID(), uMod);
+                    public Boolean call(UMod uMod) {
+                        return uMod != null;
                     }
-                });
-
-        return Observable.concat(localUMod, remoteUMod).first()
-                .map(new Func1<UMod, UMod>() {
+                })
+                .last()
+                .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
-                    public UMod call(UMod uMod) {
-                        if (uMod == null) {
-                            throw new NoSuchElementException("No task found with taskId " + uModUUID);
-                        }
-                        return uMod;
+                    public Observable<UMod> call(final UMod lanUMod) {
+                        return localDBUModObs
+                                .flatMap(new Func1<UMod, Observable<UMod>>() {
+                                    @Override
+                                    public Observable<UMod> call(UMod dbUMod) {
+                                        // Given the nature of the DB data source it explicitly returns a result or a default null.
+                                        if(dbUMod == null){
+                                            return Observable.just(lanUMod);
+                                        } else {
+                                            dbUMod.setmLANIPAddress(lanUMod.getLANIPAddress());
+                                            dbUMod.setuModState(lanUMod.getuModState());
+                                            return Observable.just(dbUMod);
+                                        }
+                                    }
+                                })
+                                .onErrorResumeNext(Observable.just(lanUMod));
                     }
                 });
     }

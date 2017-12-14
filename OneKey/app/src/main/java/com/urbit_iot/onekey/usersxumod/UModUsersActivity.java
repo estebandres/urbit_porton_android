@@ -58,8 +58,8 @@ public class UModUsersActivity extends AppCompatActivity {
         OneKeyApplication oneKeyApplication = (OneKeyApplication) getApplication();
         // Create the presenter
         DaggerUModUsersComponent.builder()
-                .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponent())
-                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponent())
+                .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponentSingleton())
+                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .uModUsersPresenterModule(new UModUsersPresenterModule(umodUsersFragment)).build()
                 .inject(this);
 
