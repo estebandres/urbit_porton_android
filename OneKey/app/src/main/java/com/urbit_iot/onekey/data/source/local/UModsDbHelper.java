@@ -35,22 +35,20 @@ public class UModsDbHelper extends SQLiteOpenHelper {
 
     private static final String COMMA_SEP = ",";
 //UUID should be the primary key isn't it?
+    //UModsPersistenceContract.UModEntry._ID + TEXT_TYPE + " PRIMARY KEY," +
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + UModsPersistenceContract.UModEntry.TABLE_NAME + " (" +
-                    UModsPersistenceContract.UModEntry._ID + TEXT_TYPE + " PRIMARY KEY," +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_UUID + TEXT_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_ALIAS + TEXT_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_AP_MODE + BOOLEAN_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_LAN_IP_ADDRESS + TEXT_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_UMOD_STATE + INTEGER_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_UMOD_STATUS + TEXT_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_APP_USER_STATUS + INTEGER_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_IS_OPEN + BOOLEAN_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_NOTIF_EN + BOOLEAN_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_HW_VERSION + TEXT_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_SW_VERSION + TEXT_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_PROD_UUID + TEXT_TYPE + COMMA_SEP +
-                    UModsPersistenceContract.UModEntry.COLUMN_NAME_LAST_UPDATE_DATE + DATE_TYPE +
+                    UModsPersistenceContract.UModEntry.UUID_CN + TEXT_TYPE + " PRIMARY KEY," +
+                    UModsPersistenceContract.UModEntry.ALIAS_CN + TEXT_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.CONNECTION_ADDRESS_CN + TEXT_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.UMOD_STATE_CN + INTEGER_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.LAST_REPORT_CN + TEXT_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.APP_USER_STATUS_CN + INTEGER_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.NOTIF_ENABLED_CN + BOOLEAN_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.HW_VERSION_CN + TEXT_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.SW_VERSION_CN + TEXT_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.PROD_UUID_CN + TEXT_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.LAST_UPDATE_DATE_CN + DATE_TYPE +
             " )";
 
     public UModsDbHelper(Context context) {

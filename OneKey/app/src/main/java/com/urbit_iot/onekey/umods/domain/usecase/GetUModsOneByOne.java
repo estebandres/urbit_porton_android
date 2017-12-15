@@ -59,15 +59,15 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
                     public Observable<UMod> call(UMod uMod) {
-                        if(uMod.getAppUserStatus() == UModUser.UModUserStatus.PENDING && ! uMod.isInAPMode()){
+                        if(uMod.getAppUserLevel() == UModUser.Level.PENDING && !uMod.isInAPMode()){
                             Log.d("GetUM1x1", "PENDING detected");
                             setStreamUMod(uMod);
                             GetMyUserLevelRPC.Request request = new GetMyUserLevelRPC.Request(new GetMyUserLevelRPC.Arguments(),uMod.getUUID());
                             return mUModsRepository.getUserLevel(uMod,request)
-                                    .flatMap(new Func1<GetMyUserLevelRPC.SuccessResponse, Observable<UMod>>() {
+                                    .flatMap(new Func1<GetMyUserLevelRPC.Response, Observable<UMod>>() {
                                         @Override
-                                        public Observable<UMod> call(GetMyUserLevelRPC.SuccessResponse successResponse) {
-                                            getStreamUMod().setAppUserStatus(successResponse.getResponseResult().getLevel());
+                                        public Observable<UMod> call(GetMyUserLevelRPC.Response successResponse) {
+                                            getStreamUMod().setAppUserLevel(successResponse.getResponseResult().getLevel());
                                             return Observable.just(getStreamUMod());
                                         }
                                     });
@@ -81,9 +81,9 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                     public Boolean call(UMod uMod) {
                         switch (values.getCurrentFiltering()) {
                             case NOTIF_EN_UMODS:
-                                return uMod.isNotificationEnabled();
+                                return uMod.isOngoingNotificationEnabled();
                             case NOTIF_DIS_UMODS:
-                                return !uMod.isNotificationEnabled();
+                                return !uMod.isOngoingNotificationEnabled();
                             case ALL_UMODS:
                             default:
                                 return true;

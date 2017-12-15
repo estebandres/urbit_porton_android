@@ -17,13 +17,14 @@
 package com.urbit_iot.onekey.data.source.lan;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
-import com.burgstaller.okhttp.digest.Credentials;
+import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.urbit_iot.onekey.data.FakeUModsLANDataSource;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.RPC;
@@ -31,7 +32,6 @@ import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
-import com.urbit_iot.onekey.util.dagger.DigestAuth;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 
 import java.util.Iterator;
@@ -44,12 +44,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import rx.Observable;
+import rx.functions.Action1;
+import rx.functions.Func1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Implementation of the data source that adds a latency simulating network.
+ * Implementation of the data mSource that adds a latency simulating network.
  */
+//TODO Remove all mocked data!!
 public class UModsLANDataSource implements UModsDataSource {
 
     @NonNull
@@ -68,9 +71,8 @@ public class UModsLANDataSource implements UModsDataSource {
     private UrlHostSelectionInterceptor urlHostSelectionInterceptor;
 
     @NonNull
-    private Credentials digestAuthCredentials;
+    private Observable.Transformer<UMod,UMod> uModLANBrander;
 
-    private static FakeUModsLANDataSource INSTANCE;
 
     private static final int SERVICE_LATENCY_IN_MILLIS = 5000;
 
@@ -102,15 +104,29 @@ public class UModsLANDataSource implements UModsDataSource {
         this.appUserUModsService = checkNotNull(AppUserUModsService, " AppUserUModsService should not be null.");
         this.urlHostSelectionInterceptor = checkNotNull(urlHostSelectionInterceptor, " urlHostSelectionInterceptor should not be null.");
         //this.digestAuthCredentials = checkNotNull(digestAuthCredentials, " digestAuthCredentials should not be null.");
+        this.uModLANBrander = new Observable.Transformer<UMod, UMod>() {
+            @Override
+            public Observable<UMod> call(Observable<UMod> uModObservable) {
+                return uModObservable
+                        .map(new Func1<UMod, UMod>() {
+                            @Override
+                            public UMod call(UMod uMod) {
+                                uMod.setuModSource(UMod.UModSource.LAN_SCAN);
+                                return uMod;
+                            }
+                        });
+            }
+        };
     }
 
     private static void addUMod(String uModUUID, String onLANIPAddress) {
         UMod uMod = new UMod(uModUUID, onLANIPAddress, true);
+        uMod.setAppUserLevel(UModUser.Level.PENDING);
         UMODS_SERVICE_DATA.put(uMod.getUUID(), uMod);
     }
 
     private static void addUModUser(String uModUUID, String userPhoneNumber){
-        UModUser uModUser = new UModUser(uModUUID,userPhoneNumber,UModUser.UModUserStatus.AUTHORIZED);
+        UModUser uModUser = new UModUser(uModUUID,userPhoneNumber, UModUser.Level.AUTHORIZED);
         UMODS_USERS_SERVICE_DATA.put(uModUUID,uModUser);
     }
 
@@ -127,24 +143,46 @@ public class UModsLANDataSource implements UModsDataSource {
                 .toList();
         */
         return Observable.mergeDelayError(Observable.from(UMODS_SERVICE_DATA.values()),
-                //mUModsDNSSDScanner.browseLANForUMods(),
-                mUModsBLEScanner.bleScanForUMods()
-                ).toList();
-
-        //return Observable.mergeDelayError(mockedUMods,DNSSDFounded);
-        //return DNSSDFounded;
+                mUModsDNSSDScanner.browseLANForUMods(),
+                mUModsBLEScanner.bleScanForUMods())
+                .compose(this.uModLANBrander)
+                .toList();
     }
 
+    @RxLogObservable
     public Observable<UMod> getUModsOneByOne(){
         return Observable.mergeDelayError(
                 Observable.from(UMODS_SERVICE_DATA.values()),
                 mUModsDNSSDScanner.browseLANForUMods(),
-                mUModsBLEScanner.bleScanForUMods());
+                mUModsBLEScanner.bleScanForUMods())
+                .compose(this.uModLANBrander);
     }
 
+
     @Override
-    public Observable<UMod> getUMod(@NonNull String uModUUID) {
-        return mUModsDNSSDScanner.browseLANForUMod(uModUUID);
+    //@RxLogObservable
+    public Observable<UMod> getUMod(@NonNull final String uModUUID) {
+        //Log.d("lan_ds", uModUUID);
+        //Log.d("lan_ds", UMODS_SERVICE_DATA.get(uModUUID).toString());
+        UMod mockedUMod = UMODS_SERVICE_DATA.get(uModUUID);
+        Observable<UMod> mockedUModObs;
+        if (mockedUMod != null){
+            mockedUModObs = Observable.just(mockedUMod);
+        } else {
+            mockedUModObs = Observable.empty();
+        }
+        Log.d("lan_ds", mockedUMod.toString());
+        return Observable.concatDelayError(mockedUModObs,
+                mUModsDNSSDScanner.browseLANForUMod(uModUUID))
+                .doOnNext(new Action1<UMod>() {
+                    @Override
+                    public void call(UMod uMod) {
+                        Log.e("lan_ds", uMod.toString());
+                    }
+                })
+        //return mUModsDNSSDScanner.browseLANForUMod(uModUUID)
+                .first()
+                .compose(this.uModLANBrander);
     }
 
     @Override
@@ -153,37 +191,22 @@ public class UModsLANDataSource implements UModsDataSource {
     }
 
     @Override
-    public void enableUModNotification(@NonNull UMod uMod) {
-        UMod notificationEnabledUMod = new UMod(uMod.getUUID(), uMod.getLANIPAddress(), true);
-        notificationEnabledUMod.enableNotification();
-        UMODS_SERVICE_DATA.put(notificationEnabledUMod.getUUID(), notificationEnabledUMod);
+    public void partialUpdate(@NonNull UMod uMod) {
+
     }
 
     @Override
-    public void enableUModNotification(@NonNull String uModUUID) {
-        // Not required for the remote data source because the {@link TasksRepository} handles
-        // converting from a {@code taskId} to a {@link task} using its cached data.
+    public void setUModNotificationStatus(@NonNull String uModUUID, @NonNull Boolean notificationEnabled) {
+
     }
 
-    @Override
-    public void disableUModNotification(@NonNull UMod uMod) {
-        UMod notificationDisabledUMod = new UMod(uMod.getUUID(), uMod.getLANIPAddress(), true);
-        notificationDisabledUMod.disableNotification();
-        UMODS_SERVICE_DATA.put(uMod.getUUID(), notificationDisabledUMod);
-    }
-
-    @Override
-    public void disableUModNotification(@NonNull String uModUUID) {
-        // Not required for the remote data source because the {@link TasksRepository} handles
-        // converting from a {@code taskId} to a {@link task} using its cached data.
-    }
 
     @Override
     public void clearAlienUMods() {
         Iterator<Map.Entry<String, UMod>> it = UMODS_SERVICE_DATA.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, UMod> entry = it.next();
-            if (entry.getValue().getAppUserStatus().equals(UModUser.UModUserStatus.UNAUTHORIZED)) {
+            if (entry.getValue().getAppUserLevel().equals(UModUser.Level.UNAUTHORIZED)) {
                 it.remove();
             }
         }
@@ -206,52 +229,66 @@ public class UModsLANDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
+    public Observable<GetMyUserLevelRPC.Response>
+    getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
         //GetMyUserLevelRPC.Request request = new GetMyUserLevelRPC.Request(
         //        new GetMyUserLevelRPC.Arguments(), uMod.getUUID());
-        GetMyUserLevelRPC.SuccessResponse response = new GetMyUserLevelRPC.SuccessResponse(
-                new GetMyUserLevelRPC.Result(UModUser.UModUserStatus.AUTHORIZED),
+        GetMyUserLevelRPC.Response response = new GetMyUserLevelRPC.Response(
+                new GetMyUserLevelRPC.Result(UModUser.Level.ADMINISTRATOR),
                 request.getCallTag(),
                 new RPC.ResponseError(null,null));
 
-        return Observable.just(response).delay(300, TimeUnit.MILLISECONDS);
+        return Observable.just(response)
+                .delay(300L, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
-        final TriggerRPC.SuccessResponse response = new TriggerRPC.SuccessResponse(new TriggerRPC.Result(),
+    public Observable<TriggerRPC.Response> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
+        final TriggerRPC.Response response = new TriggerRPC.Response(new TriggerRPC.Result(),
                 request.getCallTag(),
                 new RPC.ResponseError(null,null));
-        if(response != null) {
+
             return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
-        } else {
-            return Observable.empty();
-        }
     }
 
     @Override
-    public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
-        UpdateUserRPC.SuccessResponse defaultResponse = new UpdateUserRPC.SuccessResponse(new UpdateUserRPC.Result(),
+    public Observable<CreateUserRPC.Response> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Request request) {
+        /*
+        final CreateUserRPC.Response response = new CreateUserRPC.Response(
+                new CreateUserRPC.Result(),
+                request.getCallTag(),
+                new RPC.ResponseError(null,null)
+        );
+        return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
+        */
+        this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
+        return this.appUserUModsService.createUser(request).toObservable();
+    }
+
+    @Override
+    public Observable<UpdateUserRPC.Response> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+        UpdateUserRPC.Response defaultResponse = new UpdateUserRPC.Response(new UpdateUserRPC.Result(),
                 "STEVE MOCK RESPONSE",
                 new RPC.ResponseError(null,null));
         return Observable.just(defaultResponse).delay(850,TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
+    public Observable<DeleteUserRPC.Response> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<List<UModUser>> getUModUsers(@NonNull String uModUUID) {
-        return Observable.from(UMODS_USERS_SERVICE_DATA.get(uModUUID)).
-                delay(700,TimeUnit.MILLISECONDS).
-                toList();
+    public Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod) {
+        return Observable.from(UMODS_USERS_SERVICE_DATA.get(uMod.getUUID()))
+                .delay(700,TimeUnit.MILLISECONDS)
+                .toList();
     }
 
+
     @Override
-    public Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
-        this.urlHostSelectionInterceptor.setHost(uMod.getLANIPAddress());
+    public Observable<SysGetInfoRPC.Response> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+        this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return defaultUModsService.getSystemInfo(request);
     }
 }

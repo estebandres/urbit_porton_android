@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
@@ -36,50 +37,59 @@ import rx.Observable;
  */
 public interface UModsDataSource {
 
-    Observable<List<UMod>> getUMods();
+    Observable<List<UMod>> getUMods();// GET /umods/
 
-    Observable<UMod> getUModsOneByOne();
+    Observable<UMod> getUModsOneByOne();// GET /umods/
 
-    Observable<UMod> getUMod(@NonNull String uModUUID);
+    Observable<UMod> getUMod(@NonNull String uModUUID); // GET /umods/UMOD_ID
 
-    void saveUMod(@NonNull UMod uMod);
+    void saveUMod(@NonNull UMod uMod);// POST /umods/
 
-    void enableUModNotification(@NonNull UMod uMod);
+    //TODO PartialUpdate
 
-    void enableUModNotification(@NonNull String uModUUID);
+    void partialUpdate(@NonNull UMod uMod);// PATCH /umods/?? vs /umods/UMOD_ID
 
-    void disableUModNotification(@NonNull UMod uMod);
-
-    void disableUModNotification(@NonNull String uModUUID);
+    void setUModNotificationStatus(@NonNull String uModUUID, @NonNull Boolean notificationEnabled);
+    // PUT??PATCH /umods/UMOD_ID?notification_status=true
 
     void clearAlienUMods();
 
     void refreshUMods();
 
-    void deleteAllUMods();
+    void deleteAllUMods();// DELETE /umods/
 
-    void deleteUMod(@NonNull String uModUUID);
+    void deleteUMod(@NonNull String uModUUID);// DELETE /umods/UMOD_ID
 
     //Observable<RPC.CommandResponse> postCommand(@NonNull RPC.CommandRequest commandRequest);
 
-    Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod,
-                                                               @NonNull GetMyUserLevelRPC.Request request);
+    Observable<GetMyUserLevelRPC.Response>
+    getUserLevel(@NonNull UMod uMod,
+                 @NonNull GetMyUserLevelRPC.Request request);
+    //GET /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-    Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod,
-                                                       @NonNull TriggerRPC.Request request);
+    Observable<TriggerRPC.Response> triggerUMod(@NonNull UMod uMod,
+                                                @NonNull TriggerRPC.Request request);
+    //POST /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    Observable<CreateUserRPC.Response> createUModUser(@NonNull UMod uMod,
+                                                      @NonNull CreateUserRPC.Request request);
+    //PUT /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-    Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod,
-                                                             @NonNull UpdateUserRPC.Request request);
+    Observable<UpdateUserRPC.Response> updateUModUser(@NonNull UMod uMod,
+                                                      @NonNull UpdateUserRPC.Request request);
+    //PUT /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-    Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod,
-                                                             @NonNull DeleteUserRPC.Request request);
+    Observable<DeleteUserRPC.Response> deleteUModUser(@NonNull UMod uMod,
+                                                      @NonNull DeleteUserRPC.Request request);
+    //DELETE /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
     //Observable<UpdateUserRPC.Response> approveUModUser(@NonNull UModUser uModUser);
 
     //Observable<DeleteUserRPC.Response> deleteUModUser(@NonNull UModUser uModUser);
 
-    Observable<List<UModUser>> getUModUsers(@NonNull String uModUUID);
+    Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod);
+    //GET /rpc/ && /umods/UMOD_ID/rpc/ vs /umods/UMOD_ID/users
 
-    Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod,
-                                                            @NonNull SysGetInfoRPC.Request request);
+    Observable<SysGetInfoRPC.Response> getSystemInfo(@NonNull UMod uMod,
+                                                     @NonNull SysGetInfoRPC.Request request);
+    // GET /rpc/ && /umods/UMOD_ID/rpc/ vs /umods/UMOD_ID/info
 }

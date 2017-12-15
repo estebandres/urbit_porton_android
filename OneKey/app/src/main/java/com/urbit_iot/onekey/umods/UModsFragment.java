@@ -31,9 +31,7 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.UModConfigFragment;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -72,12 +70,13 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mListAdapter = new UModsAdapter(new ArrayList<UMod>(0), mItemListener);
+        mListAdapter = new UModsAdapter(new ArrayList<UModViewModel>(0), mItemListener);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        Log.d("umods_fr", "On Resume");
         mPresenter.subscribe();
     }
 
@@ -227,22 +226,22 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     }
 
     @Override
-    public void showUMods(List<UMod> uMods) {
-        mListAdapter.replaceData(uMods);
+    public void showUMods(List<UModViewModel> uModViewModels) {
+        mListAdapter.replaceData(uModViewModels);
 
         mTasksView.setVisibility(View.VISIBLE);
         mNoTasksView.setVisibility(View.GONE);
     }
 
-    public void showUMod(UMod uMod){
+    public void showUMod(UModViewModel uModViewModel){
         if(mNoTaskAddView.getVisibility() == View.VISIBLE){
             mNoTasksView.setVisibility(View.GONE);
         }
-        mListAdapter.addItem(uMod);
+        mListAdapter.addItem(uModViewModel);
     }
 
     @Override
-    public void appendUMod(UMod uMod) {
+    public void appendUMod(UModViewModel uMod) {
         mListAdapter.addItem(uMod);
     }
 
@@ -309,22 +308,31 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     }
 
     @Override
-    public void showUModConfigUi(String taskId) {
+    public void showUModConfigUi(String uModUUID) {
         // in it's own Activity, since it makes more sense that way and it gives us the flexibility
         // to show some Intent stubbing.
         Intent intent = new Intent(getContext(), UModConfigActivity.class);
-        intent.putExtra(UModConfigFragment.ARGUMENT_CONFIG_UMOD_ID, taskId);
+        intent.putExtra(UModConfigFragment.ARGUMENT_CONFIG_UMOD_ID, uModUUID);
             startActivityForResult(intent,REQUEST_UMOD_CONFIG);
     }
 
     @Override
     public void showUModNotificationEnabled() {
-        showMessage(getString(R.string.task_marked_complete));
+        showMessage(getString(R.string.ongoing_notif_enabled));
+    }
+
+    @Override
+    public void showOngoingNotifStatusChanged(Boolean ongoingNotifStatus) {
+        if(ongoingNotifStatus){
+            showMessage(getString(R.string.ongoing_notif_enabled));
+        } else {
+            showMessage(getString(R.string.ongoing_notif_disbled));
+        }
     }
 
     @Override
     public void showUModNotificationDisabled() {
-        showMessage(getString(R.string.task_marked_active));
+        showMessage(getString(R.string.ongoing_notif_disbled));
     }
 
     @Override
@@ -350,21 +358,28 @@ public class UModsFragment extends Fragment implements UModsContract.View {
      * Listener for clicks on tasks in the ListView.
      */
     UModItemListener mItemListener = new UModItemListener() {
+        /*
         @Override
         public void onUModClick(UMod clickedUMod) {
-            mPresenter.openUModDetails(clickedUMod);
+            mPresenter.openUModConfig(clickedUMod);
         }
+        */
 
+        /*
         @Override
         public void onCompleteUModClick(UMod completedUMod) {
             mPresenter.enableUModNotification(completedUMod);
         }
+        */
 
+        /*
         @Override
         public void onActivateUModClick(UMod activatedUMod) {
             mPresenter.disableUModNotification(activatedUMod);
         }
+        */
 
+        /*
         @Override
         public void onActionButtonClick(UMod actedUMod) {
             mPresenter.triggerUMod(actedUMod);
@@ -375,56 +390,54 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             mPresenter.requestAccess(requestedUMod);
         }
 
+        */
     };
 
     private static class UModsAdapter extends BaseAdapter {
 
-        private List<UMod> mUMods;
+        private List<UModViewModel> mViewModelsList;
         private UModItemListener mItemListener;
 
-        public UModsAdapter(List<UMod> uMods, UModItemListener itemListener) {
+        public UModsAdapter(List<UModViewModel> uMods, UModItemListener itemListener) {
             setList(uMods);
             mItemListener = itemListener;
         }
 
-        public void replaceData(List<UMod> uMods) {
+        public void replaceData(List<UModViewModel> uMods) {
             setList(uMods);
             notifyDataSetChanged();
         }
 
-        private void setList(List<UMod> uMods) {
-            mUMods = checkNotNull(uMods);
+        private void setList(List<UModViewModel> uMods) {
+            mViewModelsList = checkNotNull(uMods);
         }
 
-        public void addItem(UMod uMod){
+        public void addItem(UModViewModel viewModel){
             //refreshList();
-            if( ! mUMods.contains(uMod)){
-                mUMods.add(uMod);
+            if( ! mViewModelsList.contains(viewModel)){
+                mViewModelsList.add(viewModel);
                 notifyDataSetChanged();
-            } else {
-                UMod currentUMod = mUMods.get(mUMods.indexOf(uMod));
-                currentUMod.updatemLANIPAddress(uMod.getLANIPAddress());
-                currentUMod.updateBleHwAddress(uMod.getBleHwAddress());
             }
         }
-
+        /*
         public void refreshList(){
-            for (UMod uMod: mUMods) {
-                Long minutesOld = TimeUnit.MILLISECONDS.toMinutes((new Date()).getTime() - uMod.getLastUpdateDate().getTime());
+            for (UModViewModel viewModel: mViewModelsList) {
+                Long minutesOld = TimeUnit.MILLISECONDS.toMinutes((new Date()).getTime() - viewModel.getLastUpdateDate().getTime());
                 if (minutesOld > 5L){
-                    mUMods.remove(uMod);
+                    mViewModelsList.remove(viewModel);
                 }
             }
         }
+        */
 
         @Override
         public int getCount() {
-            return mUMods.size();
+            return mViewModelsList.size();
         }
 
         @Override
-        public UMod getItem(int i) {
-            return mUMods.get(i);
+        public UModViewModel getItem(int i) {
+            return mViewModelsList.get(i);
         }
 
         @Override
@@ -440,34 +453,38 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 rowView = inflater.inflate(R.layout.umod_item, viewGroup, false);
             }
 
-            final UMod uMod = getItem(i);
+            final UModViewModel viewModel = getItem(i);
             //TODO if R.id.title is renamed then the project doesn't build. Why??
-            TextView titleTV = (TextView) rowView.findViewById(R.id.title);
-            titleTV.setText(uMod.getNameForList());
+            TextView mainText = (TextView) rowView.findViewById(R.id.title);
 
-            CheckBox completeCB = (CheckBox) rowView.findViewById(R.id.umod_notif_enabler);
+            mainText.setText(viewModel.getItemMainText());
+
+            TextView lowerText = (TextView) rowView.findViewById(R.id.lower_text);
+
+            lowerText.setText(viewModel.getItemLowerText());
+
+            final CheckBox notifEnCB = (CheckBox) rowView.findViewById(R.id.umod_notif_enabler);
 
             Button actionButton = (Button) rowView.findViewById(R.id.umod_action_button);
 
-            if(uMod.getuModState() == UMod.UModState.AP_MODE){
+            if(viewModel.isButtonVisible()){
+                actionButton.setVisibility(View.VISIBLE);
+            } else {
                 actionButton.setVisibility(View.INVISIBLE);
             }
-            if (uMod.getuModState() == UMod.UModState.STATION_MODE){
-                actionButton.setVisibility(View.VISIBLE);
-                //TODO add button text versions as String resource.
-                if(uMod.belongsToAppUser()){
-                    actionButton.setText(R.string.umod_action_button_when_owned);
-                } else {
-                    actionButton.setText(R.string.umod_action_button_when_open_alien);
-                }
+            actionButton.setText(viewModel.getButtonText());
 
+            // NotifEnabled checkbox state
+            notifEnCB.setChecked(viewModel.isCheckboxChecked());
+            if (viewModel.isCheckboxVisible()){
+                notifEnCB.setVisibility(View.VISIBLE);
+            } else {
+                notifEnCB.setVisibility(View.INVISIBLE);
             }
 
-            // NotifEnabled cehckbox state
-            completeCB.setChecked(uMod.isNotificationEnabled());
 
             /* NO SE QUE HACE ESTO??
-            if (uMod.isNotificationEnabled()) {
+            if (uMod.isOngoingNotificationEnabled()) {
                 rowView.setBackgroundDrawable(viewGroup.getContext()
                         .getResources().getDrawable(R.drawable.list_completed_touch_feedback));
             } else {
@@ -476,35 +493,29 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             }
             */
 
-            completeCB.setOnClickListener(new View.OnClickListener() {
+            notifEnCB.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (!uMod.isNotificationEnabled()) {
-                        mItemListener.onCompleteUModClick(uMod);
-                    } else {
-                        mItemListener.onActivateUModClick(uMod);
-                    }
+                    viewModel.onCheckBoxClicked(notifEnCB.isChecked());
                 }
             });
 
             actionButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (uMod.belongsToAppUser()) {
-                        mItemListener.onActionButtonClick(uMod);
-                    } else {
-                        mItemListener.onRequestAccess(uMod);
-                    }
+                    viewModel.onButtonClicked();
                 }
             });
 
-            rowView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Log.e("STEVE_listit",uMod.toString());
-                    mItemListener.onUModClick(uMod);
-                }
-            });
+            if(viewModel.isItemOnClickListenerEnabled()){
+                rowView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Log.d("STEVE_listit",viewModel.toString());
+                        viewModel.onItemClicked();
+                    }
+                });
+            }
 
             return rowView;
         }
@@ -512,15 +523,15 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
     public interface UModItemListener {
 
-        void onUModClick(UMod clickedUMod);
+        //void onUModClick(UMod clickedUMod);
 
-        void onCompleteUModClick(UMod completedUMod);
+        //void onCompleteUModClick(UMod completedUMod);
 
-        void onActivateUModClick(UMod activatedUMod);
+        //void onActivateUModClick(UMod activatedUMod);
 
-        void onActionButtonClick(UMod actedUMod);
+        //void onActionButtonClick(UMod actedUMod);
 
-        void onRequestAccess(UMod requestedUMod);
+        //void onRequestAccess(UMod requestedUMod);
     }
 
 }

@@ -49,7 +49,7 @@ public class RPC {
 
     public static class Result{}
 
-    public static class SuccessResponse {
+    public static class Response {
 
         @SerializedName("tag")
         private String callTag;
@@ -58,7 +58,7 @@ public class RPC {
         @SerializedName("error")
         private ResponseError responseError;
 
-        public SuccessResponse(String callTag, ResponseError responseError) {
+        public Response(String callTag, ResponseError responseError) {
             this.callTag = callTag;
             this.responseError = responseError;
         }
@@ -81,7 +81,7 @@ public class RPC {
 
         @Override
         public String toString() {
-            return "SuccessResponse{" +
+            return "Response{" +
                     "callTag='" + callTag + '\'' +
                     ", responseError=" + responseError +
                     '}';

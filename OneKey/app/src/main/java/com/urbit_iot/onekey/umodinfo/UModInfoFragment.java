@@ -173,13 +173,13 @@ public class UModInfoFragment extends Fragment implements UModInfoContract.View 
     }
 
     public void showTaskMarkedComplete() {
-        Snackbar.make(getView(), getString(R.string.task_marked_complete), Snackbar.LENGTH_LONG)
+        Snackbar.make(getView(), getString(R.string.ongoing_notif_enabled), Snackbar.LENGTH_LONG)
                 .show();
     }
 
     @Override
     public void showTaskMarkedActive() {
-        Snackbar.make(getView(), getString(R.string.task_marked_active), Snackbar.LENGTH_LONG)
+        Snackbar.make(getView(), getString(R.string.ongoing_notif_disbled), Snackbar.LENGTH_LONG)
                 .show();
     }
 

@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
+import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.usersxumod.UModUsersFilterType;
@@ -38,7 +39,13 @@ public class GetUModUsers extends SimpleUseCase<GetUModUsers.RequestValues, GetU
             mUModsRepository.refreshUMods();
         }
 
-        return mUModsRepository.getUModUsers(values.getUModUUID())
+        return mUModsRepository.getUMod(values.getUModUUID())
+                .flatMap(new Func1<UMod, Observable<List<UModUser>>>() {
+                    @Override
+                    public Observable<List<UModUser>> call(UMod uMod) {
+                        return mUModsRepository.getUModUsers(uMod);
+                    }
+                })
                 .flatMap(new Func1<List<UModUser>, Observable<UModUser>>() {
                     @Override
                     public Observable<UModUser> call(List<UModUser> uModUsers) {

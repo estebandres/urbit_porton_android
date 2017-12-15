@@ -17,9 +17,9 @@
 <resources>
     <string name="app_name">OneKey</string>
     <string name="add_task">New UMod</string>
-    <string name="edit_task">Edit UMod</string>
-    <string name="task_marked_complete">Task marked complete</string>
-    <string name="task_marked_active">Task marked active</string>
+    <string name="umod_config_bar_title">Configurar UMod</string>
+    <string name="ongoing_notif_enabled">Notificación permanente activada</string>
+    <string name="ongoing_notif_disbled">Notificación permanente desactivada</string>
     <string name="loading_tasks_error">Error while loading tasks</string>
     <string name="completed_tasks_cleared">Completed tasks cleared</string>
     <string name="menu_filter_umods">Filter</string>

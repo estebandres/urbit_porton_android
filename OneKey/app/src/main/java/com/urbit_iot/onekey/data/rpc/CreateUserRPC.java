@@ -1,7 +1,6 @@
 package com.urbit_iot.onekey.data.rpc;
 
 import com.google.gson.annotations.SerializedName;
-import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
 /**
@@ -49,11 +48,11 @@ public class CreateUserRPC extends RPC {
         public Result(){}
     }
 
-    public static class SuccessResponse extends RPC.SuccessResponse{
+    public static class Response extends RPC.Response {
         @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
         private CreateUserRPC.Result responseResult;
 
-        public SuccessResponse(Result result, String callTag, ResponseError responseError) {
+        public Response(Result result, String callTag, ResponseError responseError) {
             super(callTag, responseError);
             this.responseResult = result;
         }
@@ -68,7 +67,7 @@ public class CreateUserRPC extends RPC {
 
         @Override
         public String toString() {
-            return "SuccessResponse{" +
+            return "Response{" +
                     "callTag=" + this.getCallTag() + ", " +
                     "responseResult=" + responseResult +
                     '}';

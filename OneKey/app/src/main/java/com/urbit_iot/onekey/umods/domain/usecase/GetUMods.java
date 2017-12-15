@@ -66,9 +66,9 @@ public class GetUMods extends SimpleUseCase<GetUMods.RequestValues, GetUMods.Res
                     public Boolean call(UMod uMod) {
                         switch (values.getCurrentFiltering()) {
                             case NOTIF_EN_UMODS:
-                                return uMod.isNotificationEnabled();
+                                return uMod.isOngoingNotificationEnabled();
                             case NOTIF_DIS_UMODS:
-                                return !uMod.isNotificationEnabled();
+                                return !uMod.isOngoingNotificationEnabled();
                             case ALL_UMODS:
                             default:
                                 return true;

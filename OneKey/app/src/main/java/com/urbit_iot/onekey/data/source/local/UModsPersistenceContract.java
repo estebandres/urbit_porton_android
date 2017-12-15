@@ -30,18 +30,18 @@ public final class UModsPersistenceContract {
     /* Inner class that defines the table contents */
     public static abstract class UModEntry implements BaseColumns {
         public static final String TABLE_NAME = "umod";
-        public static final String COLUMN_NAME_UUID = "uuid";
-        public static final String COLUMN_NAME_ALIAS = "alias";
-        public static final String COLUMN_NAME_NOTIF_EN = "notification_enabled";
-        public static final String COLUMN_NAME_LAN_IP_ADDRESS = "lan_ip_address";
-        public static final String COLUMN_NAME_AP_MODE = "ap_mode";
-        public static final String COLUMN_NAME_APP_USER_STATUS = "app_user_status";
-        public static final String COLUMN_NAME_UMOD_STATE = "umod_state";
-        public static final String COLUMN_NAME_UMOD_STATUS = "umod_status";
-        public static final String COLUMN_NAME_PROD_UUID = "product_uuid";
-        public static final String COLUMN_NAME_HW_VERSION = "hw_version";
-        public static final String COLUMN_NAME_SW_VERSION = "sw_version";
-        public static final String COLUMN_NAME_IS_OPEN = "is_open";
-        public static final String COLUMN_NAME_LAST_UPDATE_DATE = "last_update_date";
+        public static final String UUID_CN = "uuid";
+        public static final String ALIAS_CN = "alias";
+        public static final String NOTIF_ENABLED_CN = "notification_enabled";
+        public static final String CONNECTION_ADDRESS_CN = "connection_address";
+        //public static final String AP_MODE_CN = "ap_mode";
+        public static final String APP_USER_STATUS_CN = "app_user_status";
+        public static final String UMOD_STATE_CN = "umod_state";
+        public static final String LAST_REPORT_CN = "last_report";
+        public static final String PROD_UUID_CN = "product_uuid";
+        public static final String HW_VERSION_CN = "hw_version";
+        public static final String SW_VERSION_CN = "sw_version";
+        //public static final String IS_OPEN_CN = "is_open";
+        public static final String LAST_UPDATE_DATE_CN = "last_update_date";
     }
 }

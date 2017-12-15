@@ -41,7 +41,7 @@ import rx.Subscriber;
  */
 public class UModConfigPresenter implements UModConfigContract.Presenter {
 
-    private final UModConfigContract.View mAddTaskView;
+    private final UModConfigContract.View mUModConfigView;
 
     private final GetUMod mGetUMod;
 
@@ -52,7 +52,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     @Nullable
     private UMod uModToConfig;
 
-    @Nullable
+    @NonNull
     private String mUModUUID;
 
     /**
@@ -60,13 +60,13 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
      * with {@code @Nullable} values.
      */
     @Inject
-    public UModConfigPresenter(@Nullable String umodUUID,
+    public UModConfigPresenter(@NonNull String umodUUID,
                                @NonNull UModConfigContract.View addTaskView,
                                @NonNull GetUMod getUMod,
                                @NonNull SaveUMod saveUMod,
                                @NonNull GetUModSystemInfo getUModSystemInfo) {
         mUModUUID = umodUUID;
-        mAddTaskView = addTaskView;
+        mUModConfigView = addTaskView;
         mGetUMod = getUMod;
         mSaveUMod = saveUMod;
         this.getUModSystemInfo = getUModSystemInfo;
@@ -78,7 +78,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
      */
     @Inject
     void setupListeners() {
-        mAddTaskView.setPresenter(this);
+        mUModConfigView.setPresenter(this);
     }
 
     @Override
@@ -106,22 +106,28 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
     @Override
     public void populateUMod() {
+        Log.e("conf_pr","HOLO!1");
         if (mUModUUID == null) {
             throw new RuntimeException("populateUMod() was called but task is new.");
         }
         mGetUMod.execute(new GetUMod.RequestValues(mUModUUID), new Subscriber<GetUMod.ResponseValues>() {
             @Override
-            public void onCompleted() {}
+            public void onCompleted() {
+                Log.e("conf_pr","HOLO!");
+
+            }
 
             @Override
             public void onError(Throwable e) {
+                Log.e("conf_pr",e.getMessage());
                 showEmptyTaskError();
             }
 
             @Override
             public void onNext(GetUMod.ResponseValues response) {
                 uModToConfig = response.getUMod();
-                showTask(uModToConfig);
+                Log.e("conf_prs", response.getUMod().toString());
+                showUModSettings(uModToConfig);
             }
         });
     }
@@ -129,17 +135,18 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     @Override
     public void adminUModUsers() {
         if (Strings.isNullOrEmpty(mUModUUID)) {
-            mAddTaskView.showEmptyUModError();
+            mUModConfigView.showEmptyUModError();
             return;
         }
-        mAddTaskView.showEditUModUsers(mUModUUID);
+        mUModConfigView.showEditUModUsers(mUModUUID);
     }
 
-    private void showTask(UMod task) {
+    private void showUModSettings(UMod uMod) {
         // The view may not be able to handle UI updates anymore
-        if (mAddTaskView.isActive()) {
-            mAddTaskView.setUModUUID(task.getUUID());
-            mAddTaskView.setUModIPAddress(task.getLANIPAddress());
+        Log.e("config_prs", uMod.toString());
+        if (mUModConfigView.isActive()) {
+            mUModConfigView.setUModUUID(uMod.getUUID());
+            mUModConfigView.setUModIPAddress(uMod.getConnectionAddress());
         }
     }
 
@@ -149,8 +156,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
     private void showEmptyTaskError() {
         // The view may not be able to handle UI updates anymore
-        if (mAddTaskView.isActive()) {
-            mAddTaskView.showEmptyUModError();
+        if (mUModConfigView.isActive()) {
+            mUModConfigView.showEmptyUModError();
         }
     }
 
@@ -161,7 +168,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     private void createTask(String title, String description) {
         UMod newTask = new UMod(title, description,true);
         if (newTask.isEmpty()) {
-            mAddTaskView.showEmptyUModError();
+            mUModConfigView.showEmptyUModError();
         } else {
             mSaveUMod.execute(new SaveUMod.RequestValues(newTask), new Subscriber<SaveUMod.ResponseValues>() {
                 @Override
@@ -176,7 +183,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
                 @Override
                 public void onNext(SaveUMod.ResponseValues responseValues) {
-                    mAddTaskView.showUModsList();
+                    mUModConfigView.showUModsList();
                 }
             });
         }
@@ -201,7 +208,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
             @Override
             public void onNext(SaveUMod.ResponseValues responseValues) {
                 // After an edit, go back to the list.
-                mAddTaskView.showUModsList();
+                mUModConfigView.showUModsList();
             }
         });
     }

@@ -2,6 +2,7 @@ package com.urbit_iot.onekey.data;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.SparseArray;
 
 /**
  * Created by andresteve07 on 8/21/17.
@@ -9,7 +10,7 @@ import android.support.annotation.Nullable;
 
 public class UModUser {
 
-    public enum UModUserStatus{
+    public enum Level {
         PENDING(2),
         AUTHORIZED(1),
         UNAUTHORIZED(0),
@@ -18,11 +19,24 @@ public class UModUser {
         PRE_APPROVED(5),
         ADMINISTRATOR(6);
         private final Integer statusID;
-        UModUserStatus(Integer statusID){
+        private static SparseArray<Level> map = new SparseArray<>();
+
+        static {
+            for (Level stateEnum : Level.values()) {
+                map.put(stateEnum.statusID, stateEnum);
+            }
+        }
+
+        Level(Integer statusID) {
             this.statusID = statusID;
         }
-        public Integer getStatusID(){
+
+        public Integer getStatusID() {
             return this.statusID;
+        }
+
+        public static Level from(int value) {
+            return map.get(value);
         }
     }
 
@@ -33,9 +47,9 @@ public class UModUser {
     @Nullable
     private String userAlias;
     @NonNull
-    private UModUserStatus userStatus;
+    private Level userStatus;
 
-    public UModUser(@NonNull String uModUUID, @NonNull String phoneNumber, @NonNull UModUserStatus userStatus) {
+    public UModUser(@NonNull String uModUUID, @NonNull String phoneNumber, @NonNull Level userStatus) {
         this.uModUUID = uModUUID;
         this.phoneNumber = phoneNumber;
         this.userStatus = userStatus;
@@ -69,11 +83,11 @@ public class UModUser {
     }
 
     @NonNull
-    public UModUserStatus getUserStatus() {
+    public Level getUserStatus() {
         return userStatus;
     }
 
-    public void setUserStatus(@NonNull UModUserStatus userStatus) {
+    public void setUserStatus(@NonNull Level userStatus) {
         this.userStatus = userStatus;
     }
 
@@ -82,7 +96,7 @@ public class UModUser {
     }
 
     public boolean isAdmin(){
-        return this.userStatus == UModUserStatus.ADMINISTRATOR;
+        return this.userStatus == Level.ADMINISTRATOR;
     }
 
     @Override

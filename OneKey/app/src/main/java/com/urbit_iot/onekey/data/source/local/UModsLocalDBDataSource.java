@@ -23,10 +23,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.squareup.sqlbrite.BriteDatabase;
 import com.squareup.sqlbrite.SqlBrite;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
@@ -36,7 +38,11 @@ import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.data.source.local.UModsPersistenceContract.UModEntry;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.functions.Func1;
@@ -55,6 +61,11 @@ public class UModsLocalDBDataSource implements UModsDataSource {
     @NonNull
     private Func1<Cursor, UMod> mTaskMapperFunction;
 
+    @NonNull
+    private Observable.Transformer<UMod,UMod> uModLocalDBBrander;
+
+    static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+
     public UModsLocalDBDataSource(@NonNull Context context,
                                   @NonNull BaseSchedulerProvider schedulerProvider) {
         checkNotNull(context, "context cannot be null");
@@ -65,10 +76,33 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         mTaskMapperFunction = new Func1<Cursor, UMod>() {
             @Override
             public UMod call(Cursor c) {
-                String uuid = c.getString(c.getColumnIndexOrThrow(UModEntry.COLUMN_NAME_UUID));
-                String ipAddress = c.getString(c.getColumnIndexOrThrow(UModEntry.COLUMN_NAME_LAN_IP_ADDRESS));
-                boolean isOpen = c.getInt(c.getColumnIndexOrThrow(UModEntry.COLUMN_NAME_IS_OPEN))>0;
-                return new UMod(uuid, ipAddress, isOpen);
+                String uuid = c.getString(c.getColumnIndexOrThrow(UModEntry.UUID_CN));
+                String alias = c.getString(c.getColumnIndexOrThrow(UModEntry.ALIAS_CN));
+                boolean notifEnabled = c.getInt(c.getColumnIndexOrThrow(UModEntry.NOTIF_ENABLED_CN))>0;
+                String connectionAddress = c.getString(c.getColumnIndexOrThrow(UModEntry.CONNECTION_ADDRESS_CN));
+                UMod.State state = UMod.State.from(c.getInt(c.getColumnIndexOrThrow(UModEntry.UMOD_STATE_CN)));
+                UModUser.Level userStatus = UModUser.Level.from(c.getInt(c.getColumnIndexOrThrow(UModEntry.APP_USER_STATUS_CN)));
+                String lastReport = c.getString(c.getColumnIndexOrThrow(UModEntry.LAST_REPORT_CN));
+                String productUUID = c.getString(c.getColumnIndexOrThrow(UModEntry.PROD_UUID_CN));
+                String hwVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.LAST_REPORT_CN));
+                String swVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.LAST_REPORT_CN));
+                return new UMod(uuid, alias, connectionAddress, state, userStatus, notifEnabled,
+                        lastReport, productUUID, hwVersion, swVersion);
+            }
+        };
+        this.uModLocalDBBrander = new Observable.Transformer<UMod, UMod>() {
+            @Override
+            public Observable<UMod> call(Observable<UMod> uModObservable) {
+                return uModObservable
+                        .map(new Func1<UMod, UMod>() {
+                            @Override
+                            public UMod call(UMod uMod) {
+                                if(uMod != null){
+                                    uMod.setuModSource(UMod.UModSource.LOCAL_DB);
+                                }
+                                return uMod;
+                            }
+                        });
             }
         };
     }
@@ -76,88 +110,125 @@ public class UModsLocalDBDataSource implements UModsDataSource {
     @Override
     public Observable<List<UMod>> getUMods() {
         String[] projection = {
-                UModEntry.COLUMN_NAME_UUID,
-                UModEntry.COLUMN_NAME_ALIAS,
-                UModEntry.COLUMN_NAME_LAN_IP_ADDRESS,
-                UModEntry.COLUMN_NAME_NOTIF_EN,
+                UModEntry.UUID_CN,
+                UModEntry.ALIAS_CN,
+                UModEntry.CONNECTION_ADDRESS_CN,
+                UModEntry.NOTIF_ENABLED_CN,
         };
         String sql = String.format("SELECT %s FROM %s", TextUtils.join(",", projection), UModEntry.TABLE_NAME);
         return mDatabaseHelper.createQuery(UModEntry.TABLE_NAME, sql)
-                .mapToList(mTaskMapperFunction);
+                .mapToList(mTaskMapperFunction)
+                .flatMap(new Func1<List<UMod>, Observable<UMod>>() {
+                    @Override
+                    public Observable<UMod> call(List<UMod> uMods) {
+                        return Observable.from(uMods);
+                    }
+                })
+                .compose(this.uModLocalDBBrander)
+                .toList();
     }
 
     @Override
+    @RxLogObservable
     public Observable<UMod> getUModsOneByOne() {
         String[] projection = {
-                UModEntry.COLUMN_NAME_UUID,
-                UModEntry.COLUMN_NAME_ALIAS,
-                UModEntry.COLUMN_NAME_LAN_IP_ADDRESS,
-                UModEntry.COLUMN_NAME_NOTIF_EN,
+                UModEntry.UUID_CN,
+                UModEntry.ALIAS_CN,
+                UModEntry.CONNECTION_ADDRESS_CN,
+                UModEntry.NOTIF_ENABLED_CN,
+                UModEntry.APP_USER_STATUS_CN,
+                UModEntry.UMOD_STATE_CN,
+                UModEntry.LAST_REPORT_CN,
+                UModEntry.PROD_UUID_CN,
+                UModEntry.HW_VERSION_CN,
+                UModEntry.SW_VERSION_CN,
+                UModEntry.LAST_UPDATE_DATE_CN,
         };
         String sql = String.format("SELECT %s FROM %s", TextUtils.join(",", projection), UModEntry.TABLE_NAME);
         return mDatabaseHelper.createQuery(UModEntry.TABLE_NAME, sql)
-                .mapToOne(mTaskMapperFunction);
+                .mapToList(mTaskMapperFunction)
+                .flatMap(new Func1<List<UMod>, Observable<UMod>>() {
+                    @Override
+                    public Observable<UMod> call(List<UMod> uMods) {
+                        return Observable.from(uMods);
+                    }
+                })
+                //TODO make the stream complete on a better way.
+                .take(1200L, TimeUnit.MILLISECONDS)
+                .compose(this.uModLocalDBBrander);
     }
 
     @Override
+    @RxLogObservable
     public Observable<UMod> getUMod(@NonNull String uModUUID) {
         String[] projection = {
-                UModEntry.COLUMN_NAME_UUID,
-                UModEntry.COLUMN_NAME_ALIAS,
-                UModEntry.COLUMN_NAME_LAN_IP_ADDRESS,
-                UModEntry.COLUMN_NAME_NOTIF_EN,
+                UModEntry.UUID_CN,
+                UModEntry.ALIAS_CN,
+                UModEntry.CONNECTION_ADDRESS_CN,
+                UModEntry.NOTIF_ENABLED_CN,
+                UModEntry.APP_USER_STATUS_CN,
+                UModEntry.UMOD_STATE_CN,
+                UModEntry.LAST_REPORT_CN,
+                UModEntry.PROD_UUID_CN,
+                UModEntry.HW_VERSION_CN,
+                UModEntry.SW_VERSION_CN,
+                UModEntry.LAST_UPDATE_DATE_CN,
         };
         String sql = String.format("SELECT %s FROM %s WHERE %s LIKE ?",
-                TextUtils.join(",", projection), UModEntry.TABLE_NAME, UModEntry.COLUMN_NAME_UUID);
+                TextUtils.join(",", projection), UModEntry.TABLE_NAME, UModEntry.UUID_CN);
         return mDatabaseHelper.createQuery(UModEntry.TABLE_NAME, sql, uModUUID)
-                .mapToOneOrDefault(mTaskMapperFunction, null);
+                //.mapToOne(mTaskMapperFunction)
+                .mapToOneOrDefault(mTaskMapperFunction, null)
+                .first()
+                .compose(this.uModLocalDBBrander);
     }
 
     @Override
     public void saveUMod(@NonNull UMod uMod) {
         checkNotNull(uMod);
         ContentValues values = new ContentValues();
-        values.put(UModEntry.COLUMN_NAME_UUID, uMod.getUUID());
-        values.put(UModEntry.COLUMN_NAME_ALIAS, uMod.getAlias());
-        values.put(UModEntry.COLUMN_NAME_LAN_IP_ADDRESS, uMod.getLANIPAddress());
-        values.put(UModEntry.COLUMN_NAME_NOTIF_EN, uMod.isNotificationEnabled());
+        values.put(UModEntry.UUID_CN, uMod.getUUID());
+        values.put(UModEntry.ALIAS_CN, uMod.getAlias());
+        values.put(UModEntry.CONNECTION_ADDRESS_CN, uMod.getConnectionAddress());
+        values.put(UModEntry.NOTIF_ENABLED_CN, uMod.isOngoingNotificationEnabled());
+        values.put(UModEntry.APP_USER_STATUS_CN,uMod.getAppUserLevel().getStatusID());
+        values.put(UModEntry.UMOD_STATE_CN,uMod.getState().getStateID());
+        values.put(UModEntry.LAST_REPORT_CN, uMod.getuModLastReport());
+        values.put(UModEntry.PROD_UUID_CN, uMod.getProductUUID());
+        values.put(UModEntry.HW_VERSION_CN, uMod.getHWVersion());
+        values.put(UModEntry.SW_VERSION_CN, uMod.getSWVersion());
+        values.put(UModEntry.LAST_UPDATE_DATE_CN, dateFormat.format(uMod.getLastUpdateDate()));
         mDatabaseHelper.insert(UModEntry.TABLE_NAME, values, SQLiteDatabase.CONFLICT_REPLACE);
     }
 
     @Override
-    public void enableUModNotification(@NonNull UMod uMod) {
-        enableUModNotification(uMod.getUUID());
-    }
-
-    @Override
-    public void enableUModNotification(@NonNull String uModUUID) {
+    public void partialUpdate(@NonNull UMod uMod) {
+        checkNotNull(uMod);
         ContentValues values = new ContentValues();
-        values.put(UModEntry.COLUMN_NAME_NOTIF_EN, true);
-
-        String selection = UModEntry.COLUMN_NAME_UUID + " LIKE ?";
-        String[] selectionArgs = {uModUUID};
+        //TODO look for a better way to do a partial update in the data base
+        if (uMod.getConnectionAddress() != null && !uMod.getConnectionAddress().isEmpty()){
+            values.put(UModEntry.CONNECTION_ADDRESS_CN, uMod.getConnectionAddress());
+        }
+        values.put(UModEntry.LAST_UPDATE_DATE_CN, dateFormat.format(uMod.getLastUpdateDate()));
+        String selection = UModEntry.UUID_CN + " LIKE ?";
+        String[] selectionArgs = {uMod.getUUID()};
         mDatabaseHelper.update(UModEntry.TABLE_NAME, values, selection, selectionArgs);
     }
 
     @Override
-    public void disableUModNotification(@NonNull UMod uMod) {
-        disableUModNotification(uMod.getUUID());
-    }
-
-    @Override
-    public void disableUModNotification(@NonNull String uModUUID) {
+    public void setUModNotificationStatus(@NonNull String uModUUID, @NonNull Boolean notificationStatus) {
         ContentValues values = new ContentValues();
-        values.put(UModEntry.COLUMN_NAME_NOTIF_EN, false);
+        values.put(UModEntry.NOTIF_ENABLED_CN, notificationStatus);
 
-        String selection = UModEntry.COLUMN_NAME_UUID + " LIKE ?";
+        String selection = UModEntry.UUID_CN + " LIKE ?";
         String[] selectionArgs = {uModUUID};
         mDatabaseHelper.update(UModEntry.TABLE_NAME, values, selection, selectionArgs);
     }
 
     @Override
     public void clearAlienUMods() {
-        String selection = UModEntry.COLUMN_NAME_APP_USER_STATUS + " LIKE ?";
-        String[] selectionArgs = {UModUser.UModUserStatus.UNAUTHORIZED.getStatusID().toString()};
+        String selection = UModEntry.APP_USER_STATUS_CN + " LIKE ?";
+        String[] selectionArgs = {UModUser.Level.UNAUTHORIZED.getStatusID().toString()};
         mDatabaseHelper.delete(UModEntry.TABLE_NAME, selection, selectionArgs);
     }
 
@@ -174,38 +245,45 @@ public class UModsLocalDBDataSource implements UModsDataSource {
 
     @Override
     public void deleteUMod(@NonNull String uModUUID) {
-        String selection = UModEntry.COLUMN_NAME_UUID + " LIKE ?";
+        String selection = UModEntry.UUID_CN + " LIKE ?";
         String[] selectionArgs = {uModUUID};
         mDatabaseHelper.delete(UModEntry.TABLE_NAME, selection, selectionArgs);
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
+    public Observable<GetMyUserLevelRPC.Response> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
+    public Observable<TriggerRPC.Response> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+    public Observable<CreateUserRPC.Response> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
+    public Observable<UpdateUserRPC.Response> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<List<UModUser>> getUModUsers(@NonNull String uModUUID) {
+    public Observable<DeleteUserRPC.Response> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+    public Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod) {
         return null;
     }
+
+    @Override
+    public Observable<SysGetInfoRPC.Response> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+        return null;
+    }
+
+
 }

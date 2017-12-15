@@ -58,21 +58,21 @@ public class CreateUserOnUMod extends SimpleUseCase<CreateUserOnUMod.RequestValu
                 "SteveTriggered",666);
 
         return mUModsRepository.triggerUMod(values.getUMod(), request)
-                .onErrorResumeNext(new Func1<Throwable, Observable<TriggerRPC.SuccessResponse>>() {
+                .onErrorResumeNext(new Func1<Throwable, Observable<TriggerRPC.Response>>() {
                     @Override
-                    public Observable<TriggerRPC.SuccessResponse> call(Throwable throwable) {
+                    public Observable<TriggerRPC.Response> call(Throwable throwable) {
                         return mUModsRepository.getUMod(values.getUMod().getUUID())
-                                .flatMap(new Func1<UMod, Observable<TriggerRPC.SuccessResponse>>() {
+                                .flatMap(new Func1<UMod, Observable<TriggerRPC.Response>>() {
                                     @Override
-                                    public Observable<TriggerRPC.SuccessResponse> call(UMod uMod) {
+                                    public Observable<TriggerRPC.Response> call(UMod uMod) {
                                         return mUModsRepository.triggerUMod(values.getUMod(),request);
                                     }
                                 });
                     }
                 })
-                .map(new Func1<TriggerRPC.SuccessResponse, ResponseValues>() {
+                .map(new Func1<TriggerRPC.Response, ResponseValues>() {
                     @Override
-                    public ResponseValues call(TriggerRPC.SuccessResponse response) {
+                    public ResponseValues call(TriggerRPC.Response response) {
                         return new ResponseValues(response);
                     }
                 });
@@ -93,13 +93,13 @@ public class CreateUserOnUMod extends SimpleUseCase<CreateUserOnUMod.RequestValu
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private final TriggerRPC.SuccessResponse response;
+        private final TriggerRPC.Response response;
 
-        public ResponseValues(@NonNull TriggerRPC.SuccessResponse response) {
+        public ResponseValues(@NonNull TriggerRPC.Response response) {
             this.response = checkNotNull(response, "response cannot be null!");
         }
 
-        public TriggerRPC.SuccessResponse getResponse() {
+        public TriggerRPC.Response getResponse() {
             return response;
         }
     }

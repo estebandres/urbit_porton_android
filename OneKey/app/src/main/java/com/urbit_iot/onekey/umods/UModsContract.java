@@ -18,15 +18,17 @@ public interface UModsContract {
 
         void setLoadingIndicator(boolean active);
 
-        void showUMods(List<UMod> uMods);
+        void showUMods(List<UModViewModel> uMods);
 
-        void appendUMod(UMod uMod);
+        void appendUMod(UModViewModel uMod);
 
-        void showUMod(UMod uMod);
+        void showUMod(UModViewModel uMod);
 
         void showAddUMod();
 
         void showUModConfigUi(String taskId);
+
+        void showOngoingNotifStatusChanged(Boolean ongoingNotifStatus);
 
         void showUModNotificationEnabled();
 
@@ -67,11 +69,7 @@ public interface UModsContract {
 
         void addNewUMod();
 
-        void openUModDetails(@NonNull UMod requestedUMod);
-
-        void enableUModNotification(@NonNull UMod completedUMod);
-
-        void disableUModNotification(@NonNull UMod activeUMod);
+        void openUModConfig(@NonNull String uModUUID);
 
         void clearAlienUMods();
 
@@ -79,8 +77,10 @@ public interface UModsContract {
 
         UModsFilterType getFiltering();
 
-        void triggerUMod(UMod uMod);
+        void triggerUMod(String uModUUID);
 
-        void requestAccess(UMod uMod);
+        void requestAccess(String uModUUID);
+
+        void setNotificationStatus(String uModUUID, Boolean notificationEnabled);
     }
 }

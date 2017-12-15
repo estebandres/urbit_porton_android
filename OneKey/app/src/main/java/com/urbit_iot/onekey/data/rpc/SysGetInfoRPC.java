@@ -303,11 +303,11 @@ public class SysGetInfoRPC extends RPC {
         }
     }
 
-    public static class SuccessResponse extends RPC.SuccessResponse{
+    public static class Response extends RPC.Response {
         @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
         private SysGetInfoRPC.Result responseResult;
 
-        public SuccessResponse(Result responseResult, String callTag, ResponseError responseError) {
+        public Response(Result responseResult, String callTag, ResponseError responseError) {
             super(callTag, responseError);
             this.responseResult = responseResult;
         }
@@ -322,7 +322,7 @@ public class SysGetInfoRPC extends RPC {
 
         @Override
         public String toString() {
-            return "SuccessResponse{" +
+            return "Response{" +
                     "responseResult=" + responseResult +
                     "} " + super.toString();
         }

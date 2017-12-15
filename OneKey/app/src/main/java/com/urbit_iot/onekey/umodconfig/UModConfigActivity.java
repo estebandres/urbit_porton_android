@@ -57,15 +57,16 @@ public class UModConfigActivity extends AppCompatActivity {
                 (UModConfigFragment) getSupportFragmentManager().findFragmentById(
                         R.id.appuser_content_frame);
 
-        String taskId = getIntent().getStringExtra(uModConfigFragment.ARGUMENT_CONFIG_UMOD_ID);
+        String uModUUID;
+        uModUUID = getIntent().getStringExtra(UModConfigFragment.ARGUMENT_CONFIG_UMOD_ID);
 
         if (uModConfigFragment == null) {
-            uModConfigFragment = uModConfigFragment.newInstance();
+            uModConfigFragment = UModConfigFragment.newInstance();
 
-            if (getIntent().hasExtra(uModConfigFragment.ARGUMENT_CONFIG_UMOD_ID)) {
-                actionBar.setTitle(R.string.edit_task);
+            if (getIntent().hasExtra(UModConfigFragment.ARGUMENT_CONFIG_UMOD_ID)) {
+                actionBar.setTitle(R.string.umod_config_bar_title);
                 Bundle bundle = new Bundle();
-                bundle.putString(uModConfigFragment.ARGUMENT_CONFIG_UMOD_ID, taskId);
+                bundle.putString(UModConfigFragment.ARGUMENT_CONFIG_UMOD_ID, uModUUID);
                 uModConfigFragment.setArguments(bundle);
             } else {
                 actionBar.setTitle(R.string.add_task);
@@ -78,7 +79,7 @@ public class UModConfigActivity extends AppCompatActivity {
         OneKeyApplication oneKeyApplication = (OneKeyApplication) getApplication();
         // Create the presenter
         DaggerUModConfigComponent.builder()
-                .uModConfigPresenterModule(new UModConfigPresenterModule(uModConfigFragment, taskId))
+                .uModConfigPresenterModule(new UModConfigPresenterModule(uModConfigFragment, uModUUID))
                 .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponentSingleton())
                 .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .build()
@@ -88,13 +89,14 @@ public class UModConfigActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d("STEVE","UMods onPause");
+        mAddEditTasksPresenter.unsubscribe();
+        Log.d("STEVE","UModConfig onPause");
     }
 
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        Log.d("STEVE","UMods onPostResume");
+        Log.d("STEVE","UModConfig onPostResume");
     }
 
     @Override

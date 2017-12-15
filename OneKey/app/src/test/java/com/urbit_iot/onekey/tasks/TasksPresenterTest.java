@@ -20,8 +20,6 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.umods.domain.usecase.ClearAlienUMods;
-import com.urbit_iot.onekey.umods.domain.usecase.DisableUModNotification;
-import com.urbit_iot.onekey.umods.domain.usecase.EnableUModNotification;
 import com.urbit_iot.onekey.umods.domain.usecase.GetUMods;
 import com.urbit_iot.onekey.umods.UModsContract;
 import com.urbit_iot.onekey.umods.UModsPresenter;
@@ -141,7 +139,7 @@ public class TasksPresenterTest {
         UMod requestedTask = new UMod("Details Requested", "For this task");
 
         // When open task details is requested
-        mTasksPresenter.openUModDetails(requestedTask);
+        mTasksPresenter.openUModConfig(requestedTask);
 
         // Then task detail UI is shown
         verify(mTasksView).showUModConfigUi(any(String.class));

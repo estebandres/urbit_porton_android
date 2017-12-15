@@ -39,9 +39,9 @@ public class UpDownAdminLevel extends SimpleUseCase<UpDownAdminLevel.RequestValu
             mUModsRepository.refreshUMods();
         }
         */
-        UModUser.UModUserStatus newUserLevel;
+        UModUser.Level newUserLevel;
         UpDownAdminLevel.ResponseValues defaultResponse = new UpDownAdminLevel.ResponseValues(
-                new UpdateUserRPC.SuccessResponse(new UpdateUserRPC.Result(),
+                new UpdateUserRPC.Response(new UpdateUserRPC.Result(),
                         "STEVE DEFAULT",
                         new RPC.ResponseError(null,null)));
 
@@ -50,13 +50,13 @@ public class UpDownAdminLevel extends SimpleUseCase<UpDownAdminLevel.RequestValu
             if(values.getUModUser().isAdmin()){
                 return Observable.just(defaultResponse);
             }
-            newUserLevel = UModUser.UModUserStatus.ADMINISTRATOR;
+            newUserLevel = UModUser.Level.ADMINISTRATOR;
         } else {
             //If for some reason app tries to AUTHORIZE an AUTHORIZE
             if(!values.getUModUser().isAdmin()){
                 return Observable.just(defaultResponse);
             }
-            newUserLevel = UModUser.UModUserStatus.AUTHORIZED;
+            newUserLevel = UModUser.Level.AUTHORIZED;
         }
 
         final UpdateUserRPC.Request request = new UpdateUserRPC.Request(
@@ -66,15 +66,15 @@ public class UpDownAdminLevel extends SimpleUseCase<UpDownAdminLevel.RequestValu
 
         //TODO how many times should I try to execute the RPC.
         return mUModsRepository.getUMod(values.getUModUser().getuModUUID())
-                .flatMap(new Func1<UMod, Observable<UpdateUserRPC.SuccessResponse>>() {
+                .flatMap(new Func1<UMod, Observable<UpdateUserRPC.Response>>() {
                     @Override
-                    public Observable<UpdateUserRPC.SuccessResponse> call(UMod uMod) {
+                    public Observable<UpdateUserRPC.Response> call(UMod uMod) {
                         return mUModsRepository.updateUModUser(uMod,request);
                     }
                 })
-                .map(new Func1<UpdateUserRPC.SuccessResponse, UpDownAdminLevel.ResponseValues>() {
+                .map(new Func1<UpdateUserRPC.Response, UpDownAdminLevel.ResponseValues>() {
                     @Override
-                    public UpDownAdminLevel.ResponseValues call(UpdateUserRPC.SuccessResponse response) {
+                    public UpDownAdminLevel.ResponseValues call(UpdateUserRPC.Response response) {
                         return new UpDownAdminLevel.ResponseValues(response);
                     }
                 });
@@ -102,13 +102,13 @@ public class UpDownAdminLevel extends SimpleUseCase<UpDownAdminLevel.RequestValu
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private final UpdateUserRPC.SuccessResponse response;
+        private final UpdateUserRPC.Response response;
 
-        public ResponseValues(@NonNull UpdateUserRPC.SuccessResponse response) {
+        public ResponseValues(@NonNull UpdateUserRPC.Response response) {
             this.response = checkNotNull(response, "response cannot be null!");
         }
 
-        public UpdateUserRPC.SuccessResponse getResponse() {
+        public UpdateUserRPC.Response getResponse() {
             return response;
         }
     }

@@ -8,7 +8,6 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
-import com.urbit_iot.onekey.umodconfig.domain.usecase.DeleteUMod;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Inject;
@@ -46,15 +45,15 @@ public class DeleteUModUser extends SimpleUseCase<DeleteUModUser.RequestValues, 
                 666);
 
         return mUModsRepository.getUMod(values.getUModUser().getuModUUID())
-                .flatMap(new Func1<UMod, Observable<DeleteUserRPC.SuccessResponse>>() {
+                .flatMap(new Func1<UMod, Observable<DeleteUserRPC.Response>>() {
                     @Override
-                    public Observable<DeleteUserRPC.SuccessResponse> call(UMod uMod) {
+                    public Observable<DeleteUserRPC.Response> call(UMod uMod) {
                         return mUModsRepository.deleteUModUser(uMod, request);
                     }
                 })
-                .map(new Func1<DeleteUserRPC.SuccessResponse, DeleteUModUser.ResponseValues>() {
+                .map(new Func1<DeleteUserRPC.Response, DeleteUModUser.ResponseValues>() {
                     @Override
-                    public DeleteUModUser.ResponseValues call(DeleteUserRPC.SuccessResponse response) {
+                    public DeleteUModUser.ResponseValues call(DeleteUserRPC.Response response) {
                         return new DeleteUModUser.ResponseValues(response);
                     }
                 });
@@ -75,13 +74,13 @@ public class DeleteUModUser extends SimpleUseCase<DeleteUModUser.RequestValues, 
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private final DeleteUserRPC.SuccessResponse response;
+        private final DeleteUserRPC.Response response;
 
-        public ResponseValues(@NonNull DeleteUserRPC.SuccessResponse response) {
+        public ResponseValues(@NonNull DeleteUserRPC.Response response) {
             this.response = checkNotNull(response, "response cannot be null!");
         }
 
-        public DeleteUserRPC.SuccessResponse getResponse() {
+        public DeleteUserRPC.Response getResponse() {
             return response;
         }
     }

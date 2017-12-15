@@ -167,7 +167,6 @@ public class UModsActivity extends AppCompatActivity {
     @Override
     protected void onResume(){
         super.onResume();
-        mUModsPresenter.subscribe();
+        //mUModsPresenter.subscribe();
     }
 }
-

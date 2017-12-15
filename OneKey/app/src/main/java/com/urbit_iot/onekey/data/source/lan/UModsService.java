@@ -1,12 +1,13 @@
 package com.urbit_iot.onekey.data.source.lan;
 
+import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
+import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 import rx.Observable;
-
-import retrofit2.http.GET;
+import rx.Single;
 
 
 /**
@@ -16,5 +17,11 @@ import retrofit2.http.GET;
 public interface UModsService {
 
     @POST("/rpc/")
-    Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@Body SysGetInfoRPC.Request request);
+    Observable<SysGetInfoRPC.Response> getSystemInfo(@Body SysGetInfoRPC.Request request);
+
+    @POST("/rpc/")
+    Single<TriggerRPC.Response> triggerUMod(@Body TriggerRPC.Request request);
+
+    @POST("/rpc/")
+    Single<CreateUserRPC.Response> createUser(@Body CreateUserRPC.Request request);
 }

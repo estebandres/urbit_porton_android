@@ -42,7 +42,7 @@ public class GetStatistics extends SimpleUseCase<GetStatistics.RequestValues, Ge
 
                 // We calculate number of active and completed tasks
                 for (UMod task : tasks) {
-                    if (task.isNotificationEnabled()) {
+                    if (task.isOngoingNotificationEnabled()) {
                         completedTasks += 1;
                     } else {
                         activeTasks += 1;

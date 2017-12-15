@@ -20,8 +20,6 @@ import com.urbit_iot.onekey.umodconfig.domain.usecase.DeleteUMod;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUMod;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.source.UModsRepository;
-import com.urbit_iot.onekey.umods.domain.usecase.DisableUModNotification;
-import com.urbit_iot.onekey.umods.domain.usecase.EnableUModNotification;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.onekey.util.schedulers.ImmediateSchedulerProvider;
 

@@ -23,9 +23,8 @@ import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.DeleteUMod;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUMod;
 import com.urbit_iot.onekey.data.UMod;
-import com.urbit_iot.onekey.umods.domain.usecase.DisableUModNotification;
-import com.urbit_iot.onekey.umods.domain.usecase.EnableUModNotification;
 import com.google.common.base.Strings;
+import com.urbit_iot.onekey.umods.domain.usecase.SetOngoingNotificationStatus;
 
 import javax.inject.Inject;
 
@@ -41,8 +40,7 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
 
     private final UModInfoContract.View mTaskDetailView;
     private final GetUMod mGetUMod;
-    private final EnableUModNotification mEnableUModNotification;
-    private final DisableUModNotification mDisableUModNotification;
+    private final SetOngoingNotificationStatus mSetOngoingNotificationStatus;
     private final DeleteUMod mDeleteUMod;
 
     @Nullable
@@ -56,14 +54,12 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
     public UModInfoPresenter(@Nullable String taskId,
                              @NonNull UModInfoContract.View taskDetailView,
                              @NonNull GetUMod getUMod,
-                             @NonNull EnableUModNotification enableUModNotification,
-                             @NonNull DisableUModNotification disableUModNotification,
+                             @NonNull SetOngoingNotificationStatus setOngoingNotificationStatus,
                              @NonNull DeleteUMod deleteUMod) {
         mTaskId = taskId;
         mTaskDetailView = checkNotNull(taskDetailView, "taskDetailView cannot be null!");
-        mGetUMod = checkNotNull(getUMod, "getUMod cannot be null!");
-        mEnableUModNotification = checkNotNull(enableUModNotification, "enableUModNotification cannot be null!");
-        mDisableUModNotification = checkNotNull(disableUModNotification, "disableUModNotification cannot be null!");
+        mGetUMod = checkNotNull(getUMod, "getUModUUID cannot be null!");
+        mSetOngoingNotificationStatus = checkNotNull(setOngoingNotificationStatus, "disableUModNotification cannot be null!");
         mDeleteUMod = checkNotNull(deleteUMod, "deleteUMod cannot be null!");
         mTaskDetailView.setPresenter(this);
     }
@@ -85,8 +81,7 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
     @Override
     public void unsubscribe() {
         mGetUMod.unsubscribe();
-        mEnableUModNotification.unsubscribe();
-        mDisableUModNotification.unsubscribe();
+        mSetOngoingNotificationStatus.unsubscribe();
         mDeleteUMod.unsubscribe();
     }
 
@@ -163,7 +158,7 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
             mTaskDetailView.showMissingTask();
             return;
         }
-        mEnableUModNotification.execute(new EnableUModNotification.RequestValues(mTaskId),
+        mSetOngoingNotificationStatus.execute(new SetOngoingNotificationStatus.RequestValues(mTaskId, true),
                 new Subscriber<RxUseCase.NoResponseValues>() {
             @Override
             public void onCompleted() {
@@ -188,7 +183,7 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
             mTaskDetailView.showMissingTask();
             return;
         }
-        mDisableUModNotification.execute(new DisableUModNotification.RequestValues(mTaskId),
+        mSetOngoingNotificationStatus.execute(new SetOngoingNotificationStatus.RequestValues(mTaskId,false),
                 new Subscriber<RxUseCase.NoResponseValues>() {
             @Override
             public void onCompleted() {
@@ -209,7 +204,7 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
 
     private void showTask(@NonNull UMod uMod) {
         String title = uMod.getAlias();
-        String description = uMod.getLANIPAddress();
+        String description = uMod.getConnectionAddress();
 
         if (Strings.isNullOrEmpty(title)) {
             mTaskDetailView.hideTitle();
@@ -222,6 +217,6 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
         } else {
             mTaskDetailView.showDescription(description);
         }
-        mTaskDetailView.showCompletionStatus(uMod.isNotificationEnabled());
+        mTaskDetailView.showCompletionStatus(uMod.isOngoingNotificationEnabled());
     }
 }

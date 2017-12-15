@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 
 import com.google.common.collect.Lists;
+import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
@@ -66,25 +67,13 @@ public class FakeUModsRemoteDataSource implements UModsDataSource {
     }
 
     @Override
-    public void enableUModNotification(@NonNull UMod task) {
-        UMod completedTask = new UMod(task.getUUID(), task.getLANIPAddress(), true);
-        TASKS_SERVICE_DATA.put(task.getUUID(), completedTask);
+    public void partialUpdate(@NonNull UMod uMod) {
+
     }
 
     @Override
-    public void enableUModNotification(@NonNull String taskId) {
-        // Not required for the remote data source.
-    }
+    public void setUModNotificationStatus(@NonNull String uModUUID, @NonNull Boolean notificationEnabled) {
 
-    @Override
-    public void disableUModNotification(@NonNull UMod task) {
-        UMod activeTask = new UMod(task.getUUID(), task.getLANIPAddress(), true);
-        TASKS_SERVICE_DATA.put(task.getUUID(), activeTask);
-    }
-
-    @Override
-    public void disableUModNotification(@NonNull String taskId) {
-        // Not required for the remote data source.
     }
 
     @Override
@@ -92,7 +81,7 @@ public class FakeUModsRemoteDataSource implements UModsDataSource {
         Iterator<Map.Entry<String, UMod>> it = TASKS_SERVICE_DATA.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, UMod> entry = it.next();
-            if (entry.getValue().getAppUserStatus()==UModUser.UModUserStatus.UNAUTHORIZED) {
+            if (entry.getValue().getAppUserLevel()== UModUser.Level.UNAUTHORIZED) {
                 it.remove();
             }
         }
@@ -109,32 +98,37 @@ public class FakeUModsRemoteDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
+    public Observable<GetMyUserLevelRPC.Response> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
+    public Observable<TriggerRPC.Response> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+    public Observable<CreateUserRPC.Response> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
+    public Observable<UpdateUserRPC.Response> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<List<UModUser>> getUModUsers(@NonNull String uModUUID) {
+    public Observable<DeleteUserRPC.Response> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+    public Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod) {
+        return null;
+    }
+
+    @Override
+    public Observable<SysGetInfoRPC.Response> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
         return null;
     }
 

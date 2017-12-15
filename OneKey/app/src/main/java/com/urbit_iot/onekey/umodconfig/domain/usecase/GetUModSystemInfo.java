@@ -51,15 +51,15 @@ public class GetUModSystemInfo extends SimpleUseCase<GetUModSystemInfo.RequestVa
         final SysGetInfoRPC.Request request = new SysGetInfoRPC.Request(new SysGetInfoRPC.Arguments(),"STEVEOO",234234145);
 
         return uModsRepository.getUMod(values.getUModUUID())
-                .flatMap(new Func1<UMod, Observable<SysGetInfoRPC.SuccessResponse>>() {
+                .flatMap(new Func1<UMod, Observable<SysGetInfoRPC.Response>>() {
                     @Override
-                    public Observable<SysGetInfoRPC.SuccessResponse> call(UMod uMod) {
+                    public Observable<SysGetInfoRPC.Response> call(UMod uMod) {
                         return uModsRepository.getSystemInfo(uMod,request);
                     }
                 })
-                .map(new Func1<SysGetInfoRPC.SuccessResponse, ResponseValues>() {
+                .map(new Func1<SysGetInfoRPC.Response, ResponseValues>() {
             @Override
-            public ResponseValues call(SysGetInfoRPC.SuccessResponse rpcResponse) {
+            public ResponseValues call(SysGetInfoRPC.Response rpcResponse) {
                 return new ResponseValues(rpcResponse);
             }
         });
@@ -81,13 +81,13 @@ public class GetUModSystemInfo extends SimpleUseCase<GetUModSystemInfo.RequestVa
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private SysGetInfoRPC.SuccessResponse rpcResponse;
+        private SysGetInfoRPC.Response rpcResponse;
 
-        public ResponseValues(@NonNull SysGetInfoRPC.SuccessResponse rpcResponse) {
+        public ResponseValues(@NonNull SysGetInfoRPC.Response rpcResponse) {
             this.rpcResponse = checkNotNull(rpcResponse, "rpcResponse cannot be null!");
         }
 
-        public SysGetInfoRPC.SuccessResponse getRPCResponse() {
+        public SysGetInfoRPC.Response getRPCResponse() {
             return this.rpcResponse;
         }
     }

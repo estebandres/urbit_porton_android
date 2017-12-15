@@ -30,6 +30,7 @@ import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -167,6 +168,8 @@ public class UModsRepositoryModule {
                 .addInterceptor(urlHostSelectionInterceptor)
                 .authenticator(new CachingAuthenticatorDecorator(digestAuthenticator,authCache))
                 .addInterceptor(new AuthenticationCacheInterceptor(authCache))
+                .connectTimeout(2000L, TimeUnit.MILLISECONDS)
+                .readTimeout(650L, TimeUnit.MILLISECONDS)
                 .build();
     }
 

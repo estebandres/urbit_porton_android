@@ -52,7 +52,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
                               @NonNull DeleteUModUser deleteUModUser,
                               @NonNull UpDownAdminLevel upDownAdminLevel) {
         mUModsView = checkNotNull(umodsView, "tasksView cannot be null!");
-        this.getUModUsers = checkNotNull(getUModUsers, "getUMod cannot be null!");
+        this.getUModUsers = checkNotNull(getUModUsers, "getUModUUID cannot be null!");
         mAuthorizeUModUser = checkNotNull(authorizeUModUser, "authorizeUModUser cannot be null!");
         mDeleteUModUser = checkNotNull(deleteUModUser, "deleteUModUser cannot be null!");
         this.upDownAdminLevel = checkNotNull(upDownAdminLevel, "upDownAdminLevel cannot be null!");
@@ -264,7 +264,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
 
             @Override
             public void onNext(AuthorizeUModUser.ResponseValues responseValues) {
-                UpdateUserRPC.SuccessResponse response = responseValues.getResponse();
+                UpdateUserRPC.Response response = responseValues.getResponse();
                 Log.d("um_usrs_pr", "RPC is " + response.getCallTag());
                 mUModsView.showUserApprovalSuccess();
             }
@@ -292,7 +292,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
 
             @Override
             public void onNext(DeleteUModUser.ResponseValues responseValues) {
-                DeleteUserRPC.SuccessResponse response = responseValues.getResponse();
+                DeleteUserRPC.Response response = responseValues.getResponse();
                 Log.d("um_usrs_pr", "RPC is " + response.getCallTag());
                 mUModsView.showUserApprovalSuccess();
             }
@@ -321,7 +321,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
 
             @Override
             public void onNext(UpDownAdminLevel.ResponseValues responseValues) {
-                UpdateUserRPC.SuccessResponse response = responseValues.getResponse();
+                UpdateUserRPC.Response response = responseValues.getResponse();
                 Log.d("um_usrs_pr", "RPC is " + response.getCallTag());
                 mUModsView.showUserApprovalSuccess();
             }

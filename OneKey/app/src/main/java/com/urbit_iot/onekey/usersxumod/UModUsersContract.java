@@ -71,7 +71,7 @@ public interface UModUsersContract {
 
         void addNewUModUser();
 
-        //void openUModDetails(@NonNull UMod requestedUMod);
+        //void openUModConfig(@NonNull UMod requestedUMod);
 
         //void enableUModNotification(@NonNull UMod completedUMod);
 

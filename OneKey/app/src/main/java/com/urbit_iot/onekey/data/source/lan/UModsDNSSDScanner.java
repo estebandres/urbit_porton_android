@@ -3,6 +3,7 @@ package com.urbit_iot.onekey.data.source.lan;
 import android.content.Context;
 import android.util.Log;
 
+import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.github.druk.rxdnssd.BonjourService;
 import com.github.druk.rxdnssd.RxDnssd;
 import com.github.druk.rxdnssd.RxDnssdBindable;
@@ -11,6 +12,7 @@ import com.urbit_iot.onekey.data.UMod;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
+import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func0;
 import rx.functions.Func1;
@@ -27,6 +29,7 @@ public class UModsDNSSDScanner {
     }
 
     //Keeps browsing the LAN for 4 seconds maximum.
+    //@RxLogObservable
     public Observable<UMod> browseLANForUMods(){
         return Observable.defer(new Func0<Observable<UMod>>() {
             @Override
@@ -34,21 +37,9 @@ public class UModsDNSSDScanner {
                 return rxDnssd.browse("_http._tcp.","local.")
                         .compose(rxDnssd.resolve())
                         .compose(rxDnssd.queryRecords())
-                        .take(10)
-                        .distinct()
-                        .doOnError(new Action1<Throwable>() {
-                            @Override
-                            public void call(Throwable throwable) {
-                                Log.e("dns-sd_scan", throwable.getMessage());
-                            }
-                        })
-                        .doOnNext(new Action1<BonjourService>() {
-                            @Override
-                            public void call(BonjourService bonjourService) {
-                                Log.d("dns-sd_sca",bonjourService.getHostname() + " - " + bonjourService.getInet4Address().getHostAddress());
-                            }
-                        })
+                        //.take(10)
                         .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
+                        .distinct()
                         .filter(new Func1<BonjourService, Boolean>() {
                             @Override
                             public Boolean call(BonjourService bonjourService) {
@@ -76,6 +67,7 @@ public class UModsDNSSDScanner {
                         .compose(rxDnssd.resolve())
                         .compose(rxDnssd.queryRecords())
                         .distinct()
+                        .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
                         .doOnError(new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
@@ -85,7 +77,7 @@ public class UModsDNSSDScanner {
                         .doOnNext(new Action1<BonjourService>() {
                             @Override
                             public void call(BonjourService bonjourService) {
-                                Log.d("dns-sd_sca",bonjourService.getHostname() + " - " + bonjourService.getInet4Address().getHostAddress());
+                                Log.d("dns-sd_scan",bonjourService.getHostname() + " - " + bonjourService.getInet4Address().getHostAddress());
                             }
                         })
                         .filter(new Func1<BonjourService, Boolean>() {
@@ -100,6 +92,12 @@ public class UModsDNSSDScanner {
                                 return new UMod(discovery.getHostname(),
                                         discovery.getInet4Address().getHostAddress(),
                                         true);
+                            }
+                        })
+                        .doOnCompleted(new Action0() {
+                            @Override
+                            public void call() {
+                                Log.d("dns-sd", "single browse finished.");
                             }
                         });
             }

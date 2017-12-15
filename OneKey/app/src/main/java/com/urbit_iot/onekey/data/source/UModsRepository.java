@@ -23,6 +23,7 @@ import android.util.Log;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
@@ -62,9 +63,13 @@ public class UModsRepository implements UModsDataSource {
     @NonNull
     private final UModsDataSource mUModsLocalDataSource;
 
+    @NonNull
+    private Observable.Transformer<UMod,UMod> uModCacheBrander;
+
     /**
      * This variable has package local visibility so it can be accessed from tests.
      */
+    //TODO explore posibility of implement a self expiring cache as a new DataSource
     @VisibleForTesting
     @Nullable
     Map<String, UMod> mCachedUMods;
@@ -93,6 +98,19 @@ public class UModsRepository implements UModsDataSource {
                            @Local UModsDataSource tasksLocalDataSource) {
         mUModsLANDataSource = checkNotNull(tasksRemoteDataSource);
         mUModsLocalDataSource = checkNotNull(tasksLocalDataSource);
+        this.uModCacheBrander = new Observable.Transformer<UMod, UMod>() {
+            @Override
+            public Observable<UMod> call(Observable<UMod> uModObservable) {
+                return uModObservable
+                        .map(new Func1<UMod, UMod>() {
+                            @Override
+                            public UMod call(UMod uMod) {
+                                uMod.setuModSource(UMod.UModSource.CACHE);
+                                return uMod;
+                            }
+                        });
+            }
+        };
     }
 
     /**
@@ -125,39 +143,68 @@ public class UModsRepository implements UModsDataSource {
         }
     }
 
-    @Override
-    public Observable<UMod> getUModsOneByOne() {
-        // Respond immediately with cache if available and not dirty
-        if (mCachedUMods != null && !mCacheIsDirty) {
-            Log.d("rep_g1x1", mCachedUMods.toString());
-            return Observable.from(mCachedUMods.values());
-        } else if (mCachedUMods == null) {
-            mCachedUMods = new LinkedHashMap<>();
+    private Observable<UMod> getUModsOneByOneFromCacheOrDisk(){
+        if (mCachedUMods!=null && !mCachedUMods.isEmpty()){
+            Log.d("umods_rep","Map cache");
+                return Observable.from(mCachedUMods.values()).compose(this.uModCacheBrander);
         }
-
-        Observable<UMod> lanUModObs = mUModsLANDataSource
-                .getUModsOneByOne()
-                .filter(new Func1<UMod, Boolean>() {
+        Log.d("umods_rep","DB");
+        return mUModsLocalDataSource.getUModsOneByOne()
+                .doOnNext(new Action1<UMod>() {
                     @Override
-                    public Boolean call(UMod uMod) {
-                        return uMod != null;
+                    public void call(UMod uMod) {
+                        mCachedUMods.put(uMod.getUUID(), uMod);
+                    }
+                });
+    }
+
+    private Observable<UMod> getUModsOneByOneFromLanAndUpdateDBAndCache(){
+        return mUModsLANDataSource
+                .getUModsOneByOne()
+                .flatMap(new Func1<UMod, Observable<UMod>>() {
+                    @Override
+                    public Observable<UMod> call(final UMod lanUMod) {
+                        return mUModsLocalDataSource.getUMod(lanUMod.getUUID())
+                                .flatMap(new Func1<UMod, Observable<UMod>>() {
+                                    @Override
+                                    public Observable<UMod> call(UMod dbUMod) {
+                                        if(dbUMod == null){
+                                            return Observable.just(lanUMod);
+                                        } else {//Updates the entry
+                                            dbUMod.setConnectionAddress(lanUMod.getConnectionAddress());
+                                            dbUMod.setState(lanUMod.getState());
+                                            dbUMod.setuModSource(UMod.UModSource.LAN_SCAN);
+                                            return Observable.just(dbUMod);
+                                        }
+                                    }
+                                });
                     }
                 })
                 .doOnNext(new Action1<UMod>() {
                     @Override
                     public void call(UMod uMod) {
                         if(uMod.belongsToAppUser()){
-                            //TODO should make only an update over the DB entry: connectionAddress and updateDate only.
+                            //TODO should make only an update over the DB entry: connectionAddress and updateDate only (partial update).
+                            Log.d("umods_rep", "db update");
                             mUModsLocalDataSource.saveUMod(uMod);
                         }
-                        mCachedUMods.put(uMod.getUUID(),uMod);
+                        //TODO move to cacheDataSource when
+                        UMod cachedUMod = mCachedUMods.get(uMod.getUUID());
+                        if(cachedUMod!=null){
+                            cachedUMod.setConnectionAddress(uMod.getConnectionAddress());
+                            cachedUMod.setState(uMod.getState());
+                            cachedUMod.setLastUpdateDate(uMod.getLastUpdateDate());
+                            mCachedUMods.put(cachedUMod.getUUID(),cachedUMod);
+                        } else {
+                            mCachedUMods.put(uMod.getUUID(),uMod);
+                        }
                     }
                 })
                 .doOnError(new Action1<Throwable>() {
                     @Override
                     public void call(Throwable throwable) {
                         Log.e("repo_get_lan", throwable.getMessage());
-                        mCacheIsDirty = true;
+                        mCacheIsDirty = true;//To force the update later.
                     }
                 })
                 .doOnCompleted(new Action0() {
@@ -166,19 +213,23 @@ public class UModsRepository implements UModsDataSource {
                         mCacheIsDirty = false;
                     }
                 });
+    }
 
-        if (mCacheIsDirty) {
-            return lanUModObs;
-        } else {
-            Observable<UMod> dbUModObs = mUModsLocalDataSource
-                    .getUModsOneByOne()
-                    .doOnError(new Action1<Throwable>() {
-                        @Override
-                        public void call(Throwable throwable) {
-                            Log.e("repo_get_db", throwable.getMessage());
-                        }
-                    });
-            return Observable.concatDelayError(dbUModObs, lanUModObs)
+    //TODO make a revision of this method!
+    @Override
+    //@RxLogObservable
+    public Observable<UMod> getUModsOneByOne() {
+        Observable<UMod> cacheOrDBUModObs = Observable.empty();
+        //If cache is dirty (forced update) then lookup for UMods on LAN (dnssd,ble)
+        Observable<UMod> lanUModObs = this.getUModsOneByOneFromLanAndUpdateDBAndCache();
+        // Respond immediately with cache if available and not dirty
+        Log.d("umods_rep", "get1by1");
+        if (!mCacheIsDirty) {
+            Log.d("umods_rep", "cache" + mCachedUMods);
+            cacheOrDBUModObs = getUModsOneByOneFromCacheOrDisk();
+            return Observable.concatDelayError(
+                    cacheOrDBUModObs.defaultIfEmpty(null),
+                    lanUModObs)
                     .filter(new Func1<UMod, Boolean>() {
                         @Override
                         public Boolean call(UMod uMod) {
@@ -186,6 +237,20 @@ public class UModsRepository implements UModsDataSource {
                         }
                     });
         }
+
+        if (mCachedUMods == null){
+            mCachedUMods = new LinkedHashMap<>();
+        }
+
+        Log.d("umods_rep", "lanbrowse");
+
+        return Observable.concatDelayError(cacheOrDBUModObs, lanUModObs)
+                .filter(new Func1<UMod, Boolean>() {
+                    @Override
+                    public Boolean call(UMod uMod) {
+                        return uMod != null;
+                    }
+                });
     }
 
     private Observable<List<UMod>> getAndCacheLocalUMods() {
@@ -242,50 +307,27 @@ public class UModsRepository implements UModsDataSource {
     }
 
     @Override
-    public void enableUModNotification(@NonNull UMod uMod) {
-        checkNotNull(uMod);
-        mUModsLANDataSource.enableUModNotification(uMod);
-        mUModsLocalDataSource.enableUModNotification(uMod);
-
-        UMod notificationEnabledUMod = new UMod(uMod.getUUID(),uMod.getLANIPAddress(),uMod.isOpen());
-        notificationEnabledUMod.enableNotification();
-        // Do in memory cache update to keep the app UI up to date
-        if (mCachedUMods == null) {
-            mCachedUMods = new LinkedHashMap<>();
-        }
-        mCachedUMods.put(uMod.getUUID(), notificationEnabledUMod);
+    public void partialUpdate(@NonNull UMod uMod) {
+        mUModsLocalDataSource.partialUpdate(uMod);
     }
 
     @Override
-    public void enableUModNotification(@NonNull String uModID) {
-        checkNotNull(uModID);
-        UMod uModWithUUID = getUModWithUUID(uModID);
-        if (uModWithUUID != null) {
-            enableUModNotification(uModWithUUID);
+    public void setUModNotificationStatus(@NonNull String uModUUID,
+                                          @NonNull Boolean notificationEnabled) {
+        UMod cachedUMod = getCachedUMod(uModUUID);
+        if (cachedUMod != null){//&& !cachedUMod.isOldRegister()? would it be useful?
+            cachedUMod.setOngoingNotificationStatus(notificationEnabled);
         }
+
+        mUModsLocalDataSource.setUModNotificationStatus(uModUUID, notificationEnabled);
     }
 
-    @Override
-    public void disableUModNotification(@NonNull UMod uMod) {
-        checkNotNull(uMod);
-        mUModsLANDataSource.disableUModNotification(uMod);
-        mUModsLocalDataSource.disableUModNotification(uMod);
-
-        UMod notificationDisabledUMod = new UMod(uMod.getUUID(),uMod.getLANIPAddress(),uMod.isOpen());
-        notificationDisabledUMod.disableNotification();
-        // Do in memory cache update to keep the app UI up to date
-        if (mCachedUMods == null) {
-            mCachedUMods = new LinkedHashMap<>();
-        }
-        mCachedUMods.put(uMod.getUUID(), notificationDisabledUMod);
-    }
-
-    @Override
-    public void disableUModNotification(@NonNull String uModUUID) {
-        checkNotNull(uModUUID);
-        UMod uModWithUUID = getUModWithUUID(uModUUID);
-        if (uModWithUUID != null) {
-            disableUModNotification(uModWithUUID);
+    public UMod getCachedUMod(String uModUUID){
+        if (mCachedUMods!=null && !mCachedUMods.isEmpty()
+                && mCachedUMods.containsKey(uModUUID)) {
+            return mCachedUMods.get(uModUUID);
+        } else {
+            return null;
         }
     }
 
@@ -301,7 +343,7 @@ public class UModsRepository implements UModsDataSource {
         Iterator<Map.Entry<String, UMod>> it = mCachedUMods.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, UMod> entry = it.next();
-            if (entry.getValue().getAppUserStatus() == UModUser.UModUserStatus.UNAUTHORIZED) {
+            if (entry.getValue().getAppUserLevel() == UModUser.Level.UNAUTHORIZED) {
                 it.remove();
             }
         }
@@ -315,23 +357,32 @@ public class UModsRepository implements UModsDataSource {
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
         checkNotNull(uModUUID);
 
-        //final UMod cachedUMod = getUModWithUUID(uModUUID);
-        UMod cachedUMod;
-
         // Respond immediately with cache if available
-        if (!mCacheIsDirty && mCachedUMods!=null &&
-                !mCachedUMods.isEmpty() && mCachedUMods.containsKey(uModUUID)){
-            cachedUMod = mCachedUMods.get(uModUUID);
-            if (cachedUMod != null){//&& !cachedUMod.isOldRegister()
-                return Observable.just(cachedUMod);
-            }
+        if (!mCacheIsDirty){
+            return Observable.concatDelayError(getSingleUModFromCacheOrDisk(uModUUID),
+                    getSingleUModFromLanAndUpdateDBEntry(uModUUID))
+                    .doOnNext(new Action1<UMod>() {
+                        @Override
+                        public void call(UMod uMod) {
+                            Log.e("umod_repo", uMod.toString());
+                        }
+                    })
+                    .doOnError(new Action1<Throwable>() {
+                        @Override
+                        public void call(Throwable throwable) {
+                            Log.e("umod_repo", throwable.getMessage());
+                        }
+                    })
+                    .first();
+        } else {
+            return getSingleUModFromLanAndUpdateDBEntry(uModUUID);
         }
 
-        final Observable<UMod> localDBUModObs = mUModsLocalDataSource.getUMod(uModUUID);
-        Observable<UMod> lanUModObs = mUModsLANDataSource.getUMod(uModUUID);
 
-        // If lanUmodsDataSource produces a result
-        return lanUModObs
+    }
+    private Observable<UMod> getSingleUModFromLanAndUpdateDBEntry(final String uModUUID){
+        // If lanUmodsDataSource produces a result then tries to update the DB entry for the same UUID
+        return mUModsLANDataSource.getUMod(uModUUID)
                 .filter(new Func1<UMod, Boolean>() {
                     @Override
                     public Boolean call(UMod uMod) {
@@ -342,21 +393,57 @@ public class UModsRepository implements UModsDataSource {
                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
                     public Observable<UMod> call(final UMod lanUMod) {
-                        return localDBUModObs
+                        return mUModsLocalDataSource.getUMod(uModUUID)
                                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                                     @Override
                                     public Observable<UMod> call(UMod dbUMod) {
-                                        // Given the nature of the DB data source it explicitly returns a result or a default null.
+                                        // Given the implementation of the DB DataSource
+                                        // it explicitly returns a result or a default null.
+                                        // Since lanDS produces incomplete UMods objects it should
+                                        // fetch the DB entry and update it.
                                         if(dbUMod == null){
                                             return Observable.just(lanUMod);
-                                        } else {
-                                            dbUMod.setmLANIPAddress(lanUMod.getLANIPAddress());
-                                            dbUMod.setuModState(lanUMod.getuModState());
+                                        } else {//Updates the entry
+                                            dbUMod.setConnectionAddress(lanUMod.getConnectionAddress());
+                                            dbUMod.setState(lanUMod.getState());
                                             return Observable.just(dbUMod);
                                         }
                                     }
                                 })
                                 .onErrorResumeNext(Observable.just(lanUMod));
+                    }
+                })
+                .doOnNext(new Action1<UMod>() {
+                    @Override
+                    public void call(UMod uMod) {//Updates Cache and DB
+                        if (uMod.belongsToAppUser()){
+                            mCachedUMods.put(uMod.getUUID(),uMod);
+                            mUModsLocalDataSource.saveUMod(uMod);
+                        }
+                    }
+                });
+    }
+
+    private Observable<UMod> getSingleUModFromCacheOrDisk(String uModUUID){
+        UMod cachedUMod;
+        if (mCachedUMods!=null && !mCachedUMods.isEmpty()
+                && mCachedUMods.containsKey(uModUUID)){
+            cachedUMod = mCachedUMods.get(uModUUID);
+            if (cachedUMod != null){//&& !cachedUMod.isOldRegister()? would it be useful?
+                return Observable.just(cachedUMod);
+            }
+        }
+        return mUModsLocalDataSource.getUMod(uModUUID)
+                .filter(new Func1<UMod, Boolean>() {
+                    @Override
+                    public Boolean call(UMod uMod) {
+                        return uMod != null;
+                    }
+                })
+                .doOnNext(new Action1<UMod>() {
+                    @Override
+                    public void call(UMod uMod) {
+                        mCachedUMods.put(uMod.getUUID(), uMod);
                     }
                 });
     }
@@ -386,32 +473,42 @@ public class UModsRepository implements UModsDataSource {
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
+    public Observable<GetMyUserLevelRPC.Response>
+    getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
         return mUModsLANDataSource.getUserLevel(uMod, request);
     }
 
     @Override
-    public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
+    public Observable<TriggerRPC.Response>
+    triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
         return mUModsLANDataSource.triggerUMod(uMod,request);
     }
 
     @Override
-    public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+    public Observable<CreateUserRPC.Response> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Request request) {
+        return mUModsLANDataSource.createUModUser(uMod, request);
+    }
+
+    @Override
+    public Observable<UpdateUserRPC.Response>
+    updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
         return mUModsLANDataSource.updateUModUser(uMod,request);
     }
 
     @Override
-    public Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
+    public Observable<DeleteUserRPC.Response>
+    deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<List<UModUser>> getUModUsers(@NonNull String uModUUID) {
-        return mUModsLANDataSource.getUModUsers(uModUUID);
+    public Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod) {
+        return mUModsLANDataSource.getUModUsers(uMod);
     }
 
     @Override
-    public Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+    public Observable<SysGetInfoRPC.Response>
+    getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
         return mUModsLANDataSource.getSystemInfo(uMod, request);
     }
 

@@ -20,44 +20,50 @@ import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.CompletableUseCase;
 import com.urbit_iot.onekey.RxUseCase;
-import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.onekey.data.source.UModsRepository;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
+
+import java.security.PrivateKey;
 
 import javax.inject.Inject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Marks a task as active (not completed yet).
+ * Marks a task as completed.
  */
-public class DisableUModNotification extends CompletableUseCase<DisableUModNotification.RequestValues> {
+public class SetOngoingNotificationStatus extends CompletableUseCase<SetOngoingNotificationStatus.RequestValues> {
 
-    private final UModsRepository mTasksRepository;
+    private final UModsRepository uModsRepository;
 
     @Inject
-    public DisableUModNotification(@NonNull UModsRepository tasksRepository,
-                                   @NonNull BaseSchedulerProvider schedulerProvider) {
+    public SetOngoingNotificationStatus(@NonNull UModsRepository uModsRepository,
+                                        @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
-        mTasksRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
+        this.uModsRepository = checkNotNull(uModsRepository, "tasksRepository cannot be null!");
     }
 
     @Override
     protected void complete(RequestValues values) {
-        String uModUUID = values.getUModUUID();
-        mTasksRepository.disableUModNotification(uModUUID);
+        uModsRepository.setUModNotificationStatus(values.getUModUUID(), values.getUModOngoingNotifEnabled());
     }
-
 
     public static final class RequestValues implements RxUseCase.RequestValues {
 
-        private final String uModUUID;
+        private final String mUModUUID;
+        private final Boolean uModOngoingNotifEnabled;
 
-        public RequestValues(@NonNull String uModUUID) {
-            this.uModUUID = checkNotNull(uModUUID, "disableUModNotification cannot be null!");
+        public RequestValues(@NonNull String uModUUID, @NonNull Boolean uModOngoingNotifEnabled) {
+            mUModUUID = checkNotNull(uModUUID, "completedTask cannot be null!");
+            this.uModOngoingNotifEnabled = checkNotNull(uModOngoingNotifEnabled, "uModOngoingNotifEnabled cannot be null!");
         }
 
         public String getUModUUID() {
-            return uModUUID;
+            return mUModUUID;
+        }
+
+        public Boolean getUModOngoingNotifEnabled(){
+            return this.uModOngoingNotifEnabled;
         }
     }
 }

@@ -372,7 +372,7 @@ public class UModsRepositoryTest {
         // And the remote data source has no data available
         setTaskNotAvailable(mTasksRemoteDataSource, taskId);
 
-        // When calling getUMod in the repository
+        // When calling getUModUUID in the repository
         TestSubscriber<UMod> testSubscriber = new TestSubscriber<>();
         mTasksRepository.getTask(taskId).subscribe(testSubscriber);
 

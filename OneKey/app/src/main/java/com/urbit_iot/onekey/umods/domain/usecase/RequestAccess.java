@@ -22,11 +22,12 @@ import android.util.Log;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
-import com.urbit_iot.onekey.data.rpc.TriggerRPC;
+import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -34,19 +35,22 @@ import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
+import rx.subjects.PublishSubject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Fetches the list of tasks.
  */
-public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, TriggerUMod.ResponseValues> {
+public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, RequestAccess.ResponseValues> {
 
     private final UModsRepository mUModsRepository;
+    @NonNull
+    private final PublishSubject<Void> retrySubject = PublishSubject.create();
 
     @Inject
-    public TriggerUMod(@NonNull UModsRepository uModsRepository,
-                       @NonNull BaseSchedulerProvider schedulerProvider) {
+    public RequestAccess(@NonNull UModsRepository uModsRepository,
+                         @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(uModsRepository, "uModsRepository cannot be null!");
     }
@@ -59,35 +63,35 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
         }
         */
         //TODO figure what to do with rpc tag and id
-        final TriggerRPC.Request request = new TriggerRPC.Request(new TriggerRPC.Arguments(),
-                "SteveTriggered",666);
-        //TODO review operator usage
+        final CreateUserRPC.Request request =
+                new CreateUserRPC.Request(
+                        new CreateUserRPC.Arguments("AAAAAAAAA:BBBBBBBBBB:CCCCCCCC"),
+                        "MockCreation",
+                        666);
+
+        //int retryCounter = 0;
         return mUModsRepository.getUMod(values.getUModUUID())
-                .flatMap(new Func1<UMod, Observable<TriggerRPC.Response>>() {
+                .flatMap(new Func1<UMod, Observable<CreateUserRPC.Response>>() {
                     @Override
-                    public Observable<TriggerRPC.Response> call(UMod uMod) {
-                        return mUModsRepository.triggerUMod(uMod, request);
+                    public Observable<CreateUserRPC.Response> call(UMod uMod) {
+                        return mUModsRepository.createUModUser(uMod, request);
                     }
                 })
-                //TODO find a better way to retry
                 .retry(new Func2<Integer, Throwable, Boolean>() {
                     @Override
                     public Boolean call(Integer retryCount, Throwable throwable) {
-                        Log.e("req_access_uc", "Retry count: " + retryCount +
-                                "\n Excep msge: " + throwable.getMessage());
-                        if (retryCount < 4 &&
-                                (throwable instanceof IOException ||
+                        Log.e("req_access_uc", "Retry count: " + retryCount + "\n Excep msge: " + throwable.getMessage());
+                        if (retryCount < 4 && (throwable instanceof IOException ||
                                 throwable instanceof HttpException)){
-                            mUModsRepository.refreshUMods();
                             return true;
                         } else {
                             return false;
                         }
                     }
                 })
-                .map(new Func1<TriggerRPC.Response, ResponseValues>() {
+                .map(new Func1<CreateUserRPC.Response, ResponseValues>() {
                     @Override
-                    public ResponseValues call(TriggerRPC.Response response) {
+                    public ResponseValues call(CreateUserRPC.Response response) {
                         return new ResponseValues(response);
                     }
                 });
@@ -108,13 +112,12 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private final TriggerRPC.Response response;
+        private final CreateUserRPC.Response response;
 
-        public ResponseValues(@NonNull TriggerRPC.Response response) {
+        public ResponseValues(@NonNull CreateUserRPC.Response response) {
             this.response = checkNotNull(response, "response cannot be null!");
         }
-
-        public TriggerRPC.Response getResponse() {
+        public CreateUserRPC.Response getResponse() {
             return response;
         }
     }

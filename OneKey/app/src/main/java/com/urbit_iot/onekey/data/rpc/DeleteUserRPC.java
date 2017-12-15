@@ -49,12 +49,12 @@ public class DeleteUserRPC extends RPC {
         public Result(){}
     }
 
-    public static class SuccessResponse extends RPC.SuccessResponse{
+    public static class Response extends RPC.Response {
 
         @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
         private DeleteUserRPC.Result responseResult;
 
-        public SuccessResponse(Result result, String callTag, ResponseError responseError) {
+        public Response(Result result, String callTag, ResponseError responseError) {
             super(callTag, responseError);
             this.responseResult = result;
         }
@@ -69,7 +69,7 @@ public class DeleteUserRPC extends RPC {
 
         @Override
         public String toString() {
-            return "SuccessResponse{" +
+            return "Response{" +
                     "callTag=" + this.getCallTag() + ", " +
                     "responseResult=" + responseResult +
                     '}';

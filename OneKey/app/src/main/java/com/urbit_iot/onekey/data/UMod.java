@@ -22,6 +22,7 @@ import android.util.SparseArray;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.util.Date;
 
@@ -30,107 +31,126 @@ import java.util.Date;
  */
 public final class UMod {
 
-    private final long OUTDATED_THRESHOLD = 86400000L;
-
-    public enum UModState{
+    public enum State {
         AP_MODE(0),
         IDLE(1),
         IN_OPERATION(2),
         OTA_UPDATE(3),
-        DEATH(4),
         STATION_MODE(5),
         BLE_MODE(6);
         private final Integer stateID;
-        private static SparseArray<UModState> map = new SparseArray<>();
+        private static SparseArray<State> map = new SparseArray<>();
 
         static {
-            for (UModState stateEnum : UModState.values()) {
+            for (State stateEnum : State.values()) {
                 map.put(stateEnum.stateID, stateEnum);
             }
         }
 
-        UModState(Integer stateID){
+        State(Integer stateID){
             this.stateID = stateID;
         }
         public Integer getStateID(){
             return this.stateID;
         }
-        public static UModState from(int value) {
+        public static State from(int value) {
             return map.get(value);
         }
     }
 
-    @NonNull
-    private final String mUUID;
-
-    @Nullable
-    private String mAlias;
-
-    @Nullable
-    private boolean mNotificationEnabled;
-
-    @Nullable
-    private String mLANIPAddress;
-
-    @Nullable
-    private String bleHwAddress;
-
-    @Nullable
-    private String mWiFiSSID;
-
-    @Nullable
-    private String mWiFiPassword;
+    public enum UModSource{
+        CACHE(0),
+        LOCAL_DB(1),
+        BLE_SCAN(2),
+        DNS_SD_BROWSE(3),
+        LAN_SCAN(4),
+        WEB(3);
+        private final Integer sourceID;
+        UModSource(Integer sourceID) {
+            this.sourceID = sourceID;
+        }
+        public Integer getSourceID(){
+            return this.sourceID;
+        }
+    }
 
     @NonNull
-    private UModUser.UModUserStatus appUserStatus;
+    private final String uModUUID;
 
     @NonNull
-    private UModState uModState;
+    private UModUser.Level appUserLevel;
+
+    @NonNull
+    private State state;
+
+    @NonNull
+    private Boolean ongoingNotificationEnabled;
+
+    //TODO change to LocalDate when java8 is supported
+    @NonNull
+    private Date lastUpdateDate;
+
+    //------------------------------------------
 
     @Nullable
-    private String uModReport;
+    private String alias;
+
+    @Nullable
+    private String connectionAddress;
+
+    @Nullable
+    private String wifiSSID;
+
+    @Nullable
+    private UModSource uModSource;
+
+    @Nullable
+    private String uModLastReport;
 
     @Nullable
     private String productUUID;
 
     @Nullable
-    private String mHWVersion;
+    private String hwVersion;
 
     @Nullable
-    private String mSWVersion;
+    private String swVersion;
 
-    @NonNull
+    @Nullable
     private boolean isOpen;//It could be determined by the umodule state. Can an umodule respond to a request while updating??
 
     //private boolean admitsRinging;
-    //TODO change to LocalDate when java8 is supported
-    @NonNull
-    private Date lastUpdateDate;
 
     /**
      * Use this constructor to create a new umod when the data is retrieve from dns-sd and TXT contains isOpen.
-     * @param mUUID
-     * @param mLANIPAddress
+     * @param uModUUID
+     * @param connectionAddress
      */
-    public UMod(@NonNull String mUUID, String mLANIPAddress, @NonNull Boolean isOpen) {
-        this.mUUID = mUUID;
-        this.mLANIPAddress = mLANIPAddress;
-        this.uModState = UModState.STATION_MODE;
-        this.appUserStatus = UModUser.UModUserStatus.UNAUTHORIZED;
+    public UMod(@NonNull String uModUUID,
+                @Nullable String connectionAddress,
+                @NonNull Boolean isOpen) {
+        this.uModUUID = uModUUID;
+        this.alias = uModUUID;
+        this.ongoingNotificationEnabled =  false;
+        this.connectionAddress = connectionAddress;
+        this.state = State.STATION_MODE;
+        this.appUserLevel = UModUser.Level.UNAUTHORIZED;
         this.isOpen = isOpen;
         this.lastUpdateDate = new Date();
     }
 
     /**
      * Use this constructor to create a new umod when the data is retrieve from BLE scanning.
-     * @param mUUID
+     * @param uModUUID
      * @param bleHwAddress
      */
-    public UMod(@NonNull String mUUID, String bleHwAddress) {
-        this.mUUID = mUUID;
-        this.bleHwAddress = bleHwAddress;
-        this.uModState = UModState.AP_MODE;
-        this.appUserStatus = UModUser.UModUserStatus.UNAUTHORIZED;
+    public UMod(@NonNull String uModUUID, @Nullable String bleHwAddress) {
+        this.uModUUID = uModUUID;
+        this.alias = uModUUID;
+        this.ongoingNotificationEnabled =  false;
+        this.connectionAddress = bleHwAddress;
+        this.state = State.AP_MODE;
+        this.appUserLevel = UModUser.Level.UNAUTHORIZED;
         this.isOpen = true;
         this.lastUpdateDate = new Date();
     }
@@ -139,50 +159,94 @@ public final class UMod {
      * Use this constructor when the data is retrieved from WiFi AP scanner.
      * @param moduleUUID
      */
-    public UMod(@NonNull String moduleUUID, @NonNull String prodUUID, @NonNull String hwVersion, @NonNull String swVersion) {
-        this.mUUID = moduleUUID;
-        this.mAlias = moduleUUID;
-        this.productUUID = prodUUID;
-        this.mHWVersion = hwVersion;
-        this.mSWVersion = swVersion;
-
+    public UMod(@NonNull String moduleUUID) {
+        this.uModUUID = moduleUUID;
+        this.alias = uModUUID;
+        this.ongoingNotificationEnabled =  false;
+        this.connectionAddress = GlobalConstants.AP_DEFAULT_IP_ADDRESS;
+        this.state = State.AP_MODE;
+        this.appUserLevel = UModUser.Level.UNAUTHORIZED;
+        this.isOpen = true;
         this.lastUpdateDate = new Date();
-    }
-
-    /**
-     * Only for mocked execution.
-     * @param mUUID
-     */
-    public UMod(@NonNull String mUUID) {
-        this.mUUID = mUUID;
     }
 
     /**
      * Use this constructor to create a new umod when the data is retrieve from dns-sd and the
      * response includes the TXT fields.
-     * @param mUUID
-     * @param mAlias
-     * @param mLANIPAddress
-     * @param uModStateInt
-     * @param uModReport
+     * @param uModUUID module UUID.
+     * @param alias module alias would be shown in UI.
+     * @param connectionAddress LAN IP address to direct RPCs.
+     * @param uModLastReport
      * @param productUUID
-     * @param mHWVersion
-     * @param mSWVersion
+     * @param hwVersion
+     * @param swVersion
      * @param isOpen
      */
-    public UMod(@NonNull String mUUID, String mAlias, String mLANIPAddress, int uModStateInt,
-                String uModReport, String productUUID, String mHWVersion, String mSWVersion,
+    public UMod(@NonNull String uModUUID,
+                @Nullable String alias,
+                @Nullable String connectionAddress,
+                @Nullable String uModLastReport,
+                @Nullable String productUUID,
+                @Nullable String hwVersion,
+                @Nullable String swVersion,
                 @NonNull boolean isOpen) {
-        this.mUUID = mUUID;
-        this.mAlias = mAlias;
-        this.mLANIPAddress = mLANIPAddress;
-        this.uModState = UModState.from(uModStateInt);
-        this.uModReport = uModReport;
+        this.uModUUID = uModUUID;
+        this.ongoingNotificationEnabled =  false;
+        this.alias = alias;
+        this.connectionAddress = connectionAddress;
+        this.state = State.STATION_MODE;
+        this.uModLastReport = uModLastReport;
         this.productUUID = productUUID;
-        this.mHWVersion = mHWVersion;
-        this.mSWVersion = mSWVersion;
+        this.hwVersion = hwVersion;
+        this.swVersion = swVersion;
         this.isOpen = isOpen;
         this.lastUpdateDate = new Date();
+    }
+
+    /**
+     * Use this constructor for the DB entries translations.
+     * @param uuid
+     * @param alias
+     * @param connectionAddress
+     * @param uModState
+     * @param userLevel
+     * @param ongoingNotifEnabled
+     * @param lastReport
+     * @param productUUID
+     * @param hwVersion
+     * @param swVersion
+     */
+    public UMod(@NonNull String uuid,
+                @Nullable String alias,
+                @Nullable String connectionAddress,
+                @NonNull State uModState,
+                @NonNull UModUser.Level userLevel,
+                boolean ongoingNotifEnabled,
+                @Nullable String lastReport,
+                @Nullable String productUUID,
+                @Nullable String hwVersion,
+                @Nullable String swVersion){
+        this.uModUUID = uuid;
+        this.ongoingNotificationEnabled =  ongoingNotifEnabled;
+        this.alias = alias;
+        this.connectionAddress = connectionAddress;
+        this.state = uModState;
+        this.appUserLevel = userLevel;
+        this.ongoingNotificationEnabled = ongoingNotifEnabled;
+        this.uModLastReport = lastReport;
+        this.productUUID = productUUID;
+        this.hwVersion = hwVersion;
+        this.swVersion = swVersion;
+        this.lastUpdateDate = new Date();
+    }
+
+    @Nullable
+    public UModSource getuModSource() {
+        return uModSource;
+    }
+
+    public void setuModSource(@Nullable UModSource uModSource) {
+        this.uModSource = uModSource;
     }
 
     /**
@@ -190,96 +254,72 @@ public final class UMod {
      * @return true if older then a Day (24hs)
      */
     public boolean isOldRegister(){
+        long OUTDATED_THRESHOLD = 86400000L;
         return Math.abs((new Date()).getTime() - this.lastUpdateDate.getTime()) >= OUTDATED_THRESHOLD;
     }
 
     @NonNull
     public String getUUID() {
-        return mUUID;
+        return uModUUID;
     }
 
     public void setAlias(@Nullable String mAlias) {
-        this.mAlias = mAlias;
+        this.alias = mAlias;
     }
 
     @Nullable
     public String getAlias() {
-        return mAlias;
+        return alias;
     }
 
     @Nullable
     public String getNameForList() {
-        if (!Strings.isNullOrEmpty(mAlias)) {
-            return mAlias;
+        if (!Strings.isNullOrEmpty(alias)) {
+            return alias;
         } else {
-            return mUUID;
+            return uModUUID;
         }
     }
 
     @Nullable
-    public boolean isNotificationEnabled() {
-        return mNotificationEnabled;
+    public Boolean isOngoingNotificationEnabled() {
+        return ongoingNotificationEnabled;
     }
 
-    public void enableNotification() {
-        this.mNotificationEnabled = true;
+    public void setOngoingNotificationStatus(Boolean notificationStatus){
+        this.ongoingNotificationEnabled = notificationStatus;
     }
 
-    public void disableNotification() {
-        this.mNotificationEnabled = false;
+    public void enableOngoingNotification() {
+        this.ongoingNotificationEnabled = true;
+    }
+
+    public void disableOngoingNotification() {
+        this.ongoingNotificationEnabled = false;
     }
 
     @Nullable
-    public String getLANIPAddress() {
-        return mLANIPAddress;
+    public String getConnectionAddress() {
+        return connectionAddress;
     }
 
-    public void setmLANIPAddress(@Nullable String mLANIPAddress) {
-        this.mLANIPAddress = mLANIPAddress;
+    public void setConnectionAddress(@Nullable String connectionAddress) {
+        this.connectionAddress = connectionAddress;
     }
 
     public void updatemLANIPAddress(@Nullable String mLANIPAddress) {
         if(mLANIPAddress != null){
-            this.mLANIPAddress = mLANIPAddress;
+            this.connectionAddress = mLANIPAddress;
         }
     }
 
     @Nullable
-    public String getBleHwAddress() {
-        return bleHwAddress;
+    public String getWifiSSID() {
+        return wifiSSID;
     }
 
-    public void setBleHwAddress(@Nullable String bleHwAddress) {
-            this.bleHwAddress = bleHwAddress;
-    }
-
-    public void updateBleHwAddress(@Nullable String bleHwAddress) {
-        if(bleHwAddress != null){
-            this.bleHwAddress = bleHwAddress;
-        }
-    }
-
-    @Nullable
-    public String getmWiFiSSID() {
-        return mWiFiSSID;
-    }
-
-    public void setmWiFiSSID(@Nullable String mWiFiSSID) {
-        this.mWiFiSSID = mWiFiSSID;
-    }
-
-    @Nullable
-    public String getmWiFiPassword() {
-        return mWiFiPassword;
-    }
-
-    public void setmWiFiPassword(@Nullable String mWiFiPassword) {
-        this.mWiFiPassword = mWiFiPassword;
-    }
-
-    @Nullable
-    public boolean isOnLAN() {
-        return (!this.mLANIPAddress.equalsIgnoreCase("") && checkIPv4Address(this.mLANIPAddress));
+    public void setWifiSSID(@Nullable String wifiSSID) {
+        this.wifiSSID = wifiSSID;
     }
 
     private boolean checkIPv4Address(String ip){
@@ -296,37 +336,37 @@ public final class UMod {
     }
     @Nullable
     public boolean isInAPMode() {
-        return this.getuModState() == UModState.AP_MODE;
+        return this.getState() == State.AP_MODE;
     }
 
     public void setInAPMode(@Nullable boolean inAPMode) {
     }
 
     @NonNull
-    public UModUser.UModUserStatus getAppUserStatus() {
-        return appUserStatus;
+    public UModUser.Level getAppUserLevel() {
+        return appUserLevel;
     }
 
-    public void setAppUserStatus(@NonNull UModUser.UModUserStatus appUserStatus) {
-        this.appUserStatus = appUserStatus;
-    }
-
-    @Nullable
-    public UModState getuModState() {
-        return uModState;
-    }
-
-    public void setuModState(@Nullable UModState uModState) {
-        this.uModState = uModState;
+    public void setAppUserLevel(@NonNull UModUser.Level appUserLevel) {
+        this.appUserLevel = appUserLevel;
     }
 
     @Nullable
-    public String getuModReport() {
-        return uModReport;
+    public State getState() {
+        return state;
     }
 
-    public void setuModReport(@Nullable String uModReport) {
-        this.uModReport = uModReport;
+    public void setState(@Nullable State state) {
+        this.state = state;
+    }
+
+    @Nullable
+    public String getuModLastReport() {
+        return uModLastReport;
+    }
+
+    public void setuModLastReport(@Nullable String uModLastReport) {
+        this.uModLastReport = uModLastReport;
     }
 
 
@@ -337,12 +377,12 @@ public final class UMod {
 
     @Nullable
     public String getHWVersion() {
-        return mHWVersion;
+        return hwVersion;
     }
 
     @Nullable
     public String getSWVersion() {
-        return mSWVersion;
+        return swVersion;
     }
 
     @NonNull
@@ -359,11 +399,11 @@ public final class UMod {
     }
 
     public void setHWVersion(@Nullable String mHWVersion) {
-        this.mHWVersion = mHWVersion;
+        this.hwVersion = mHWVersion;
     }
 
     public void setSWVersion(@Nullable String mSWVersion) {
-        this.mSWVersion = mSWVersion;
+        this.swVersion = mSWVersion;
     }
 
     @NonNull
@@ -376,12 +416,12 @@ public final class UMod {
     }
 
     public boolean isEmpty(){
-        return Strings.isNullOrEmpty(mUUID) &&
-                Strings.isNullOrEmpty(mLANIPAddress);
+        return Strings.isNullOrEmpty(uModUUID) &&
+                Strings.isNullOrEmpty(connectionAddress);
     }
 
     public boolean belongsToAppUser(){
-        return this.getAppUserStatus() != UModUser.UModUserStatus.UNAUTHORIZED ;
+        return this.getAppUserLevel() != UModUser.Level.UNAUTHORIZED ;
     }
 
     @Override
@@ -389,16 +429,16 @@ public final class UMod {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UMod uMod = (UMod) o;
-        return Objects.equal(mUUID, uMod.mUUID);
+        return Objects.equal(uModUUID, uMod.uModUUID);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(mUUID);
+        return Objects.hashCode(uModUUID);
     }
 
     @Override
     public String toString() {
-        return "I'm UModule: [" + mAlias + " ; " + mUUID + " ; " + mLANIPAddress + "]";
+        return "I'm UModule: [" + alias + " ; " + uModUUID + " ; " + connectionAddress + "]";
     }
 }

@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
@@ -96,27 +97,13 @@ public class UModsRemoteDataSource implements UModsDataSource {
     }
 
     @Override
-    public void enableUModNotification(@NonNull UMod uMod) {
-        UMod notificationEnabledUMod = new UMod(uMod.getUUID(), uMod.getLANIPAddress(), uMod.isNotificationEnabled());
-        TASKS_SERVICE_DATA.put(uMod.getUUID(), notificationEnabledUMod);
+    public void partialUpdate(@NonNull UMod uMod) {
+
     }
 
     @Override
-    public void enableUModNotification(@NonNull String uModUUID) {
-        // Not required for the remote data source because the {@link TasksRepository} handles
-        // converting from a {@code taskId} to a {@link task} using its cached data.
-    }
+    public void setUModNotificationStatus(@NonNull String uModUUID, @NonNull Boolean notificationEnabled) {
 
-    @Override
-    public void disableUModNotification(@NonNull UMod uMod) {
-        UMod notificationDisabledUMod = new UMod(uMod.getUUID(), uMod.getLANIPAddress(), uMod.isNotificationEnabled());
-        TASKS_SERVICE_DATA.put(uMod.getUUID(), notificationDisabledUMod);
-    }
-
-    @Override
-    public void disableUModNotification(@NonNull String uModUUID) {
-        // Not required for the remote data source because the {@link TasksRepository} handles
-        // converting from a {@code taskId} to a {@link task} using its cached data.
     }
 
     @Override
@@ -124,7 +111,7 @@ public class UModsRemoteDataSource implements UModsDataSource {
         Iterator<Map.Entry<String, UMod>> it = TASKS_SERVICE_DATA.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, UMod> entry = it.next();
-            if (entry.getValue().getAppUserStatus() == UModUser.UModUserStatus.UNAUTHORIZED) {
+            if (entry.getValue().getAppUserLevel() == UModUser.Level.UNAUTHORIZED) {
                 it.remove();
             }
         }
@@ -147,32 +134,37 @@ public class UModsRemoteDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.SuccessResponse> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
+    public Observable<GetMyUserLevelRPC.Response> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<TriggerRPC.SuccessResponse> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
+    public Observable<TriggerRPC.Response> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<UpdateUserRPC.SuccessResponse> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+    public Observable<CreateUserRPC.Response> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<DeleteUserRPC.SuccessResponse> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
+    public Observable<UpdateUserRPC.Response> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<List<UModUser>> getUModUsers(@NonNull String uModUUID) {
+    public Observable<DeleteUserRPC.Response> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
         return null;
     }
 
     @Override
-    public Observable<SysGetInfoRPC.SuccessResponse> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+    public Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod) {
+        return null;
+    }
+
+    @Override
+    public Observable<SysGetInfoRPC.Response> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
         return null;
     }
 }

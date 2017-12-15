@@ -3,8 +3,10 @@ package com.urbit_iot.onekey.data.source.lan;
 
 import android.util.Log;
 
+import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.github.druk.rxdnssd.BonjourService;
 import com.polidea.rxandroidble.RxBleClient;
+import com.polidea.rxandroidble.RxBleScanResult;
 import com.polidea.rxandroidble.scan.ScanFilter;
 import com.polidea.rxandroidble.scan.ScanResult;
 import com.polidea.rxandroidble.scan.ScanSettings;
@@ -31,17 +33,38 @@ public class UModsBLEScanner {
     }
 
     //Scans for BLE devices for 4 seconds.
+    //@RxLogObservable
     public Observable<UMod> bleScanForUMods(){
         return Observable.defer(new Func0<Observable<UMod>>() {
             @Override
             public Observable<UMod> call() {
-                return mRxBleClient.scanBleDevices(
-                        new ScanSettings.Builder()
-                                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                                .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-                                .build(),
-                        new ScanFilter.Builder()
-                                .build())
+                return mRxBleClient.observeStateChanges()
+                        .switchMap(new Func1<RxBleClient.State, Observable<ScanResult>>() {
+                            @Override
+                            public Observable<ScanResult> call(RxBleClient.State state) {
+                                switch (state) {
+                                    case READY:
+                                        // everything should work
+                                        return mRxBleClient.scanBleDevices(
+                                                new ScanSettings.Builder()
+                                                        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                                                        .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                                                        .build(),
+                                                new ScanFilter.Builder()
+                                                        .build());
+                                    case BLUETOOTH_NOT_AVAILABLE:
+                                        // basically no functionality will work here
+                                    case LOCATION_PERMISSION_NOT_GRANTED:
+                                        // scanning and connecting will not work
+                                    case BLUETOOTH_NOT_ENABLED:
+                                        // scanning and connecting will not work
+                                    case LOCATION_SERVICES_NOT_ENABLED:
+                                        // scanning will not work
+                                    default:
+                                        return Observable.empty();
+                                }
+                            }
+                        })
                         .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
                         .distinct()
                         .doOnError(new Action1<Throwable>() {

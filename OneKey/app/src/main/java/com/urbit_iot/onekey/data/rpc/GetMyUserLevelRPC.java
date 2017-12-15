@@ -34,26 +34,26 @@ public class GetMyUserLevelRPC {
 
     public static class Result{
 
-        @SerializedName("level")
-        private UModUser.UModUserStatus level;
+        @SerializedName("user_type")
+        private UModUser.Level level;
 
-        public Result(UModUser.UModUserStatus level){
+        public Result(UModUser.Level level){
             this.level = level;
         }
 
-        public UModUser.UModUserStatus getLevel() {
+        public UModUser.Level getLevel() {
             return level;
         }
 
-        public void setLevel(UModUser.UModUserStatus level) {
+        public void setLevel(UModUser.Level level) {
             this.level = level;
         }
     }
 
-    public static class SuccessResponse extends RPC.SuccessResponse{
+    public static class Response extends RPC.Response {
         @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
         private GetMyUserLevelRPC.Result responseResult;
-        public SuccessResponse(Result result, String callTag, RPC.ResponseError responseError){
+        public Response(Result result, String callTag, RPC.ResponseError responseError){
             super(callTag, responseError);
             this.responseResult = result;
         }
@@ -68,7 +68,7 @@ public class GetMyUserLevelRPC {
 
         @Override
         public String toString() {
-            return "SuccessResponse{" +
+            return "Response{" +
                     "callTag=" + this.getCallTag() + ", " +
                     "responseResult=" + responseResult +
                     "} ";

@@ -1,6 +1,6 @@
 package com.urbit_iot.onekey.umodconfig;
 
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 
 import dagger.Module;
 import dagger.Provides;
@@ -14,11 +14,11 @@ public class UModConfigPresenterModule {
 
     private final UModConfigContract.View mView;
 
-    private String mTaskId;
+    private String mUModUUID;
 
-    public UModConfigPresenterModule(UModConfigContract.View view, @Nullable String taskId) {
+    public UModConfigPresenterModule(UModConfigContract.View view, @NonNull String uModUUID) {
         mView = view;
-        mTaskId = taskId;
+        mUModUUID = uModUUID;
     }
 
     @Provides
@@ -27,8 +27,8 @@ public class UModConfigPresenterModule {
     }
 
     @Provides
-    @Nullable
-    String provideTaskId() {
-        return mTaskId;
+    @NonNull
+    String provideUModUUID() {
+        return mUModUUID;
     }
 }

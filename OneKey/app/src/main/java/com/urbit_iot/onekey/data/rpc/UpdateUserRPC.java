@@ -14,9 +14,9 @@ public class UpdateUserRPC extends RPC {
         @SerializedName("user_name")
         private String userID;
         @SerializedName("user_type")
-        private UModUser.UModUserStatus userLevel;
+        private UModUser.Level userLevel;
 
-        public Arguments(String userID, UModUser.UModUserStatus userLevel) {
+        public Arguments(String userID, UModUser.Level userLevel) {
             this.userID = userID;
             this.userLevel = userLevel;
         }
@@ -29,11 +29,11 @@ public class UpdateUserRPC extends RPC {
             this.userID = userID;
         }
 
-        public UModUser.UModUserStatus getUserLevel() {
+        public UModUser.Level getUserLevel() {
             return userLevel;
         }
 
-        public void setUserLevel(UModUser.UModUserStatus userLevel) {
+        public void setUserLevel(UModUser.Level userLevel) {
             this.userLevel = userLevel;
         }
     }
@@ -60,11 +60,11 @@ public class UpdateUserRPC extends RPC {
         public Result(){}
     }
 
-    public static class SuccessResponse extends RPC.SuccessResponse{
+    public static class Response extends RPC.Response {
         @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
         private UpdateUserRPC.Result responseResult;
 
-        public SuccessResponse(Result result, String callTag, ResponseError responseError) {
+        public Response(Result result, String callTag, ResponseError responseError) {
             super(callTag, responseError);
             this.responseResult = result;
         }
@@ -79,7 +79,7 @@ public class UpdateUserRPC extends RPC {
 
         @Override
         public String toString() {
-            return "SuccessResponse{" +
+            return "Response{" +
                     "callTag=" + this.getCallTag() + ", " +
                     "responseResult=" + responseResult +
                     '}';
