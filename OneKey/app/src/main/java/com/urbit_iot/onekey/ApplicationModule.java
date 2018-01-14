@@ -13,9 +13,13 @@ import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.urbit_iot.onekey.appuser.data.source.AppUserDataSource;
+import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
+import com.urbit_iot.onekey.appuser.data.source.localfile.AppUserLocalFileDataSource;
 import com.urbit_iot.onekey.data.source.lan.UModsService;
 import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.dagger.DigestAuth;
+import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 
 import java.util.Map;
@@ -55,6 +59,28 @@ public final class ApplicationModule {
     @Singleton
     RxSharedPreferences provideRxSharedPreferences(){
         return RxSharedPreferences.create(PreferenceManager.getDefaultSharedPreferences(this.mContext));
+    }
+
+    @Provides
+    @Singleton
+    @Named("app_user")
+    Gson provideGsonInstance(){
+        return  new GsonBuilder()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create();
+    }
+    @Singleton
+    @Provides
+    @Local
+    AppUserDataSource provideAppUserLocalDataSource(RxSharedPreferences rxSharedPreferences,
+                                                    @Named("app_user") Gson gson) {
+        return new AppUserLocalFileDataSource(rxSharedPreferences, gson);
+    }
+
+    @Provides
+    @Singleton
+    AppUserRepository provideAppUserRepository(@Local AppUserDataSource appUserDataSource){
+        return new AppUserRepository(appUserDataSource);
     }
 
     /*

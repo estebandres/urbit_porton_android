@@ -3,8 +3,11 @@ package com.urbit_iot.onekey.umods.domain.usecase;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
+import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
+import com.urbit_iot.onekey.appuser.domain.AppUser;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
@@ -25,24 +28,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValues, GetUModsOneByOne.ResponseValues> {
 
     private final UModsRepository mUModsRepository;
-    private UMod streamUMod;
+    private final AppUserRepository mAppUserRepository;
 
     @Inject
     public GetUModsOneByOne(@NonNull UModsRepository tasksRepository,
+                            @NonNull AppUserRepository appUserRepository,
                             @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
-    }
-
-    public UMod getStreamUMod() {
-        return streamUMod;
-    }
-
-    public void setStreamUMod(UMod streamUMod) {
-        this.streamUMod = streamUMod;
+        mAppUserRepository = checkNotNull(appUserRepository, "appUserRepository cannot be null!");
     }
 
     @Override
+    @RxLogObservable
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
         if (values.isForceUpdate()) {
@@ -56,21 +54,30 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                         return (uMod.isOpen() || uMod.belongsToAppUser() || uMod.isInAPMode());
                     }
                 })
+                //Asks to the esp if the admin has authorized me when PENDING.
                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
-                    public Observable<UMod> call(UMod uMod) {
+                    public Observable<UMod> call(final UMod uMod) {
                         if(uMod.getAppUserLevel() == UModUser.Level.PENDING && !uMod.isInAPMode()){
                             Log.d("GetUM1x1", "PENDING detected");
-                            setStreamUMod(uMod);
-                            GetMyUserLevelRPC.Request request = new GetMyUserLevelRPC.Request(new GetMyUserLevelRPC.Arguments(),uMod.getUUID());
-                            return mUModsRepository.getUserLevel(uMod,request)
-                                    .flatMap(new Func1<GetMyUserLevelRPC.Response, Observable<UMod>>() {
+                            return mAppUserRepository.getAppUser()
+                                    .flatMap(new Func1<AppUser, Observable<UMod>>() {
                                         @Override
-                                        public Observable<UMod> call(GetMyUserLevelRPC.Response successResponse) {
-                                            getStreamUMod().setAppUserLevel(successResponse.getResponseResult().getLevel());
-                                            return Observable.just(getStreamUMod());
+                                        public Observable<UMod> call(AppUser appUser) {
+                                            GetMyUserLevelRPC.Request request =
+                                                    new GetMyUserLevelRPC.Request(new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber()),uMod.getUUID());
+                                            return mUModsRepository.getUserLevel(uMod,request)//TODO should be called from other UseCase??
+                                                    .flatMap(new Func1<GetMyUserLevelRPC.Response, Observable<UMod>>() {
+                                                        @Override
+                                                        public Observable<UMod> call(GetMyUserLevelRPC.Response successResponse) {
+                                                            uMod.setAppUserLevel(successResponse.getResponseResult().getUserLevel());
+                                                            mUModsRepository.saveUMod(uMod);
+                                                            return Observable.just(uMod);
+                                                        }
+                                                    });
                                         }
                                     });
+
                         } else {
                             return Observable.just(uMod);
                         }

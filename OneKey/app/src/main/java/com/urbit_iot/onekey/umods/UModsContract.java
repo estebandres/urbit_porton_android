@@ -59,6 +59,12 @@ public interface UModsContract {
         void showOpenCloseSuccess();
 
         void showOpenCloseFail();
+
+        void showRequestAccessFailedMessage();
+
+        void showRequestAccessCompletedMessage();
+
+        void makeUModViewModelActionButtonVisible(String uModUUID);
     }
 
     interface Presenter extends BasePresenter {

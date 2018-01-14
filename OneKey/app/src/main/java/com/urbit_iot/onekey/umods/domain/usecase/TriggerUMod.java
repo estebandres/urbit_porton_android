@@ -22,6 +22,9 @@ import android.util.Log;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
@@ -65,11 +68,49 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
         return mUModsRepository.getUMod(values.getUModUUID())
                 .flatMap(new Func1<UMod, Observable<TriggerRPC.Response>>() {
                     @Override
-                    public Observable<TriggerRPC.Response> call(UMod uMod) {
-                        return mUModsRepository.triggerUMod(uMod, request);
+                    public Observable<TriggerRPC.Response> call(final UMod uMod) {
+                        return mUModsRepository.triggerUMod(uMod, request)
+                                .onErrorResumeNext(new Func1<Throwable, Observable<? extends TriggerRPC.Response>>() {
+                                    @Override
+                                    public Observable<? extends TriggerRPC.Response> call(Throwable throwable) {
+                                        if (throwable instanceof HttpException){
+                                            //Check for HTTP ANAUTHORIZED error code
+                                            int httpErrorCode = ((HttpException) throwable).response().code();
+                                            if (httpErrorCode != 0 && (httpErrorCode == 401 || httpErrorCode == 403)){
+                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                mUModsRepository.saveUMod(uMod);
+                                                return Observable.error(new Exception("Forces umods UI Refresh"));
+                                            }
+                                        }
+                                        //TODO is this a desirable behaviour? What about the other error codes?
+                                        return Observable.error(throwable);
+                                    }
+                                })
+                                //Mongoose implementation always returns a successful response and
+                                // if an error occurs then its details are embedded
+                                // in the response JSON body.
+                                .flatMap(new Func1<TriggerRPC.Response, Observable<TriggerRPC.Response>>() {
+                                    @Override
+                                    public Observable<TriggerRPC.Response> call(final TriggerRPC.Response triggerResponse) {
+                                        RPC.ResponseError responseError = triggerResponse.getResponseError();
+                                        //
+                                        if (responseError != null){
+                                            Integer errorCode = responseError.getErrorCode();
+                                            if (errorCode!= null && errorCode != 0
+                                                    && (errorCode == 401 || errorCode == 403)){
+                                                //this is the lazy alternative. One could RPC for the
+                                                // user level and update the umod registry accordingly.
+                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                mUModsRepository.saveUMod(uMod);
+                                                return Observable.error(new Exception("Forces umods UI Refresh"));
+                                            }
+                                        }
+                                        return Observable.just(triggerResponse);
+                                    }
+                                });
                     }
                 })
-                //TODO find a better way to retry
+                //TODO find the scenarios where retry would be useful.
                 .retry(new Func2<Integer, Throwable, Boolean>() {
                     @Override
                     public Boolean call(Integer retryCount, Throwable throwable) {

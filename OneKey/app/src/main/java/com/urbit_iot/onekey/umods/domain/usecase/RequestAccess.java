@@ -22,7 +22,10 @@ import android.util.Log;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
+import com.urbit_iot.onekey.data.rpc.RPC;
+import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -73,16 +76,63 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
         return mUModsRepository.getUMod(values.getUModUUID())
                 .flatMap(new Func1<UMod, Observable<CreateUserRPC.Response>>() {
                     @Override
-                    public Observable<CreateUserRPC.Response> call(UMod uMod) {
-                        return mUModsRepository.createUModUser(uMod, request);
+                    public Observable<CreateUserRPC.Response> call(final UMod uMod) {
+                        return mUModsRepository.createUModUser(uMod, request)
+                                .onErrorResumeNext(new Func1<Throwable, Observable<CreateUserRPC.Response>>() {
+                                    @Override
+                                    public Observable<CreateUserRPC.Response> call(Throwable throwable) {
+                                        if (throwable instanceof HttpException){
+                                            //Check for HTTP ANAUTHORIZED error code
+                                            int httpErrorCode = ((HttpException) throwable).response().code();
+                                            if (httpErrorCode != 0 && (httpErrorCode == 401 || httpErrorCode == 403)){
+                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                mUModsRepository.saveUMod(uMod);
+                                                return Observable.error(new Exception("Forces umods UI Refresh"));
+                                            }
+                                        }
+                                        //TODO is this a desirable behaviour? What about the other error codes?
+                                        return Observable.error(throwable);
+                                    }
+                                })
+                                //Mongoose implementation always returns a successful response and
+                                // if an error occurs then its details are embedded
+                                // in the response JSON body.
+                                .flatMap(new Func1<CreateUserRPC.Response, Observable<CreateUserRPC.Response>>() {
+                                    @Override
+                                    public Observable<CreateUserRPC.Response> call(final CreateUserRPC.Response createUserResponse) {
+                                        RPC.ResponseError responseError = createUserResponse.getResponseError();
+                                        //
+                                        if (responseError != null){
+                                            Integer errorCode = responseError.getErrorCode();
+                                            if (errorCode!= null && errorCode != 0
+                                                    && (errorCode == 401 || errorCode == 403)){
+                                                //this is the lazy alternative. One could RPC for the
+                                                // user level and update the UMod registry accordingly.
+                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                mUModsRepository.saveUMod(uMod);
+                                                return Observable.error(new Exception("Forces umods UI Refresh"));
+                                            }
+                                        } else {
+                                            //TODO ask if this is possible. Currently the API doesn't
+                                            // specify what data is returned as part of the response.
+                                            uMod.setAppUserLevel(createUserResponse.getResponseResult().getUserLevel());
+                                            mUModsRepository.saveUMod(uMod);
+                                        }
+                                        return Observable.just(createUserResponse);
+                                    }
+                                });
                     }
                 })
+                //The RPC is executed in the saved umod connectionAddress
+                //only when that address is outdated and produces an error a retry is done that
+                // forces the network lookup for the connected UMod.
                 .retry(new Func2<Integer, Throwable, Boolean>() {
                     @Override
                     public Boolean call(Integer retryCount, Throwable throwable) {
                         Log.e("req_access_uc", "Retry count: " + retryCount + "\n Excep msge: " + throwable.getMessage());
-                        if (retryCount < 4 && (throwable instanceof IOException ||
+                        if (retryCount < 3 && (throwable instanceof IOException ||
                                 throwable instanceof HttpException)){
+                            mUModsRepository.refreshUMods();
                             return true;
                         } else {
                             return false;

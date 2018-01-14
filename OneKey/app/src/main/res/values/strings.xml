@@ -74,5 +74,7 @@
     <string name="app_user_phone_hint">0351 499-9999</string>
     <string name="umod_action_button_when_owned">O/C</string>
     <string name="umod_action_button_when_open_alien">REQ</string>
+    <string name="request_access_failed_message">Solicitud de acceso fallida.</string>
+    <string name="request_access_completed_message">Solicitud de accesso enviada.</string>
 
 </resources>

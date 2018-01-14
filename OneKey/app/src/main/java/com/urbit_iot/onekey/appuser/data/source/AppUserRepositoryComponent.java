@@ -22,7 +22,7 @@ import dagger.Component;
  */
 @Singleton
 @Component(dependencies = {SchedulerProviderComponent.class},
-        modules = {AppUserRepositoryModule.class, ApplicationModule.class})
+        modules = {ApplicationModule.class})
 public interface AppUserRepositoryComponent {
 
     AppUserRepository getAppUserRepository();

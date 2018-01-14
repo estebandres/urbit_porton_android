@@ -1,10 +1,13 @@
 package com.urbit_iot.onekey.umods;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.NavigationView;
 import android.support.test.espresso.IdlingResource;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -15,6 +18,7 @@ import android.view.MenuItem;
 
 
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
+import com.github.pwittchen.reactivewifi.AccessRequester;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.OneKeyApplication;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
@@ -35,6 +39,7 @@ public class UModsActivity extends AppCompatActivity {
     private static final String CURRENT_FILTERING_KEY = "CURRENT_FILTERING_KEY";
     public static final String APP_USER_PHONE_NUMBER = "APP_USER_PHONE_NUMBER";
     public static final String APP_UUID_HASH = "APP_UUID_HASH";
+    public static final int APP_PERMISSIONS_REQUEST_FINE_AND_COARSE = 666;
     private static final int REQUEST_APP_USER = 1;
     private DrawerLayout mDrawerLayout;
 
@@ -45,11 +50,6 @@ public class UModsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.umods_act);
-        //TODO implement conditional running of appuser activity
-        /*
-        Intent intent = new Intent(UModsActivity.this, AppUserActivity.class);
-        startActivity(intent);
-        */
 
         // Set up the toolbar.
         Toolbar toolbar = (Toolbar) findViewById(R.id.umods_toolbar);
@@ -78,8 +78,17 @@ public class UModsActivity extends AppCompatActivity {
                     getSupportFragmentManager(), umodsFragment, R.id.umods_content_frame);
         }
 
+
         OneKeyApplication oneKeyApplication = (OneKeyApplication) getApplication();
 
+        if (!AccessRequester.isLocationEnabled(getApplicationContext())){
+            AccessRequester.requestLocationAccess(this);
+        }
+
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, APP_PERMISSIONS_REQUEST_FINE_AND_COARSE);
+        }
         // Create the presenter
         DaggerUModsComponent.builder()
                 .uModsRepositoryComponent(oneKeyApplication.createUModsRepositoryComponentSingleton(appUserPhoneNumber,appUUIDHash))

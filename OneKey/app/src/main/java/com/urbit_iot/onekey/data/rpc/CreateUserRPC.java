@@ -1,6 +1,7 @@
 package com.urbit_iot.onekey.data.rpc;
 
 import com.google.gson.annotations.SerializedName;
+import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
 /**
@@ -45,7 +46,24 @@ public class CreateUserRPC extends RPC {
     }
 
     public static class Result{
-        public Result(){}
+        @SerializedName("user_type")
+        private GetMyUserLevelRPC.UModUserType userType;
+
+        public Result(GetMyUserLevelRPC.UModUserType userType){
+            this.userType = userType;
+        }
+
+        public GetMyUserLevelRPC.UModUserType getUserType() {
+            return userType;
+        }
+
+        public UModUser.Level getUserLevel(){
+            return this.userType.asUModUserLevel();
+        }
+
+        public void setUserType(GetMyUserLevelRPC.UModUserType userType) {
+            this.userType = userType;
+        }
     }
 
     public static class Response extends RPC.Response {

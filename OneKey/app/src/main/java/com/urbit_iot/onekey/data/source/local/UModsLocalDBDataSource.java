@@ -129,7 +129,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
     }
 
     @Override
-    @RxLogObservable
+    //@RxLogObservable
     public Observable<UMod> getUModsOneByOne() {
         String[] projection = {
                 UModEntry.UUID_CN,
@@ -159,7 +159,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
     }
 
     @Override
-    @RxLogObservable
+    //@RxLogObservable
     public Observable<UMod> getUMod(@NonNull String uModUUID) {
         String[] projection = {
                 UModEntry.UUID_CN,

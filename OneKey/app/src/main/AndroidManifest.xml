@@ -20,7 +20,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!--Gets contact information to humanize the getUsers view-->
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
+    <!--Enables the WiFi APs scan-->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!--Vibration on action button clicked-->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="false"

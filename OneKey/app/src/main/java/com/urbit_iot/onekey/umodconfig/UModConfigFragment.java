@@ -17,13 +17,18 @@
 package com.urbit_iot.onekey.umodconfig;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -137,5 +142,21 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         Intent intent = new Intent(getContext(), UModUsersActivity.class);
         intent.putExtra(ARGUMENT_UMOD_USERS, taskId);
         startActivityForResult(intent, REQUEST_EDIT_TASK);
+    }
+
+    @Override
+    //TODO find a more elegant way to do this in a 'clean' way.
+    public void launchWiFiSettings(String uModSSID) {
+        WifiManager wifiManager = (WifiManager) getActivity().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        if (wifiInfo == null){
+            this.getActivity().finish();
+        } else {
+            Log.d("umodConf_frag", wifiInfo.toString());
+            if (!wifiInfo.getSSID().contains(uModSSID)){
+                startActivityForResult(new Intent(Settings.ACTION_WIFI_SETTINGS),0);
+                this.getActivity().finish();
+            }
+        }
     }
 }

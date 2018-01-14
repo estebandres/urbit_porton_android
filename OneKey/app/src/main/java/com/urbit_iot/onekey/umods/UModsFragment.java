@@ -1,7 +1,9 @@
 package com.urbit_iot.onekey.umods;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -31,7 +33,17 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.UModConfigFragment;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
+
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -59,6 +71,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
     private TextView mFilteringLabelView;
 
+    private Vibrator mVibrator;
+
     public UModsFragment() {
         // Requires empty public constructor
     }
@@ -71,6 +85,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mListAdapter = new UModsAdapter(new ArrayList<UModViewModel>(0), mItemListener);
+        mVibrator = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @Override
@@ -118,11 +133,11 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         FloatingActionButton fab =
                 (FloatingActionButton) getActivity().findViewById(R.id.fab_add_umod);
 
-        fab.setImageResource(R.drawable.ic_add);
+        fab.setImageResource(R.drawable.ic_update);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPresenter.addNewUMod();
+                mPresenter.loadUMods(true);
             }
         });
 
@@ -204,6 +219,21 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     @Override
     public void showOpenCloseFail() {
         showMessage(getString(R.string.open_close_fail_message));
+    }
+
+    @Override
+    public void showRequestAccessFailedMessage() {
+        showMessage(getString(R.string.request_access_failed_message));
+    }
+
+    @Override
+    public void showRequestAccessCompletedMessage() {
+        showMessage(getString(R.string.request_access_completed_message));
+    }
+
+    @Override
+    public void makeUModViewModelActionButtonVisible(String uModUUID) {
+        mListAdapter.makeButtonVisible(uModUUID);
     }
 
 
@@ -358,6 +388,23 @@ public class UModsFragment extends Fragment implements UModsContract.View {
      * Listener for clicks on tasks in the ListView.
      */
     UModItemListener mItemListener = new UModItemListener() {
+
+        public void vibrateOnActionButtonClick(){
+            //TODO make three consecutive shorter vibrations
+            mVibrator.vibrate(100L);
+            Observable.interval(500L, TimeUnit.MILLISECONDS)
+                    .take(2)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .map(new Func1<Long, Object>() {
+                        @Override
+                        public Object call(Long aLong) {
+                            mVibrator.vibrate((aLong+1L)*200L);
+                            return null;
+                        }
+                    })
+                    .subscribe();
+        }
         /*
         @Override
         public void onUModClick(UMod clickedUMod) {
@@ -412,11 +459,30 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             mViewModelsList = checkNotNull(uMods);
         }
 
-        public void addItem(UModViewModel viewModel){
+        public void addItem(final UModViewModel viewModel){
             //refreshList();
             if( ! mViewModelsList.contains(viewModel)){
                 mViewModelsList.add(viewModel);
                 notifyDataSetChanged();
+            } else {
+                Iterator<UModViewModel> iterator = mViewModelsList.iterator();
+                //for-each wont work since the removal causes the list size to change
+                while (iterator.hasNext()){
+                    if (iterator.next().equals(viewModel)){
+                        iterator.remove();
+                    }
+                }
+                mViewModelsList.add(viewModel);
+                notifyDataSetChanged();
+            }
+        }
+
+        public void makeButtonVisible(String uModUUID){
+            for (UModViewModel viewModel : mViewModelsList){
+                if (viewModel.getuModUUID().equals(uModUUID)){
+                    viewModel.setButtonVisible(true);
+                    notifyDataSetChanged();
+                }
             }
         }
         /*
@@ -465,7 +531,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
             final CheckBox notifEnCB = (CheckBox) rowView.findViewById(R.id.umod_notif_enabler);
 
-            Button actionButton = (Button) rowView.findViewById(R.id.umod_action_button);
+            final Button actionButton = (Button) rowView.findViewById(R.id.umod_action_button);
 
             if(viewModel.isButtonVisible()){
                 actionButton.setVisibility(View.VISIBLE);
@@ -500,10 +566,13 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 }
             });
 
-            actionButton.setOnClickListener(new View.OnClickListener() {
+            actionButton.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
-                public void onClick(View v) {
+                public boolean onLongClick(View v) {
                     viewModel.onButtonClicked();
+                    mItemListener.vibrateOnActionButtonClick();
+                    actionButton.setVisibility(View.INVISIBLE);
+                    return true;
                 }
             });
 
@@ -532,6 +601,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         //void onActionButtonClick(UMod actedUMod);
 
         //void onRequestAccess(UMod requestedUMod);
+
+        void vibrateOnActionButtonClick();
     }
 
 }

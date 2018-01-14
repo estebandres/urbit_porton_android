@@ -1,5 +1,6 @@
 package com.urbit_iot.onekey.appuser;
 
+import com.urbit_iot.onekey.ApplicationModule;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepositoryComponent;
 import com.urbit_iot.onekey.util.dagger.FragmentScoped;
 import com.urbit_iot.onekey.util.schedulers.SchedulerProviderComponent;

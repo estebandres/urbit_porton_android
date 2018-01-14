@@ -3,6 +3,7 @@ package com.urbit_iot.onekey.data.source;
 import com.urbit_iot.onekey.ApplicationModule;
 import com.urbit_iot.onekey.OneKeyApplication;
 import com.urbit_iot.onekey.appuser.AppUserPresenterModule;
+import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
 import com.urbit_iot.onekey.util.schedulers.SchedulerProviderComponent;
 
 import javax.inject.Singleton;
@@ -23,5 +24,7 @@ import dagger.Component;
 public interface UModsRepositoryComponent {
 
     UModsRepository getUModsRepository();
+
+    AppUserRepository getAppUserRepository();
 
 }

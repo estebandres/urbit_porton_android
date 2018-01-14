@@ -13,7 +13,7 @@ import com.urbit_iot.onekey.umods.UModsComponent;
 import com.urbit_iot.onekey.util.schedulers.SchedulerProviderComponent;
 import com.urbit_iot.onekey.util.schedulers.SchedulerProviderModule;
 
-import com.urbit_iot.onekey.appuser.data.source.DaggerAppUserRepositoryComponent;
+ import com.urbit_iot.onekey.appuser.data.source.DaggerAppUserRepositoryComponent;
 import com.urbit_iot.onekey.util.schedulers.DaggerSchedulerProviderComponent;
 import com.urbit_iot.onekey.data.source.DaggerUModsRepositoryComponent;
 
@@ -56,7 +56,6 @@ public class OneKeyApplication extends Application {
                 .applicationModule(applicationModule)
                 .schedulerProviderComponent(mSchedulerProviderComponent)
                 .build();
-
     }
 
     public UModsRepositoryComponent createUModsRepositoryComponentSingleton(String appUserPhoneNumber, String appUUIDHash) {

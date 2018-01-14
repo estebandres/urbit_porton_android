@@ -43,7 +43,7 @@ public class UModsDNSSDScanner {
                         .filter(new Func1<BonjourService, Boolean>() {
                             @Override
                             public Boolean call(BonjourService bonjourService) {
-                                return bonjourService.getHostname() != null && bonjourService.getHostname().contains("mos");
+                                return bonjourService.getHostname() != null && bonjourService.getHostname().contains("mOS");
                             }
                         })
                         .map(new Func1<BonjourService,UMod>(){
@@ -57,7 +57,7 @@ public class UModsDNSSDScanner {
         });
     }
 
-    //TODO as proof of concept we should try send a regular DNS query(A/AAAA) to 224.0.0.251:5353 as the DNS server
+    //TODO as proof of concept we should try send a regular DNS query(A/AAAA) to 224.0.0.251:5353 (DNS server)
     //there are several java android libraries that could work well. But it seems that mongoose os only implements the advertise method.
     public Observable<UMod> browseLANForUMod(final String uModUUID){
         return Observable.defer(new Func0<Observable<UMod>>() {

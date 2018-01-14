@@ -12,7 +12,20 @@ import java.util.Random;
 
 public class GetMyUserLevelRPC {
     public static class Arguments{
-        public Arguments(){}
+        @SerializedName("user_name")
+        private String userName;
+
+        public Arguments(String userName){
+            this.userName = userName;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public void setUserName(String userName) {
+            this.userName = userName;
+        }
     }
 
     public static class Request extends RPC.Request{
@@ -32,21 +45,48 @@ public class GetMyUserLevelRPC {
         }
     }
 
+    public enum UModUserType{
+        Admin {
+            @Override
+            public UModUser.Level asUModUserLevel() {
+                return UModUser.Level.ADMINISTRATOR;
+            }
+        },
+        Guest {
+            @Override
+            public UModUser.Level asUModUserLevel() {
+                return UModUser.Level.PENDING;
+            }
+        },
+        User {
+            @Override
+            public UModUser.Level asUModUserLevel() {
+                return UModUser.Level.AUTHORIZED;
+            }
+        };
+
+        public abstract UModUser.Level asUModUserLevel();
+
+    }
     public static class Result{
 
         @SerializedName("user_type")
-        private UModUser.Level level;
+        private UModUserType userType;
 
-        public Result(UModUser.Level level){
-            this.level = level;
+        public Result(UModUserType userType){
+            this.userType = userType;
         }
 
-        public UModUser.Level getLevel() {
-            return level;
+        public UModUserType getUserType() {
+            return userType;
         }
 
-        public void setLevel(UModUser.Level level) {
-            this.level = level;
+        public UModUser.Level getUserLevel(){
+            return this.userType.asUModUserLevel();
+        }
+
+        public void setUserType(UModUserType userType) {
+            this.userType = userType;
         }
     }
 

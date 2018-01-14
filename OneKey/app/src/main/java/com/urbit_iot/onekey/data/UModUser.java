@@ -17,7 +17,8 @@ public class UModUser {
         TEMPORAL(3),
         WATCHER(4),
         PRE_APPROVED(5),
-        ADMINISTRATOR(6);
+        ADMINISTRATOR(6),
+        UNKNOWN(7);
         private final Integer statusID;
         private static SparseArray<Level> map = new SparseArray<>();
 

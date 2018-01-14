@@ -37,6 +37,8 @@ public interface UModConfigContract {
         boolean isActive();
 
         void showEditUModUsers(String uModUUID);
+
+        void launchWiFiSettings(String uModSSID);
     }
 
     interface Presenter extends BasePresenter {

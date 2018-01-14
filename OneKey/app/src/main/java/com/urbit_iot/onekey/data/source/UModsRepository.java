@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
@@ -146,7 +147,8 @@ public class UModsRepository implements UModsDataSource {
     private Observable<UMod> getUModsOneByOneFromCacheOrDisk(){
         if (mCachedUMods!=null && !mCachedUMods.isEmpty()){
             Log.d("umods_rep","Map cache");
-                return Observable.from(mCachedUMods.values()).compose(this.uModCacheBrander);
+                return Observable.from(mCachedUMods.values())
+                        .compose(this.uModCacheBrander);
         }
         Log.d("umods_rep","DB");
         return mUModsLocalDataSource.getUModsOneByOne()
@@ -171,9 +173,13 @@ public class UModsRepository implements UModsDataSource {
                                         if(dbUMod == null){
                                             return Observable.just(lanUMod);
                                         } else {//Updates the entry
+                                            //TODO check if all necesary fields are being updated.
+                                            //AppUserLevel should remain as in DB
                                             dbUMod.setConnectionAddress(lanUMod.getConnectionAddress());
                                             dbUMod.setState(lanUMod.getState());
                                             dbUMod.setuModSource(UMod.UModSource.LAN_SCAN);
+                                            dbUMod.setOpen(lanUMod.isOpen());
+                                            dbUMod.setLastUpdateDate(lanUMod.getLastUpdateDate());
                                             return Observable.just(dbUMod);
                                         }
                                     }
@@ -191,8 +197,10 @@ public class UModsRepository implements UModsDataSource {
                         //TODO move to cacheDataSource when
                         UMod cachedUMod = mCachedUMods.get(uMod.getUUID());
                         if(cachedUMod!=null){
+                            //AppUserLevel should remain as in DB
                             cachedUMod.setConnectionAddress(uMod.getConnectionAddress());
                             cachedUMod.setState(uMod.getState());
+                            cachedUMod.setOpen(uMod.isOpen());
                             cachedUMod.setLastUpdateDate(uMod.getLastUpdateDate());
                             mCachedUMods.put(cachedUMod.getUUID(),cachedUMod);
                         } else {
@@ -230,6 +238,12 @@ public class UModsRepository implements UModsDataSource {
             return Observable.concatDelayError(
                     cacheOrDBUModObs.defaultIfEmpty(null),
                     lanUModObs)
+                    .doOnUnsubscribe(new Action0() {
+                        @Override
+                        public void call() {
+                            mCacheIsDirty = false;
+                        }
+                    })
                     .filter(new Func1<UMod, Boolean>() {
                         @Override
                         public Boolean call(UMod uMod) {
@@ -245,6 +259,12 @@ public class UModsRepository implements UModsDataSource {
         Log.d("umods_rep", "lanbrowse");
 
         return Observable.concatDelayError(cacheOrDBUModObs, lanUModObs)
+                .doOnUnsubscribe(new Action0() {
+                    @Override
+                    public void call() {
+                        mCacheIsDirty = false;//prevents the getUMod to refresh
+                    }
+                })
                 .filter(new Func1<UMod, Boolean>() {
                     @Override
                     public Boolean call(UMod uMod) {
@@ -359,6 +379,7 @@ public class UModsRepository implements UModsDataSource {
 
         // Respond immediately with cache if available
         if (!mCacheIsDirty){
+            Log.d("rep_umods", "HOLOc");
             return Observable.concatDelayError(getSingleUModFromCacheOrDisk(uModUUID),
                     getSingleUModFromLanAndUpdateDBEntry(uModUUID))
                     .doOnNext(new Action1<UMod>() {
@@ -430,9 +451,11 @@ public class UModsRepository implements UModsDataSource {
                 && mCachedUMods.containsKey(uModUUID)){
             cachedUMod = mCachedUMods.get(uModUUID);
             if (cachedUMod != null){//&& !cachedUMod.isOldRegister()? would it be useful?
-                return Observable.just(cachedUMod);
+                return Observable.just(cachedUMod)
+                        .compose(this.uModCacheBrander);
             }
         }
+        Log.d("rep_umods", "algo");
         return mUModsLocalDataSource.getUMod(uModUUID)
                 .filter(new Func1<UMod, Boolean>() {
                     @Override
@@ -451,6 +474,10 @@ public class UModsRepository implements UModsDataSource {
     @Override
     public void refreshUMods() {
         mCacheIsDirty = true;
+    }
+
+    public void cachedFirst() {
+        mCacheIsDirty = false;
     }
 
     @Override

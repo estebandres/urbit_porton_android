@@ -19,7 +19,6 @@ package com.urbit_iot.onekey.data.source.lan;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.urbit_iot.onekey.data.UMod;
@@ -62,6 +61,9 @@ public class UModsLANDataSource implements UModsDataSource {
     private UModsBLEScanner mUModsBLEScanner;
 
     @NonNull
+    private UModsWiFiScanner mUModsWiFiScanner;
+
+    @NonNull
     private UModsService defaultUModsService;
 
     @NonNull
@@ -95,11 +97,13 @@ public class UModsLANDataSource implements UModsDataSource {
     @Inject
     public UModsLANDataSource(@NonNull UModsDNSSDScanner uModsDNSSDScanner,
                               @NonNull UModsBLEScanner uModsBLEScanner,
+                              @NonNull UModsWiFiScanner uModsWiFiScanner,
                               @NonNull UrlHostSelectionInterceptor urlHostSelectionInterceptor,
                               @NonNull @Named("default") UModsService defaultUModsService,
                               @NonNull @Named("app_user") UModsService AppUserUModsService){ //@NonNull @DigestAuth Credentials digestAuthCredentials) {
         mUModsDNSSDScanner = checkNotNull(uModsDNSSDScanner,"uModsDNSSDScanner should not be null.");
         mUModsBLEScanner = checkNotNull(uModsBLEScanner, " uModsBLEScanner should not be null.");
+        this.mUModsWiFiScanner = checkNotNull(uModsWiFiScanner, " uModsWiFiScanner should not be null.");
         this.defaultUModsService = checkNotNull(defaultUModsService, " defaultUModsService should not be null.");
         this.appUserUModsService = checkNotNull(AppUserUModsService, " AppUserUModsService should not be null.");
         this.urlHostSelectionInterceptor = checkNotNull(urlHostSelectionInterceptor, " urlHostSelectionInterceptor should not be null.");
@@ -149,12 +153,13 @@ public class UModsLANDataSource implements UModsDataSource {
                 .toList();
     }
 
-    @RxLogObservable
+    //@RxLogObservable
     public Observable<UMod> getUModsOneByOne(){
         return Observable.mergeDelayError(
                 Observable.from(UMODS_SERVICE_DATA.values()),
                 mUModsDNSSDScanner.browseLANForUMods(),
-                mUModsBLEScanner.bleScanForUMods())
+                mUModsBLEScanner.bleScanForUMods(),
+                mUModsWiFiScanner.browseWiFiForUMods())
                 .compose(this.uModLANBrander);
     }
 
@@ -168,10 +173,11 @@ public class UModsLANDataSource implements UModsDataSource {
         Observable<UMod> mockedUModObs;
         if (mockedUMod != null){
             mockedUModObs = Observable.just(mockedUMod);
+            Log.d("lan_ds", mockedUMod.toString());
         } else {
             mockedUModObs = Observable.empty();
         }
-        Log.d("lan_ds", mockedUMod.toString());
+
         return Observable.concatDelayError(mockedUModObs,
                 mUModsDNSSDScanner.browseLANForUMod(uModUUID))
                 .doOnNext(new Action1<UMod>() {
@@ -234,7 +240,7 @@ public class UModsLANDataSource implements UModsDataSource {
         //GetMyUserLevelRPC.Request request = new GetMyUserLevelRPC.Request(
         //        new GetMyUserLevelRPC.Arguments(), uMod.getUUID());
         GetMyUserLevelRPC.Response response = new GetMyUserLevelRPC.Response(
-                new GetMyUserLevelRPC.Result(UModUser.Level.ADMINISTRATOR),
+                new GetMyUserLevelRPC.Result(GetMyUserLevelRPC.UModUserType.User),
                 request.getCallTag(),
                 new RPC.ResponseError(null,null));
 
@@ -246,23 +252,26 @@ public class UModsLANDataSource implements UModsDataSource {
     public Observable<TriggerRPC.Response> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
         final TriggerRPC.Response response = new TriggerRPC.Response(new TriggerRPC.Result(),
                 request.getCallTag(),
-                new RPC.ResponseError(null,null));
+                new RPC.ResponseError(401,"Unauthenticated"));
 
-            return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
+            return Observable.just(response).delay(1100L, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public Observable<CreateUserRPC.Response> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Request request) {
-        /*
+
         final CreateUserRPC.Response response = new CreateUserRPC.Response(
-                new CreateUserRPC.Result(),
+                new CreateUserRPC.Result(GetMyUserLevelRPC.UModUserType.Admin),
                 request.getCallTag(),
-                new RPC.ResponseError(null,null)
+                null
         );
         return Observable.just(response).delay(680, TimeUnit.MILLISECONDS);
-        */
+
+
+        /*
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return this.appUserUModsService.createUser(request).toObservable();
+        */
     }
 
     @Override

@@ -99,11 +99,11 @@ public class RPC {
             this.errorMessage = errorMessage;
         }
 
-        public int getErrorCode() {
+        public Integer getErrorCode() {
             return errorCode;
         }
 
-        public void setErrorCode(int errorCode) {
+        public void setErrorCode(Integer errorCode) {
             this.errorCode = errorCode;
         }
 

@@ -126,7 +126,15 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
             @Override
             public void onNext(GetUMod.ResponseValues response) {
                 uModToConfig = response.getUMod();
-                Log.e("conf_prs", response.getUMod().toString());
+                if (uModToConfig == null){
+                    Log.d("conf_prs", "vino nulo negro");
+                } else {
+                    Log.d("conf_prs", response.getUMod().toString());
+                    if (uModToConfig.getState() == UMod.State.AP_MODE){
+                            mUModConfigView.launchWiFiSettings(uModToConfig.getUUID());
+                    }
+
+                }
                 showUModSettings(uModToConfig);
             }
         });

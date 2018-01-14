@@ -1,5 +1,6 @@
 package com.urbit_iot.onekey.umods;
 
+import com.urbit_iot.onekey.ApplicationModule;
 import com.urbit_iot.onekey.OneKeyApplication;
 import com.urbit_iot.onekey.appuser.AppUserComponent;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepositoryComponent;
@@ -19,7 +20,7 @@ import dagger.Component;
  */
 @FragmentScoped
 @Component(dependencies = {UModsRepositoryComponent.class, SchedulerProviderComponent.class},
-        modules = UModsPresenterModule.class)
+        modules = {UModsPresenterModule.class})
 public interface UModsComponent {
 	
     void inject(UModsActivity activity);

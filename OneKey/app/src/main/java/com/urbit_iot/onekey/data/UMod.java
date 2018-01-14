@@ -33,11 +33,9 @@ public final class UMod {
 
     public enum State {
         AP_MODE(0),
-        IDLE(1),
-        IN_OPERATION(2),
-        OTA_UPDATE(3),
-        STATION_MODE(5),
-        BLE_MODE(6);
+        STATION_MODE(1),
+        OTA_UPDATE(2),
+        BLE_MODE(3);
         private final Integer stateID;
         private static SparseArray<State> map = new SparseArray<>();
 
@@ -83,6 +81,7 @@ public final class UMod {
     @NonNull
     private State state;
 
+    //TODO change to boolean
     @NonNull
     private Boolean ongoingNotificationEnabled;
 
@@ -128,7 +127,7 @@ public final class UMod {
      */
     public UMod(@NonNull String uModUUID,
                 @Nullable String connectionAddress,
-                @NonNull Boolean isOpen) {
+                @NonNull boolean isOpen) {
         this.uModUUID = uModUUID;
         this.alias = uModUUID;
         this.ongoingNotificationEnabled =  false;

@@ -7,22 +7,24 @@ import com.burgstaller.okhttp.CachingAuthenticatorDecorator;
 import com.burgstaller.okhttp.digest.CachingAuthenticator;
 import com.burgstaller.okhttp.digest.Credentials;
 import com.burgstaller.okhttp.digest.DigestAuthenticator;
-import com.f2prateek.rx.preferences2.Preference;
-import com.f2prateek.rx.preferences2.RxSharedPreferences;
+
 import com.github.druk.rxdnssd.RxDnssd;
 import com.github.druk.rxdnssd.RxDnssdBindable;
+
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 import com.polidea.rxandroidble.RxBleClient;
-import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
+
 import com.urbit_iot.onekey.data.source.lan.UModsBLEScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsDNSSDScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsLANDataSource;
 import com.urbit_iot.onekey.data.source.lan.UModsService;
+import com.urbit_iot.onekey.data.source.lan.UModsWiFiScanner;
 import com.urbit_iot.onekey.data.source.local.UModsLocalDBDataSource;
+
 import com.urbit_iot.onekey.util.GlobalConstants;
-import com.urbit_iot.onekey.util.dagger.DigestAuth;
 import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.Remote;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
@@ -51,6 +53,7 @@ public class UModsRepositoryModule {
     private String appUserPhoneNumber;
     private String appUUIDHash;
 
+    //TODO replace private fields with the appUserRepository instance
     public UModsRepositoryModule(String appUserPhoneNumber, String appUUIDHash) {
         this.appUserPhoneNumber = appUserPhoneNumber;
         this.appUUIDHash = appUUIDHash;
@@ -72,6 +75,12 @@ public class UModsRepositoryModule {
 
     @Singleton
     @Provides
+    UModsWiFiScanner provideUModsWiFiScanner(Context context){
+        return new UModsWiFiScanner(context);
+    }
+
+    @Singleton
+    @Provides
     @Local
     UModsDataSource provideUModsLocalDBDataSource(Context context, BaseSchedulerProvider schedulerProvider) {
         return new UModsLocalDBDataSource(context, schedulerProvider);
@@ -82,10 +91,11 @@ public class UModsRepositoryModule {
     @Remote
     UModsDataSource provideUModsRemoteDataSource(UModsDNSSDScanner uModsDNSSDScanner,
                                                  UModsBLEScanner uModsBLEScanner,
+                                                 UModsWiFiScanner uModsWiFiScanner,
                                                  UrlHostSelectionInterceptor urlHostSelectionInterceptor,
                                                  @Named("default") UModsService defaultUModsService,
                                                  @Named("app_user") UModsService appUserUModsService) {
-        return new UModsLANDataSource(uModsDNSSDScanner, uModsBLEScanner, urlHostSelectionInterceptor,defaultUModsService, appUserUModsService);
+        return new UModsLANDataSource(uModsDNSSDScanner, uModsBLEScanner, uModsWiFiScanner, urlHostSelectionInterceptor,defaultUModsService, appUserUModsService);
     }
 
     //TODO separate those into ints own network module

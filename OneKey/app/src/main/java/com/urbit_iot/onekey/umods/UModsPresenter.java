@@ -186,6 +186,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         });
     }
 
+    //TODO peer review view model creation rules
     private UModViewModel createViewModel(final UMod uMod){
         final String uModUUID;
         String itemMainText;
@@ -204,35 +205,54 @@ public class UModsPresenter implements UModsContract.Presenter {
             itemMainText = uModUUID;
         }
 
-        if (uMod.belongsToAppUser()){
+        if (uMod.belongsToAppUser() && uMod.getState() != UMod.State.AP_MODE){
             checkboxVisible = true;
         } else {
             checkboxVisible = false;
         }
 
-        if (uMod.getState() == UMod.State.STATION_MODE){
-            buttonVisible = true;
-            //TODO add button text versions as String resource or GlobalConstants??.
-            if(uMod.belongsToAppUser()){
-                buttonText = "TRIG";
+        //Default values
+        buttonText = "OFF";
+        buttonVisible = false;
+
+        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){
+            //shows action button only when online and is in station mode.
+            if (uMod.getState() == UMod.State.STATION_MODE){
+                buttonVisible = true;
+                //TODO add button text alternatives as String resource or GlobalConstants??.
+                if(uMod.belongsToAppUser()){
+                    buttonText = "TRIG";
+                } else {
+                    buttonText = "ASK";
+                }
             } else {
-                buttonText = "ASK";
+                buttonVisible = false;
+                buttonText = "NON";
             }
-        } else {
-            buttonVisible = false;
-            buttonText = "NON";
         }
 
         checkboxChecked = uMod.isOngoingNotificationEnabled();
 
-        if(uMod.getuModSource() == UMod.UModSource.LAN_SCAN){
+
+        //Default until all states are defined i.e. what about BLE_MODE and OTA_UPDATE??
+        itemOnClickListenerEnabled = false;
+        itemLowerText = "UNKNOWN";
+
+        if (uMod.getState()== UMod.State.AP_MODE
+                && uMod.getuModSource() == UMod.UModSource.LAN_SCAN){
             itemOnClickListenerEnabled = true;
             itemLowerText = "ONLINE";
-        } else {
+        }
+        if(uMod.getState()== UMod.State.STATION_MODE
+                && uMod.getuModSource() == UMod.UModSource.LAN_SCAN){
+            itemOnClickListenerEnabled = true;
+            itemLowerText = "ONLINE";
+        }
+
+        if(uMod.getuModSource() != UMod.UModSource.LAN_SCAN){
             itemOnClickListenerEnabled = false;
             itemLowerText = "OFFLINE";
         }
-
 
         return new UModViewModel(uModUUID, this, itemMainText, itemLowerText,
                 checkboxChecked, checkboxVisible, buttonText, buttonVisible, itemOnClickListenerEnabled) {
@@ -241,7 +261,9 @@ public class UModsPresenter implements UModsContract.Presenter {
                 if(uMod.belongsToAppUser()){
                     this.getPresenter().triggerUMod(uModUUID);
                 } else {
-                    this.getPresenter().requestAccess(uModUUID);
+                    if (uMod.getState() == UMod.State.STATION_MODE){
+                        this.getPresenter().requestAccess(uModUUID);
+                    }
                 }
             }
 
@@ -372,7 +394,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     }
 
     @Override
-    public void triggerUMod(String uModUUID) {
+    public void triggerUMod(final String uModUUID) {
 
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.
@@ -387,7 +409,8 @@ public class UModsPresenter implements UModsContract.Presenter {
 
             @Override
             public void onError(Throwable e) {
-                mUModsView.showLoadingUModsError();
+                mUModsView.showOpenCloseFail();
+                loadUMods(true);
             }
 
             @Override
@@ -395,12 +418,19 @@ public class UModsPresenter implements UModsContract.Presenter {
                 //TODO make a method that proceses HTTP error codes for the given RPC.
                 TriggerRPC.Response response = responseValues.getResponse();
                 RPC.ResponseError responseError = response.getResponseError();
-                if (responseError != null && responseError.getErrorCode() != 0){
-                    Log.d("umods_pr", "Error Code: " + responseError.getErrorCode());
+                if (responseError != null
+                        && responseError.getErrorCode() != null
+                        && responseError.getErrorCode() != 0){
+                    Log.d("umods_pr", "Error Code: " + responseError.getErrorCode()
+                            + "\nError Message: " + responseError.getErrorMessage());
+                    mUModsView.showOpenCloseFail();
+                    mUModsView.makeUModViewModelActionButtonVisible(uModUUID);
+                } else {
+                    Log.d("ModsPresenter", "RPC is " + response.toString());
+                    mUModsView.showOpenCloseSuccess();
                 }
                 //If 500 then updateAppUserLevelOnUMod
-                Log.d("ModsPresenter", "RPC is " + response.toString());
-                mUModsView.showOpenCloseSuccess();
+                //TODO after a successful answer enable action button on view
             }
         });
     }
@@ -421,13 +451,23 @@ public class UModsPresenter implements UModsContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 Log.e("umods_pr", "Request Access Failed: " + e.getMessage());
+                mUModsView.showRequestAccessFailedMessage();
             }
 
             @Override
             public void onNext(RequestAccess.ResponseValues responseValues) {
                 CreateUserRPC.Response successResponse = responseValues.getResponse();
-                Log.d("umods_pr", successResponse.toString());
-                mUModsView.showSuccessfullySavedMessage();
+                RPC.ResponseError responseError = successResponse.getResponseError();
+                if (responseError != null
+                        && responseError.getErrorCode() != null
+                        && responseError.getErrorCode() != 0) {
+                    Log.d("umods_pr", "Error Code: " + responseError.getErrorCode()
+                            + "\nError Message: " + responseError.getErrorMessage());
+                    mUModsView.showRequestAccessFailedMessage();
+                } else {
+                    Log.d("umods_pr", successResponse.toString());
+                    mUModsView.showRequestAccessCompletedMessage();
+                }
             }
         });
     }
