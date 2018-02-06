@@ -29,6 +29,14 @@ public class UModsWiFiScanner {
     }
 
     public Observable<UMod> browseWiFiForUMods() {
+        return scanWiFi(null);
+    }
+
+    public Observable<UMod> browseWiFiForUMod(String uModUUID) {
+        return scanWiFi(uModUUID);
+    }
+
+    private Observable<UMod> scanWiFi(final String filterUModUUID) {
         if (ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -55,7 +63,7 @@ public class UModsWiFiScanner {
                 .filter(new Func1<ScanResult, Boolean>() {
                     @Override
                     public Boolean call(ScanResult scanResult) {
-                        return scanResult.level > -70;
+                        return scanResult.level > -75;
                     }
                 })
                 .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
@@ -65,6 +73,15 @@ public class UModsWiFiScanner {
                         UMod mappedUMod = new UMod(scanResult.SSID);
                         mappedUMod.setState(UMod.State.AP_MODE);
                         return mappedUMod;
+                    }
+                })
+                .filter(new Func1<UMod, Boolean>() {
+                    @Override
+                    public Boolean call(UMod uMod) {
+                        if (filterUModUUID != null){
+                            return filterUModUUID.contentEquals(uMod.getUUID());
+                        }
+                        return true;
                     }
                 });
     }

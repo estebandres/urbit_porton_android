@@ -384,6 +384,11 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         return isAdded();
     }
 
+    @Override
+    public void clearAllItems() {
+        mListAdapter.replaceData(new ArrayList<UModViewModel>());
+    }
+
     /**
      * Listener for clicks on tasks in the ListView.
      */

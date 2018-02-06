@@ -17,7 +17,7 @@
 package com.urbit_iot.onekey.umodinfo;
 
 import com.urbit_iot.onekey.umodconfig.domain.usecase.DeleteUMod;
-import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUMod;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModAndUpdateInfo;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
@@ -187,13 +187,13 @@ public class UModInfoPresenterTest {
     }
 
     private UModInfoPresenter givenTaskDetailPresenter(String id) {
-        GetUMod getUMod = new GetUMod(mTasksRepository, mSchedulerProvider);
+        GetUModAndUpdateInfo getUModAndUpdateInfo = new GetUModAndUpdateInfo(mTasksRepository, mSchedulerProvider, appUserRepository);
         EnableUModNotification enableUModNotification = new EnableUModNotification(mTasksRepository, mSchedulerProvider);
         DisableUModNotification disableUModNotification = new DisableUModNotification(mTasksRepository, mSchedulerProvider);
         DeleteUMod deleteUMod = new DeleteUMod(mTasksRepository, mSchedulerProvider);
 
         return new UModInfoPresenter(id, mTaskDetailView,
-                getUMod, enableUModNotification, disableUModNotification, deleteUMod);
+                getUModAndUpdateInfo, enableUModNotification, disableUModNotification, deleteUMod);
     }
 
     private void setTaskAvailable(UMod task) {

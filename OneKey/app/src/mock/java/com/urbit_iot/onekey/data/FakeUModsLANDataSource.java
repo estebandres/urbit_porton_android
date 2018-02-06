@@ -21,19 +21,25 @@ import android.support.annotation.NonNull;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
+import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
+import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.ResponseBody;
+import retrofit2.Response;
 import rx.Observable;
 
 /**
@@ -111,6 +117,11 @@ public class FakeUModsLANDataSource implements UModsDataSource {
     }
 
     @Override
+    public Observable<UMod> updateUModAlias(@NonNull String uModUUID, @NonNull String newAlias) {
+        return null;
+    }
+
+    @Override
     public void partialUpdate(@NonNull UMod uMod) {
 
     }
@@ -181,6 +192,31 @@ public class FakeUModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<SysGetInfoRPC.Response> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+        return null;
+    }
+
+    @Override
+    public Observable<SetWiFiAPRPC.Response> setWiFiAP(UMod uMod, SetWiFiAPRPC.Request request) {
+        return null;
+    }
+
+    @Override
+    public Observable<File> getFirmwareImageFile(UMod uMod) {
+        return null;
+    }
+
+    @Override
+    public Observable<Response<ResponseBody>> postFirmwareUpdateToUMod(UMod uMod, File newFirmwareFile) {
+        return null;
+    }
+
+    @Override
+    public Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Request request) {
+        return null;
+    }
+
+    @Override
+    public Observable<FactoryResetRPC.Response> factoryResetUMod(UMod uMod, FactoryResetRPC.Request request) {
         return null;
     }
 }

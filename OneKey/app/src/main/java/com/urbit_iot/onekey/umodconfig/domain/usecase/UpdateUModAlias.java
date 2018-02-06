@@ -17,16 +17,18 @@
 package com.urbit_iot.onekey.umodconfig.domain.usecase;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
-import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.source.UModsRepository;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Inject;
 
 import rx.Observable;
+import rx.Subscriber;
 import rx.functions.Func1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -34,23 +36,24 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Retrieves a {@link UMod} from the {@link UModsRepository}.
  */
-public class GetUMod extends SimpleUseCase<GetUMod.RequestValues, GetUMod.ResponseValues> {
+public class UpdateUModAlias extends SimpleUseCase<UpdateUModAlias.RequestValues, UpdateUModAlias.ResponseValues> {
 
     private final UModsRepository uModsRepository;
 
     @Inject
-    public GetUMod(@NonNull UModsRepository tasksRepository,
-                   @NonNull BaseSchedulerProvider schedulerProvider) {
+    public UpdateUModAlias(@NonNull UModsRepository tasksRepository,
+                           @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         uModsRepository = tasksRepository;
     }
 
     @Override
     public Observable<ResponseValues> buildUseCase(RequestValues values) {
-        return uModsRepository.getUMod(values.getUModUUID())
+        return uModsRepository.updateUModAlias(values.getuModUUID(),values.getNewAlias())
                 .map(new Func1<UMod, ResponseValues>() {
             @Override
             public ResponseValues call(UMod uMod) {
+                Log.d("update_alias", uMod.toString());
                 return new ResponseValues(uMod);
             }
         });
@@ -59,20 +62,26 @@ public class GetUMod extends SimpleUseCase<GetUMod.RequestValues, GetUMod.Respon
 
     public static final class RequestValues implements RxUseCase.RequestValues {
 
-        private final String mUModUUID;
+        private final String uModUUID;
+        private final String newAlias;
 
-        public RequestValues(@NonNull String uModUUID) {
-            mUModUUID = checkNotNull(uModUUID, "uModUUID cannot be null!");
+        public RequestValues(String uModUUID, String newAlias) {
+            this.uModUUID = checkNotNull(uModUUID, "uModUUID cannot be null!");
+            this.newAlias = checkNotNull(newAlias, "newAlias cannot be null!");
         }
 
-        public String getUModUUID() {
-            return mUModUUID;
+        public String getuModUUID() {
+            return uModUUID;
+        }
+
+        public String getNewAlias() {
+            return newAlias;
         }
     }
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private UMod mUMod;
+        private final UMod mUMod;
 
         public ResponseValues(@NonNull UMod uMod) {
             mUMod = checkNotNull(uMod, "uMod cannot be null!");

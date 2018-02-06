@@ -76,5 +76,10 @@
     <string name="umod_action_button_when_open_alien">REQ</string>
     <string name="request_access_failed_message">Solicitud de acceso fallida.</string>
     <string name="request_access_completed_message">Solicitud de accesso enviada.</string>
+    <string name="configuration_error"> falló al configurarse.</string>
+    <string name="configuration_success"> configurado exitosamente!</string>
+    <string name="firmware_update_title">Actualización de Firmware</string>
+    <string name="firmware_update_started_message">Actualización iniciada. Este proceso podría tomar hasta 60 segundos...</string>
+    <string name="firmware_update_cancel_text">Cancelar</string>
 
 </resources>

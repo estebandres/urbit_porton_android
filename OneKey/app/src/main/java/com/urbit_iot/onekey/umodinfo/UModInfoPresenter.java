@@ -21,7 +21,7 @@ import android.support.annotation.Nullable;
 
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.DeleteUMod;
-import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUMod;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModAndUpdateInfo;
 import com.urbit_iot.onekey.data.UMod;
 import com.google.common.base.Strings;
 import com.urbit_iot.onekey.umods.domain.usecase.SetOngoingNotificationStatus;
@@ -39,7 +39,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class UModInfoPresenter implements UModInfoContract.Presenter {
 
     private final UModInfoContract.View mTaskDetailView;
-    private final GetUMod mGetUMod;
+    private final GetUModAndUpdateInfo mGetUModAndUpdateInfo;
     private final SetOngoingNotificationStatus mSetOngoingNotificationStatus;
     private final DeleteUMod mDeleteUMod;
 
@@ -53,12 +53,12 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
     @Inject
     public UModInfoPresenter(@Nullable String taskId,
                              @NonNull UModInfoContract.View taskDetailView,
-                             @NonNull GetUMod getUMod,
+                             @NonNull GetUModAndUpdateInfo getUModAndUpdateInfo,
                              @NonNull SetOngoingNotificationStatus setOngoingNotificationStatus,
                              @NonNull DeleteUMod deleteUMod) {
         mTaskId = taskId;
         mTaskDetailView = checkNotNull(taskDetailView, "taskDetailView cannot be null!");
-        mGetUMod = checkNotNull(getUMod, "getUModUUID cannot be null!");
+        mGetUModAndUpdateInfo = checkNotNull(getUModAndUpdateInfo, "getUModUUID cannot be null!");
         mSetOngoingNotificationStatus = checkNotNull(setOngoingNotificationStatus, "disableUModNotification cannot be null!");
         mDeleteUMod = checkNotNull(deleteUMod, "deleteUMod cannot be null!");
         mTaskDetailView.setPresenter(this);
@@ -80,7 +80,7 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
 
     @Override
     public void unsubscribe() {
-        mGetUMod.unsubscribe();
+        mGetUModAndUpdateInfo.unsubscribe();
         mSetOngoingNotificationStatus.unsubscribe();
         mDeleteUMod.unsubscribe();
     }
@@ -93,7 +93,10 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
 
         mTaskDetailView.setLoadingIndicator(true);
 
-        mGetUMod.execute(new GetUMod.RequestValues(mTaskId), new Subscriber<GetUMod.ResponseValues>() {
+        //TODO remove mock
+        String wifissid = "mockwifi";
+        mGetUModAndUpdateInfo.execute(new GetUModAndUpdateInfo.RequestValues(mTaskId, wifissid),
+                new Subscriber<GetUModAndUpdateInfo.ResponseValues>() {
             @Override
             public void onCompleted() {
 
@@ -109,7 +112,7 @@ public class UModInfoPresenter implements UModInfoContract.Presenter {
             }
 
             @Override
-            public void onNext(GetUMod.ResponseValues response) {
+            public void onNext(GetUModAndUpdateInfo.ResponseValues response) {
                 UMod task = response.getUMod();
 
                 // The view may not be able to handle UI updates anymore

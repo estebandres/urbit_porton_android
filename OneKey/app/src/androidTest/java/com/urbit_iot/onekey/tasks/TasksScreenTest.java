@@ -129,7 +129,7 @@ public class TasksScreenTest {
         onView(withId(R.id.fab_add_task)).perform(click());
 
         // Check if the add task screen is displayed
-        onView(withId(R.id.add_task_title)).check(matches(isDisplayed()));
+        onView(withId(R.id.alias_text_input)).check(matches(isDisplayed()));
     }
 
     @Test
@@ -147,13 +147,13 @@ public class TasksScreenTest {
         String editTaskDescription = "New Description";
 
         // Edit task title and description
-        onView(withId(R.id.add_task_title))
+        onView(withId(R.id.alias_text_input))
                 .perform(replaceText(editTaskTitle), closeSoftKeyboard()); // Type new task title
         onView(withId(R.id.add_task_description)).perform(replaceText(editTaskDescription),
                 closeSoftKeyboard()); // Type new task description and close the keyboard
 
         // Save the task
-        onView(withId(R.id.fab_edit_task_done)).perform(click());
+        onView(withId(R.id.fab_upload_settings)).perform(click());
 
         // Verify task is displayed on screen in the task list.
         onView(withItemText(editTaskTitle)).check(matches(isDisplayed()));
@@ -455,13 +455,13 @@ public class TasksScreenTest {
         onView(withId(R.id.fab_add_task)).perform(click());
 
         // Add task title and description
-        onView(withId(R.id.add_task_title)).perform(typeText(title),
+        onView(withId(R.id.alias_text_input)).perform(typeText(title),
                 closeSoftKeyboard()); // Type new task title
         onView(withId(R.id.add_task_description)).perform(typeText(description),
                 closeSoftKeyboard()); // Type new task description and close the keyboard
 
         // Save the task
-        onView(withId(R.id.fab_edit_task_done)).perform(click());
+        onView(withId(R.id.fab_upload_settings)).perform(click());
     }
 
     private void clickCheckBoxForTask(String title) {

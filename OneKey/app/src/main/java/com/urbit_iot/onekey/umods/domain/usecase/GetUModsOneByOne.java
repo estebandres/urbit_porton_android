@@ -40,7 +40,6 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
     }
 
     @Override
-    @RxLogObservable
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
         if (values.isForceUpdate()) {

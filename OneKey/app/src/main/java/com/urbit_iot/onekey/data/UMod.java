@@ -217,6 +217,7 @@ public final class UMod {
      */
     public UMod(@NonNull String uuid,
                 @Nullable String alias,
+                @Nullable String wifiSSID,
                 @Nullable String connectionAddress,
                 @NonNull State uModState,
                 @NonNull UModUser.Level userLevel,
@@ -228,6 +229,7 @@ public final class UMod {
         this.uModUUID = uuid;
         this.ongoingNotificationEnabled =  ongoingNotifEnabled;
         this.alias = alias;
+        this.wifiSSID = wifiSSID;
         this.connectionAddress = connectionAddress;
         this.state = uModState;
         this.appUserLevel = userLevel;

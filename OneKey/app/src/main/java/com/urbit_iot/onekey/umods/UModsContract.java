@@ -65,6 +65,8 @@ public interface UModsContract {
         void showRequestAccessCompletedMessage();
 
         void makeUModViewModelActionButtonVisible(String uModUUID);
+
+        void clearAllItems();
     }
 
     interface Presenter extends BasePresenter {

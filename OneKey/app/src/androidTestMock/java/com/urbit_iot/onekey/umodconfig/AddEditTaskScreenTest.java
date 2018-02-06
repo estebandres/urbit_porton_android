@@ -71,13 +71,13 @@ public class AddEditTaskScreenTest {
     @Test
     public void emptyTask_isNotSaved() {
         // Add invalid title and description combination
-        onView(withId(R.id.add_task_title)).perform(clearText());
+        onView(withId(R.id.alias_text_input)).perform(clearText());
         onView(withId(R.id.add_task_description)).perform(clearText());
         // Try to save the task
-        onView(withId(R.id.fab_edit_task_done)).perform(click());
+        onView(withId(R.id.fab_upload_settings)).perform(click());
 
         // Verify that the activity is still displayed (a correct task would close it).
-        onView(withId(R.id.add_task_title)).check(matches(isDisplayed()));
+        onView(withId(R.id.alias_text_input)).check(matches(isDisplayed()));
     }
 
     /**

@@ -1,49 +1,22 @@
 package com.urbit_iot.onekey.data.rpc;
 
 import com.google.gson.annotations.SerializedName;
-import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
 /**
  * Created by andresteve07 on 8/11/17.
  */
 
-public class UpdateUserRPC extends RPC {
+public class FactoryResetRPC extends RPC {
     public static class Arguments{
-
-        @SerializedName("user_name")
-        private String userID;
-        @SerializedName("user_type")
-        private UModUser.Level userLevel;
-
-        public Arguments(String userID, UModUser.Level userLevel) {
-            this.userID = userID;
-            this.userLevel = userLevel;
-        }
-
-        public String getUserID() {
-            return userID;
-        }
-
-        public void setUserID(String userID) {
-            this.userID = userID;
-        }
-
-        public UModUser.Level getUserLevel() {
-            return userLevel;
-        }
-
-        public void setUserLevel(UModUser.Level userLevel) {
-            this.userLevel = userLevel;
-        }
+        public Arguments(){}
     }
 
     public static class Request extends RPC.Request{
         @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
-        private UpdateUserRPC.Arguments methodArguments;
-
-        public Request(Arguments args, String uModTag, int id) {
-            super("Admin.UpdateUser",uModTag,id);
+        private FactoryResetRPC.Arguments methodArguments;
+        public Request(Arguments args, String callTag, int id) {
+            super("Admin.FactoryReset",callTag,id);
             this.methodArguments = args;
         }
 
@@ -62,7 +35,7 @@ public class UpdateUserRPC extends RPC {
 
     public static class Response extends RPC.Response {
         @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
-        private UpdateUserRPC.Result responseResult;
+        private FactoryResetRPC.Result responseResult;
 
         public Response(Result result, String callTag, ResponseError responseError) {
             super(callTag, responseError);

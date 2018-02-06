@@ -29,9 +29,10 @@ public final class UModsPersistenceContract {
 
     /* Inner class that defines the table contents */
     public static abstract class UModEntry implements BaseColumns {
-        public static final String TABLE_NAME = "umod";
+        public static final String UMODS_TABLE_NAME = "umod";
         public static final String UUID_CN = "uuid";
         public static final String ALIAS_CN = "alias";
+        public static final String WIFI_SSID_CN = "wifi_ssid";
         public static final String NOTIF_ENABLED_CN = "notification_enabled";
         public static final String CONNECTION_ADDRESS_CN = "connection_address";
         //public static final String AP_MODE_CN = "ap_mode";

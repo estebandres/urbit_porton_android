@@ -14,66 +14,47 @@
  * limitations under the License.
  */
 
-package com.urbit_iot.onekey.data.source.remote;
+package com.urbit_iot.onekey.data.source.internet;
 
 import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
+import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
+import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 
-import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.io.File;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+
+import okhttp3.ResponseBody;
+import retrofit2.Response;
 import rx.Observable;
 
 /**
  * Implementation of the data source that adds a latency simulating network.
  */
-public class UModsRemoteDataSource implements UModsDataSource {
+public class UModsInternetDataSource implements UModsDataSource {
 
-    private static UModsRemoteDataSource INSTANCE;
+    private FirmwareFileDownloader mFirmwareFileDownloader;
 
-    private static final int SERVICE_LATENCY_IN_MILLIS = 5000;
-
-    private final static Map<String, UMod> TASKS_SERVICE_DATA;
-
-    static {
-        TASKS_SERVICE_DATA = new LinkedHashMap<>(2);
-        addUMod("Build tower in Pisa", "Ground looks good, no foundation work required.");
-        addUMod("Finish bridge in Tacoma", "Found awesome girders at half the cost!");
-    }
-
-    public static UModsRemoteDataSource getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new UModsRemoteDataSource();
-        }
-        return INSTANCE;
-    }
-
-    // Prevent direct instantiation.
-    private UModsRemoteDataSource() {}
-
-    private static void addUMod(String title, String description) {
-        UMod newTask = new UMod(title, description, true);
-        TASKS_SERVICE_DATA.put(newTask.getUUID(), newTask);
+    @Inject
+    public UModsInternetDataSource(FirmwareFileDownloader firmwareDownloader){
+        this.mFirmwareFileDownloader = firmwareDownloader;
     }
 
     @Override
     public Observable<List<UMod>> getUMods() {
-        return Observable
-                .from(TASKS_SERVICE_DATA.values())
-                .delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS)
-                .toList();
+        return null;
     }
 
     @Override
@@ -82,18 +63,18 @@ public class UModsRemoteDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<UMod> getUMod(@NonNull String taskId) {
-        final UMod task = TASKS_SERVICE_DATA.get(taskId);
-        if(task != null) {
-            return Observable.just(task).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MILLISECONDS);
-        } else {
-            return Observable.empty();
-        }
+    public Observable<UMod> getUMod(@NonNull String uModUUID) {
+        return null;
     }
 
     @Override
     public void saveUMod(@NonNull UMod uMod) {
-        TASKS_SERVICE_DATA.put(uMod.getUUID(), uMod);
+
+    }
+
+    @Override
+    public Observable<UMod> updateUModAlias(@NonNull String uModUUID, @NonNull String newAlias) {
+        return null;
     }
 
     @Override
@@ -108,29 +89,22 @@ public class UModsRemoteDataSource implements UModsDataSource {
 
     @Override
     public void clearAlienUMods() {
-        Iterator<Map.Entry<String, UMod>> it = TASKS_SERVICE_DATA.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, UMod> entry = it.next();
-            if (entry.getValue().getAppUserLevel() == UModUser.Level.UNAUTHORIZED) {
-                it.remove();
-            }
-        }
+
     }
 
     @Override
     public void refreshUMods() {
-        // Not required because the {@link TasksRepository} handles the logic of refreshing the
-        // tasks from all the available data sources.
+
     }
 
     @Override
     public void deleteAllUMods() {
-        TASKS_SERVICE_DATA.clear();
+
     }
 
     @Override
     public void deleteUMod(@NonNull String uModUUID) {
-        TASKS_SERVICE_DATA.remove(uModUUID);
+
     }
 
     @Override
@@ -165,6 +139,31 @@ public class UModsRemoteDataSource implements UModsDataSource {
 
     @Override
     public Observable<SysGetInfoRPC.Response> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+        return null;
+    }
+
+    @Override
+    public Observable<SetWiFiAPRPC.Response> setWiFiAP(UMod uMod, SetWiFiAPRPC.Request request) {
+        return null;
+    }
+
+    @Override
+    public Observable<File> getFirmwareImageFile(UMod uMod) {
+        return this.mFirmwareFileDownloader.downloadFirmwareFile();
+    }
+
+    @Override
+    public Observable<Response<ResponseBody>> postFirmwareUpdateToUMod(UMod uMod, File newFirmwareFile) {
+        return null;
+    }
+
+    @Override
+    public Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Request request) {
+        return null;
+    }
+
+    @Override
+    public Observable<FactoryResetRPC.Response> factoryResetUMod(UMod uMod, FactoryResetRPC.Request request) {
         return null;
     }
 }

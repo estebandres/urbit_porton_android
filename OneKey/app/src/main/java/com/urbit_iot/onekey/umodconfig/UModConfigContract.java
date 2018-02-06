@@ -18,6 +18,7 @@ package com.urbit_iot.onekey.umodconfig;
 
 import com.urbit_iot.onekey.BasePresenter;
 import com.urbit_iot.onekey.BaseView;
+import com.urbit_iot.onekey.data.UMod;
 
 /**
  * This specifies the contract between the view and the presenter.
@@ -38,17 +39,53 @@ public interface UModConfigContract {
 
         void showEditUModUsers(String uModUUID);
 
-        void launchWiFiSettings(String uModSSID);
+        String getWiFiAPSSID();
+
+        void launchWiFiSettings();
+
+        void showUModConfigs(UModConfigViewModel viewModel);
+
+        void showConfigurationSuccessMessage(String config);
+
+        void showConfigurationFailureMessage(String config);
+
+        void hideUpdateDialog();
+
+        void showUpdateSucessMessage();
+
+        void showUpdateErrorMessage();
+
+        void showResetFailMsg();
+
+        void showResetSuccessMsg();
+
+        void finishActivity();
+
+        void showUpgradeCancellationMsg();
+
+        void showProgressBar();
+
+        void hideProgressBar();
     }
 
     interface Presenter extends BasePresenter {
         //TODO save umod config: is it possible to separate umod from umod config??
         void saveUMod(String title, String description);//saveUModConfig
 
-        void populateUMod();
+        void populateUModSettings();
 
         void adminUModUsers();
 
+        void updateUModAlias(UModConfigViewModel viewModel);
+
+        void updateUModWiFiCredentials(UModConfigViewModel viewModel);
+
         void getUModSystemInfo(String uModUUID);
+
+        void updateUModFirmware();
+
+        void factoryResetUMod();
+
+        void cancelFirmwareUpgrade();
     }
 }

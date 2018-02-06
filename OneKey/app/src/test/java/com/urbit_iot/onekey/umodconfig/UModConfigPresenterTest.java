@@ -16,7 +16,7 @@
 
 package com.urbit_iot.onekey.umodconfig;
 
-import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUMod;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModAndUpdateInfo;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.SaveUMod;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.source.UModsRepository;
@@ -113,7 +113,7 @@ public class UModConfigPresenterTest {
         mUModConfigPresenter = givenEditTaskPresenter(testTask.getId());
 
         // When the presenter is asked to populate an existing task
-        mUModConfigPresenter.populateUMod();
+        mUModConfigPresenter.populateUModSettings();
 
         // Then the task repository is queried and the view updated
         verify(mTasksRepository).getTask(eq(testTask.getId()));
@@ -132,7 +132,7 @@ public class UModConfigPresenterTest {
         mUModConfigPresenter = givenEditTaskPresenter(testTask.getId());
 
         // When the presenter is asked to populate an existing task
-        mUModConfigPresenter.populateUMod();
+        mUModConfigPresenter.populateUModSettings();
 
         // Then the task repository is queried and the view updated
         verify(mTasksRepository).getTask(eq(testTask.getId()));
@@ -144,9 +144,9 @@ public class UModConfigPresenterTest {
 
     private UModConfigPresenter givenEditTaskPresenter(String taskId) {
 
-        GetUMod getUMod = new GetUMod(mTasksRepository, mSchedulerProvider);
+        GetUModAndUpdateInfo getUModAndUpdateInfo = new GetUModAndUpdateInfo(mTasksRepository, mSchedulerProvider, appUserRepository);
         SaveUMod saveUMod = new SaveUMod(mTasksRepository, mSchedulerProvider);
 
-        return new UModConfigPresenter(taskId, mAddEditTaskView, getUMod, saveUMod);
+        return new UModConfigPresenter(taskId, mAddEditTaskView, getUModAndUpdateInfo, saveUMod);
     }
 }

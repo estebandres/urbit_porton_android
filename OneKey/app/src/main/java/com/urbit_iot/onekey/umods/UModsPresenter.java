@@ -76,6 +76,7 @@ public class UModsPresenter implements UModsContract.Presenter {
 
     @Override
     public void subscribe() {
+        mUModsView.clearAllItems();
         loadUMods(false);
     }
 

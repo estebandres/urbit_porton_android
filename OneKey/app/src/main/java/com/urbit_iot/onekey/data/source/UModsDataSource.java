@@ -22,13 +22,19 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
+import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
+import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 
+import java.io.File;
 import java.util.List;
 
+import okhttp3.ResponseBody;
+import retrofit2.Response;
 import rx.Observable;
 
 /**
@@ -44,6 +50,8 @@ public interface UModsDataSource {
     Observable<UMod> getUMod(@NonNull String uModUUID); // GET /umods/UMOD_ID
 
     void saveUMod(@NonNull UMod uMod);// POST /umods/
+
+    Observable<UMod> updateUModAlias(@NonNull String uModUUID, @NonNull String newAlias);
 
     //TODO PartialUpdate
 
@@ -92,4 +100,16 @@ public interface UModsDataSource {
     Observable<SysGetInfoRPC.Response> getSystemInfo(@NonNull UMod uMod,
                                                      @NonNull SysGetInfoRPC.Request request);
     // GET /rpc/ && /umods/UMOD_ID/rpc/ vs /umods/UMOD_ID/info
+
+    Observable<SetWiFiAPRPC.Response> setWiFiAP(UMod uMod, SetWiFiAPRPC.Request request);
+
+    Observable<File> getFirmwareImageFile(UMod uMod);
+
+    Observable<Response<ResponseBody>> postFirmwareUpdateToUMod(UMod uMod, File newFirmwareFile);
+
+    Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Request request);
+
+    Observable<FactoryResetRPC.Response> factoryResetUMod(UMod uMod,
+                                                          FactoryResetRPC.Request request);
+
 }

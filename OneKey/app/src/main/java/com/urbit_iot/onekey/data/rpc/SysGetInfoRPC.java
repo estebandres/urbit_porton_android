@@ -238,7 +238,7 @@ public class SysGetInfoRPC extends RPC {
             }
         }
 
-        public class Wifi {
+        public static class Wifi {
             @SerializedName("sta_ip")
             @Expose
             private String staIp;

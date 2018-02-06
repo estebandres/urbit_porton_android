@@ -21,18 +21,22 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
-import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
+import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
+import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
+import com.urbit_iot.onekey.util.dagger.Internet;
 import com.urbit_iot.onekey.util.dagger.Local;
-import com.urbit_iot.onekey.util.dagger.Remote;
+import com.urbit_iot.onekey.util.dagger.LanOnly;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,6 +45,8 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import okhttp3.ResponseBody;
+import retrofit2.Response;
 import rx.Observable;
 import rx.functions.Action0;
 import rx.functions.Action1;
@@ -63,6 +69,9 @@ public class UModsRepository implements UModsDataSource {
 
     @NonNull
     private final UModsDataSource mUModsLocalDataSource;
+
+    @NonNull
+    private final UModsDataSource mUModsInternetDataSource;
 
     @NonNull
     private Observable.Transformer<UMod,UMod> uModCacheBrander;
@@ -95,10 +104,12 @@ public class UModsRepository implements UModsDataSource {
      * with {@code @Nullable} values.
      */
     @Inject
-    public UModsRepository(@Remote UModsDataSource tasksRemoteDataSource,
-                           @Local UModsDataSource tasksLocalDataSource) {
-        mUModsLANDataSource = checkNotNull(tasksRemoteDataSource);
-        mUModsLocalDataSource = checkNotNull(tasksLocalDataSource);
+    public UModsRepository(@LanOnly UModsDataSource uModsRemoteDataSource,
+                           @Local UModsDataSource uModsLocalDataSource,
+                           @Internet UModsDataSource uModsInternetDataSource) {
+        mUModsLANDataSource = checkNotNull(uModsRemoteDataSource);
+        mUModsLocalDataSource = checkNotNull(uModsLocalDataSource);
+        this.mUModsInternetDataSource = checkNotNull(uModsInternetDataSource);
         this.uModCacheBrander = new Observable.Transformer<UMod, UMod>() {
             @Override
             public Observable<UMod> call(Observable<UMod> uModObservable) {
@@ -173,7 +184,7 @@ public class UModsRepository implements UModsDataSource {
                                         if(dbUMod == null){
                                             return Observable.just(lanUMod);
                                         } else {//Updates the entry
-                                            //TODO check if all necesary fields are being updated.
+                                            //TODO check if all necessary fields are being updated.
                                             //AppUserLevel should remain as in DB
                                             dbUMod.setConnectionAddress(lanUMod.getConnectionAddress());
                                             dbUMod.setState(lanUMod.getState());
@@ -190,22 +201,12 @@ public class UModsRepository implements UModsDataSource {
                     @Override
                     public void call(UMod uMod) {
                         if(uMod.belongsToAppUser()){
-                            //TODO should make only an update over the DB entry: connectionAddress and updateDate only (partial update).
+                            //TODO should make only an update of connectionAddress and updateDate only (partial update).
                             Log.d("umods_rep", "db update");
                             mUModsLocalDataSource.saveUMod(uMod);
                         }
-                        //TODO move to cacheDataSource when
-                        UMod cachedUMod = mCachedUMods.get(uMod.getUUID());
-                        if(cachedUMod!=null){
-                            //AppUserLevel should remain as in DB
-                            cachedUMod.setConnectionAddress(uMod.getConnectionAddress());
-                            cachedUMod.setState(uMod.getState());
-                            cachedUMod.setOpen(uMod.isOpen());
-                            cachedUMod.setLastUpdateDate(uMod.getLastUpdateDate());
-                            mCachedUMods.put(cachedUMod.getUUID(),cachedUMod);
-                        } else {
-                            mCachedUMods.put(uMod.getUUID(),uMod);
-                        }
+                        //TODO move to cacheDataSource ASAP
+                        mCachedUMods.put(uMod.getUUID(),uMod);
                     }
                 })
                 .doOnError(new Action1<Throwable>() {
@@ -327,6 +328,18 @@ public class UModsRepository implements UModsDataSource {
     }
 
     @Override
+    public Observable<UMod> updateUModAlias(@NonNull String uModUUID, @NonNull String newAlias) {
+        return mUModsLocalDataSource.updateUModAlias(uModUUID,newAlias)
+                .doOnNext(new Action1<UMod>() {
+                    @Override
+                    public void call(UMod uMod) {
+                        //Updates cached value.
+                        mCachedUMods.put(uMod.getUUID(), uMod);
+                    }
+                });
+    }
+
+    @Override
     public void partialUpdate(@NonNull UMod uMod) {
         mUModsLocalDataSource.partialUpdate(uMod);
     }
@@ -427,6 +440,9 @@ public class UModsRepository implements UModsDataSource {
                                         } else {//Updates the entry
                                             dbUMod.setConnectionAddress(lanUMod.getConnectionAddress());
                                             dbUMod.setState(lanUMod.getState());
+                                            dbUMod.setuModSource(UMod.UModSource.LAN_SCAN);
+                                            dbUMod.setOpen(lanUMod.isOpen());
+                                            dbUMod.setLastUpdateDate(lanUMod.getLastUpdateDate());
                                             return Observable.just(dbUMod);
                                         }
                                     }
@@ -537,6 +553,31 @@ public class UModsRepository implements UModsDataSource {
     public Observable<SysGetInfoRPC.Response>
     getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
         return mUModsLANDataSource.getSystemInfo(uMod, request);
+    }
+
+    @Override
+    public Observable<SetWiFiAPRPC.Response> setWiFiAP(UMod uMod, SetWiFiAPRPC.Request request) {
+        return mUModsLANDataSource.setWiFiAP(uMod,request);
+    }
+
+    @Override
+    public Observable<File> getFirmwareImageFile(UMod uMod) {
+        return mUModsInternetDataSource.getFirmwareImageFile(uMod);
+    }
+
+    @Override
+    public Observable<Response<ResponseBody>> postFirmwareUpdateToUMod(UMod uMod, File newFirmwareFile) {
+        return mUModsLANDataSource.postFirmwareUpdateToUMod(uMod, newFirmwareFile);
+    }
+
+    @Override
+    public Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Request request) {
+        return this.mUModsLANDataSource.otaCommit(uMod, request);
+    }
+
+    @Override
+    public Observable<FactoryResetRPC.Response> factoryResetUMod(UMod uMod, FactoryResetRPC.Request request) {
+        return this.mUModsLANDataSource.factoryResetUMod(uMod, request);
     }
 
     @Nullable

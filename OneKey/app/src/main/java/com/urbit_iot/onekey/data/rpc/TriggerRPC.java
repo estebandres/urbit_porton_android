@@ -16,7 +16,7 @@ public class TriggerRPC extends RPC {
         @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
         private TriggerRPC.Arguments methodArguments;
         public Request(Arguments args, String callTag, int id) {
-            super("Trigger",callTag,id);
+            super("User.Trigger",callTag,id);
             this.methodArguments = args;
         }
 

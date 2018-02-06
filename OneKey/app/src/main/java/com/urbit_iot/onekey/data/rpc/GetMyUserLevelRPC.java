@@ -32,7 +32,7 @@ public class GetMyUserLevelRPC {
         @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
         private GetMyUserLevelRPC.Arguments methodArguments;
         public Request(Arguments args, String uModTag){
-            super("Gest.GetUserStatus", uModTag, (new Random().nextInt()));
+            super("Gest.UserStatus", uModTag, (new Random().nextInt()));
             this.methodArguments = args;
         }
 

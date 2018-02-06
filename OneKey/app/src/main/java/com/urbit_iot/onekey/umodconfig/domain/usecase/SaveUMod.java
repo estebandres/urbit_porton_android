@@ -51,9 +51,9 @@ public class SaveUMod extends SimpleUseCase<SaveUMod.RequestValues, SaveUMod.Res
             @Override
             public void call(Subscriber<? super ResponseValues> subscriber) {
                 try {
-                    UMod task = values.getUMod();
-                    uModsRepository.saveUMod(task);
-                    subscriber.onNext(new ResponseValues(task));
+                    UMod uMod = values.getUMod();
+                    uModsRepository.saveUMod(uMod);
+                    subscriber.onNext(new ResponseValues(uMod));
                     subscriber.onCompleted();
                 } catch (Exception e) {
                     subscriber.onError(e);

@@ -21,18 +21,30 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.base.Strings;
-import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUMod;
+import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.FactoryResetUMod;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModAndUpdateInfo;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModSystemInfo;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.SaveUMod;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.UpdateUModAlias;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.UpdateWiFiCredentials;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.UpgradeUModFirmware;
+import com.urbit_iot.onekey.util.IntegerContainer;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 
 import retrofit2.adapter.rxjava.HttpException;
+import rx.Observable;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
  * Listens to user actions from the UI ({@link UModConfigFragment}), retrieves the data and
@@ -41,19 +53,36 @@ import rx.Subscriber;
  */
 public class UModConfigPresenter implements UModConfigContract.Presenter {
 
+    @NonNull
     private final UModConfigContract.View mUModConfigView;
 
-    private final GetUMod mGetUMod;
+    @NonNull
+    private final GetUModAndUpdateInfo mGetUModAndUpdateInfo;
 
+    @NonNull
     private final SaveUMod mSaveUMod;
 
-    private final GetUModSystemInfo getUModSystemInfo;
+    @NonNull
+    private final UpdateUModAlias mUpdateUModAlias;
+
+    @NonNull
+    private final UpdateWiFiCredentials mUpdateWiFiCredentials;
+
+    @NonNull
+    private final GetUModSystemInfo mGetUModSystemInfo;
+
+    @NonNull
+    private final FactoryResetUMod mFactoryReset;
+
+    @NonNull
+    private final UpgradeUModFirmware mUpgradeUModFirmware;
 
     @Nullable
     private UMod uModToConfig;
 
     @NonNull
     private String mUModUUID;
+
 
     /**
      * Dagger strictly enforces that arguments not marked with {@code @Nullable} are not injected
@@ -62,14 +91,22 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     @Inject
     public UModConfigPresenter(@NonNull String umodUUID,
                                @NonNull UModConfigContract.View addTaskView,
-                               @NonNull GetUMod getUMod,
+                               @NonNull GetUModAndUpdateInfo getUModAndUpdateInfo,
+                               @NonNull UpdateUModAlias updateUModAlias,
                                @NonNull SaveUMod saveUMod,
-                               @NonNull GetUModSystemInfo getUModSystemInfo) {
-        mUModUUID = umodUUID;
-        mUModConfigView = addTaskView;
-        mGetUMod = getUMod;
-        mSaveUMod = saveUMod;
-        this.getUModSystemInfo = getUModSystemInfo;
+                               @NonNull UpdateWiFiCredentials mUpdateWiFiCredentials,
+                               @NonNull GetUModSystemInfo mGetUModSystemInfo,
+                               @NonNull FactoryResetUMod mFactoryReset,
+                               @NonNull UpgradeUModFirmware mUpgradeUModFirmware) {
+        this.mUModUUID = umodUUID;
+        this.mUModConfigView = addTaskView;
+        this.mGetUModAndUpdateInfo = getUModAndUpdateInfo;
+        this.mUpdateUModAlias = updateUModAlias;
+        this.mSaveUMod = saveUMod;
+        this.mUpdateWiFiCredentials = mUpdateWiFiCredentials;
+        this.mGetUModSystemInfo = mGetUModSystemInfo;
+        this.mFactoryReset = mFactoryReset;
+        this.mUpgradeUModFirmware = mUpgradeUModFirmware;
     }
 
     /**
@@ -84,15 +121,19 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     @Override
     public void subscribe() {
         if (mUModUUID != null) {
-            populateUMod();
+            populateUModSettings();
         }
     }
 
     @Override
     public void unsubscribe() {
-        mGetUMod.unsubscribe();
+        mFactoryReset.unsubscribe();
+        mUpgradeUModFirmware.unsubscribe();
+        mUpdateUModAlias.unsubscribe();
+        mUpdateWiFiCredentials.unsubscribe();
+        mGetUModAndUpdateInfo.unsubscribe();
         mSaveUMod.unsubscribe();
-        this.getUModSystemInfo.unsubscribe();
+        this.mGetUModSystemInfo.unsubscribe();
     }
 
     @Override
@@ -105,37 +146,51 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     }
 
     @Override
-    public void populateUMod() {
-        Log.e("conf_pr","HOLO!1");
-        if (mUModUUID == null) {
-            throw new RuntimeException("populateUMod() was called but task is new.");
+    public void populateUModSettings() {
+
+        if (Strings.isNullOrEmpty(mUModUUID)) {
+            throw new RuntimeException("populateUModSettings() was called but umod is null.");
         }
-        mGetUMod.execute(new GetUMod.RequestValues(mUModUUID), new Subscriber<GetUMod.ResponseValues>() {
+        mUModConfigView.showProgressBar();
+        final IntegerContainer onNextCount = new IntegerContainer(0);
+        String currentWiFiAPSSID = mUModConfigView.getWiFiAPSSID();
+        mGetUModAndUpdateInfo.execute(
+                new GetUModAndUpdateInfo.RequestValues(mUModUUID, currentWiFiAPSSID),
+                new Subscriber<GetUModAndUpdateInfo.ResponseValues>() {
             @Override
             public void onCompleted() {
-                Log.e("conf_pr","HOLO!");
-
+                if (onNextCount.getValue() <= 0){
+                    Log.e("conf_pr","GetUModAndUpdateInfo didn't retreive any result: "+ onNextCount);
+                    mUModConfigView.finishActivity();
+                }
+                mUModConfigView.hideProgressBar();
             }
 
             @Override
             public void onError(Throwable e) {
                 Log.e("conf_pr",e.getMessage());
                 showEmptyTaskError();
+                if (mUModConfigView.isActive()){
+                    mUModConfigView.finishActivity();
+                }
             }
 
             @Override
-            public void onNext(GetUMod.ResponseValues response) {
+            public void onNext(GetUModAndUpdateInfo.ResponseValues response) {
+                onNextCount.plusOne();
                 uModToConfig = response.getUMod();
                 if (uModToConfig == null){
                     Log.d("conf_prs", "vino nulo negro");
                 } else {
                     Log.d("conf_prs", response.getUMod().toString());
-                    if (uModToConfig.getState() == UMod.State.AP_MODE){
-                            mUModConfigView.launchWiFiSettings(uModToConfig.getUUID());
+                    if (uModToConfig.getState() == UMod.State.AP_MODE
+                            && !uModToConfig.belongsToAppUser()){
+                            mUModConfigView.launchWiFiSettings();
                     }
-
                 }
-                showUModSettings(uModToConfig);
+                if (mUModConfigView.isActive()){
+                    mUModConfigView.showUModConfigs(createViewModel(uModToConfig));
+                }
             }
         });
     }
@@ -149,6 +204,71 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         mUModConfigView.showEditUModUsers(mUModUUID);
     }
 
+    @Override
+    public void updateUModAlias(UModConfigViewModel viewModel) {
+        final IntegerContainer onNextCount = new IntegerContainer(0);
+        mUpdateUModAlias.execute(new UpdateUModAlias.RequestValues(viewModel.getuModUUID(), viewModel.getAliasText()),
+                new Subscriber<UpdateUModAlias.ResponseValues>() {
+            @Override
+            public void onCompleted() {
+                if (onNextCount.getValue() <= 0){
+                    Log.e("conf_pr","updateUModAlias didn't retreive any result: "+ onNextCount);
+                    mUModConfigView.finishActivity();
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                mUModConfigView.showConfigurationFailureMessage("Alias");
+            }
+
+            @Override
+            public void onNext(UpdateUModAlias.ResponseValues responseValues) {
+                if (responseValues.getUMod() != null){
+                    onNextCount.plusOne();
+                    mUModConfigView.showConfigurationSuccessMessage("Alias");
+                }
+            }
+        });
+    }
+
+    @Override
+    public void updateUModWiFiCredentials(final UModConfigViewModel viewModel) {
+        final IntegerContainer onNextCount = new IntegerContainer(0);
+        mUpdateWiFiCredentials.execute(
+                new UpdateWiFiCredentials.RequestValues(
+                        viewModel.getuModUUID(),
+                        viewModel.getWifiSSIDText(),
+                        viewModel.getWifiPasswordText()),
+                new Subscriber<UpdateWiFiCredentials.ResponseValues>() {
+            @Override
+            public void onCompleted() {
+                if (onNextCount.getValue() <= 0){
+                    Log.e("conf_pr","updateUModWiFiCredentials didn't retreive any result: "+ onNextCount);
+                    mUModConfigView.finishActivity();
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                mUModConfigView.showConfigurationFailureMessage("WiFi AP");
+                Log.e("config_pr", e.getMessage());
+            }
+
+            @Override
+            public void onNext(UpdateWiFiCredentials.ResponseValues responseValues) {
+                onNextCount.plusOne();
+                SetWiFiAPRPC.Response response = responseValues.getRPCResponse();
+                if (response.getResponseError()!= null && response.getResponseError().getErrorCode() == 405){
+                    mUModConfigView.showConfigurationFailureMessage("WiFi AP");
+                } else {
+                    mUModConfigView.showConfigurationSuccessMessage("WiFi AP");
+                }
+            }
+        });
+    }
+
+
     private void showUModSettings(UMod uMod) {
         // The view may not be able to handle UI updates anymore
         Log.e("config_prs", uMod.toString());
@@ -156,6 +276,32 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
             mUModConfigView.setUModUUID(uMod.getUUID());
             mUModConfigView.setUModIPAddress(uMod.getConnectionAddress());
         }
+    }
+
+    private UModConfigViewModel createViewModel(UMod uMod){
+        String uModUUID = uMod.getUUID();
+        String connectionStatusText =  uMod.getuModSource() == UMod.UModSource.LAN_SCAN ?
+                "CONECTADO" : "DESCONECTADO";
+        String aliasText = uMod.getAlias();
+        String wifiSSIDText = uMod.getWifiSSID();
+        boolean adminLayoutVisible = uMod.getuModSource() == UMod.UModSource.LAN_SCAN
+                && uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR;
+        String uModSysInfoText =
+                uMod.getUUID() + "\n" +
+                uMod.getConnectionAddress() + "\n" +
+                uMod.getSWVersion();
+        String wifiPasswordText = null;
+
+        UModConfigViewModel viewModel =
+                new UModConfigViewModel(uModUUID,
+                        connectionStatusText,
+                        aliasText,
+                        wifiSSIDText,
+                        adminLayoutVisible,
+                        uModSysInfoText,
+                        wifiPasswordText);
+
+        return viewModel;
     }
 
     private void showSaveError() {
@@ -223,11 +369,14 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
     @Override
     public void getUModSystemInfo(String uModUUID) {
-
-        this.getUModSystemInfo.execute(new GetUModSystemInfo.RequestValues(uModUUID), new Subscriber<GetUModSystemInfo.ResponseValues>() {
+        final IntegerContainer onNextCount = new IntegerContainer(0);
+        this.mGetUModSystemInfo.execute(new GetUModSystemInfo.RequestValues(uModUUID), new Subscriber<GetUModSystemInfo.ResponseValues>() {
             @Override
             public void onCompleted() {
-
+                if (onNextCount.getValue() <= 0){
+                    Log.e("conf_pr","getUModSystemInfo didn't retreive any result: "+ onNextCount);
+                    mUModConfigView.finishActivity();
+                }
             }
 
             @Override
@@ -251,9 +400,85 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
             @Override
             public void onNext(GetUModSystemInfo.ResponseValues responseValues) {
+                onNextCount.plusOne();
                 Log.d("config_pr", "RESPUESTA: \n" + responseValues.getRPCResponse());
             }
         });
 
+    }
+
+    @Override
+    public void updateUModFirmware() {
+        final IntegerContainer onNextCount = new IntegerContainer(0);
+        mUpgradeUModFirmware.execute(new UpgradeUModFirmware.RequestValues(uModToConfig.getUUID()),
+                new Subscriber<UpgradeUModFirmware.ResponseValues>() {
+                    @Override
+                    public void onCompleted() {
+                        if (onNextCount.getValue() <= 0){
+                            Log.e("conf_pr","updateUModFirmware didn't retreive any result: "+ onNextCount);
+                            mUModConfigView.finishActivity();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e("config_pr", e.getMessage(),e);
+                        mUModConfigView.hideUpdateDialog();
+                        mUModConfigView.showUpdateErrorMessage();
+                    }
+
+                    @Override
+                    public void onNext(UpgradeUModFirmware.ResponseValues responseValues) {
+                        onNextCount.plusOne();
+                        //mUModConfigView.setUpdateDialogMessage("Actualización Exitosa.");
+                        mUModConfigView.hideUpdateDialog();
+                        mUModConfigView.showUpdateSucessMessage();
+                    }
+                });
+    }
+
+    @Override
+    public void cancelFirmwareUpgrade() {
+        mUpgradeUModFirmware.unsubscribe();
+        mUModConfigView.showUpgradeCancellationMsg();
+    }
+
+    @Override
+    public void factoryResetUMod() {
+        final IntegerContainer onNextCount = new IntegerContainer(0);
+        mFactoryReset.execute(new FactoryResetUMod.RequestValues(uModToConfig.getUUID()),
+                new Subscriber<FactoryResetUMod.ResponseValues>() {
+                    @Override
+                    public void onCompleted() {
+                        if (onNextCount.getValue() <= 0){
+                            Log.e("conf_pr","factoryResetUMod didn't retreive any result: "+ onNextCount);
+                            mUModConfigView.finishActivity();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        mUModConfigView.showResetFailMsg();
+                    }
+
+                    @Override
+                    public void onNext(FactoryResetUMod.ResponseValues responseValues) {
+                        onNextCount.plusOne();
+                        mUModConfigView.showResetSuccessMsg();
+                        Observable.timer(1100L, TimeUnit.MILLISECONDS)
+                                .subscribeOn(Schedulers.computation())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .map(new Func1<Long, Object>() {
+                                    @Override
+                                    public Object call(Long aLong) {
+                                        if (mUModConfigView.isActive()){
+                                            mUModConfigView.finishActivity();
+                                        }
+                                        return aLong;
+                                    }
+                                })
+                                .subscribe();
+                    }
+                });
     }
 }

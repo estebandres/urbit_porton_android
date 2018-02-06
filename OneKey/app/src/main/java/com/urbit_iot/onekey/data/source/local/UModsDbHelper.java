@@ -37,9 +37,10 @@ public class UModsDbHelper extends SQLiteOpenHelper {
 //UUID should be the primary key isn't it?
     //UModsPersistenceContract.UModEntry._ID + TEXT_TYPE + " PRIMARY KEY," +
     private static final String SQL_CREATE_ENTRIES =
-            "CREATE TABLE " + UModsPersistenceContract.UModEntry.TABLE_NAME + " (" +
+            "CREATE TABLE " + UModsPersistenceContract.UModEntry.UMODS_TABLE_NAME + " (" +
                     UModsPersistenceContract.UModEntry.UUID_CN + TEXT_TYPE + " PRIMARY KEY," +
                     UModsPersistenceContract.UModEntry.ALIAS_CN + TEXT_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.WIFI_SSID_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.CONNECTION_ADDRESS_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.UMOD_STATE_CN + INTEGER_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.LAST_REPORT_CN + TEXT_TYPE + COMMA_SEP +

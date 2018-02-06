@@ -8,42 +8,42 @@ import com.urbit_iot.onekey.util.GlobalConstants;
  * Created by andresteve07 on 8/11/17.
  */
 
-public class UpdateUserRPC extends RPC {
+public class SetWiFiAPRPC extends RPC {
     public static class Arguments{
 
-        @SerializedName("user_name")
-        private String userID;
-        @SerializedName("user_type")
-        private UModUser.Level userLevel;
+        @SerializedName("ssid")
+        private String ssid;
+        @SerializedName("password")
+        private String password;
 
-        public Arguments(String userID, UModUser.Level userLevel) {
-            this.userID = userID;
-            this.userLevel = userLevel;
+        public Arguments(String ssid, String password) {
+            this.ssid = ssid;
+            this.password = password;
         }
 
-        public String getUserID() {
-            return userID;
+        public String getSsid() {
+            return ssid;
         }
 
-        public void setUserID(String userID) {
-            this.userID = userID;
+        public void setSsid(String ssid) {
+            this.ssid = ssid;
         }
 
-        public UModUser.Level getUserLevel() {
-            return userLevel;
+        public String getPassword() {
+            return password;
         }
 
-        public void setUserLevel(UModUser.Level userLevel) {
-            this.userLevel = userLevel;
+        public void setPassword(String password) {
+            this.password = password;
         }
     }
 
     public static class Request extends RPC.Request{
         @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
-        private UpdateUserRPC.Arguments methodArguments;
+        private SetWiFiAPRPC.Arguments methodArguments;
 
         public Request(Arguments args, String uModTag, int id) {
-            super("Admin.UpdateUser",uModTag,id);
+            super("Admin.SetWiFiAP",uModTag,id);
             this.methodArguments = args;
         }
 
@@ -62,7 +62,7 @@ public class UpdateUserRPC extends RPC {
 
     public static class Response extends RPC.Response {
         @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
-        private UpdateUserRPC.Result responseResult;
+        private SetWiFiAPRPC.Result responseResult;
 
         public Response(Result result, String callTag, ResponseError responseError) {
             super(callTag, responseError);
