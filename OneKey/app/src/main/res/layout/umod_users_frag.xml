@@ -31,6 +31,13 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <ProgressBar
+                android:id="@+id/umod_users_load_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:indeterminate="true"/>
+
             <TextView
                 android:id="@+id/umod_users_filtering_label"
                 android:layout_width="match_parent"

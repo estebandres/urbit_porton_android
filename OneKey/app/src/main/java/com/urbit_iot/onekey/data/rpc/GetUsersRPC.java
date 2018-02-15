@@ -1,38 +1,24 @@
 package com.urbit_iot.onekey.data.rpc;
 
 import com.google.gson.annotations.SerializedName;
-import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
+
+import java.util.List;
 
 /**
  * Created by andresteve07 on 8/11/17.
  */
 
-public class CreateUserRPC extends RPC {
+public class GetUsersRPC extends RPC {
     public static class Arguments{
-
-        @SerializedName("credentials")
-        private String credentials;
-
-        public Arguments(String credentials) {
-            this.credentials = credentials;
-        }
-
-        public String getCredentials() {
-            return credentials;
-        }
-
-        public void setCredentials(String credentials) {
-            this.credentials = credentials;
-        }
+        public Arguments(){}
     }
 
     public static class Request extends RPC.Request{
         @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
-        private CreateUserRPC.Arguments methodArguments;
-
-        public Request(Arguments args, String uModTag, int id) {
-            super("Guest.CreateUser",uModTag,id);
+        private GetUsersRPC.Arguments methodArguments;
+        public Request(Arguments args, String callTag, int id) {
+            super("Admin.GetUsers",callTag,id);
             this.methodArguments = args;
         }
 
@@ -45,20 +31,27 @@ public class CreateUserRPC extends RPC {
         }
     }
 
-    public static class Result{
+    public static class UserResult{
+        @SerializedName("user_name")
+        private String userName;
         @SerializedName("user_type")
         private GetMyUserLevelRPC.UModUserType userType;
 
-        public Result(GetMyUserLevelRPC.UModUserType userType){
+        public UserResult(String userName, GetMyUserLevelRPC.UModUserType userType) {
+            this.userName = userName;
             this.userType = userType;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public void setUserName(String userName) {
+            this.userName = userName;
         }
 
         public GetMyUserLevelRPC.UModUserType getUserType() {
             return userType;
-        }
-
-        public UModUser.Level getUserLevel(){
-            return this.userType.asUModUserLevel();
         }
 
         public void setUserType(GetMyUserLevelRPC.UModUserType userType) {
@@ -66,9 +59,26 @@ public class CreateUserRPC extends RPC {
         }
     }
 
+    public static class Result{
+        @SerializedName("users")
+        private List<UserResult> users;
+
+        public Result(List<UserResult> users) {
+            this.users = users;
+        }
+
+        public List<UserResult> getUsers() {
+            return users;
+        }
+
+        public void setUsers(List<UserResult> users) {
+            this.users = users;
+        }
+    }
+
     public static class Response extends RPC.Response {
         @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
-        private CreateUserRPC.Result responseResult;
+        private GetUsersRPC.Result responseResult;
 
         public Response(Result result, String callTag, ResponseError responseError) {
             super(callTag, responseError);

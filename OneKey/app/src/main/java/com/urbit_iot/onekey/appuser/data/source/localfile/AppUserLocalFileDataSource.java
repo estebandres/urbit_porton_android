@@ -133,7 +133,7 @@ public class AppUserLocalFileDataSource implements AppUserDataSource {
             md.update(message.getBytes());
             byte[] digest = md.digest();
             //BigInteger produces a number large enough to hold the translation of the byte[]
-            // in the least significant portion e.g. {15,10} -> 0000...F0A
+            // in the least significant portion e.g. {15,10} -> 0000...0F0A
             //That number can be represented as a string of hexadecimal numbers with two ciphers(chars) for each byte.
             String digestToStringOfHexas = String.format("%040x", new BigInteger(1, digest));
             //Since MD5 will produce a 128bits number i.e. 16 bytes or 16 hexadecimal numbers of
