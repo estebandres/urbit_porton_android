@@ -6,7 +6,7 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0'
+        classpath 'com.android.tools.build:gradle:3.0.1'
         classpath "com.fernandocejas.frodo:frodo-plugin:0.8.3"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -29,11 +29,11 @@ ext {
     // Sdk and tools
     minSdkVersion = 18
     targetSdkVersion = 24
-    compileSdkVersion = 24
-    buildToolsVersion = '24.0.2'
+    compileSdkVersion = 26
+    buildToolsVersion = '26.0.2'
 
     // App dependencies
-    supportLibraryVersion = '24.2.0'
+    supportLibraryVersion = '27.0.2'
     guavaVersion = '18.0'
     junitVersion = '4.12'
     mockitoVersion = '1.10.19'
@@ -53,7 +53,7 @@ ext {
     libphonenumber = '8.2.0'
     rxPreferences = '2.0.0-RC3'//forces rxjava2.x to the project
     retrofit = '2.3.0'
-    okhttpDigest = '1.15'
+    okhttpDigest = '1.16'
     retrofitConverterGson = '2.1.0'
     retrofitAdapterRxJava = '2.0.2'
 }

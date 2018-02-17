@@ -10,9 +10,9 @@ public final class GlobalConstants {
     public static final String SP_APP_UUID_HASH_KEY = "app_uuid_hash";
 
 
-    public static final String LAN_DEFAULT_URL = "http://urbit.local/rpc/";
+    public static final String LAN_DEFAULT_URL = "http://default.lan.url/rpc/";
 
-    public static final String AP_DEFAULT_IP_ADDRESS = "192.168.0.1";
+    public static final String AP_DEFAULT_IP_ADDRESS = "192.168.4.1";
 
     public static final String RPC_REQ_METHOD_ATTR_NAME = "method";
     public static final String RPC_REQ_ARGS_ATTR_NAME = "args";
@@ -24,5 +24,7 @@ public final class GlobalConstants {
 
     public static final String RPC_FAIL_RESP_CODE_ATTR_NAME = "result";
     public static final String RPC_FAIL_RESP_TAG_ATTR_NAME = "tag";
+
+    public static final String CREDENTIALS_REALM_SEPARATOR = ":urbit:";
 
 }

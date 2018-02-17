@@ -4,11 +4,27 @@ import com.google.gson.annotations.SerializedName;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
+import java.lang.reflect.Array;
+import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by andresteve07 on 8/11/17.
  */
 
 public class CreateUserRPC extends RPC {
+    public static final List<Integer> ALLOWED_ERROR_CODES = Arrays.asList(
+                HttpURLConnection.HTTP_BAD_REQUEST,
+                HttpURLConnection.HTTP_NOT_FOUND,
+                HttpURLConnection.HTTP_INTERNAL_ERROR,
+                HttpURLConnection.HTTP_BAD_REQUEST,
+                HttpURLConnection.HTTP_PRECON_FAILED,
+                //Digest Auth + ACL this call is performed with urbit:urbit so never should fail.
+                HttpURLConnection.HTTP_UNAUTHORIZED,
+                HttpURLConnection.HTTP_FORBIDDEN);
+
     public static class Arguments{
 
         @SerializedName("credentials")
@@ -47,13 +63,13 @@ public class CreateUserRPC extends RPC {
 
     public static class Result{
         @SerializedName("user_type")
-        private GetMyUserLevelRPC.UModUserType userType;
+        private APIUserType userType;
 
-        public Result(GetMyUserLevelRPC.UModUserType userType){
+        public Result(APIUserType userType){
             this.userType = userType;
         }
 
-        public GetMyUserLevelRPC.UModUserType getUserType() {
+        public APIUserType getUserType() {
             return userType;
         }
 
@@ -61,8 +77,15 @@ public class CreateUserRPC extends RPC {
             return this.userType.asUModUserLevel();
         }
 
-        public void setUserType(GetMyUserLevelRPC.UModUserType userType) {
+        public void setUserType(APIUserType userType) {
             this.userType = userType;
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "userType=" + userType +
+                    '}';
         }
     }
 

@@ -516,31 +516,31 @@ public class UModsRepository implements UModsDataSource {
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.Response>
-    getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
+    public Observable<GetMyUserLevelRPC.Result>
+    getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Arguments request) {
         return mUModsLANDataSource.getUserLevel(uMod, request);
     }
 
     @Override
-    public Observable<TriggerRPC.Response>
-    triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
+    public Observable<TriggerRPC.Result>
+    triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Arguments request) {
         return mUModsLANDataSource.triggerUMod(uMod,request);
     }
 
     @Override
-    public Observable<CreateUserRPC.Response> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Request request) {
+    public Observable<CreateUserRPC.Result> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Arguments request) {
         return mUModsLANDataSource.createUModUser(uMod, request);
     }
 
     @Override
-    public Observable<UpdateUserRPC.Response>
-    updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
+    public Observable<UpdateUserRPC.Result>
+    updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Arguments request) {
         return mUModsLANDataSource.updateUModUser(uMod,request);
     }
 
     @Override
-    public Observable<DeleteUserRPC.Response>
-    deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
+    public Observable<DeleteUserRPC.Result>
+    deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Arguments request) {
         return null;
     }
 
@@ -550,13 +550,13 @@ public class UModsRepository implements UModsDataSource {
     }
 
     @Override
-    public Observable<SysGetInfoRPC.Response>
-    getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
+    public Observable<SysGetInfoRPC.Result>
+    getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Arguments request) {
         return mUModsLANDataSource.getSystemInfo(uMod, request);
     }
 
     @Override
-    public Observable<SetWiFiAPRPC.Response> setWiFiAP(UMod uMod, SetWiFiAPRPC.Request request) {
+    public Observable<SetWiFiAPRPC.Result> setWiFiAP(UMod uMod, SetWiFiAPRPC.Arguments request) {
         return mUModsLANDataSource.setWiFiAP(uMod,request);
     }
 
@@ -571,12 +571,12 @@ public class UModsRepository implements UModsDataSource {
     }
 
     @Override
-    public Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Request request) {
+    public Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Arguments request) {
         return this.mUModsLANDataSource.otaCommit(uMod, request);
     }
 
     @Override
-    public Observable<FactoryResetRPC.Response> factoryResetUMod(UMod uMod, FactoryResetRPC.Request request) {
+    public Observable<FactoryResetRPC.Result> factoryResetUMod(UMod uMod, FactoryResetRPC.Arguments request) {
         return this.mUModsLANDataSource.factoryResetUMod(uMod, request);
     }
 

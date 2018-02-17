@@ -33,81 +33,86 @@
             android:layout_height="wrap_content"
             style="@style/Widget.AppCompat.ProgressBar.Horizontal"
             android:indeterminate="true"/>
-
-        <TextView
-            android:id="@+id/umod_connection_status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="UNKNOWN"
-            android:textAlignment="textEnd"
-            android:textStyle="bold"/>
-        <TextView
-            android:id="@+id/umod_sys_info"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="textEnd"
-            android:text="SysInfo"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Alias"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
-        <EditText
-            android:id="@+id/alias_text_input"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/title_hint"
-            android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title" />
-
         <LinearLayout
-            android:id="@+id/admin_settings"
+            android:id="@+id/all_settings"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
+            <TextView
+                android:id="@+id/umod_connection_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="UNKNOWN"
+                android:textAlignment="textEnd"
+                android:textStyle="bold"/>
+            <TextView
+                android:id="@+id/umod_sys_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="textEnd"
+                android:text="SysInfo"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="WiFi Credentials"
+                android:text="Alias"
                 android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
-
             <EditText
-                android:id="@+id/wifi_ssid"
+                android:id="@+id/alias_text_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="top"
-                android:hint="WiFi SSID" />
+                android:hint="@string/title_hint"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.AppCompat.Title" />
 
-            <EditText
-                android:id="@+id/wifi_password"
-                android:inputType="textPassword"
+            <LinearLayout
+                android:id="@+id/admin_settings"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="top"
-                android:hint="WiFi Password" />
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-            <Button
-                android:id="@+id/users_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Usuarios"
-                android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="WiFi Credentials"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
 
-            <Button
-                android:id="@+id/factory_reset_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Factory Reset"
-                android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
+                <EditText
+                    android:id="@+id/wifi_ssid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:hint="WiFi SSID" />
 
-            <Button
-                android:id="@+id/firmware_update_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Update Firmware"
-                android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
+                <EditText
+                    android:id="@+id/wifi_password"
+                    android:inputType="textPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="top"
+                    android:hint="WiFi Password" />
+
+                <Button
+                    android:id="@+id/users_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Usuarios"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
+
+                <Button
+                    android:id="@+id/factory_reset_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Factory Reset"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
+
+                <Button
+                    android:id="@+id/firmware_update_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Update Firmware"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

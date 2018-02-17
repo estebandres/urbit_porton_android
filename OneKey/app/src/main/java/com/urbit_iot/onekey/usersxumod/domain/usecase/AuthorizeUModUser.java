@@ -38,21 +38,26 @@ public class AuthorizeUModUser extends SimpleUseCase<AuthorizeUModUser.RequestVa
             mUModsRepository.refreshUMods();
         }
         */
+
+        /*
         final UpdateUserRPC.Request request = new UpdateUserRPC.Request(
                 new UpdateUserRPC.Arguments(values.getUModUser().getPhoneNumber(), UModUser.Level.AUTHORIZED),
                 values.uModUser.getuModUUID(),
                 666);
+         */
+
         //TODO how many times should I try to execute the RPC.
         return mUModsRepository.getUMod(values.getUModUser().getuModUUID())
-                .flatMap(new Func1<UMod, Observable<UpdateUserRPC.Response>>() {
+                .flatMap(new Func1<UMod, Observable<UpdateUserRPC.Result>>() {
                     @Override
-                    public Observable<UpdateUserRPC.Response> call(UMod uMod) {
-                        return mUModsRepository.updateUModUser(uMod,request);
+                    public Observable<UpdateUserRPC.Result> call(UMod uMod) {
+                        UpdateUserRPC.Arguments updateUserArgs = new UpdateUserRPC.Arguments(values.getUModUser().getPhoneNumber(), UModUser.Level.AUTHORIZED);
+                        return mUModsRepository.updateUModUser(uMod,updateUserArgs);
                     }
                 })
-                .map(new Func1<UpdateUserRPC.Response, AuthorizeUModUser.ResponseValues>() {
+                .map(new Func1<UpdateUserRPC.Result, AuthorizeUModUser.ResponseValues>() {
                     @Override
-                    public AuthorizeUModUser.ResponseValues call(UpdateUserRPC.Response response) {
+                    public AuthorizeUModUser.ResponseValues call(UpdateUserRPC.Result response) {
                         return new AuthorizeUModUser.ResponseValues(response);
                     }
                 });
@@ -74,14 +79,14 @@ public class AuthorizeUModUser extends SimpleUseCase<AuthorizeUModUser.RequestVa
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private final UpdateUserRPC.Response response;
+        private final UpdateUserRPC.Result result;
 
-        public ResponseValues(@NonNull UpdateUserRPC.Response response) {
-            this.response = checkNotNull(response, "response cannot be null!");
+        public ResponseValues(@NonNull UpdateUserRPC.Result result) {
+            this.result = checkNotNull(result, "result cannot be null!");
         }
 
-        public UpdateUserRPC.Response getResponse() {
-            return response;
+        public UpdateUserRPC.Result getResult() {
+            return result;
         }
     }
 }

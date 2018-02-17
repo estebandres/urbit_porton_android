@@ -43,7 +43,8 @@ public class UModsDNSSDScanner {
                         .filter(new Func1<BonjourService, Boolean>() {
                             @Override
                             public Boolean call(BonjourService bonjourService) {
-                                return bonjourService.getHostname() != null && bonjourService.getHostname().contains("mOS");
+                                //TODO improve filter using regex
+                                return bonjourService.getHostname() != null && bonjourService.getHostname().contains("urbit");
                             }
                         })
                         .map(new Func1<BonjourService,UMod>(){

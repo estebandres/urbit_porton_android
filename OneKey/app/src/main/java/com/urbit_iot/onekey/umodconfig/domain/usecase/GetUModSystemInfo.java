@@ -48,19 +48,21 @@ public class GetUModSystemInfo extends SimpleUseCase<GetUModSystemInfo.RequestVa
 
     @Override
     public Observable<ResponseValues> buildUseCase(RequestValues values) {
-        final SysGetInfoRPC.Request request = new SysGetInfoRPC.Request(new SysGetInfoRPC.Arguments(),"STEVEOO",234234145);
+        //final SysGetInfoRPC.Request request = new SysGetInfoRPC.Request(new SysGetInfoRPC.Arguments(),"STEVEOO",234234145);
+
+        final SysGetInfoRPC.Arguments getSysInfoArgs = new SysGetInfoRPC.Arguments();
 
         return uModsRepository.getUMod(values.getUModUUID())
-                .flatMap(new Func1<UMod, Observable<SysGetInfoRPC.Response>>() {
+                .flatMap(new Func1<UMod, Observable<SysGetInfoRPC.Result>>() {
                     @Override
-                    public Observable<SysGetInfoRPC.Response> call(UMod uMod) {
-                        return uModsRepository.getSystemInfo(uMod,request);
+                    public Observable<SysGetInfoRPC.Result> call(UMod uMod) {
+                        return uModsRepository.getSystemInfo(uMod,getSysInfoArgs);
                     }
                 })
-                .map(new Func1<SysGetInfoRPC.Response, ResponseValues>() {
+                .map(new Func1<SysGetInfoRPC.Result, ResponseValues>() {
             @Override
-            public ResponseValues call(SysGetInfoRPC.Response rpcResponse) {
-                return new ResponseValues(rpcResponse);
+            public ResponseValues call(SysGetInfoRPC.Result rpcResult) {
+                return new ResponseValues(rpcResult);
             }
         });
     }
@@ -81,14 +83,14 @@ public class GetUModSystemInfo extends SimpleUseCase<GetUModSystemInfo.RequestVa
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private SysGetInfoRPC.Response rpcResponse;
+        private SysGetInfoRPC.Result rpcResult;
 
-        public ResponseValues(@NonNull SysGetInfoRPC.Response rpcResponse) {
-            this.rpcResponse = checkNotNull(rpcResponse, "rpcResponse cannot be null!");
+        public ResponseValues(@NonNull SysGetInfoRPC.Result rpcResult) {
+            this.rpcResult = checkNotNull(rpcResult, "rpcResult cannot be null!");
         }
 
-        public SysGetInfoRPC.Response getRPCResponse() {
-            return this.rpcResponse;
+        public SysGetInfoRPC.Result getRPCResponse() {
+            return this.rpcResult;
         }
     }
 }

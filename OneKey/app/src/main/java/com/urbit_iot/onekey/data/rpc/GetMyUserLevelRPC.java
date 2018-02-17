@@ -4,6 +4,9 @@ import com.google.gson.annotations.SerializedName;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
+import java.net.HttpURLConnection;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -11,6 +14,13 @@ import java.util.Random;
  */
 
 public class GetMyUserLevelRPC {
+    public static final List<Integer> ALLOWED_ERROR_CODES = Arrays.asList(
+            HttpURLConnection.HTTP_BAD_REQUEST,
+            HttpURLConnection.HTTP_NOT_FOUND,
+            //Digest Auth + ACL this call is performed with urbit:urbit so never should fail.
+            HttpURLConnection.HTTP_UNAUTHORIZED,
+            HttpURLConnection.HTTP_FORBIDDEN);
+
     public static class Arguments{
         @SerializedName("user_name")
         private String userName;
@@ -32,7 +42,7 @@ public class GetMyUserLevelRPC {
         @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
         private GetMyUserLevelRPC.Arguments methodArguments;
         public Request(Arguments args, String uModTag){
-            super("Gest.UserStatus", uModTag, (new Random().nextInt()));
+            super("Guest.UserStatus", uModTag, (new Random().nextInt()));
             this.methodArguments = args;
         }
 
@@ -45,48 +55,25 @@ public class GetMyUserLevelRPC {
         }
     }
 
-    public enum UModUserType{
-        Admin {
-            @Override
-            public UModUser.Level asUModUserLevel() {
-                return UModUser.Level.ADMINISTRATOR;
-            }
-        },
-        Guest {
-            @Override
-            public UModUser.Level asUModUserLevel() {
-                return UModUser.Level.PENDING;
-            }
-        },
-        User {
-            @Override
-            public UModUser.Level asUModUserLevel() {
-                return UModUser.Level.AUTHORIZED;
-            }
-        };
-
-        public abstract UModUser.Level asUModUserLevel();
-
-    }
     public static class Result{
 
         @SerializedName("user_type")
-        private UModUserType userType;
+        private APIUserType APIUserType;
 
-        public Result(UModUserType userType){
-            this.userType = userType;
+        public Result(APIUserType APIUserType){
+            this.APIUserType = APIUserType;
         }
 
-        public UModUserType getUserType() {
-            return userType;
+        public APIUserType getAPIUserType() {
+            return APIUserType;
         }
 
         public UModUser.Level getUserLevel(){
-            return this.userType.asUModUserLevel();
+            return this.APIUserType.asUModUserLevel();
         }
 
-        public void setUserType(UModUserType userType) {
-            this.userType = userType;
+        public void setAPIUserType(APIUserType APIUserType) {
+            this.APIUserType = APIUserType;
         }
     }
 

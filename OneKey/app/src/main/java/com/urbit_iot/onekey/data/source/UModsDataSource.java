@@ -70,24 +70,24 @@ public interface UModsDataSource {
 
     //Observable<RPC.CommandResponse> postCommand(@NonNull RPC.CommandRequest commandRequest);
 
-    Observable<GetMyUserLevelRPC.Response>
+    Observable<GetMyUserLevelRPC.Result>
     getUserLevel(@NonNull UMod uMod,
-                 @NonNull GetMyUserLevelRPC.Request request);
+                 @NonNull GetMyUserLevelRPC.Arguments requestArguments);
     //GET /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-    Observable<TriggerRPC.Response> triggerUMod(@NonNull UMod uMod,
-                                                @NonNull TriggerRPC.Request request);
+    Observable<TriggerRPC.Result> triggerUMod(@NonNull UMod uMod,
+                                                @NonNull TriggerRPC.Arguments requestArguments);
     //POST /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    Observable<CreateUserRPC.Response> createUModUser(@NonNull UMod uMod,
-                                                      @NonNull CreateUserRPC.Request request);
+    Observable<CreateUserRPC.Result> createUModUser(@NonNull UMod uMod,
+                                                      @NonNull CreateUserRPC.Arguments requestArguments);
     //PUT /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-    Observable<UpdateUserRPC.Response> updateUModUser(@NonNull UMod uMod,
-                                                      @NonNull UpdateUserRPC.Request request);
+    Observable<UpdateUserRPC.Result> updateUModUser(@NonNull UMod uMod,
+                                                      @NonNull UpdateUserRPC.Arguments requestArguments);
     //PUT /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-    Observable<DeleteUserRPC.Response> deleteUModUser(@NonNull UMod uMod,
-                                                      @NonNull DeleteUserRPC.Request request);
+    Observable<DeleteUserRPC.Result> deleteUModUser(@NonNull UMod uMod,
+                                                      @NonNull DeleteUserRPC.Arguments requestArguments);
     //DELETE /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
     //Observable<UpdateUserRPC.Response> approveUModUser(@NonNull UModUser uModUser);
@@ -97,19 +97,19 @@ public interface UModsDataSource {
     Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod);
     //GET /rpc/ && /umods/UMOD_ID/rpc/ vs /umods/UMOD_ID/users
 
-    Observable<SysGetInfoRPC.Response> getSystemInfo(@NonNull UMod uMod,
-                                                     @NonNull SysGetInfoRPC.Request request);
+    Observable<SysGetInfoRPC.Result> getSystemInfo(@NonNull UMod uMod,
+                                                     @NonNull SysGetInfoRPC.Arguments request);
     // GET /rpc/ && /umods/UMOD_ID/rpc/ vs /umods/UMOD_ID/info
 
-    Observable<SetWiFiAPRPC.Response> setWiFiAP(UMod uMod, SetWiFiAPRPC.Request request);
+    Observable<SetWiFiAPRPC.Result> setWiFiAP(UMod uMod, SetWiFiAPRPC.Arguments request);
 
     Observable<File> getFirmwareImageFile(UMod uMod);
 
     Observable<Response<ResponseBody>> postFirmwareUpdateToUMod(UMod uMod, File newFirmwareFile);
 
-    Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Request request);
+    Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Arguments request);
 
-    Observable<FactoryResetRPC.Response> factoryResetUMod(UMod uMod,
-                                                          FactoryResetRPC.Request request);
+    Observable<FactoryResetRPC.Result> factoryResetUMod(UMod uMod,
+                                                          FactoryResetRPC.Arguments request);
 
 }

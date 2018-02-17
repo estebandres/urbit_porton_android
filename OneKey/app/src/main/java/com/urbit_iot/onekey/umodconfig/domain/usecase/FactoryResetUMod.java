@@ -17,6 +17,7 @@
 package com.urbit_iot.onekey.umodconfig.domain.usecase;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
@@ -25,12 +26,14 @@ import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import rx.Observable;
 import rx.functions.Func1;
+import rx.functions.Func2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -50,34 +53,48 @@ public class FactoryResetUMod extends SimpleUseCase<FactoryResetUMod.RequestValu
 
     @Override
     public Observable<ResponseValues> buildUseCase(RequestValues values) {
-        final FactoryResetRPC.Request request = new FactoryResetRPC.Request(null,"FactoryReset",666);
+        //final FactoryResetRPC.Request request = new FactoryResetRPC.Request(null,"FactoryReset",666);
+        final FactoryResetRPC.Arguments requestArguments = new FactoryResetRPC.Arguments();
 
         //TODO Is it neccesary? Perhaps the try and refresh-retry scheme is a good option.
         uModsRepository.refreshUMods();
 
         return uModsRepository.getUMod(values.getUModUUID())
-                .flatMap(new Func1<UMod, Observable<FactoryResetRPC.Response>>() {
+                .flatMap(new Func1<UMod, Observable<FactoryResetRPC.Result>>() {
                     @Override
-                    public Observable<FactoryResetRPC.Response> call(final UMod uMod) {
-                        return uModsRepository.factoryResetUMod(uMod,request)
+                    public Observable<FactoryResetRPC.Result> call(final UMod uMod) {
+                        return uModsRepository.factoryResetUMod(uMod,requestArguments)
+                                //wait 12 seconds for umod restart
                                 .delay(12L, TimeUnit.SECONDS)
-                                .flatMap(new Func1<FactoryResetRPC.Response, Observable<FactoryResetRPC.Response>>() {
+                                .flatMap(new Func1<FactoryResetRPC.Result, Observable<FactoryResetRPC.Result>>() {
                                     @Override
-                                    public Observable<FactoryResetRPC.Response> call(FactoryResetRPC.Response response) {
-                                        if (response.getResponseError()!=null){
-                                            return Observable.error(new Exception("Factory Reset RPC Failed."));
-                                        } else {
-                                            uModsRepository.deleteUMod(uMod.getUUID());
-                                            return Observable.just(response);
-                                        }
+                                    public Observable<FactoryResetRPC.Result> call(FactoryResetRPC.Result result) {
+                                        uModsRepository.deleteUMod(uMod.getUUID());
+                                        return Observable.just(result);
                                     }
                                 });
                     }
                 })
-                .map(new Func1<FactoryResetRPC.Response, ResponseValues>() {
+                //TODO find the scenarios where retry would be useful. When do we want a retry??
+                //A retry should be performed when a timeout is produce because a umod changed its address or is suddenly disconnected.
+                .retry(new Func2<Integer, Throwable, Boolean>() {
                     @Override
-                    public ResponseValues call(FactoryResetRPC.Response response) {
-                        return new ResponseValues(response);
+                    public Boolean call(Integer retryCount, Throwable throwable) {
+                        Log.e("factory-reset_uc", "Retry count: " + retryCount +
+                                "\n Excep msge: " + throwable.getMessage());
+                        if (retryCount < 4 &&
+                                (throwable instanceof IOException)){
+                            uModsRepository.refreshUMods();
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                })
+                .map(new Func1<FactoryResetRPC.Result, ResponseValues>() {
+                    @Override
+                    public ResponseValues call(FactoryResetRPC.Result result) {
+                        return new ResponseValues(result);
                     }
                 });
     }
@@ -98,14 +115,14 @@ public class FactoryResetUMod extends SimpleUseCase<FactoryResetUMod.RequestValu
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private FactoryResetRPC.Response rpcResponse;
+        private FactoryResetRPC.Result rpcResult;
 
-        public ResponseValues(@NonNull FactoryResetRPC.Response rpcResponse) {
-            this.rpcResponse = checkNotNull(rpcResponse, "rpcResponse cannot be null!");
+        public ResponseValues(@NonNull FactoryResetRPC.Result rpcResult) {
+            this.rpcResult = checkNotNull(rpcResult, "rpcResult cannot be null!");
         }
 
-        public FactoryResetRPC.Response getRPCResponse() {
-            return this.rpcResponse;
+        public FactoryResetRPC.Result getRpcResult() {
+            return this.rpcResult;
         }
     }
 }

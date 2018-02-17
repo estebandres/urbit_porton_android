@@ -67,6 +67,13 @@ public class UModsWiFiScanner {
                     }
                 })
                 .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
+                .filter(new Func1<ScanResult, Boolean>() {
+                    @Override
+                    public Boolean call(ScanResult scanResult) {
+                        //TODO improve filter using regex
+                        return scanResult.SSID.contains("urbit");
+                    }
+                })
                 .map(new Func1<ScanResult, UMod>() {
                     @Override
                     public UMod call(ScanResult scanResult) {

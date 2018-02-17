@@ -159,45 +159,10 @@ public class FakeUModsLANDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.Response> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Request request) {
-        return null;
-    }
-
-    @Override
-    public Observable<TriggerRPC.Response> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Request request) {
-        return null;
-    }
-
-    @Override
-    public Observable<CreateUserRPC.Response> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Request request) {
-        return null;
-    }
-
-    @Override
-    public Observable<UpdateUserRPC.Response> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Request request) {
-        return null;
-    }
-
-    @Override
-    public Observable<DeleteUserRPC.Response> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Request request) {
-        return null;
-    }
-
-    @Override
     public Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod) {
         return Observable.from(UMODS_USERS_SERVICE_DATA.get(uMod.getUUID())).
                 delay(700,TimeUnit.MILLISECONDS).
                 toList();
-    }
-
-    @Override
-    public Observable<SysGetInfoRPC.Response> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Request request) {
-        return null;
-    }
-
-    @Override
-    public Observable<SetWiFiAPRPC.Response> setWiFiAP(UMod uMod, SetWiFiAPRPC.Request request) {
-        return null;
     }
 
     @Override
@@ -211,12 +176,47 @@ public class FakeUModsLANDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Request request) {
+    public Observable<GetMyUserLevelRPC.Result> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Arguments requestArguments) {
         return null;
     }
 
     @Override
-    public Observable<FactoryResetRPC.Response> factoryResetUMod(UMod uMod, FactoryResetRPC.Request request) {
+    public Observable<TriggerRPC.Result> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Arguments requestArguments) {
+        return null;
+    }
+
+    @Override
+    public Observable<CreateUserRPC.Result> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Arguments requestArguments) {
+        return null;
+    }
+
+    @Override
+    public Observable<UpdateUserRPC.Result> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Arguments requestArguments) {
+        return null;
+    }
+
+    @Override
+    public Observable<DeleteUserRPC.Result> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Arguments requestArguments) {
+        return null;
+    }
+
+    @Override
+    public Observable<SysGetInfoRPC.Result> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Arguments request) {
+        return null;
+    }
+
+    @Override
+    public Observable<SetWiFiAPRPC.Result> setWiFiAP(UMod uMod, SetWiFiAPRPC.Arguments request) {
+        return null;
+    }
+
+    @Override
+    public Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Arguments request) {
+        return null;
+    }
+
+    @Override
+    public Observable<FactoryResetRPC.Result> factoryResetUMod(UMod uMod, FactoryResetRPC.Arguments request) {
         return null;
     }
 }

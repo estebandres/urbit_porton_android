@@ -23,8 +23,6 @@ import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
-import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
@@ -56,69 +54,56 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
 
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
+        // try first force update on retry.
         /*
         if (values.isForceUpdate()) {
             mUModsRepository.refreshUMods();
         }
         */
+
+        /*
         //TODO figure what to do with rpc tag and id
         final TriggerRPC.Request request = new TriggerRPC.Request(new TriggerRPC.Arguments(),
                 "SteveTriggered",666);
+         */
+        final TriggerRPC.Arguments requestArguments = new TriggerRPC.Arguments();
         //TODO review operator usage
         return mUModsRepository.getUMod(values.getUModUUID())
-                .flatMap(new Func1<UMod, Observable<TriggerRPC.Response>>() {
+                .flatMap(new Func1<UMod, Observable<TriggerRPC.Result>>() {
                     @Override
-                    public Observable<TriggerRPC.Response> call(final UMod uMod) {
-                        return mUModsRepository.triggerUMod(uMod, request)
-                                .onErrorResumeNext(new Func1<Throwable, Observable<? extends TriggerRPC.Response>>() {
+                    public Observable<TriggerRPC.Result> call(final UMod uMod) {
+                        return mUModsRepository.triggerUMod(uMod, requestArguments)
+                                .onErrorResumeNext(new Func1<Throwable, Observable<? extends TriggerRPC.Result>>() {
                                     @Override
-                                    public Observable<? extends TriggerRPC.Response> call(Throwable throwable) {
+                                    public Observable<? extends TriggerRPC.Result> call(Throwable throwable) {
                                         if (throwable instanceof HttpException){
-                                            //Check for HTTP ANAUTHORIZED error code
+                                            //Check for HTTP UNAUTHORIZED error code
                                             int httpErrorCode = ((HttpException) throwable).response().code();
                                             if (httpErrorCode != 0 && (httpErrorCode == 401 || httpErrorCode == 403)){
+                                                Log.e("trigger_uc", "Trigger Failed: Auth Error: " + httpErrorCode);
                                                 uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
                                                 mUModsRepository.saveUMod(uMod);
-                                                return Observable.error(new Exception("Forces umods UI Refresh"));
+                                                //TODO what difference would it make if Observable.error(throwable)??
+                                                //return Observable.error(new Exception("Forces umods UI Refresh"));
+                                                //return Observable.error(throwable);
                                             }
                                         }
                                         //TODO is this a desirable behaviour? What about the other error codes?
                                         return Observable.error(throwable);
                                     }
-                                })
-                                //Mongoose implementation always returns a successful response and
-                                // if an error occurs then its details are embedded
-                                // in the response JSON body.
-                                .flatMap(new Func1<TriggerRPC.Response, Observable<TriggerRPC.Response>>() {
-                                    @Override
-                                    public Observable<TriggerRPC.Response> call(final TriggerRPC.Response triggerResponse) {
-                                        RPC.ResponseError responseError = triggerResponse.getResponseError();
-                                        //
-                                        if (responseError != null){
-                                            Integer errorCode = responseError.getErrorCode();
-                                            if (errorCode!= null && errorCode != 0
-                                                    && (errorCode == 401 || errorCode == 403)){
-                                                //this is the lazy alternative. One could RPC for the
-                                                // user level and update the umod registry accordingly.
-                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                mUModsRepository.saveUMod(uMod);
-                                                return Observable.error(new Exception("Forces umods UI Refresh"));
-                                            }
-                                        }
-                                        return Observable.just(triggerResponse);
-                                    }
                                 });
                     }
                 })
-                //TODO find the scenarios where retry would be useful.
+                //TODO find the scenarios where retry would be useful. When do we want a retry??
+                //TODO how can we force the list refresh (load) when retry finish unsuccessful??
+                //A retry should be performed when a timeout is produce because a umod changed its address or is suddenly disconnected.
                 .retry(new Func2<Integer, Throwable, Boolean>() {
                     @Override
                     public Boolean call(Integer retryCount, Throwable throwable) {
-                        Log.e("req_access_uc", "Retry count: " + retryCount +
-                                "\n Excep msge: " + throwable.getMessage());
+                        Log.e("trigger_uc", "Retry count: " + retryCount +
+                                " -- Excep msge: " + throwable.getMessage() + "Excep Type: " + throwable.getClass().getSimpleName());
                         if (retryCount < 4 &&
-                                (throwable instanceof IOException ||
-                                throwable instanceof HttpException)){
+                                (throwable instanceof IOException)){
                             mUModsRepository.refreshUMods();
                             return true;
                         } else {
@@ -126,10 +111,10 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                         }
                     }
                 })
-                .map(new Func1<TriggerRPC.Response, ResponseValues>() {
+                .map(new Func1<TriggerRPC.Result, ResponseValues>() {
                     @Override
-                    public ResponseValues call(TriggerRPC.Response response) {
-                        return new ResponseValues(response);
+                    public ResponseValues call(TriggerRPC.Result result) {
+                        return new ResponseValues(result);
                     }
                 });
     }
@@ -149,14 +134,14 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private final TriggerRPC.Response response;
+        private final TriggerRPC.Result result;
 
-        public ResponseValues(@NonNull TriggerRPC.Response response) {
-            this.response = checkNotNull(response, "response cannot be null!");
+        public ResponseValues(@NonNull TriggerRPC.Result result) {
+            this.result = checkNotNull(result, "result cannot be null!");
         }
 
-        public TriggerRPC.Response getResponse() {
-            return response;
+        public TriggerRPC.Result getResult() {
+            return result;
         }
     }
 }

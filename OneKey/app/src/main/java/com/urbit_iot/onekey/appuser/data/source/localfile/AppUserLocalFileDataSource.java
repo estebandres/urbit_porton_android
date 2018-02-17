@@ -34,7 +34,7 @@ public class AppUserLocalFileDataSource implements AppUserDataSource {
     private Preference<String> serializedAppUserPref;
     //both appUUID and appUUIDHash could be gotten from the deserialization of the appUser each time.
     private Preference<String> appUUIDPref;
-    private Preference<String> appUUIDHashPref;
+    private Preference<String> appUserCredentialsHashPref;
 
     @Inject
     public AppUserLocalFileDataSource(@NonNull RxSharedPreferences rxSharedPreferences,
@@ -43,7 +43,7 @@ public class AppUserLocalFileDataSource implements AppUserDataSource {
         this.gson = gson;
         this.serializedAppUserPref = this.rxSharedPreferences.getString(GlobalConstants.SP_SERIALIZED_APPUSER_KEY);
         this.appUUIDPref = this.rxSharedPreferences.getString(GlobalConstants.SP_APP_UUID_KEY);
-        this.appUUIDHashPref = this.rxSharedPreferences.getString(GlobalConstants.SP_APP_UUID_KEY);
+        this.appUserCredentialsHashPref = this.rxSharedPreferences.getString(GlobalConstants.SP_APP_UUID_KEY);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class AppUserLocalFileDataSource implements AppUserDataSource {
             }
         }
         String appUUID = this.getAppUUID();
-        String appUUIDHash = this.getAppUUIDHash(appUUID);
+        String appUUIDHash = this.getAppUserCredentialsHash(appUserPhoneNumber + GlobalConstants.CREDENTIALS_REALM_SEPARATOR + appUUID);
         newAppUser = new AppUser(appUserPhoneNumber,appUUID,appUUIDHash);
         String appUserString = this.gson.toJson(newAppUser);
         this.serializedAppUserPref.set(appUserString);
@@ -113,15 +113,15 @@ public class AppUserLocalFileDataSource implements AppUserDataSource {
 
     }
 
-    private String getAppUUIDHash(String appUUID){
-        if (this.appUUIDHashPref.isSet()) {
-            String appUUIDHash = this.appUUIDHashPref.get();//To reduce the quantity of sharedPref lookups.
+    private String getAppUserCredentialsHash(String appUserPlainTextCredentials){
+        if (this.appUserCredentialsHashPref.isSet()) {
+            String appUUIDHash = this.appUserCredentialsHashPref.get();//To reduce the quantity of sharedPref lookups.
             if (!appUUIDHash.isEmpty() && appUUIDHash.length() == 32) {//TODO Add regex verification of MD5
                 return appUUIDHash;
             }
         }
-        String hashedAppUUID = this.calculateMD5Hash(appUUID);
-        appUUIDHashPref.set(hashedAppUUID);
+        String hashedAppUUID = this.calculateMD5Hash(appUserPlainTextCredentials);
+        appUserCredentialsHashPref.set(hashedAppUUID);
         return hashedAppUUID;
     }
 

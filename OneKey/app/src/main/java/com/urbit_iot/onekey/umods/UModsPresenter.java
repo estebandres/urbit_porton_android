@@ -18,6 +18,7 @@ import com.urbit_iot.onekey.umods.domain.usecase.RequestAccess;
 import com.urbit_iot.onekey.umods.domain.usecase.SetOngoingNotificationStatus;
 import com.urbit_iot.onekey.umods.domain.usecase.TriggerUMod;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
+import com.urbit_iot.onekey.util.retrofit2.RetrofitUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,10 @@ public class UModsPresenter implements UModsContract.Presenter {
     private final GetUModsOneByOne mGetUModsOneByOne;
     private final SetOngoingNotificationStatus mSetOngoingNotificationStatus;
     private final RequestAccess mRequestAccess;
+    /*
+    @NonNull
+    private final RetrofitUtils mRetrofitUtils;
+    */
 
     private UModsFilterType mCurrentFiltering = UModsFilterType.ALL_UMODS;
 
@@ -49,6 +54,7 @@ public class UModsPresenter implements UModsContract.Presenter {
 
     @Inject
     public UModsPresenter(@NonNull UModsContract.View umodsView,
+                          //@NonNull RetrofitUtils mRetrofitUtils,
                           @NonNull GetUMods getUMods,
                           @NonNull GetUModsOneByOne getUModsOneByOne,
                           @NonNull SetOngoingNotificationStatus setOngoingNotificationStatus,
@@ -63,6 +69,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                 "clearAlienUMods cannot be null!");
         mTriggerUMod = checkNotNull(triggerUMod, "triggerUMod cannot be null!");
         mRequestAccess = checkNotNull(requestAccess, "requestAccess cannot be null!");
+        //this.mRetrofitUtils = mRetrofitUtils;
     }
 
     /**
@@ -410,14 +417,23 @@ public class UModsPresenter implements UModsContract.Presenter {
 
             @Override
             public void onError(Throwable e) {
+                //TODO make a method that process HTTP error codes for the given RPC.
+                /*
+                if (e instanceof HttpException) {
+                    //Check for HTTP UNAUTHORIZED error code
+                    Response<?> response = ((HttpException) e).response();
+                    RPC.ResponseError responseError =
+                }
+                 */
                 mUModsView.showOpenCloseFail();
                 loadUMods(true);
             }
 
             @Override
             public void onNext(TriggerUMod.ResponseValues responseValues) {
-                //TODO make a method that proceses HTTP error codes for the given RPC.
-                TriggerRPC.Response response = responseValues.getResponse();
+
+                TriggerRPC.Result response = responseValues.getResult();
+                /*
                 RPC.ResponseError responseError = response.getResponseError();
                 if (responseError != null
                         && responseError.getErrorCode() != null
@@ -432,6 +448,9 @@ public class UModsPresenter implements UModsContract.Presenter {
                 }
                 //If 500 then updateAppUserLevelOnUMod
                 //TODO after a successful answer enable action button on view
+                 */
+                Log.d("umods_pr", "RPC is " + response.toString());
+                mUModsView.showOpenCloseSuccess();
             }
         });
     }
@@ -451,24 +470,15 @@ public class UModsPresenter implements UModsContract.Presenter {
 
             @Override
             public void onError(Throwable e) {
+                //TODO make a method that process HTTP error codes for the given RPC.
                 Log.e("umods_pr", "Request Access Failed: " + e.getMessage());
                 mUModsView.showRequestAccessFailedMessage();
             }
 
             @Override
             public void onNext(RequestAccess.ResponseValues responseValues) {
-                CreateUserRPC.Response successResponse = responseValues.getResponse();
-                RPC.ResponseError responseError = successResponse.getResponseError();
-                if (responseError != null
-                        && responseError.getErrorCode() != null
-                        && responseError.getErrorCode() != 0) {
-                    Log.d("umods_pr", "Error Code: " + responseError.getErrorCode()
-                            + "\nError Message: " + responseError.getErrorMessage());
-                    mUModsView.showRequestAccessFailedMessage();
-                } else {
-                    Log.d("umods_pr", successResponse.toString());
-                    mUModsView.showRequestAccessCompletedMessage();
-                }
+                Log.d("umods_pr", responseValues.getResult().toString());
+                mUModsView.showRequestAccessCompletedMessage();
             }
         });
     }

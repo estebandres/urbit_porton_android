@@ -88,7 +88,7 @@ public class AppUserFragment extends Fragment implements AppUserContract.View {
             Log.d("appusr_frag","NumberParseException was thrown: " + e.toString());
             return null;
         }
-        return this.phoneUtil.format(argentinianNumberProto, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+        return this.phoneUtil.format(argentinianNumberProto, PhoneNumberUtil.PhoneNumberFormat.E164);
 
     }
 

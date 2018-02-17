@@ -23,14 +23,16 @@ import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
-import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
+
+import java.io.IOException;
 
 import javax.inject.Inject;
 
 import rx.Observable;
 import rx.functions.Func1;
+import rx.functions.Func2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -51,33 +53,50 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
+        /*
         final SetWiFiAPRPC.Request request =
                 new SetWiFiAPRPC.Request(
                         new SetWiFiAPRPC.Arguments(values.getmWiFiSSID(),
                                 values.getmWiFiPassword()),"SetWiFiAP", 666);
+        */
 
         return uModsRepository.getUMod(values.getmUModUUID())
-                .flatMap(new Func1<UMod, Observable<SetWiFiAPRPC.Response>>() {
+                .flatMap(new Func1<UMod, Observable<SetWiFiAPRPC.Result>>() {
                     @Override
-                    public Observable<SetWiFiAPRPC.Response> call(final UMod uMod) {
-                        return uModsRepository.setWiFiAP(uMod,request)
-                                .flatMap(new Func1<SetWiFiAPRPC.Response, Observable<SetWiFiAPRPC.Response>>() {
+                    public Observable<SetWiFiAPRPC.Result> call(final UMod uMod) {
+                        SetWiFiAPRPC.Arguments setWiFiArgs = new SetWiFiAPRPC.Arguments(values.getmWiFiSSID(), values.getmWiFiPassword());
+                        return uModsRepository.setWiFiAP(uMod,setWiFiArgs)
+                                .flatMap(new Func1<SetWiFiAPRPC.Result, Observable<SetWiFiAPRPC.Result>>() {
                                     @Override
-                                    public Observable<SetWiFiAPRPC.Response> call(SetWiFiAPRPC.Response response) {
-                                        if (response.getResponseError() == null){
+                                    public Observable<SetWiFiAPRPC.Result> call(SetWiFiAPRPC.Result result) {
                                             UMod tempUMod = uMod;
                                             tempUMod.setWifiSSID(values.getmWiFiSSID());
                                             Log.d("update_wifi", tempUMod.getWifiSSID());
                                             uModsRepository.saveUMod(tempUMod);
-                                        }
-                                        return Observable.just(response);
+                                        return Observable.just(result);
                                     }
                                 });
                     }
                 })
-                .map(new Func1<SetWiFiAPRPC.Response, ResponseValues>() {
+                //TODO find the scenarios where retry would be useful. When do we want a retry??
+                //A retry should be performed when a timeout is produce because a umod changed its address or is suddenly disconnected.
+                .retry(new Func2<Integer, Throwable, Boolean>() {
+                    @Override
+                    public Boolean call(Integer retryCount, Throwable throwable) {
+                        Log.e("factory-reset_uc", "Retry count: " + retryCount +
+                                "\n Excep msge: " + throwable.getMessage());
+                        if (retryCount < 4 &&
+                                (throwable instanceof IOException)){
+                            uModsRepository.refreshUMods();
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                })
+                .map(new Func1<SetWiFiAPRPC.Result, ResponseValues>() {
             @Override
-            public ResponseValues call(SetWiFiAPRPC.Response rpcResponse) {
+            public ResponseValues call(SetWiFiAPRPC.Result rpcResponse) {
                 return new ResponseValues(rpcResponse);
             }
         });
@@ -111,14 +130,14 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private SetWiFiAPRPC.Response rpcResponse;
+        private SetWiFiAPRPC.Result rpcResult;
 
-        public ResponseValues(@NonNull SetWiFiAPRPC.Response rpcResponse) {
-            this.rpcResponse = checkNotNull(rpcResponse, "rpcResponse cannot be null!");
+        public ResponseValues(@NonNull SetWiFiAPRPC.Result rpcResult) {
+            this.rpcResult = checkNotNull(rpcResult, "rpcResult cannot be null!");
         }
 
-        public SetWiFiAPRPC.Response getRPCResponse() {
-            return this.rpcResponse;
+        public SetWiFiAPRPC.Result getRpcResult() {
+            return this.rpcResult;
         }
     }
 }

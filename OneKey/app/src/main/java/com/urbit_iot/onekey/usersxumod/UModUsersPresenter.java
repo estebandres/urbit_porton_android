@@ -264,8 +264,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
 
             @Override
             public void onNext(AuthorizeUModUser.ResponseValues responseValues) {
-                UpdateUserRPC.Response response = responseValues.getResponse();
-                Log.d("um_usrs_pr", "RPC is " + response.getCallTag());
+                Log.d("um_usrs_pr", "RPC is " + responseValues.getResult().toString());
                 mUModsView.showUserApprovalSuccess();
             }
         });
@@ -292,8 +291,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
 
             @Override
             public void onNext(DeleteUModUser.ResponseValues responseValues) {
-                DeleteUserRPC.Response response = responseValues.getResponse();
-                Log.d("um_usrs_pr", "RPC is " + response.getCallTag());
+                Log.d("um_usrs_pr", "RPC is " + responseValues.getResult().toString());
                 mUModsView.showUserApprovalSuccess();
             }
         });
@@ -321,8 +319,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
 
             @Override
             public void onNext(UpDownAdminLevel.ResponseValues responseValues) {
-                UpdateUserRPC.Response response = responseValues.getResponse();
-                Log.d("um_usrs_pr", "RPC is " + response.getCallTag());
+                Log.d("um_usrs_pr", "RPC is " + responseValues.getResponse().toString());
                 mUModsView.showUserApprovalSuccess();
             }
         });

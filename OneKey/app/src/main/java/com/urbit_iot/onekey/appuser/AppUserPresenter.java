@@ -1,7 +1,6 @@
 package com.urbit_iot.onekey.appuser;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import com.urbit_iot.onekey.appuser.domain.SaveAppUser;
 
@@ -60,7 +59,7 @@ public class AppUserPresenter implements AppUserContract.Presenter {
 
             @Override
             public void onNext(SaveAppUser.ResponseValues responseValues) {
-                mAppUserView.showUModsList(responseValues.getmAppUser().getPhoneNumber(), responseValues.getmAppUser().getAppUUIDHash());
+                mAppUserView.showUModsList(responseValues.getmAppUser().getPhoneNumber(), responseValues.getmAppUser().getAppUUID());
             }
         });
     }

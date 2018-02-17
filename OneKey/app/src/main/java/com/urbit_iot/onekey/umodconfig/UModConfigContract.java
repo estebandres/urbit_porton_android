@@ -66,6 +66,8 @@ public interface UModConfigContract {
         void showProgressBar();
 
         void hideProgressBar();
+
+        void hideCompletely();
     }
 
     interface Presenter extends BasePresenter {

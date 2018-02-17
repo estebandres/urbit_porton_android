@@ -6,6 +6,7 @@ import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
+import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 
 import javax.inject.Inject;
 
@@ -30,20 +31,23 @@ import rx.Single;
 
 public interface UModsService {
 
-    @POST("/rpc/")
-    Observable<SysGetInfoRPC.Response> getSystemInfo(@Body SysGetInfoRPC.Request request);
+    @POST("/rpc/Sys.GetInfo")
+    Observable<SysGetInfoRPC.Result> getSystemInfo(@Body SysGetInfoRPC.Arguments request);
 
-    @POST("/rpc/")
-    Observable<TriggerRPC.Response> triggerUMod(@Body TriggerRPC.Request request);
+    @POST("/rpc/User.Trigger")
+    Observable<TriggerRPC.Result> triggerUMod(@Body TriggerRPC.Arguments request);
 
-    @POST("/rpc/")
-    Observable<CreateUserRPC.Response> createUser(@Body CreateUserRPC.Request request);
+    @POST("/rpc/Guest.CreateUser")
+    Observable<CreateUserRPC.Result> createUser(@Body CreateUserRPC.Arguments request);
 
-    @POST("/rpc/")
-    Observable<GetMyUserLevelRPC.Response> getAppUserLevel(@Body GetMyUserLevelRPC.Request request);
+    @POST("/rpc/Guest.UserStatus")
+    Observable<GetMyUserLevelRPC.Result> getAppUserLevel(@Body GetMyUserLevelRPC.Arguments request);
 
-    @POST("/rpc/")
-    Observable<FactoryResetRPC.Response> postFactoryReset(@Body FactoryResetRPC.Request request);
+    @POST("/rpc/Admin.FactoryReset")
+    Observable<FactoryResetRPC.Result> postFactoryReset(@Body FactoryResetRPC.Arguments request);
+
+    @POST("/rpc/Admin.UpdateUser")
+    Observable<UpdateUserRPC.Result> postUpdateUser(@Body UpdateUserRPC.Arguments requestArguments);
 
     /*
     @GET
@@ -57,6 +61,6 @@ public interface UModsService {
     startFirmwareUpdate(@Part("commit_timeout") RequestBody timeoutBody,
                         @Part MultipartBody.Part firmwareImageFile);
 
-    @POST("/rpc/")
-    Observable<Response<ResponseBody>> otaCommit(@Body OTACommitRPC.Request request);
+    @POST("/rpc/OTA.Commit")
+    Observable<Response<ResponseBody>> otaCommit(@Body OTACommitRPC.Arguments arguments);
 }

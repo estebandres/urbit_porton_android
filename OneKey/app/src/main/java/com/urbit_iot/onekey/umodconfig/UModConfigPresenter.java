@@ -147,7 +147,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
     @Override
     public void populateUModSettings() {
-
+        mUModConfigView.hideCompletely();
         if (Strings.isNullOrEmpty(mUModUUID)) {
             throw new RuntimeException("populateUModSettings() was called but umod is null.");
         }
@@ -169,10 +169,17 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 Log.e("conf_pr",e.getMessage());
-                showEmptyTaskError();
-                if (mUModConfigView.isActive()){
-                    mUModConfigView.finishActivity();
+                //showEmptyTaskError();
+                //TODO BUG-RISK Improve this with exception subclass polymorphism
+                if (e instanceof GetUModAndUpdateInfo.UnconnectedFromAPModeUModException){
+                    //TODO should the presenter call finishActivity or the fragment do it as part of launchWiFiSettings??
+                    mUModConfigView.launchWiFiSettings();
+                } else {
+                    if (mUModConfigView.isActive()){
+                        mUModConfigView.finishActivity();
+                    }
                 }
+
             }
 
             @Override
@@ -180,16 +187,15 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                 onNextCount.plusOne();
                 uModToConfig = response.getUMod();
                 if (uModToConfig == null){
-                    Log.d("conf_prs", "vino nulo negro");
+                    Log.e("conf_prs", "umod to config is null.");
+                    if (mUModConfigView.isActive()){
+                        mUModConfigView.finishActivity();
+                    }
                 } else {
                     Log.d("conf_prs", response.getUMod().toString());
-                    if (uModToConfig.getState() == UMod.State.AP_MODE
-                            && !uModToConfig.belongsToAppUser()){
-                            mUModConfigView.launchWiFiSettings();
+                    if (mUModConfigView.isActive()){
+                        mUModConfigView.showUModConfigs(createViewModel(uModToConfig));
                     }
-                }
-                if (mUModConfigView.isActive()){
-                    mUModConfigView.showUModConfigs(createViewModel(uModToConfig));
                 }
             }
         });
@@ -251,6 +257,14 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
             @Override
             public void onError(Throwable e) {
+                /*
+                //TODO implement error parsing
+                if (response.getResponseError()!= null && response.getResponseError().getErrorCode() == 405){
+                    mUModConfigView.showConfigurationFailureMessage("WiFi AP");
+                } else {
+                    mUModConfigView.showConfigurationSuccessMessage("WiFi AP");
+                }
+                 */
                 mUModConfigView.showConfigurationFailureMessage("WiFi AP");
                 Log.e("config_pr", e.getMessage());
             }
@@ -258,12 +272,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
             @Override
             public void onNext(UpdateWiFiCredentials.ResponseValues responseValues) {
                 onNextCount.plusOne();
-                SetWiFiAPRPC.Response response = responseValues.getRPCResponse();
-                if (response.getResponseError()!= null && response.getResponseError().getErrorCode() == 405){
-                    mUModConfigView.showConfigurationFailureMessage("WiFi AP");
-                } else {
-                    mUModConfigView.showConfigurationSuccessMessage("WiFi AP");
-                }
+                mUModConfigView.showConfigurationSuccessMessage("WiFi AP");
             }
         });
     }

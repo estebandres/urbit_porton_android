@@ -35,9 +35,9 @@ public class GetUsersRPC extends RPC {
         @SerializedName("user_name")
         private String userName;
         @SerializedName("user_type")
-        private GetMyUserLevelRPC.UModUserType userType;
+        private APIUserType userType;
 
-        public UserResult(String userName, GetMyUserLevelRPC.UModUserType userType) {
+        public UserResult(String userName, APIUserType userType) {
             this.userName = userName;
             this.userType = userType;
         }
@@ -50,11 +50,11 @@ public class GetUsersRPC extends RPC {
             this.userName = userName;
         }
 
-        public GetMyUserLevelRPC.UModUserType getUserType() {
+        public APIUserType getUserType() {
             return userType;
         }
 
-        public void setUserType(GetMyUserLevelRPC.UModUserType userType) {
+        public void setUserType(APIUserType userType) {
             this.userType = userType;
         }
     }

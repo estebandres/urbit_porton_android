@@ -17,11 +17,13 @@
 package com.urbit_iot.onekey.umodconfig.domain.usecase;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
 import com.urbit_iot.onekey.appuser.domain.AppUser;
+import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
@@ -31,7 +33,9 @@ import com.urbit_iot.onekey.data.source.UModsRepository;
 
 import javax.inject.Inject;
 
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
+import rx.functions.Action1;
 import rx.functions.Func1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -57,62 +61,84 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
 
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
-        final SysGetInfoRPC.Request infoRequest = new SysGetInfoRPC.Request(null, "GetSysInfo", 666);
-        final CreateUserRPC.Request createUserRequest = new CreateUserRPC.Request(
-                new CreateUserRPC.Arguments("AAA:BBBB:CCCC"),
-                "CreateUser",
-                666);
 
+        //TODO why not to take cached values and refresh on retry only.
         mUModsRepository.refreshUMods();
+
         return mUModsRepository.getUMod(values.getUModUUID())
                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
                     public Observable<UMod> call(final UMod uMod) {
                         if (uMod.getState() == UMod.State.AP_MODE
                                 && !values.getmConnectedWiFiAP().contains(uMod.getUUID())){
-                            return Observable.just(uMod);
+                            Log.d("getumod+info_uc","Not connected to an AP_MODE UMod!");
+                            //return Observable.just(uMod);
+                            return Observable.error(new UnconnectedFromAPModeUModException(uMod.getUUID()));
                         }
-                        return mUModsRepository.createUModUser(uMod, createUserRequest)
-                                .flatMap(new Func1<CreateUserRPC.Response, Observable<UMod>>() {
+                        //TODO review behaviour
+                        return mAppUserRepository.getAppUser()
+                                .flatMap(new Func1<AppUser, Observable<UMod>>() {
                                     @Override
-                                    public Observable<UMod> call(CreateUserRPC.Response response) {
-                                        //If creation succeeds.
-                                        if (response.getResponseError() == null){
-                                            uMod.setAppUserLevel(response.getResponseResult().getUserLevel());
-                                            return Observable.just(uMod);
-                                        }
-                                        //If error exists and isn't 400: User already exists.
-                                        if (response.getResponseError() != null){
-                                            //TODO check error code perhaps 409 is more appropriate
-                                            //and save us the need for message parsing.
-                                            if (response.getResponseError().getErrorCode() != 400
-                                                    || !response.getResponseError().getErrorMessage()
-                                                    .contains("already")){
-                                                return Observable.error(
-                                                        new Exception("createUser Error" +
-                                                                response.getResponseError().
-                                                                        getErrorMessage()));
-                                            }
-                                        }
-                                        return mAppUserRepository.getAppUser()
-                                                .flatMap(new Func1<AppUser, Observable<UMod>>() {
+                                    public Observable<UMod> call(final AppUser appUser) {
+                                        CreateUserRPC.Arguments createUserArgs = new CreateUserRPC.Arguments(appUser.getCredentialsString());
+                                        return mUModsRepository.createUModUser(uMod, createUserArgs)
+                                                .flatMap(new Func1<CreateUserRPC.Result, Observable<UMod>>() {
                                                     @Override
-                                                    public Observable<UMod> call(AppUser appUser) {
-                                                        GetMyUserLevelRPC.Request request =
-                                                                new GetMyUserLevelRPC.Request(new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber()),uMod.getUUID());
-                                                        return mUModsRepository.getUserLevel(uMod,request)//TODO should be called from other UseCase??
-                                                                .flatMap(new Func1<GetMyUserLevelRPC.Response, Observable<UMod>>() {
-                                                                    @Override
-                                                                    public Observable<UMod> call(GetMyUserLevelRPC.Response successResponse) {
-                                                                        uMod.setAppUserLevel(successResponse.getResponseResult().getUserLevel());
-                                                                        mUModsRepository.saveUMod(uMod);
-                                                                        return Observable.just(uMod);
-                                                                    }
-                                                                });
+                                                    public Observable<UMod> call(CreateUserRPC.Result result) {
+                                                        //User Creation Succeeded
+                                                        Log.d("getumod+info_uc","User Creation Succeeded!");
+                                                        uMod.setAppUserLevel(result.getUserLevel());
+                                                        return Observable.just(uMod);
+                                                    }
+                                                })
+                                                //TODO discus retry policy.
+                                                .onErrorResumeNext(new Func1<Throwable, Observable<? extends UMod>>() {
+                                                    @Override
+                                                    public Observable<? extends UMod> call(Throwable throwable) {
+                                                        Log.e("getumod+info_uc", "Create User Failed: " +throwable.getMessage());
+                                                        if (throwable instanceof HttpException) {
+                                                            //Check for HTTP UNAUTHORIZED error code
+                                                            int httpErrorCode = ((HttpException) throwable).response().code();
+                                                            //If user is already created
+                                                            //Improve  httpErrorCode != 0 to isValidHttpCode(httpErrorCode)
+                                                            if (httpErrorCode != 0) {
+                                                                if (httpErrorCode == 401 || httpErrorCode == 403){
+                                                                    uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                                    mUModsRepository.saveUMod(uMod);
+                                                                    return Observable.just(uMod);
+                                                                }
+                                                                if (httpErrorCode == 409){
+                                                                    //TODO evaluate the benefit of getting the user_type in the error body.
+                                                                    //That may save us the next request (Deserialization using JSONObject)
+                                                                    GetMyUserLevelRPC.Arguments getUserLevelArgs =
+                                                                            new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber());
+                                                                    return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)
+                                                                            .doOnError(new Action1<Throwable>() {
+                                                                                @Override
+                                                                                public void call(Throwable throwable) {
+                                                                                    Log.e("getumod+info_uc","Get User Level Failed: " + throwable.getMessage());
+                                                                                }
+                                                                            })
+                                                                            .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<UMod>>() {
+                                                                                @Override
+                                                                                public Observable<UMod> call(GetMyUserLevelRPC.Result result) {
+                                                                                    Log.d("getumod+info_uc","Get User Level Succeeded!");
+                                                                                    uMod.setAppUserLevel(result.getUserLevel());
+                                                                                    mUModsRepository.saveUMod(uMod);
+                                                                                    return Observable.just(uMod);
+                                                                                }
+                                                                            });
+                                                                }
+                                                            }
+                                                        }
+                                                        //when the error is from other source like a timeout it is forwarded to the presenter.
+                                                        return Observable.error(throwable);
+                                                        //return Observable.just(uMod);
                                                     }
                                                 });
                                     }
                                 });
+
                     }
                 })
                 .map(new Func1<UMod, ResponseValues>() {
@@ -153,6 +179,17 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
 
         public UMod getUMod() {
             return mUMod;
+        }
+    }
+
+    public static class UnconnectedFromAPModeUModException extends Exception{
+        private String mAPModeUModUUID;
+        public UnconnectedFromAPModeUModException(String uModUUID){
+            super("Trying to configure the unconnected AP_MODE umod: " + uModUUID);
+            this.mAPModeUModUUID = uModUUID;
+        }
+        public String getAPModeUModUUID(){
+            return this.mAPModeUModUUID;
         }
     }
 }

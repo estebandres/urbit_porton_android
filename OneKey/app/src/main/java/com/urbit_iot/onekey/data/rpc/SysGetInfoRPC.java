@@ -18,7 +18,7 @@ public class SysGetInfoRPC extends RPC {
         private SysGetInfoRPC.Arguments methodArguments;
 
         public Request(Arguments methodArguments, String callTag, int callID) {
-            super("Sys.GetInxxxfo",callTag,callID);
+            super("Sys.GetInfo",callTag,callID);
             this.methodArguments = methodArguments;
         }
 

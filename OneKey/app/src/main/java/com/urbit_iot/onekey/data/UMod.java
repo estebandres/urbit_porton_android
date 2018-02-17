@@ -440,6 +440,21 @@ public final class UMod {
 
     @Override
     public String toString() {
-        return "I'm UModule: [" + alias + " ; " + uModUUID + " ; " + connectionAddress + "]";
+        return "UMod{" +
+                "uModUUID='" + uModUUID + '\'' +
+                ", appUserLevel=" + appUserLevel +
+                ", state=" + state +
+                ", ongoingNotificationEnabled=" + ongoingNotificationEnabled +
+                ", lastUpdateDate=" + lastUpdateDate +
+                ", alias='" + alias + '\'' +
+                ", connectionAddress='" + connectionAddress + '\'' +
+                ", wifiSSID='" + wifiSSID + '\'' +
+                ", uModSource=" + uModSource +
+                ", uModLastReport='" + uModLastReport + '\'' +
+                ", productUUID='" + productUUID + '\'' +
+                ", hwVersion='" + hwVersion + '\'' +
+                ", swVersion='" + swVersion + '\'' +
+                ", isOpen=" + isOpen +
+                '}';
     }
 }

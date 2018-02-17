@@ -55,10 +55,12 @@ public class UpgradeUModFirmware extends SimpleUseCase<UpgradeUModFirmware.Reque
 
     @Override
     public Observable<ResponseValues> buildUseCase(RequestValues values) {
+        /*
         final SysGetInfoRPC.Request infoRequest =
                 new SysGetInfoRPC.Request(new SysGetInfoRPC.Arguments(),"Sys.GetInfo",234234145);
         final OTACommitRPC.Request otaCommitRequest =
                 new OTACommitRPC.Request(null,"OTA.Update",666);
+         */
 
         uModsRepository.refreshUMods();
 
@@ -84,16 +86,18 @@ public class UpgradeUModFirmware extends SimpleUseCase<UpgradeUModFirmware.Reque
                                                             return Observable.error(new Exception("postFirmwareUpdate errored."));
                                                         } else {
                                                             Log.d("OTA_UC","Verifying umod version");
-                                                            return uModsRepository.getSystemInfo(uMod, infoRequest)
-                                                                    .flatMap(new Func1<SysGetInfoRPC.Response, Observable<Response<ResponseBody>>>() {
+                                                            SysGetInfoRPC.Arguments sysGetInfoArgs = new SysGetInfoRPC.Arguments();
+                                                            return uModsRepository.getSystemInfo(uMod, sysGetInfoArgs)
+                                                                    .flatMap(new Func1<SysGetInfoRPC.Result, Observable<Response<ResponseBody>>>() {
                                                                         @Override
-                                                                        public Observable<Response<ResponseBody>> call(SysGetInfoRPC.Response response) {
-                                                                            Log.d("OTA_UC","The current version is: " + response.getResponseResult().getFwVersion());
+                                                                        public Observable<Response<ResponseBody>> call(SysGetInfoRPC.Result result) {
+                                                                            Log.d("OTA_UC","The current version is: " + result.getFwVersion());
                                                                             //TODO implement method for comparing versions as v1.5.4 > v1.3.6. Question: is always the upgrade forward??
-                                                                            if(!uMod.getSWVersion().contentEquals(response.getResponseResult().getFwVersion())){
-                                                                                uMod.setSWVersion(response.getResponseResult().getFwVersion());
+                                                                            if(!uMod.getSWVersion().contentEquals(result.getFwVersion())){
+                                                                                uMod.setSWVersion(result.getFwVersion());
                                                                                 Log.d("OTA_UC","Update was Successful. Preparing commit.");
-                                                                                return uModsRepository.otaCommit(uMod, otaCommitRequest);
+                                                                                OTACommitRPC.Arguments otaCommitArgs = new OTACommitRPC.Arguments();
+                                                                                return uModsRepository.otaCommit(uMod, otaCommitArgs);
                                                                             } else {
                                                                                 Log.d("OTA_UC","Versions missmatch. Upgrade FAILED.");
                                                                                 return Observable.error(new Exception("Incorrect firmware version after update."));

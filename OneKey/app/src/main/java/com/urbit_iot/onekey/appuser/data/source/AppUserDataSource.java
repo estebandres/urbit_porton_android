@@ -16,5 +16,5 @@ public interface AppUserDataSource {
     //Observable<AppUser> saveAppUser(AppUser appUser);
     Observable<AppUser> getAppUser();//GET /users/MY-USER-ID
     //Observable<String> getAppUUID();
-    //Observable<String> getAppUUIDHash();
+    //Observable<String> getAppUserCredentialsHash();
 }

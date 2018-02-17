@@ -4,10 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
-
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 /**
  * Created by andresteve07 on 8/11/17.
@@ -23,8 +20,8 @@ public class AppUser {
     private final String appUUID;
 
     @Nullable
-    @SerializedName("appuid_hash")
-    private String appUUIDHash;
+    @SerializedName("user_credentials_hash")
+    private String appUserCredentialsHash;
 
     @Nullable
     @SerializedName("user_alias")
@@ -47,19 +44,19 @@ public class AppUser {
     private String actionPassword;
     //TODO what if I want to use my lock screen as actionPassword?
 
-    public AppUser(@NonNull String phoneNumber, @NonNull String appUUID, @NonNull String appUUIDHash) {
+    public AppUser(@NonNull String phoneNumber, @NonNull String appUUID, @NonNull String appUserCredentialsHash) {
         this.phoneNumber = phoneNumber;
         this.appUUID = appUUID;
-        this.appUUIDHash = appUUIDHash;
+        this.appUserCredentialsHash = appUserCredentialsHash;
     }
 
     @Nullable
-    public String getAppUUIDHash(){
-        return this.appUUIDHash;
+    public String getAppUserCredentialsHash(){
+        return this.appUserCredentialsHash;
     }
 
-    public void setAppUUIDHash(@Nullable String appUUIDHash) {
-        this.appUUIDHash = appUUIDHash;
+    public void setAppUserCredentialsHash(@Nullable String appUserCredentialsHash) {
+        this.appUserCredentialsHash = appUserCredentialsHash;
     }
 
     @NonNull
@@ -115,6 +112,10 @@ public class AppUser {
 
     public void setActionPassword(@Nullable String actionPassword) {
         this.actionPassword = actionPassword;
+    }
+
+    public String getCredentialsString(){
+        return this.phoneNumber + GlobalConstants.CREDENTIALS_REALM_SEPARATOR + this.appUserCredentialsHash;
     }
 
     @Override

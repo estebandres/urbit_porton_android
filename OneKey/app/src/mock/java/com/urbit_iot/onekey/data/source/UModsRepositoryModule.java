@@ -31,6 +31,7 @@ import com.urbit_iot.onekey.util.dagger.Internet;
 import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.LanOnly;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
+import com.urbit_iot.onekey.util.retrofit2.RetrofitUtils;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.util.Map;
@@ -154,6 +155,8 @@ public class UModsRepositoryModule {
                 .addInterceptor(urlHostSelectionInterceptor)
                 .authenticator(new CachingAuthenticatorDecorator(digestAuthenticator,authCache))
                 .addInterceptor(new AuthenticationCacheInterceptor(authCache))
+                .connectTimeout(1500L, TimeUnit.MILLISECONDS)
+                .readTimeout(800L, TimeUnit.MILLISECONDS)
                 .build();
     }
 
@@ -172,7 +175,7 @@ public class UModsRepositoryModule {
     @Provides
     @Singleton
     @Named("default")
-    UModsService provideDefaultUModsService(@Named("app_user") Retrofit retrofit){
+    UModsService provideDefaultUModsService(@Named("default") Retrofit retrofit){
         return retrofit.create(UModsService.class);
     }
 
@@ -187,8 +190,8 @@ public class UModsRepositoryModule {
                 .addInterceptor(urlHostSelectionInterceptor)
                 .authenticator(new CachingAuthenticatorDecorator(digestAuthenticator,authCache))
                 .addInterceptor(new AuthenticationCacheInterceptor(authCache))
-                .connectTimeout(2000L, TimeUnit.MILLISECONDS)
-                .readTimeout(650L, TimeUnit.MILLISECONDS)
+                .connectTimeout(1500L, TimeUnit.MILLISECONDS)
+                .readTimeout(800L, TimeUnit.MILLISECONDS)
                 .build();
     }
 

@@ -17,6 +17,7 @@ import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Inject;
 
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -50,6 +51,8 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                 .filter(new Func1<UMod, Boolean>() {
                     @Override
                     public Boolean call(UMod uMod) {
+                        //TODO Replace actual isOpen logic or remove it completely
+                        //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
                         return (uMod.isOpen() || uMod.belongsToAppUser() || uMod.isInAPMode());
                     }
                 })
@@ -57,21 +60,41 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
                     public Observable<UMod> call(final UMod uMod) {
+                        //If the module is in AP_MODE then GetUserLevel may fail if android isn't connected to the module
+                        //also the standard flow of configuration wouldn't allow this combination.
                         if(uMod.getAppUserLevel() == UModUser.Level.PENDING && !uMod.isInAPMode()){
                             Log.d("GetUM1x1", "PENDING detected");
                             return mAppUserRepository.getAppUser()
                                     .flatMap(new Func1<AppUser, Observable<UMod>>() {
                                         @Override
                                         public Observable<UMod> call(AppUser appUser) {
+                                            /*
                                             GetMyUserLevelRPC.Request request =
                                                     new GetMyUserLevelRPC.Request(new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber()),uMod.getUUID());
-                                            return mUModsRepository.getUserLevel(uMod,request)//TODO should be called from other UseCase??
-                                                    .flatMap(new Func1<GetMyUserLevelRPC.Response, Observable<UMod>>() {
+                                             */
+                                            GetMyUserLevelRPC.Arguments getMyLevelArgs = new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber());
+                                            return mUModsRepository.getUserLevel(uMod,getMyLevelArgs)//TODO should be called from other UseCase??
+                                                    .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<UMod>>() {
                                                         @Override
-                                                        public Observable<UMod> call(GetMyUserLevelRPC.Response successResponse) {
-                                                            uMod.setAppUserLevel(successResponse.getResponseResult().getUserLevel());
+                                                        public Observable<UMod> call(GetMyUserLevelRPC.Result result) {
+                                                            uMod.setAppUserLevel(result.getUserLevel());
                                                             mUModsRepository.saveUMod(uMod);
                                                             return Observable.just(uMod);
+                                                        }
+                                                    })
+                                                    .onErrorResumeNext(new Func1<Throwable, Observable<? extends UMod>>() {
+                                                        @Override
+                                                        public Observable<? extends UMod> call(Throwable throwable) {
+                                                            if (throwable instanceof HttpException) {
+                                                                //Check for HTTP UNAUTHORIZED error code
+                                                                int httpErrorCode = ((HttpException) throwable).response().code();
+                                                                //401 and 403 aren't considered because the call is made with urbit:urbit
+                                                                if (httpErrorCode != 0 && (httpErrorCode == 404)) {
+                                                                    uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                                    return Observable.just(uMod);
+                                                                }
+                                                            }
+                                                            return Observable.error(throwable);
                                                         }
                                                     });
                                         }

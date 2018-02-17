@@ -39,22 +39,25 @@ public class DeleteUModUser extends SimpleUseCase<DeleteUModUser.RequestValues, 
         }
         */
 
+        /*
         final DeleteUserRPC.Request request = new DeleteUserRPC.Request(
                 new DeleteUserRPC.Arguments(values.getUModUser().getPhoneNumber()),
                 values.uModUser.getuModUUID(),
                 666);
+         */
 
         return mUModsRepository.getUMod(values.getUModUser().getuModUUID())
-                .flatMap(new Func1<UMod, Observable<DeleteUserRPC.Response>>() {
+                .flatMap(new Func1<UMod, Observable<DeleteUserRPC.Result>>() {
                     @Override
-                    public Observable<DeleteUserRPC.Response> call(UMod uMod) {
-                        return mUModsRepository.deleteUModUser(uMod, request);
+                    public Observable<DeleteUserRPC.Result> call(UMod uMod) {
+                        DeleteUserRPC.Arguments deleteUserArgs = new DeleteUserRPC.Arguments(values.getUModUser().getPhoneNumber());
+                        return mUModsRepository.deleteUModUser(uMod, deleteUserArgs);
                     }
                 })
-                .map(new Func1<DeleteUserRPC.Response, DeleteUModUser.ResponseValues>() {
+                .map(new Func1<DeleteUserRPC.Result, DeleteUModUser.ResponseValues>() {
                     @Override
-                    public DeleteUModUser.ResponseValues call(DeleteUserRPC.Response response) {
-                        return new DeleteUModUser.ResponseValues(response);
+                    public DeleteUModUser.ResponseValues call(DeleteUserRPC.Result result) {
+                        return new DeleteUModUser.ResponseValues(result);
                     }
                 });
     }
@@ -74,14 +77,14 @@ public class DeleteUModUser extends SimpleUseCase<DeleteUModUser.RequestValues, 
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private final DeleteUserRPC.Response response;
+        private final DeleteUserRPC.Result result;
 
-        public ResponseValues(@NonNull DeleteUserRPC.Response response) {
-            this.response = checkNotNull(response, "response cannot be null!");
+        public ResponseValues(@NonNull DeleteUserRPC.Result result) {
+            this.result = checkNotNull(result, "result cannot be null!");
         }
 
-        public DeleteUserRPC.Response getResponse() {
-            return response;
+        public DeleteUserRPC.Result getResult() {
+            return result;
         }
     }
 }

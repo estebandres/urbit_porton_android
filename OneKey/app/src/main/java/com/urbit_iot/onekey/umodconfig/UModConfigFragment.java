@@ -89,6 +89,8 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private ProgressBar mPorgressBar;
 
+    private LinearLayout mAllSettingsLinearLayout;
+
     public static UModConfigFragment newInstance() {
         return new UModConfigFragment();
     }
@@ -170,6 +172,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mFirmwareUpdateButton = (Button) root.findViewById(R.id.firmware_update_button);
         mAdminSettingsLayout = (LinearLayout) root.findViewById(R.id.admin_settings);
         mPorgressBar = (ProgressBar) root.findViewById(R.id.umod_config_load_bar);
+        mAllSettingsLinearLayout = (LinearLayout) root.findViewById(R.id.all_settings);
 
         mTextWatcher = new TextWatcher() {
             @Override
@@ -261,6 +264,11 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     }
 
     @Override
+    public void hideCompletely() {
+        mAllSettingsLinearLayout.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
     public String getWiFiAPSSID(){
         WifiManager wifiManager = (WifiManager) getActivity().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         WifiInfo wifiInfo = wifiManager.getConnectionInfo();
@@ -314,6 +322,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         } else {
             mAdminSettingsLayout.setVisibility(View.INVISIBLE);
         }
+        mAllSettingsLinearLayout.setVisibility(View.VISIBLE);
     }
 
     @Override

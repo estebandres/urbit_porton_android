@@ -4,6 +4,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
+import com.urbit_iot.onekey.data.rpc.APIUserType;
+
 /**
  * Created by andresteve07 on 8/21/17.
  */
@@ -11,14 +13,54 @@ import android.util.SparseArray;
 public class UModUser {
 
     public enum Level {
-        PENDING(2),
-        AUTHORIZED(1),
-        UNAUTHORIZED(0),
-        TEMPORAL(3),
-        WATCHER(4),
-        PRE_APPROVED(5),
-        ADMINISTRATOR(6),
-        UNKNOWN(7);
+        PENDING(2) {
+            @Override
+            public APIUserType asAPIUserType() {
+                return APIUserType.Guest;
+            }
+        },
+        AUTHORIZED(1) {
+            @Override
+            public APIUserType asAPIUserType() {
+                return APIUserType.User;
+            }
+        },
+        UNAUTHORIZED(0) {
+            @Override
+            public APIUserType asAPIUserType() {
+                return APIUserType.NotUser;
+            }
+        },
+        TEMPORAL(3) {
+            @Override
+            public APIUserType asAPIUserType() {
+                return null;
+            }
+        },
+        WATCHER(4) {
+            @Override
+            public APIUserType asAPIUserType() {
+                return null;
+            }
+        },
+        PRE_APPROVED(5) {
+            @Override
+            public APIUserType asAPIUserType() {
+                return null;
+            }
+        },
+        ADMINISTRATOR(6){
+            @Override
+            public APIUserType asAPIUserType() {
+                return APIUserType.Admin;
+            }
+        },
+        UNKNOWN(7) {
+            @Override
+            public APIUserType asAPIUserType() {
+                return null;
+            }
+        };
         private final Integer statusID;
         private static SparseArray<Level> map = new SparseArray<>();
 
@@ -39,6 +81,8 @@ public class UModUser {
         public static Level from(int value) {
             return map.get(value);
         }
+
+        public abstract APIUserType asAPIUserType();
     }
 
     @NonNull
