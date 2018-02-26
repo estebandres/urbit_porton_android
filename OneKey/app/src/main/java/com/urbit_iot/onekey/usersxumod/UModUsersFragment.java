@@ -14,7 +14,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.PopupMenu;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,12 +26,12 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UMod;
-import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.umods.ScrollChildSwipeRefreshLayout;
 
 import java.util.ArrayList;
@@ -61,6 +60,8 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
 
     private TextView mFilteringLabelView;
 
+    private ProgressBar mProgressBar;
+
     public UModUsersFragment() {
         // Requires empty public constructor
     }
@@ -72,7 +73,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mListAdapter = new UModUsersAdapter(new ArrayList<UModUser>(0), mItemListener);
+        mListAdapter = new UModUsersAdapter(new ArrayList<UModUserViewModel>(0), mItemListener);
     }
 
     @Override
@@ -97,6 +98,8 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
                              Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.umod_users_frag, container, false);
 
+        mProgressBar = (ProgressBar) root.findViewById(R.id.umod_users_load_bar);
+        mProgressBar.setVisibility(View.INVISIBLE);
         // Set up tasks view
         ListView listView = (ListView) root.findViewById(R.id.umod_users_list);
         listView.setAdapter(mListAdapter);
@@ -236,7 +239,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
     }
 
     @Override
-    public void showUModUsers(List<UModUser> uModUsers) {
+    public void showUModUsers(List<UModUserViewModel> uModUsers) {
         mListAdapter.replaceData(uModUsers);
 
         mUsersView.setVisibility(View.VISIBLE);
@@ -324,6 +327,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
      * Listener for clicks on UModUsers in the ListView.
      */
     UModUserItemListener mItemListener = new UModUserItemListener() {
+        /*
         @Override
         public void onActionButtonClick(UModUser actedUModUser) {
             mPresenter.authorizeUser(actedUModUser);
@@ -333,6 +337,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
         public void onIsAdminCBClick(UModUser uModUser, boolean toAdmin) {
             mPresenter.UpDownAdminLevel(uModUser, toAdmin);
         }
+        */
     };
 
     @Override
@@ -342,20 +347,20 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
 
     private static class UModUsersAdapter extends BaseAdapter {
 
-        private List<UModUser> uModUsers;
+        private List<UModUserViewModel> uModUsers;
         private UModUserItemListener mItemListener;
 
-        public UModUsersAdapter(List<UModUser> uModUsers, UModUserItemListener itemListener) {
+        public UModUsersAdapter(List<UModUserViewModel> uModUsers, UModUserItemListener itemListener) {
             setList(uModUsers);
             mItemListener = itemListener;
         }
 
-        public void replaceData(List<UModUser> uModUsers) {
+        public void replaceData(List<UModUserViewModel> uModUsers) {
             setList(uModUsers);
             notifyDataSetChanged();
         }
 
-        private void setList(List<UModUser> uModUsers) {
+        private void setList(List<UModUserViewModel> uModUsers) {
             this.uModUsers = checkNotNull(uModUsers);
         }
 
@@ -365,7 +370,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
         }
 
         @Override
-        public UModUser getItem(int i) {
+        public UModUserViewModel getItem(int i) {
             return uModUsers.get(i);
         }
 
@@ -382,19 +387,26 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
                 rowView = inflater.inflate(R.layout.umod_user_item, viewGroup, false);
             }
 
-            final UModUser uModUser = getItem(i);
+            final UModUserViewModel viewModel = getItem(i);
             //TODO: After an admin upgrade or downgrade is performed the users checkbox state should be updated acordingly.
             final int viewIndex = i;
 
             TextView titleTV = (TextView) rowView.findViewById(R.id.umod_user_title);
-            titleTV.setText(uModUser.getUserAlias());
+            titleTV.setText(viewModel.getItemMainText());
             //titleTV.setText(getContactNameFromPhoneNumber(uModUser.getPhoneNumber()));
 
             Button actionButton = (Button) rowView.findViewById(R.id.umod_user_action_button);
+            actionButton.setText(viewModel.getButtonText());
 
             final CheckBox isAdminCB = (CheckBox) rowView.findViewById(R.id.umod_user_is_admin_checkbox);
 
-            if(uModUser.isAdmin()){
+            if (viewModel.isCheckboxVisible()){
+                isAdminCB.setVisibility(View.VISIBLE);
+            } else {
+                isAdminCB.setVisibility(View.INVISIBLE);
+            }
+
+            if(viewModel.isCheckboxChecked()){
                 isAdminCB.setChecked(true);
             } else {
                 isAdminCB.setChecked(false);
@@ -403,11 +415,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
             actionButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (!uModUser.isAdmin()) {
-                        mItemListener.onActionButtonClick(uModUser);
-                    } else {
-                        mItemListener.onActionButtonClick(uModUser);
-                    }
+                    viewModel.onButtonClicked();
                 }
             });
             //TODO: Potential bug, customer could play with the checkbox so many times the actual umod may hang or reboot.
@@ -415,7 +423,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
             isAdminCB.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mItemListener.onIsAdminCBClick(uModUser, isAdminCB.isChecked());
+                    viewModel.onCheckBoxClicked(isAdminCB.isChecked());
                 }
             });
 
@@ -425,9 +433,9 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
 
     public interface UModUserItemListener {
 
-        void onActionButtonClick(UModUser actedUModUser);
+        //void onActionButtonClick(UModUser actedUModUser);
 
-        void onIsAdminCBClick(UModUser uModUser, boolean toAdmin);
+        //void onIsAdminCBClick(UModUser uModUser, boolean toAdmin);
     }
 
     //TODO: Make this function compatible with Android 6.0 with on run time permission grant.
@@ -449,5 +457,15 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
             c.close();
         }
         return displayName;
+    }
+
+    @Override
+    public void showProgressBar() {
+        this.mProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void hideProgressBar() {
+        this.mProgressBar.setVisibility(View.INVISIBLE);
     }
 }

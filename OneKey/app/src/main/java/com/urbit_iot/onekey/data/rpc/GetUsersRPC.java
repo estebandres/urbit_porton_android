@@ -57,10 +57,18 @@ public class GetUsersRPC extends RPC {
         public void setUserType(APIUserType userType) {
             this.userType = userType;
         }
+
+        @Override
+        public String toString() {
+            return "UserResult{" +
+                    "userName='" + userName + '\'' +
+                    ", userType=" + userType +
+                    '}';
+        }
     }
 
     public static class Result{
-        @SerializedName("users")
+        @SerializedName("Response")
         private List<UserResult> users;
 
         public Result(List<UserResult> users) {
@@ -73,6 +81,13 @@ public class GetUsersRPC extends RPC {
 
         public void setUsers(List<UserResult> users) {
             this.users = users;
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "users=" + users +
+                    '}';
         }
     }
 

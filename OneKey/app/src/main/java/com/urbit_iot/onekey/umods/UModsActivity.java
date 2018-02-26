@@ -17,19 +17,14 @@ import android.util.Log;
 import android.view.MenuItem;
 
 
-import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.github.pwittchen.reactivewifi.AccessRequester;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.OneKeyApplication;
-import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
-import com.urbit_iot.onekey.appuser.domain.AppUser;
 import com.urbit_iot.onekey.statistics.StatisticsActivity;
 import com.urbit_iot.onekey.util.ActivityUtils;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
 
 import javax.inject.Inject;
-
-import rx.Subscriber;
 
 /**
  * Created by steve-urbit on 02/08/17.
@@ -38,7 +33,7 @@ import rx.Subscriber;
 public class UModsActivity extends AppCompatActivity {
     private static final String CURRENT_FILTERING_KEY = "CURRENT_FILTERING_KEY";
     public static final String APP_USER_PHONE_NUMBER = "APP_USER_PHONE_NUMBER";
-    public static final String APP_UUID_HASH = "APP_UUID_HASH";
+    public static final String APP_UUID = "APP_UUID";
     public static final int APP_PERMISSIONS_REQUEST_FINE_AND_COARSE = 666;
     private static final int REQUEST_APP_USER = 1;
     private DrawerLayout mDrawerLayout;
@@ -67,7 +62,7 @@ public class UModsActivity extends AppCompatActivity {
         }
 
         String appUserPhoneNumber = getIntent().getStringExtra(APP_USER_PHONE_NUMBER);
-        String appUUIDHash = getIntent().getStringExtra(APP_UUID_HASH);
+        String appUUID = getIntent().getStringExtra(APP_UUID);
 
         UModsFragment umodsFragment =
                 (UModsFragment) getSupportFragmentManager().findFragmentById(R.id.umods_content_frame);
@@ -91,7 +86,7 @@ public class UModsActivity extends AppCompatActivity {
         }
         // Create the presenter
         DaggerUModsComponent.builder()
-                .uModsRepositoryComponent(oneKeyApplication.createUModsRepositoryComponentSingleton(appUserPhoneNumber,appUUIDHash))
+                .uModsRepositoryComponent(oneKeyApplication.createUModsRepositoryComponentSingleton(appUserPhoneNumber,appUUID))
                 .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .uModsPresenterModule(new UModsPresenterModule(umodsFragment))
                 .build()

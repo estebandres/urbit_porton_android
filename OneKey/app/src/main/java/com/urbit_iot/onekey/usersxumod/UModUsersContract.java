@@ -20,7 +20,7 @@ public interface UModUsersContract {
 
         void setLoadingIndicator(boolean active);
 
-        void showUModUsers(List<UModUser> uModUsers);
+        void showUModUsers(List<UModUserViewModel> uModUsers);
 
         void showAddUModUser();
 
@@ -61,6 +61,10 @@ public interface UModUsersContract {
         void showUserApprovalFail();
 
         String getContactNameFromPhoneNumber(String phoneNumber);
+
+        void showProgressBar();
+
+        void hideProgressBar();
     }
 
     interface Presenter extends BasePresenter {
@@ -84,12 +88,12 @@ public interface UModUsersContract {
 
         UModUsersFilterType getFiltering();
 
-        void authorizeUser(UModUser uModUser);
+        void authorizeUser(String uModUserPhoneNum);
 
-        void deleteUser(UModUser uModUser);
-
-        void UpDownAdminLevel(UModUser uModUser, boolean toAdmin);
+        void deleteUser(String uModUserPhoneNum);
 
         void setContactsAccessGranted(boolean contactsAccessGranted);
+
+        void upDownAdminLevel(String uModUserPhoneNum, boolean toAdmin);
     }
 }

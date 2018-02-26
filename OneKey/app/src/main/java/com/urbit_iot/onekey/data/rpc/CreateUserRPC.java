@@ -15,7 +15,7 @@ import java.util.List;
  */
 
 public class CreateUserRPC extends RPC {
-    public static final List<Integer> ALLOWED_ERROR_CODES = Arrays.asList(
+    public static final List<Integer> DOC_ERROR_CODES = Arrays.asList(
                 HttpURLConnection.HTTP_BAD_REQUEST,
                 HttpURLConnection.HTTP_NOT_FOUND,
                 HttpURLConnection.HTTP_INTERNAL_ERROR,

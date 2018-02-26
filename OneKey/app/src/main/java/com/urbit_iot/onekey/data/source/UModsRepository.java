@@ -27,6 +27,7 @@ import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
@@ -541,12 +542,12 @@ public class UModsRepository implements UModsDataSource {
     @Override
     public Observable<DeleteUserRPC.Result>
     deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Arguments request) {
-        return null;
+        return mUModsLANDataSource.deleteUModUser(uMod, request);
     }
 
     @Override
-    public Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod) {
-        return mUModsLANDataSource.getUModUsers(uMod);
+    public Observable<GetUsersRPC.Result> getUModUsers(@NonNull UMod uMod, @NonNull GetUsersRPC.Arguments requestArgs) {
+        return mUModsLANDataSource.getUModUsers(uMod, requestArgs);
     }
 
     @Override

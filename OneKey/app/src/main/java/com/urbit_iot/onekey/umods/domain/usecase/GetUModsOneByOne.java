@@ -51,6 +51,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                 .filter(new Func1<UMod, Boolean>() {
                     @Override
                     public Boolean call(UMod uMod) {
+                        Log.d("GetUM1x1", uMod.toString());
                         //TODO Replace actual isOpen logic or remove it completely
                         //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
                         return (uMod.isOpen() || uMod.belongsToAppUser() || uMod.isInAPMode());
@@ -77,6 +78,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                                     .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<UMod>>() {
                                                         @Override
                                                         public Observable<UMod> call(GetMyUserLevelRPC.Result result) {
+                                                            Log.d("getumods1x1_uc", "Get User Status Success: " + result.toString());
                                                             uMod.setAppUserLevel(result.getUserLevel());
                                                             mUModsRepository.saveUMod(uMod);
                                                             return Observable.just(uMod);
@@ -85,6 +87,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                                     .onErrorResumeNext(new Func1<Throwable, Observable<? extends UMod>>() {
                                                         @Override
                                                         public Observable<? extends UMod> call(Throwable throwable) {
+                                                            Log.e("getumods1x1_uc", "Get User Status Fail: " + throwable.getMessage() + "ExcType: " + throwable.getClass().getSimpleName());
                                                             if (throwable instanceof HttpException) {
                                                                 //Check for HTTP UNAUTHORIZED error code
                                                                 int httpErrorCode = ((HttpException) throwable).response().code();

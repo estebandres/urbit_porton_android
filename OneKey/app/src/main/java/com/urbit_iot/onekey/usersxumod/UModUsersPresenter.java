@@ -4,19 +4,20 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
-import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
+import com.urbit_iot.onekey.data.rpc.APIUserType;
+import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.umods.UModsFragment;
-import com.urbit_iot.onekey.usersxumod.domain.usecase.AuthorizeUModUser;
+import com.urbit_iot.onekey.usersxumod.domain.usecase.UpdateUserType;
 import com.urbit_iot.onekey.usersxumod.domain.usecase.DeleteUModUser;
 import com.urbit_iot.onekey.usersxumod.domain.usecase.GetUModUsers;
 import com.urbit_iot.onekey.usersxumod.domain.usecase.UpDownAdminLevel;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -30,11 +31,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * UI as required.
  */
 public class UModUsersPresenter implements UModUsersContract.Presenter {
-
+    /*
+todo inmediato
+        1 repasar API vs RPCs:  api revisar args y results
+    2 agregar errores en los rpc.
+    3 agregar manejo de errores en los casos de uso
+*/
 
     private final UModUsersContract.View mUModsView;
     private final GetUModUsers getUModUsers;
-    private final AuthorizeUModUser mAuthorizeUModUser;
+    private final UpdateUserType mUpdateUserType;
     private final DeleteUModUser mDeleteUModUser;
     private final UpDownAdminLevel upDownAdminLevel;
 
@@ -48,12 +54,12 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
     @Inject
     public UModUsersPresenter(@NonNull UModUsersContract.View umodsView,
                               @NonNull GetUModUsers getUModUsers,
-                              @NonNull AuthorizeUModUser authorizeUModUser,
+                              @NonNull UpdateUserType updateUserType,
                               @NonNull DeleteUModUser deleteUModUser,
                               @NonNull UpDownAdminLevel upDownAdminLevel) {
         mUModsView = checkNotNull(umodsView, "tasksView cannot be null!");
         this.getUModUsers = checkNotNull(getUModUsers, "getUModUUID cannot be null!");
-        mAuthorizeUModUser = checkNotNull(authorizeUModUser, "authorizeUModUser cannot be null!");
+        mUpdateUserType = checkNotNull(updateUserType, "updateUserType cannot be null!");
         mDeleteUModUser = checkNotNull(deleteUModUser, "deleteUModUser cannot be null!");
         this.upDownAdminLevel = checkNotNull(upDownAdminLevel, "upDownAdminLevel cannot be null!");
     }
@@ -88,7 +94,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
     @Override
     public void unsubscribe() {
         getUModUsers.unsubscribe();
-        mAuthorizeUModUser.unsubscribe();
+        mUpdateUserType.unsubscribe();
         mDeleteUModUser.unsubscribe();
     }
 
@@ -123,8 +129,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
         EspressoIdlingResource.increment(); // App is busy until further notice
 
         getUModUsers.unsubscribe();
-        GetUModUsers.RequestValues requestValue = new GetUModUsers.RequestValues(uModUUID,forceUpdate,
-                mCurrentFiltering);
+        GetUModUsers.RequestValues requestValue = new GetUModUsers.RequestValues(uModUUID);//,forceUpdate,mCurrentFiltering
         getUModUsers.execute(requestValue, new Subscriber<GetUModUsers.ResponseValues>() {
             @Override
             public void onCompleted() {
@@ -139,10 +144,96 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
 
             @Override
             public void onNext(GetUModUsers.ResponseValues values) {
-                tryGetFriendlyAliasForUsers(values.getUModUsers());
-                processTasks(values.getUModUsers());
+                Log.d("umod-users_pr", values.getResult().toString());
+                processUModUsersVM(mapResponseToViewModels(values.getResult()));
             }
         });
+    }
+
+    private List<UModUserViewModel> mapResponseToViewModels(GetUsersRPC.Result result){
+        List<UModUserViewModel> userVMsList = new ArrayList<>();
+        String itemMainText;
+        String buttonText;
+        boolean checkboxChecked;
+        boolean checkboxVisible;
+
+        for(GetUsersRPC.UserResult userResult : result.getUsers()){
+
+            if(this.contactsAccessGranted){
+                itemMainText = mUModsView.getContactNameFromPhoneNumber(userResult.getUserName());
+            } else {
+                itemMainText = userResult.getUserName();
+            }
+
+            switch (userResult.getUserType()){
+                case Admin:
+                    buttonText = "DEL";
+                    checkboxChecked = true;
+                    checkboxVisible = true;
+                    break;
+                case User:
+                    buttonText = "DEL";
+                    checkboxChecked = false;
+                    checkboxVisible = true;
+                    break;
+                case Guest:
+                    buttonText = "AUTH";
+                    checkboxChecked = false;
+                    checkboxVisible = false;
+                    break;
+                case NotUser:
+                    buttonText = "BUG";
+                    checkboxChecked = false;
+                    checkboxVisible = false;
+                    break;
+                default:
+                    buttonText = "DEF";
+                    checkboxChecked = false;
+                    checkboxVisible = false;
+            }
+
+            userVMsList.add(
+                    new UModUserViewModel(userResult,
+                            this,
+                            itemMainText,
+                            buttonText,
+                            checkboxChecked,
+                            checkboxVisible) {
+                @Override
+                public void onButtonClicked() {
+                    switch (getUserResult().getUserType()) {
+                        case Admin:
+                            getPresenter().deleteUser(getUserResult().getUserName());
+                            break;
+                        case User:
+                            getPresenter().deleteUser(getUserResult().getUserName());
+                            break;
+                        case Guest:
+                            getPresenter().authorizeUser(getUserResult().getUserName());
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                @Override
+                public void onCheckBoxClicked(Boolean cbChecked) {
+                    switch (getUserResult().getUserType()) {
+                        case Admin:
+                            getPresenter().upDownAdminLevel(getUserResult().getUserName(),false);
+                            break;
+                        case User:
+                            getPresenter().upDownAdminLevel(getUserResult().getUserName(),true);
+                            break;
+                        case Guest:
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
+        }
+        return userVMsList;
     }
 
     private void tryGetFriendlyAliasForUsers(List<UModUser> uModUsers){
@@ -155,13 +246,13 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
         }
     }
 
-    private void processTasks(List<UModUser> uModUsers) {
-        if (uModUsers.isEmpty()) {
+    private void processUModUsersVM(List<UModUserViewModel> uModUsersVMs) {
+        if (uModUsersVMs.isEmpty()) {
             // Show a message indicating there are no uMods for that filter type.
-            processEmptyTasks();
+            processNoUsersFound();
         } else {
             // Show the list of uMods
-            mUModsView.showUModUsers(uModUsers);
+            mUModsView.showUModUsers(uModUsersVMs);
             // Set the filter label's text.
             showFilterLabel();
         }
@@ -181,7 +272,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
         }
     }
 
-    private void processEmptyTasks() {
+    private void processNoUsersFound() {
         switch (mCurrentFiltering) {
             case NOT_ADMINS:
                 mUModsView.showNoActiveTasks();
@@ -244,17 +335,22 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
     }
 
     @Override
-    public void authorizeUser(UModUser uModUser) {
+    public void authorizeUser(String uModUserPhoneNum) {
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
-        mAuthorizeUModUser.unsubscribe();
-        AuthorizeUModUser.RequestValues requestValue = new AuthorizeUModUser.RequestValues(uModUser);
-        mAuthorizeUModUser.execute(requestValue, new Subscriber<AuthorizeUModUser.ResponseValues>() {
+        mUModsView.showProgressBar();
+        mUpdateUserType.unsubscribe();
+        UpdateUserType.RequestValues requestValue =
+                new UpdateUserType.RequestValues(
+                        uModUserPhoneNum,
+                        this.uModUUID,
+                        APIUserType.Admin);
+        mUpdateUserType.execute(requestValue, new Subscriber<UpdateUserType.ResponseValues>() {
             @Override
             public void onCompleted() {
-                mUModsView.setLoadingIndicator(false);
+                mUModsView.hideProgressBar();
             }
 
             @Override
@@ -263,7 +359,7 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
             }
 
             @Override
-            public void onNext(AuthorizeUModUser.ResponseValues responseValues) {
+            public void onNext(UpdateUserType.ResponseValues responseValues) {
                 Log.d("um_usrs_pr", "RPC is " + responseValues.getResult().toString());
                 mUModsView.showUserApprovalSuccess();
             }
@@ -271,21 +367,23 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
     }
 
     @Override
-    public void deleteUser(UModUser uModUser) {
+    public void deleteUser(String uModUserPhoneNum) {
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
+        mUModsView.showProgressBar();
         mDeleteUModUser.unsubscribe();
-        DeleteUModUser.RequestValues requestValue = new DeleteUModUser.RequestValues(uModUser);
+        DeleteUModUser.RequestValues requestValue = new DeleteUModUser.RequestValues(uModUserPhoneNum, uModUUID);
         mDeleteUModUser.execute(requestValue, new Subscriber<DeleteUModUser.ResponseValues>() {
             @Override
             public void onCompleted() {
-                mUModsView.setLoadingIndicator(false);
+                mUModsView.hideProgressBar();
             }
 
             @Override
             public void onError(Throwable e) {
+                Log.d("um_usrs_pr", "Delete Fail: " + e.getMessage());
                 mUModsView.showLoadingUModUsersError();
             }
 
@@ -298,17 +396,22 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
     }
 
     @Override
-    public void UpDownAdminLevel(UModUser uModUser, boolean toAdmin) {
+    public void upDownAdminLevel(String userPhoneNum, boolean toAdmin) {
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
-        this.upDownAdminLevel.unsubscribe();
-        UpDownAdminLevel.RequestValues requestValue = new UpDownAdminLevel.RequestValues(uModUser, toAdmin);
-        this.upDownAdminLevel.execute(requestValue, new Subscriber<UpDownAdminLevel.ResponseValues>() {
+        mUModsView.showProgressBar();
+        this.mUpdateUserType.unsubscribe();
+        UpdateUserType.RequestValues requestValue =
+                new UpdateUserType.RequestValues(
+                        userPhoneNum,
+                        this.uModUUID,
+                        toAdmin?APIUserType.Admin:APIUserType.User);
+        this.mUpdateUserType.execute(requestValue, new Subscriber<UpdateUserType.ResponseValues>() {
             @Override
             public void onCompleted() {
-                mUModsView.showSuccessfullySavedMessage();
+                mUModsView.hideProgressBar();
             }
 
             @Override
@@ -318,8 +421,8 @@ public class UModUsersPresenter implements UModUsersContract.Presenter {
             }
 
             @Override
-            public void onNext(UpDownAdminLevel.ResponseValues responseValues) {
-                Log.d("um_usrs_pr", "RPC is " + responseValues.getResponse().toString());
+            public void onNext(UpdateUserType.ResponseValues responseValues) {
+                Log.d("um_usrs_pr", "RPC is " + responseValues.getResult().toString());
                 mUModsView.showUserApprovalSuccess();
             }
         });

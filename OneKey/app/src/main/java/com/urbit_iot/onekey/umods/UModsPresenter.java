@@ -67,7 +67,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         mSetOngoingNotificationStatus = checkNotNull(setOngoingNotificationStatus, "setOngoingNotificationStatus cannot be null!");
         mClearAlienUMods = checkNotNull(clearAlienUMods,
                 "clearAlienUMods cannot be null!");
-        mTriggerUMod = checkNotNull(triggerUMod, "triggerUMod cannot be null!");
+        mTriggerUMod = checkNotNull(triggerUMod, "userTriggerUMod cannot be null!");
         mRequestAccess = checkNotNull(requestAccess, "requestAccess cannot be null!");
         //this.mRetrofitUtils = mRetrofitUtils;
     }
@@ -266,23 +266,25 @@ public class UModsPresenter implements UModsContract.Presenter {
                 checkboxChecked, checkboxVisible, buttonText, buttonVisible, itemOnClickListenerEnabled) {
             @Override
             public void onButtonClicked() {
+                //TODO this code shouldnt depend on external objects.
                 if(uMod.belongsToAppUser()){
-                    this.getPresenter().triggerUMod(uModUUID);
+                    this.getPresenter().triggerUMod(getuModUUID());
                 } else {
+                    //TODO this code shouldnt depend on external objects.
                     if (uMod.getState() == UMod.State.STATION_MODE){
-                        this.getPresenter().requestAccess(uModUUID);
+                        this.getPresenter().requestAccess(getuModUUID());
                     }
                 }
             }
 
             @Override
             public void onCheckBoxClicked(Boolean cbChecked) {
-                this.getPresenter().setNotificationStatus(uModUUID, cbChecked);
+                this.getPresenter().setNotificationStatus(getuModUUID(), cbChecked);
             }
 
             @Override
             public void onItemClicked() {
-                this.getPresenter().openUModConfig(uModUUID);
+                this.getPresenter().openUModConfig(getuModUUID());
             }
         };
     }
@@ -479,6 +481,7 @@ public class UModsPresenter implements UModsContract.Presenter {
             public void onNext(RequestAccess.ResponseValues responseValues) {
                 Log.d("umods_pr", responseValues.getResult().toString());
                 mUModsView.showRequestAccessCompletedMessage();
+                loadUModsOneByOne(true,true);
             }
         });
     }

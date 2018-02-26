@@ -23,6 +23,7 @@ import com.google.common.collect.Multimap;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
@@ -158,12 +159,6 @@ public class FakeUModsLANDataSource implements UModsDataSource {
         UMODS_SERVICE_DATA.remove(uModUUID);
     }
 
-    @Override
-    public Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod) {
-        return Observable.from(UMODS_USERS_SERVICE_DATA.get(uMod.getUUID())).
-                delay(700,TimeUnit.MILLISECONDS).
-                toList();
-    }
 
     @Override
     public Observable<File> getFirmwareImageFile(UMod uMod) {
@@ -197,6 +192,11 @@ public class FakeUModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<DeleteUserRPC.Result> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Arguments requestArguments) {
+        return null;
+    }
+
+    @Override
+    public Observable<GetUsersRPC.Result> getUModUsers(@NonNull UMod uMod, @NonNull GetUsersRPC.Arguments requestArgs) {
         return null;
     }
 

@@ -115,7 +115,7 @@ public class AppUser {
     }
 
     public String getCredentialsString(){
-        return this.phoneNumber + GlobalConstants.CREDENTIALS_REALM_SEPARATOR + this.appUserCredentialsHash;
+        return this.phoneNumber.replace("+","") + GlobalConstants.CREDENTIALS_REALM_SEPARATOR + this.appUserCredentialsHash;
     }
 
     @Override

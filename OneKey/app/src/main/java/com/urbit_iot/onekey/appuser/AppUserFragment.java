@@ -6,8 +6,6 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -121,7 +119,7 @@ public class AppUserFragment extends Fragment implements AppUserContract.View {
         //TODO: Should I use some Intent FLAGS?
         Intent goToUModsActivity = new Intent(getActivity(), UModsActivity.class);
         goToUModsActivity.putExtra(UModsActivity.APP_USER_PHONE_NUMBER,userPhoneNumber);
-        goToUModsActivity.putExtra(UModsActivity.APP_UUID_HASH,appUUIDHash);
+        goToUModsActivity.putExtra(UModsActivity.APP_UUID,appUUIDHash);
         startActivity(goToUModsActivity);
         getActivity().finish();
     }

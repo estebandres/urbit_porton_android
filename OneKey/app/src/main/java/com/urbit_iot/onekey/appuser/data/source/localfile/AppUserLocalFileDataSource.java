@@ -74,8 +74,10 @@ public class AppUserLocalFileDataSource implements AppUserDataSource {
             }
         }
         String appUUID = this.getAppUUID();
-        String appUUIDHash = this.getAppUserCredentialsHash(appUserPhoneNumber + GlobalConstants.CREDENTIALS_REALM_SEPARATOR + appUUID);
-        newAppUser = new AppUser(appUserPhoneNumber,appUUID,appUUIDHash);
+        String credentialsHash =
+                this.getAppUserCredentialsHash(appUserPhoneNumber.replace("+","")
+                + GlobalConstants.CREDENTIALS_REALM_SEPARATOR + appUUID);
+        newAppUser = new AppUser(appUserPhoneNumber,appUUID,credentialsHash);
         String appUserString = this.gson.toJson(newAppUser);
         this.serializedAppUserPref.set(appUserString);
         return Observable.just(newAppUser);

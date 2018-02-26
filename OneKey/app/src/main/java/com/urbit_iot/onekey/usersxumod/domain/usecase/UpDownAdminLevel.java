@@ -41,7 +41,7 @@ public class UpDownAdminLevel extends SimpleUseCase<UpDownAdminLevel.RequestValu
         */
         final UModUser.Level newUserLevel;
         UpDownAdminLevel.ResponseValues defaultResponse = new UpDownAdminLevel.ResponseValues(
-                new UpdateUserRPC.Result());
+                new UpdateUserRPC.Result("updated???"));
 
         if(values.isUModUserToBeAdmin()){
             //If for some reason app tries to ADMIN an ADMIN
@@ -70,7 +70,7 @@ public class UpDownAdminLevel extends SimpleUseCase<UpDownAdminLevel.RequestValu
                 .flatMap(new Func1<UMod, Observable<UpdateUserRPC.Result>>() {
                     @Override
                     public Observable<UpdateUserRPC.Result> call(UMod uMod) {
-                        UpdateUserRPC.Arguments updateUserArgs = new UpdateUserRPC.Arguments(values.getUModUser().getPhoneNumber(), newUserLevel);
+                        UpdateUserRPC.Arguments updateUserArgs = new UpdateUserRPC.Arguments(values.getUModUser().getPhoneNumber(), newUserLevel.asAPIUserType());
                         return mUModsRepository.updateUModUser(uMod,updateUserArgs);
                     }
                 })

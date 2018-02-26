@@ -99,6 +99,13 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                         if (throwable instanceof HttpException) {
                                                             //Check for HTTP UNAUTHORIZED error code
                                                             int httpErrorCode = ((HttpException) throwable).response().code();
+                                                            String errorMessage = "";
+                                                            try {
+                                                                errorMessage = ((HttpException) throwable).response().errorBody().string();
+                                                            }catch (Exception exc){
+                                                                return Observable.error(exc);
+                                                            }
+
                                                             //If user is already created
                                                             //Improve  httpErrorCode != 0 to isValidHttpCode(httpErrorCode)
                                                             if (httpErrorCode != 0) {
@@ -107,11 +114,12 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                     mUModsRepository.saveUMod(uMod);
                                                                     return Observable.just(uMod);
                                                                 }
-                                                                if (httpErrorCode == 409){
+                                                                if (httpErrorCode == 409
+                                                                        || errorMessage.contains("already")){
                                                                     //TODO evaluate the benefit of getting the user_type in the error body.
                                                                     //That may save us the next request (Deserialization using JSONObject)
                                                                     GetMyUserLevelRPC.Arguments getUserLevelArgs =
-                                                                            new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber());
+                                                                            new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber().replace("+",""));
                                                                     return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)
                                                                             .doOnError(new Action1<Throwable>() {
                                                                                 @Override
@@ -122,7 +130,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                             .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<UMod>>() {
                                                                                 @Override
                                                                                 public Observable<UMod> call(GetMyUserLevelRPC.Result result) {
-                                                                                    Log.d("getumod+info_uc","Get User Level Succeeded!");
+                                                                                    Log.d("getumod+info_uc","Get User Level Succeeded!: "+result.toString());
                                                                                     uMod.setAppUserLevel(result.getUserLevel());
                                                                                     mUModsRepository.saveUMod(uMod);
                                                                                     return Observable.just(uMod);
@@ -139,6 +147,24 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                     }
                                 });
 
+                    }
+                })
+                .flatMap(new Func1<UMod, Observable<UMod>>() {
+                    @Override
+                    public Observable<UMod> call(final UMod uMod) {
+                        SysGetInfoRPC.Arguments args = new SysGetInfoRPC.Arguments();
+                        return mUModsRepository.getSystemInfo(uMod,args)//This request should not fail since it is done with urbit:urbit
+                                .flatMap(new Func1<SysGetInfoRPC.Result, Observable<UMod>>() {
+                                    @Override
+                                    public Observable<UMod> call(SysGetInfoRPC.Result result) {
+                                        //TODO review: What fields should be updated??
+                                        Log.d("getumod+info_uc", result.toString());
+                                        uMod.setSWVersion(result.getFwVersion());
+                                        uMod.setWifiSSID(result.getWifi().getSsid());
+                                        uMod.setConnectionAddress(result.getWifi().getStaIp());
+                                        return Observable.just(uMod);
+                                    }
+                                });
                     }
                 })
                 .map(new Func1<UMod, ResponseValues>() {

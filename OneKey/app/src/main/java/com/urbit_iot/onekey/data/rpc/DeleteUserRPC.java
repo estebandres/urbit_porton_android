@@ -3,11 +3,21 @@ package com.urbit_iot.onekey.data.rpc;
 import com.google.gson.annotations.SerializedName;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
+import java.net.HttpURLConnection;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by andresteve07 on 8/11/17.
  */
 
 public class DeleteUserRPC extends RPC {
+    public static final List<Integer> DOC_ERROR_CODES = Arrays.asList(
+            HttpURLConnection.HTTP_NOT_FOUND,
+            HttpURLConnection.HTTP_INTERNAL_ERROR,
+            //Digest Auth + ACL this call is performed with user:pass could fail.
+            HttpURLConnection.HTTP_UNAUTHORIZED,
+            HttpURLConnection.HTTP_FORBIDDEN);
 
     public static class Arguments{
 
@@ -46,7 +56,26 @@ public class DeleteUserRPC extends RPC {
     }
 
     public static class Result{
-        public Result(){}
+        @SerializedName("Response")
+        private String response;
+        public Result(String response){
+            this.response = response;
+        }
+
+        public String getResponse() {
+            return response;
+        }
+
+        public void setResponse(String response) {
+            this.response = response;
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "response='" + response + '\'' +
+                    '}';
+        }
     }
 
     public static class Response extends RPC.Response {

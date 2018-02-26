@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
-import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.APIUserType;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
@@ -21,18 +21,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by andresteve07 on 8/21/17.
  */
 
-public class AuthorizeUModUser extends SimpleUseCase<AuthorizeUModUser.RequestValues, AuthorizeUModUser.ResponseValues> {
+public class UpdateUserType extends SimpleUseCase<UpdateUserType.RequestValues, UpdateUserType.ResponseValues> {
     private final UModsRepository mUModsRepository;
 
     @Inject
-    public AuthorizeUModUser(@NonNull UModsRepository uModsRepository,
-                             @NonNull BaseSchedulerProvider schedulerProvider) {
+    public UpdateUserType(@NonNull UModsRepository uModsRepository,
+                          @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(uModsRepository, "uModsRepository cannot be null!");
     }
 
     @Override
-    public Observable<AuthorizeUModUser.ResponseValues> buildUseCase(final AuthorizeUModUser.RequestValues values) {
+    public Observable<UpdateUserType.ResponseValues> buildUseCase(final UpdateUserType.RequestValues values) {
         /*
         if (values.isForceUpdate()) {
             mUModsRepository.refreshUMods();
@@ -42,39 +42,54 @@ public class AuthorizeUModUser extends SimpleUseCase<AuthorizeUModUser.RequestVa
         /*
         final UpdateUserRPC.Request request = new UpdateUserRPC.Request(
                 new UpdateUserRPC.Arguments(values.getUModUser().getPhoneNumber(), UModUser.Level.AUTHORIZED),
-                values.uModUser.getuModUUID(),
+                values.uModUserPhone.getuModUUID(),
                 666);
          */
 
         //TODO how many times should I try to execute the RPC.
-        return mUModsRepository.getUMod(values.getUModUser().getuModUUID())
+        return mUModsRepository.getUMod(values.getuModUUID())
                 .flatMap(new Func1<UMod, Observable<UpdateUserRPC.Result>>() {
                     @Override
                     public Observable<UpdateUserRPC.Result> call(UMod uMod) {
-                        UpdateUserRPC.Arguments updateUserArgs = new UpdateUserRPC.Arguments(values.getUModUser().getPhoneNumber(), UModUser.Level.AUTHORIZED);
+
+                        UpdateUserRPC.Arguments updateUserArgs =
+                                new UpdateUserRPC.Arguments(
+                                        values.getuModUserPhone(),
+                                        values.getApiUserType());
                         return mUModsRepository.updateUModUser(uMod,updateUserArgs);
                     }
                 })
-                .map(new Func1<UpdateUserRPC.Result, AuthorizeUModUser.ResponseValues>() {
+                .map(new Func1<UpdateUserRPC.Result, UpdateUserType.ResponseValues>() {
                     @Override
-                    public AuthorizeUModUser.ResponseValues call(UpdateUserRPC.Result response) {
-                        return new AuthorizeUModUser.ResponseValues(response);
+                    public UpdateUserType.ResponseValues call(UpdateUserRPC.Result response) {
+                        return new UpdateUserType.ResponseValues(response);
                     }
                 });
     }
 
     public static final class RequestValues implements RxUseCase.RequestValues {
 
-        private final UModUser uModUser;
+        private final String uModUserPhone;
+        private final String uModUUID;
+        private final APIUserType apiUserType;
 
-        public RequestValues(@NonNull UModUser uModUser) {
-            this.uModUser = checkNotNull(uModUser, "uModUser cannot be null!");
+        public RequestValues(@NonNull String uModUserPhone, @NonNull String uModUUID, @NonNull APIUserType apiUserType) {
+            this.uModUserPhone = checkNotNull(uModUserPhone, "uModUserPhone cannot be null!");
+            this.uModUUID = checkNotNull(uModUUID, "uModUUID cannot be null!");
+            this.apiUserType = checkNotNull(apiUserType,"apiUserType cannot be null!") ;
         }
 
-        public UModUser getUModUser() {
-            return this.uModUser;
+        public String getuModUserPhone() {
+            return this.uModUserPhone;
         }
 
+        public String getuModUUID(){
+            return this.uModUUID;
+        }
+
+        public APIUserType getApiUserType() {
+            return apiUserType;
+        }
     }
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {

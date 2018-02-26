@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
@@ -134,9 +135,10 @@ public class FakeUModsRemoteDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod) {
+    public Observable<GetUsersRPC.Result> getUModUsers(@NonNull UMod uMod, @NonNull GetUsersRPC.Arguments requestArgs) {
         return null;
     }
+
 
     @Override
     public Observable<SysGetInfoRPC.Result> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Arguments request) {

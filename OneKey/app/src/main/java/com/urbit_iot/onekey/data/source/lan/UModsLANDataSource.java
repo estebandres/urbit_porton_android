@@ -29,24 +29,23 @@ import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
-import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
-import com.urbit_iot.onekey.umodconfig.domain.usecase.FactoryResetUMod;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -54,9 +53,7 @@ import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import okio.BufferedSource;
 import retrofit2.Response;
-import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
@@ -258,10 +255,10 @@ public class UModsLANDataSource implements UModsDataSource {
     @Override
     public Observable<GetMyUserLevelRPC.Result>
     getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Arguments request) {
-        /*
+
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return this.defaultUModsService.getAppUserLevel(request);
-         */
+
         //TODO remove mock
         /*
         GetMyUserLevelRPC.Response response = new GetMyUserLevelRPC.Response(
@@ -269,18 +266,24 @@ public class UModsLANDataSource implements UModsDataSource {
                 request.getCallTag(),
                 new RPC.ResponseError(null,null));
         */
+        /*
         GetMyUserLevelRPC.Result result =
                 new GetMyUserLevelRPC.Result(APIUserType.Admin);
 
         return Observable.just(result)
                 .delay(300L, TimeUnit.MILLISECONDS);
+        */
     }
 
     @Override
     public Observable<TriggerRPC.Result> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Arguments request) {
 
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
-        return this.appUserUModsService.triggerUMod(request);
+        if (uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR){
+            return this.appUserUModsService.adminTriggerUMod(request);
+        } else {
+            return this.appUserUModsService.userTriggerUMod(request);
+        }
 
         //TODO remove mock
         /*
@@ -304,10 +307,8 @@ public class UModsLANDataSource implements UModsDataSource {
     @Override
     public Observable<CreateUserRPC.Result> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Arguments request) {
 
-
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return this.defaultUModsService.createUser(request);
-
 
         //TODO remove mock
         /*
@@ -317,9 +318,10 @@ public class UModsLANDataSource implements UModsDataSource {
                 null
         );
          */
+
         /*
         final CreateUserRPC.Result result =
-                new CreateUserRPC.Result(GetMyUserLevelRPC.UModUserType.Admin);
+                new CreateUserRPC.Result(APIUserType.Admin);
         return Observable.just(result).delay(680, TimeUnit.MILLISECONDS);
         */
     }
@@ -336,33 +338,51 @@ public class UModsLANDataSource implements UModsDataSource {
                 "STEVE MOCK RESPONSE",
                 new RPC.ResponseError(null,null));
          */
-        final UpdateUserRPC.Result mockedResult = new UpdateUserRPC.Result();
+        final UpdateUserRPC.Result mockedResult = new UpdateUserRPC.Result("update success");
         return Observable.just(mockedResult).delay(850,TimeUnit.MILLISECONDS);
     }
 
     @Override
     public Observable<DeleteUserRPC.Result> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Arguments request) {
-        return null;
+        /*
+        this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
+        return this.appUserUModsService.deleteUser(request);
+        */
+
+        DeleteUserRPC.Result result = new DeleteUserRPC.Result("user deleted");
+
+        return Observable.just(result).delay(500L, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public Observable<List<UModUser>> getUModUsers(@NonNull UMod uMod) {
-        return Observable.from(UMODS_USERS_SERVICE_DATA.get(uMod.getUUID()))
-                .delay(700,TimeUnit.MILLISECONDS)
-                .toList();
+    public Observable<GetUsersRPC.Result> getUModUsers(@NonNull UMod uMod, @NonNull GetUsersRPC.Arguments requestArgs) {
+        this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
+        return this.appUserUModsService.getUsers(requestArgs);
+
+        /*
+        List<GetUsersRPC.UserResult> usersResults = new ArrayList<>();
+        for (UModUser user :
+                UMODS_USERS_SERVICE_DATA.values()) {
+            usersResults.add(new GetUsersRPC.UserResult(user.getPhoneNumber(), user.getUserStatus().asAPIUserType()));
+        }
+        GetUsersRPC.Result result = new GetUsersRPC.Result(usersResults);
+
+        return Observable.just(result).delay(700L, TimeUnit.MILLISECONDS);
+        */
     }
 
 
     @Override
     public Observable<SysGetInfoRPC.Result> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Arguments request) {
-        /*
+
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return defaultUModsService.getSystemInfo(request);
-         */
+
         //TODO remove mock
         /*
         SysGetInfoRPC.Response mockedResponse = new SysGetInfoRPC.Response(new SysGetInfoRPC.Result(null, "v1.0.2", null, null, null, null, null, null, null, null, null, new SysGetInfoRPC.Result.Wifi("192.168.212.134","192.168.212.1",null,"MOCKED_SSID"), null),"STEVE MOCK", null);
          */
+        /*
         final SysGetInfoRPC.Result mockedResult =
                 new SysGetInfoRPC.Result(
                         null,
@@ -383,6 +403,7 @@ public class UModsLANDataSource implements UModsDataSource {
                                 "MOCKED_SSID"),
                         null);
         return Observable.just(mockedResult).delay(330L, TimeUnit.MILLISECONDS);
+        */
     }
 
     @Override

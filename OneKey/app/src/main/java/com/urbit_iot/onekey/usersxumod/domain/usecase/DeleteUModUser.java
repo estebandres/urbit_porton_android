@@ -1,19 +1,25 @@
 package com.urbit_iot.onekey.usersxumod.domain.usecase;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
-import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+
 import javax.inject.Inject;
 
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.functions.Func1;
+import rx.functions.Func2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -42,16 +48,48 @@ public class DeleteUModUser extends SimpleUseCase<DeleteUModUser.RequestValues, 
         /*
         final DeleteUserRPC.Request request = new DeleteUserRPC.Request(
                 new DeleteUserRPC.Arguments(values.getUModUser().getPhoneNumber()),
-                values.uModUser.getuModUUID(),
+                values.uModUserPhoneNum.getuModUUID(),
                 666);
          */
 
-        return mUModsRepository.getUMod(values.getUModUser().getuModUUID())
+        return mUModsRepository.getUMod(values.getuModUUID())
                 .flatMap(new Func1<UMod, Observable<DeleteUserRPC.Result>>() {
                     @Override
                     public Observable<DeleteUserRPC.Result> call(UMod uMod) {
-                        DeleteUserRPC.Arguments deleteUserArgs = new DeleteUserRPC.Arguments(values.getUModUser().getPhoneNumber());
+                        DeleteUserRPC.Arguments deleteUserArgs = new DeleteUserRPC.Arguments(values.getuModUserPhoneNum());
                         return mUModsRepository.deleteUModUser(uMod, deleteUserArgs);
+                    }
+                })
+                .onErrorResumeNext(new Func1<Throwable, Observable<? extends DeleteUserRPC.Result>>() {
+                    @Override
+                    public Observable<? extends DeleteUserRPC.Result> call(Throwable throwable) {
+                        if (throwable instanceof HttpException) {
+                            //Check for HTTP UNAUTHORIZED error code
+                            int httpErrorCode = ((HttpException) throwable).response().code();
+                            Log.e("req_access_uc", "CreateUser Failed: " + httpErrorCode);
+                            if (CreateUserRPC.DOC_ERROR_CODES.contains(httpErrorCode)) {
+                                if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
+                                        || httpErrorCode == HttpURLConnection.HTTP_FORBIDDEN) {
+
+                                }
+                                if (httpErrorCode == HttpURLConnection.HTTP_NOT_FOUND){
+
+                                }
+                            }
+                        }
+                        return Observable.error(throwable);
+                    }
+                })
+                .retry(new Func2<Integer, Throwable, Boolean>() {
+                    @Override
+                    public Boolean call(Integer retryCount, Throwable throwable) {
+                        Log.e("delete-user_uc", "Retry count: " + retryCount + "\n Excep msge: " + throwable.getMessage());
+                        if (retryCount < 2 && (throwable instanceof IOException)){
+                            mUModsRepository.refreshUMods();
+                            return true;
+                        } else {
+                            return false;
+                        }
                     }
                 })
                 .map(new Func1<DeleteUserRPC.Result, DeleteUModUser.ResponseValues>() {
@@ -64,14 +102,20 @@ public class DeleteUModUser extends SimpleUseCase<DeleteUModUser.RequestValues, 
 
     public static final class RequestValues implements RxUseCase.RequestValues {
 
-        private final UModUser uModUser;
+        private final String uModUserPhoneNum;
+        private final String uModUUID;
 
-        public RequestValues(@NonNull UModUser uModUser) {
-            this.uModUser = checkNotNull(uModUser, "uModUser cannot be null!");
+        public RequestValues(@NonNull String uModUserPhoneNum, String uModUUID) {
+            this.uModUserPhoneNum = checkNotNull(uModUserPhoneNum, "uModUserPhoneNum cannot be null!");
+            this.uModUUID = uModUUID;
         }
 
-        public UModUser getUModUser() {
-            return this.uModUser;
+        public String getuModUserPhoneNum() {
+            return this.uModUserPhoneNum;
+        }
+
+        public String getuModUUID() {
+            return uModUUID;
         }
     }
 
@@ -86,5 +130,26 @@ public class DeleteUModUser extends SimpleUseCase<DeleteUModUser.RequestValues, 
         public DeleteUserRPC.Result getResult() {
             return result;
         }
+    }
+
+    public static class UserNotFoundForDeletionException extends Exception{
+        private String userPhoneNum;
+        public UserNotFoundForDeletionException(String userPhoneNum){
+            //TODO message to globalConstants??
+            super("Delete cannot be performed. User " + userPhoneNum + " not found");
+            this.userPhoneNum = userPhoneNum;
+        }
+
+        public String getUserPhoneNum() {
+            return userPhoneNum;
+        }
+
+        public void setUserPhoneNum(String userPhoneNum) {
+            this.userPhoneNum = userPhoneNum;
+        }
+    }
+
+    public static class ForbbidenDeletionException{
+
     }
 }

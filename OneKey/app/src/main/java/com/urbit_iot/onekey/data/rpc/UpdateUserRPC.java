@@ -1,24 +1,34 @@
 package com.urbit_iot.onekey.data.rpc;
 
 import com.google.gson.annotations.SerializedName;
-import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
+
+import java.net.HttpURLConnection;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by andresteve07 on 8/11/17.
  */
 
 public class UpdateUserRPC extends RPC {
+    public static final List<Integer> DOC_ERROR_CODES = Arrays.asList(
+            HttpURLConnection.HTTP_NOT_FOUND,
+            HttpURLConnection.HTTP_BAD_REQUEST,
+            //Digest Auth + ACL this call is performed with user:pass COULD fail.
+            HttpURLConnection.HTTP_UNAUTHORIZED,
+            HttpURLConnection.HTTP_FORBIDDEN);
+
     public static class Arguments{
 
         @SerializedName("user_name")
         private String userID;
         @SerializedName("user_type")
-        private UModUser.Level userLevel;
+        private APIUserType userType;
 
-        public Arguments(String userID, UModUser.Level userLevel) {
+        public Arguments(String userID, APIUserType userType) {
             this.userID = userID;
-            this.userLevel = userLevel;
+            this.userType = userType;
         }
 
         public String getUserID() {
@@ -29,12 +39,12 @@ public class UpdateUserRPC extends RPC {
             this.userID = userID;
         }
 
-        public UModUser.Level getUserLevel() {
-            return userLevel;
+        public APIUserType getUserType() {
+            return userType;
         }
 
-        public void setUserLevel(UModUser.Level userLevel) {
-            this.userLevel = userLevel;
+        public void setUserType(APIUserType userType) {
+            this.userType = userType;
         }
     }
 
@@ -57,7 +67,26 @@ public class UpdateUserRPC extends RPC {
     }
 
     public static class Result{
-        public Result(){}
+        @SerializedName("Response")
+        private String response;
+        public Result(String response){
+            this.response = response;
+        }
+
+        public String getResponse() {
+            return response;
+        }
+
+        public void setResponse(String response) {
+            this.response = response;
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "response='" + response + '\'' +
+                    '}';
+        }
     }
 
     public static class Response extends RPC.Response {

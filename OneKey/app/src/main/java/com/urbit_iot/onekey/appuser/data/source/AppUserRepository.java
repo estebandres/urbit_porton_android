@@ -6,6 +6,7 @@ import com.urbit_iot.onekey.util.dagger.Local;
 import javax.inject.Inject;
 
 import rx.Observable;
+import rx.functions.Action1;
 
 /**
  * Created by andresteve07 on 11/14/17.
@@ -14,10 +15,12 @@ import rx.Observable;
 public class AppUserRepository implements AppUserDataSource {
 
     private AppUserDataSource mFileDataSource;
+    private AppUser mCachedAppUser;
 
     @Inject
     public AppUserRepository(@Local AppUserDataSource fileDataSource){
         mFileDataSource = fileDataSource;
+        mCachedAppUser = null;
     }
 
     @Override
@@ -27,7 +30,13 @@ public class AppUserRepository implements AppUserDataSource {
 
     @Override
     public Observable<AppUser> createAppUser(String appUserPhoneNumber) {
-        return mFileDataSource.createAppUser(appUserPhoneNumber);
+        return mFileDataSource.createAppUser(appUserPhoneNumber)
+                .doOnNext(new Action1<AppUser>() {
+                    @Override
+                    public void call(AppUser appUser) {
+                        mCachedAppUser = appUser;
+                    }
+                });
     }
 
     @Override
@@ -37,6 +46,11 @@ public class AppUserRepository implements AppUserDataSource {
 
     @Override
     public Observable<AppUser> getAppUser() {
-        return mFileDataSource.getAppUser();
+        if (mCachedAppUser != null){
+            return Observable.just(mCachedAppUser);
+        } else {
+            return mFileDataSource.getAppUser();
+        }
+
     }
 }

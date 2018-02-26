@@ -25,7 +25,6 @@ import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
 import com.urbit_iot.onekey.appuser.domain.AppUser;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.rpc.APIUserType;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
@@ -38,7 +37,6 @@ import javax.inject.Inject;
 
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
-import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.subjects.PublishSubject;
@@ -111,7 +109,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                             //Check for HTTP UNAUTHORIZED error code
                                                             int httpErrorCode = ((HttpException) throwable).response().code();
                                                             Log.e("req_access_uc", "CreateUser Failed: " + httpErrorCode);
-                                                            if (CreateUserRPC.ALLOWED_ERROR_CODES.contains(httpErrorCode)){
+                                                            if (CreateUserRPC.DOC_ERROR_CODES.contains(httpErrorCode)){
                                                                 if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
                                                                 || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
                                                                     Log.e("req_access_uc", "CreateUser failed to Auth with urbit:urbit CODE: " + httpErrorCode);

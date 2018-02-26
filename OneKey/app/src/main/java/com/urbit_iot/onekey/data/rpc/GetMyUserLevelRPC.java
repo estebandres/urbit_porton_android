@@ -75,6 +75,13 @@ public class GetMyUserLevelRPC {
         public void setAPIUserType(APIUserType APIUserType) {
             this.APIUserType = APIUserType;
         }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "APIUserType=" + APIUserType +
+                    '}';
+        }
     }
 
     public static class Response extends RPC.Response {

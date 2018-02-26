@@ -434,7 +434,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         /*
         @Override
         public void onActionButtonClick(UMod actedUMod) {
-            mPresenter.triggerUMod(actedUMod);
+            mPresenter.userTriggerUMod(actedUMod);
         }
 
         @Override

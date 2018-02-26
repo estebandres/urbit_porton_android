@@ -31,7 +31,6 @@ import com.urbit_iot.onekey.util.dagger.Internet;
 import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.LanOnly;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
-import com.urbit_iot.onekey.util.retrofit2.RetrofitUtils;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.util.Map;
@@ -55,12 +54,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class UModsRepositoryModule {
 
     private String appUserPhoneNumber;
-    private String appUUIDHash;
+    private String appUUID;
 
     //TODO replace private fields with the appUserRepository instance
-    public UModsRepositoryModule(String appUserPhoneNumber, String appUUIDHash) {
+    public UModsRepositoryModule(String appUserPhoneNumber, String appUUID) {
         this.appUserPhoneNumber = appUserPhoneNumber;
-        this.appUUIDHash = appUUIDHash;
+        this.appUUID = appUUID;
     }
 
     @Singleton
@@ -183,7 +182,7 @@ public class UModsRepositoryModule {
     @Singleton
     @Named("app_user")
     OkHttpClient provideDigestAuthAppUserOkHttpClient(UrlHostSelectionInterceptor urlHostSelectionInterceptor){
-        final Credentials credentials = new Credentials(this.appUserPhoneNumber,this.appUUIDHash);
+        final Credentials credentials = new Credentials(this.appUserPhoneNumber.replace("+",""),this.appUUID);
         final DigestAuthenticator digestAuthenticator = new DigestAuthenticator(credentials);
         final Map<String, CachingAuthenticator> authCache = new ConcurrentHashMap<>();
         return new OkHttpClient.Builder()
