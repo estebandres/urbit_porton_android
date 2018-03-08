@@ -32,7 +32,7 @@ import javax.inject.Inject;
 
 public class UModsActivity extends AppCompatActivity {
     private static final String CURRENT_FILTERING_KEY = "CURRENT_FILTERING_KEY";
-    public static final String APP_USER_PHONE_NUMBER = "APP_USER_PHONE_NUMBER";
+    public static final String APP_USER_NAME = "APP_USER_NAME";
     public static final String APP_UUID = "APP_UUID";
     public static final int APP_PERMISSIONS_REQUEST_FINE_AND_COARSE = 666;
     private static final int REQUEST_APP_USER = 1;
@@ -61,7 +61,7 @@ public class UModsActivity extends AppCompatActivity {
             setupDrawerContent(navigationView);
         }
 
-        String appUserPhoneNumber = getIntent().getStringExtra(APP_USER_PHONE_NUMBER);
+        String appUserPhoneNumber = getIntent().getStringExtra(APP_USER_NAME);
         String appUUID = getIntent().getStringExtra(APP_UUID);
 
         UModsFragment umodsFragment =

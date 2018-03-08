@@ -33,6 +33,8 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.UModConfigFragment;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -478,6 +480,14 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                     }
                 }
                 mViewModelsList.add(viewModel);
+
+                Collections.sort(mViewModelsList, new Comparator<UModViewModel>() {
+                    @Override
+                    public int compare(UModViewModel uModViewModel, UModViewModel t1) {
+                        return uModViewModel.getItemMainText().compareTo(t1.getItemMainText());
+                    }
+                });
+
                 notifyDataSetChanged();
             }
         }

@@ -115,10 +115,10 @@ public class AppUserFragment extends Fragment implements AppUserContract.View {
     }
 
     @Override
-    public void showUModsList(String userPhoneNumber, String appUUIDHash) {
+    public void showUModsList(String userName, String appUUIDHash) {
         //TODO: Should I use some Intent FLAGS?
         Intent goToUModsActivity = new Intent(getActivity(), UModsActivity.class);
-        goToUModsActivity.putExtra(UModsActivity.APP_USER_PHONE_NUMBER,userPhoneNumber);
+        goToUModsActivity.putExtra(UModsActivity.APP_USER_NAME,userName);
         goToUModsActivity.putExtra(UModsActivity.APP_UUID,appUUIDHash);
         startActivity(goToUModsActivity);
         getActivity().finish();

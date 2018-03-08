@@ -14,6 +14,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.PopupMenu;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,6 +30,9 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UMod;
@@ -62,6 +66,8 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
 
     private ProgressBar mProgressBar;
 
+    private PhoneNumberUtil phoneUtil;
+
     public UModUsersFragment() {
         // Requires empty public constructor
     }
@@ -74,6 +80,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mListAdapter = new UModUsersAdapter(new ArrayList<UModUserViewModel>(0), mItemListener);
+        this.phoneUtil = PhoneNumberUtil.getInstance();
     }
 
     @Override
@@ -442,6 +449,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
     //This will fail for Android >= 6.0 given the new permissions policies.
     @Override
     public String getContactNameFromPhoneNumber(String phoneNumber){
+        phoneNumber = getPhoneNumberNationalFormatted(phoneNumber);
         String displayName = phoneNumber;
         Context context = this.getContext();
         Uri lookupUri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber));
@@ -457,6 +465,19 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
             c.close();
         }
         return displayName;
+    }
+
+    private String getPhoneNumberNationalFormatted(String phoneNumberStr){
+        Phonenumber.PhoneNumber argentinianNumberProto;
+        try{
+            argentinianNumberProto = phoneUtil.parse(phoneNumberStr, "AR");
+        }
+        catch (NumberParseException e) {
+            Log.d("appusr_frag","NumberParseException was thrown: " + e.toString());
+            return phoneNumberStr;
+        }
+        return this.phoneUtil.format(argentinianNumberProto, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+
     }
 
     @Override

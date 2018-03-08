@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
@@ -156,21 +157,26 @@ public class UModsRepository implements UModsDataSource {
         }
     }
 
+    //@RxLogObservable
     private Observable<UMod> getUModsOneByOneFromCacheOrDisk(){
+        Observable<UMod> cachedUModsObs = Observable.empty();
         if (mCachedUMods!=null && !mCachedUMods.isEmpty()){
             Log.d("umods_rep","Map cache");
-                return Observable.from(mCachedUMods.values())
+                cachedUModsObs = Observable.from(mCachedUMods.values())
                         .compose(this.uModCacheBrander);
         }
         Log.d("umods_rep","DB");
-        return mUModsLocalDataSource.getUModsOneByOne()
+        return Observable.concatDelayError(
+                cachedUModsObs,
+                mUModsLocalDataSource.getUModsOneByOne()
                 .doOnNext(new Action1<UMod>() {
                     @Override
                     public void call(UMod uMod) {
                         mCachedUMods.put(uMod.getUUID(), uMod);
                     }
-                });
+                }));
     }
+
 
     private Observable<UMod> getUModsOneByOneFromLanAndUpdateDBAndCache(){
         return mUModsLANDataSource
@@ -227,16 +233,17 @@ public class UModsRepository implements UModsDataSource {
 
     //TODO make a revision of this method!
     @Override
-    //@RxLogObservable
+    @RxLogObservable
     public Observable<UMod> getUModsOneByOne() {
-        Observable<UMod> cacheOrDBUModObs = Observable.empty();
+        //Observable<UMod> cacheOrDBUModObs = Observable.empty();
+        Observable<UMod> cacheOrDBUModObs = this.getUModsOneByOneFromCacheOrDisk();
         //If cache is dirty (forced update) then lookup for UMods on LAN (dnssd,ble)
         Observable<UMod> lanUModObs = this.getUModsOneByOneFromLanAndUpdateDBAndCache();
         // Respond immediately with cache if available and not dirty
+        //TODO if both cases are equal the why do the cases exist??
         Log.d("umods_rep", "get1by1");
         if (!mCacheIsDirty) {
-            Log.d("umods_rep", "cache" + mCachedUMods);
-            cacheOrDBUModObs = getUModsOneByOneFromCacheOrDisk();
+            Log.d("umods_rep", "cached first" + mCachedUMods);
             return Observable.concatDelayError(
                     cacheOrDBUModObs.defaultIfEmpty(null),
                     lanUModObs)
@@ -258,9 +265,11 @@ public class UModsRepository implements UModsDataSource {
             mCachedUMods = new LinkedHashMap<>();
         }
 
-        Log.d("umods_rep", "lanbrowse");
+        Log.d("umods_rep", "lanbrowse first");
 
-        return Observable.concatDelayError(cacheOrDBUModObs, lanUModObs)
+        return Observable.concatDelayError(
+                cacheOrDBUModObs.defaultIfEmpty(null),
+                lanUModObs)
                 .doOnUnsubscribe(new Action0() {
                     @Override
                     public void call() {
@@ -388,6 +397,7 @@ public class UModsRepository implements UModsDataSource {
      * uses the network data source. This is done to simplify the sample.
      */
     @Override
+    @RxLogObservable
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
         checkNotNull(uModUUID);
 
@@ -412,11 +422,10 @@ public class UModsRepository implements UModsDataSource {
         } else {
             return getSingleUModFromLanAndUpdateDBEntry(uModUUID);
         }
-
-
     }
+
     private Observable<UMod> getSingleUModFromLanAndUpdateDBEntry(final String uModUUID){
-        // If lanUmodsDataSource produces a result then tries to update the DB entry for the same UUID
+        // If lanUmodsDataSource produces a result then tries to update the DB entry for the same UUID.
         return mUModsLANDataSource.getUMod(uModUUID)
                 .filter(new Func1<UMod, Boolean>() {
                     @Override

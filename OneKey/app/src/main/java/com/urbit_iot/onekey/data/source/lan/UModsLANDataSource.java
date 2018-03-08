@@ -328,18 +328,20 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<UpdateUserRPC.Result> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Arguments request) {
-        /*
+
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return this.appUserUModsService.postUpdateUser(request);
-         */
+
         //TODO remove mock
         /*
         UpdateUserRPC.Response defaultResponse = new UpdateUserRPC.Response(new UpdateUserRPC.Result(),
                 "STEVE MOCK RESPONSE",
                 new RPC.ResponseError(null,null));
          */
+        /*
         final UpdateUserRPC.Result mockedResult = new UpdateUserRPC.Result("update success");
         return Observable.just(mockedResult).delay(850,TimeUnit.MILLISECONDS);
+        */
     }
 
     @Override

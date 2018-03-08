@@ -107,6 +107,12 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
 
                                                         if (throwable instanceof HttpException){
                                                             //Check for HTTP UNAUTHORIZED error code
+                                                            String errorMessage = "";
+                                                            try {
+                                                                errorMessage = ((HttpException) throwable).response().errorBody().string();
+                                                            }catch (IOException exc){
+                                                                return Observable.error(exc);
+                                                            }
                                                             int httpErrorCode = ((HttpException) throwable).response().code();
                                                             Log.e("req_access_uc", "CreateUser Failed: " + httpErrorCode);
                                                             if (CreateUserRPC.DOC_ERROR_CODES.contains(httpErrorCode)){
@@ -114,11 +120,12 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                                 || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
                                                                     Log.e("req_access_uc", "CreateUser failed to Auth with urbit:urbit CODE: " + httpErrorCode);
                                                                 }
-                                                                if (httpErrorCode == HttpURLConnection.HTTP_CONFLICT){
+                                                                if (httpErrorCode == HttpURLConnection.HTTP_CONFLICT
+                                                                        || errorMessage.contains("already")){
                                                                     //TODO evaluate the benefit of getting the user_type in the error body.
                                                                     //That may save us the next request (Deserialization using JSONObject)
                                                                     GetMyUserLevelRPC.Arguments getUserLevelArgs =
-                                                                            new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber());
+                                                                            new GetMyUserLevelRPC.Arguments(appUser.getUserName());
                                                                     return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)
                                                                             .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<CreateUserRPC.Result>>() {
                                                                                 @Override

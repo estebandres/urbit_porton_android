@@ -53,12 +53,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Module
 public class UModsRepositoryModule {
 
-    private String appUserPhoneNumber;
+    private String appUserName;
     private String appUUID;
 
     //TODO replace private fields with the appUserRepository instance
-    public UModsRepositoryModule(String appUserPhoneNumber, String appUUID) {
-        this.appUserPhoneNumber = appUserPhoneNumber;
+    public UModsRepositoryModule(String appUserName, String appUUID) {
+        this.appUserName = appUserName;
         this.appUUID = appUUID;
     }
 
@@ -182,7 +182,7 @@ public class UModsRepositoryModule {
     @Singleton
     @Named("app_user")
     OkHttpClient provideDigestAuthAppUserOkHttpClient(UrlHostSelectionInterceptor urlHostSelectionInterceptor){
-        final Credentials credentials = new Credentials(this.appUserPhoneNumber.replace("+",""),this.appUUID);
+        final Credentials credentials = new Credentials(this.appUserName,this.appUUID);
         final DigestAuthenticator digestAuthenticator = new DigestAuthenticator(credentials);
         final Map<String, CachingAuthenticator> authCache = new ConcurrentHashMap<>();
         return new OkHttpClient.Builder()

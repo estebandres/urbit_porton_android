@@ -160,7 +160,7 @@ todo inmediato
         for(GetUsersRPC.UserResult userResult : result.getUsers()){
 
             if(this.contactsAccessGranted){
-                itemMainText = mUModsView.getContactNameFromPhoneNumber(userResult.getUserName());
+                itemMainText = mUModsView.getContactNameFromPhoneNumber("+" + userResult.getUserName());
             } else {
                 itemMainText = userResult.getUserName();
             }
@@ -346,7 +346,7 @@ todo inmediato
                 new UpdateUserType.RequestValues(
                         uModUserPhoneNum,
                         this.uModUUID,
-                        APIUserType.Admin);
+                        APIUserType.User);
         mUpdateUserType.execute(requestValue, new Subscriber<UpdateUserType.ResponseValues>() {
             @Override
             public void onCompleted() {

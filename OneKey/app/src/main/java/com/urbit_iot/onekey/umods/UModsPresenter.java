@@ -414,7 +414,8 @@ public class UModsPresenter implements UModsContract.Presenter {
         mTriggerUMod.execute(requestValue, new Subscriber<TriggerUMod.ResponseValues>() {
             @Override
             public void onCompleted() {
-                mUModsView.setLoadingIndicator(false);
+                mUModsView.makeUModViewModelActionButtonVisible(uModUUID);
+
             }
 
             @Override

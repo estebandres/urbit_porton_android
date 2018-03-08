@@ -62,7 +62,7 @@ public class GetUModUsers extends SimpleUseCase<GetUModUsers.RequestValues, GetU
                                     @Override
                                     public Boolean call(final GetUsersRPC.UserResult userResult) {
                                         return !userResult.getUserName().contentEquals("urbit")
-                                                && !appUser.getPhoneNumber().contains(userResult.getUserName());//TODO add umodUserName as AppUser member
+                                                && !appUser.getUserName().contentEquals(userResult.getUserName());//TODO add umodUserName as AppUser member
                                     }
                                 });
                     }

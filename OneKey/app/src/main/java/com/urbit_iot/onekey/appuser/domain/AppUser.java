@@ -12,12 +12,16 @@ import com.urbit_iot.onekey.util.GlobalConstants;
 
 public class AppUser {
     @NonNull
+    @SerializedName("user_name")
+    private String userName;
+
+    @NonNull
     @SerializedName("phone_number")
-    private final String phoneNumber;
+    private String phoneNumber;
 
     @NonNull
     @SerializedName("app_uuid")
-    private final String appUUID;
+    private String appUUID;
 
     @Nullable
     @SerializedName("user_credentials_hash")
@@ -46,8 +50,26 @@ public class AppUser {
 
     public AppUser(@NonNull String phoneNumber, @NonNull String appUUID, @NonNull String appUserCredentialsHash) {
         this.phoneNumber = phoneNumber;
+        this.userName = phoneNumber.replace("+","");
         this.appUUID = appUUID;
         this.appUserCredentialsHash = appUserCredentialsHash;
+    }
+
+    @NonNull
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(@NonNull String userName) {
+        this.userName = userName;
+    }
+
+    public void setPhoneNumber(@NonNull String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public void setAppUUID(@NonNull String appUUID) {
+        this.appUUID = appUUID;
     }
 
     @Nullable
@@ -115,11 +137,21 @@ public class AppUser {
     }
 
     public String getCredentialsString(){
-        return this.phoneNumber.replace("+","") + GlobalConstants.CREDENTIALS_REALM_SEPARATOR + this.appUserCredentialsHash;
+        return this.userName + GlobalConstants.CREDENTIALS_REALM_SEPARATOR + this.appUserCredentialsHash;
     }
 
     @Override
     public String toString() {
-        return "[" + this.getPhoneNumber() + " ; " + this.getAppUUID() + "]" ;
+        return "AppUser{" +
+                "userName='" + userName + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", appUUID='" + appUUID + '\'' +
+                ", appUserCredentialsHash='" + appUserCredentialsHash + '\'' +
+                ", alias='" + alias + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", emailAddress='" + emailAddress + '\'' +
+                ", actionPassword='" + actionPassword + '\'' +
+                '}';
     }
 }

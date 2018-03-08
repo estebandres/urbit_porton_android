@@ -15,6 +15,9 @@ import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+
 import javax.inject.Inject;
 
 import retrofit2.adapter.rxjava.HttpException;
@@ -73,7 +76,8 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                             GetMyUserLevelRPC.Request request =
                                                     new GetMyUserLevelRPC.Request(new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber()),uMod.getUUID());
                                              */
-                                            GetMyUserLevelRPC.Arguments getMyLevelArgs = new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber());
+                                            Log.d("getumods1x1_uc", appUser.toString());
+                                            GetMyUserLevelRPC.Arguments getMyLevelArgs = new GetMyUserLevelRPC.Arguments(appUser.getUserName());
                                             return mUModsRepository.getUserLevel(uMod,getMyLevelArgs)//TODO should be called from other UseCase??
                                                     .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<UMod>>() {
                                                         @Override
@@ -89,13 +93,28 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                                         public Observable<? extends UMod> call(Throwable throwable) {
                                                             Log.e("getumods1x1_uc", "Get User Status Fail: " + throwable.getMessage() + "ExcType: " + throwable.getClass().getSimpleName());
                                                             if (throwable instanceof HttpException) {
+                                                                String errorMessage = "";
                                                                 //Check for HTTP UNAUTHORIZED error code
+                                                                try {
+                                                                    errorMessage = ((HttpException) throwable).response().errorBody().string();
+                                                                }catch (IOException exc){
+                                                                    return Observable.error(exc);
+                                                                }
                                                                 int httpErrorCode = ((HttpException) throwable).response().code();
+                                                                Log.e("getumods1x1_uc", "Get User Status Failure Response: " + errorMessage + "Status Code: " + httpErrorCode);
                                                                 //401 and 403 aren't considered because the call is made with urbit:urbit
                                                                 if (httpErrorCode != 0 && (httpErrorCode == 404)) {
                                                                     uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
                                                                     return Observable.just(uMod);
                                                                 }
+                                                                if (httpErrorCode == 500){
+                                                                    uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                                    return Observable.just(uMod);
+                                                                }
+                                                            }
+                                                            if (throwable instanceof SocketTimeoutException){
+                                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                                return Observable.just(uMod);
                                                             }
                                                             return Observable.error(throwable);
                                                         }

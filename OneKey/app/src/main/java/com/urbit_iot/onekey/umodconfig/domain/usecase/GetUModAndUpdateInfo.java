@@ -64,7 +64,9 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
 
         //TODO why not to take cached values and refresh on retry only.
         mUModsRepository.refreshUMods();
-
+        //GOLDEN RULE when an object is passed in the rxjava chain and its modifications are
+        //evident there is no need of make a clone but if said object is passed as some external method parameter
+        // then it has to be cloned so said method don't modified the object instance leading to miss behaviour.
         return mUModsRepository.getUMod(values.getUModUUID())
                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
@@ -106,12 +108,17 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                 return Observable.error(exc);
                                                             }
 
+                                                            Log.e("getumod+info_uc", "Get User Status (urbit:urbit) Failed on error CODE:"
+                                                                    +httpErrorCode
+                                                                    +" MESSAGE: "
+                                                                    + errorMessage);
+
                                                             //If user is already created
                                                             //Improve  httpErrorCode != 0 to isValidHttpCode(httpErrorCode)
                                                             if (httpErrorCode != 0) {
                                                                 if (httpErrorCode == 401 || httpErrorCode == 403){
                                                                     uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                                    mUModsRepository.saveUMod(uMod);
+                                                                    mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
                                                                     return Observable.just(uMod);
                                                                 }
                                                                 if (httpErrorCode == 409
@@ -119,8 +126,9 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                     //TODO evaluate the benefit of getting the user_type in the error body.
                                                                     //That may save us the next request (Deserialization using JSONObject)
                                                                     GetMyUserLevelRPC.Arguments getUserLevelArgs =
-                                                                            new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber().replace("+",""));
-                                                                    return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)
+                                                                            new GetMyUserLevelRPC.Arguments(appUser.getUserName());
+                                                                    return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)//Careful icarus!!! uMod may change
+                                                                            // This
                                                                             .doOnError(new Action1<Throwable>() {
                                                                                 @Override
                                                                                 public void call(Throwable throwable) {
@@ -135,13 +143,48 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                                     mUModsRepository.saveUMod(uMod);
                                                                                     return Observable.just(uMod);
                                                                                 }
+                                                                            })
+                                                                            .onErrorResumeNext(new Func1<Throwable, Observable<UMod>>() {
+                                                                                @Override
+                                                                                public Observable<UMod> call(Throwable throwable) {
+                                                                                    Log.e("getumod+info_uc", "Get User Status Failed: " +throwable.getMessage());
+                                                                                    if (throwable instanceof HttpException) {
+                                                                                        //Check for HTTP UNAUTHORIZED error code
+                                                                                        int httpErrorCode = ((HttpException) throwable).response().code();
+                                                                                        String errorMessage = "";
+                                                                                        try {
+                                                                                            errorMessage = ((HttpException) throwable).response().errorBody().string();
+                                                                                        } catch (Exception exc) {
+                                                                                            return Observable.error(exc);
+                                                                                        }
+
+                                                                                        Log.e("getumod+info_uc", "Get User Status (urbit:urbit) Failed on error CODE:"
+                                                                                                +httpErrorCode
+                                                                                                +" MESSAGE: "
+                                                                                                + errorMessage);
+
+                                                                                        //If user is already created
+                                                                                        //Improve  httpErrorCode != 0 to isValidHttpCode(httpErrorCode)
+                                                                                        if (httpErrorCode != 0) {
+                                                                                            if (httpErrorCode == 500){
+                                                                                                if (errorMessage.contains("user not found")){
+                                                                                                    uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                                                                    mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
+                                                                                                    return Observable.just(uMod);
+                                                                                                }
+                                                                                                //It also can fail on: BAD_REQUEST, "userName is required" but we cannot overcome that error.
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                    //when the error is from other source like a timeout it is forwarded to the presenter.
+                                                                                    return Observable.error(throwable);
+                                                                                }
                                                                             });
                                                                 }
                                                             }
                                                         }
                                                         //when the error is from other source like a timeout it is forwarded to the presenter.
                                                         return Observable.error(throwable);
-                                                        //return Observable.just(uMod);
                                                     }
                                                 });
                                     }
@@ -153,7 +196,8 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                     @Override
                     public Observable<UMod> call(final UMod uMod) {
                         SysGetInfoRPC.Arguments args = new SysGetInfoRPC.Arguments();
-                        return mUModsRepository.getSystemInfo(uMod,args)//This request should not fail since it is done with urbit:urbit
+                        return mUModsRepository.getSystemInfo(uMod,args)
+                                //This request should not fail since it is done with urbit:urbit
                                 .flatMap(new Func1<SysGetInfoRPC.Result, Observable<UMod>>() {
                                     @Override
                                     public Observable<UMod> call(SysGetInfoRPC.Result result) {

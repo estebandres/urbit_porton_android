@@ -59,7 +59,7 @@ public class AppUserPresenter implements AppUserContract.Presenter {
 
             @Override
             public void onNext(SaveAppUser.ResponseValues responseValues) {
-                mAppUserView.showUModsList(responseValues.getmAppUser().getPhoneNumber(), responseValues.getmAppUser().getAppUUID());
+                mAppUserView.showUModsList(responseValues.getmAppUser().getUserName(), responseValues.getmAppUser().getAppUUID());
             }
         });
     }

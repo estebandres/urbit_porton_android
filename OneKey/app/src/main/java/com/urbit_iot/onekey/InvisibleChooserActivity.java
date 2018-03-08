@@ -51,7 +51,7 @@ public class InvisibleChooserActivity extends AppCompatActivity {
             Log.d("chooser", "USER_DATA: " + serializedAppUser.get());
             AppUser appUser = gsonInstance.fromJson(serializedAppUser.get(),AppUser.class);
             firstActivityIntent = new Intent(this, UModsActivity.class);
-            firstActivityIntent.putExtra(UModsActivity.APP_USER_PHONE_NUMBER,appUser.getPhoneNumber());
+            firstActivityIntent.putExtra(UModsActivity.APP_USER_NAME,appUser.getUserName());
             firstActivityIntent.putExtra(UModsActivity.APP_UUID,appUser.getAppUUID());
         } else {
             firstActivityIntent = new Intent(this, AppUserActivity.class);
