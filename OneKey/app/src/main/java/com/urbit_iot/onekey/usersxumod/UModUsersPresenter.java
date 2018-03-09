@@ -236,16 +236,6 @@ todo inmediato
         return userVMsList;
     }
 
-    private void tryGetFriendlyAliasForUsers(List<UModUser> uModUsers){
-        for(UModUser uModUser : uModUsers){
-            if(this.contactsAccessGranted){
-                uModUser.setUserAlias(mUModsView.getContactNameFromPhoneNumber(uModUser.getPhoneNumber()));
-            } else {
-                uModUser.setUserAlias(uModUser.getPhoneNumber());
-            }
-        }
-    }
-
     private void processUModUsersVM(List<UModUserViewModel> uModUsersVMs) {
         if (uModUsersVMs.isEmpty()) {
             // Show a message indicating there are no uMods for that filter type.
@@ -355,13 +345,15 @@ todo inmediato
 
             @Override
             public void onError(Throwable e) {
-                mUModsView.showLoadingUModUsersError();
+                mUModsView.showUserApprovalFailMessage();
+                loadUModUsers(true);
             }
 
             @Override
             public void onNext(UpdateUserType.ResponseValues responseValues) {
                 Log.d("um_usrs_pr", "RPC is " + responseValues.getResult().toString());
-                mUModsView.showUserApprovalSuccess();
+                mUModsView.showUserApprovalSuccessMessage();
+                loadUModUsers(true);
             }
         });
     }
@@ -384,19 +376,21 @@ todo inmediato
             @Override
             public void onError(Throwable e) {
                 Log.d("um_usrs_pr", "Delete Fail: " + e.getMessage());
-                mUModsView.showLoadingUModUsersError();
+                mUModsView.showUserDeletionFailMessage();
+                loadUModUsers(true);
             }
 
             @Override
             public void onNext(DeleteUModUser.ResponseValues responseValues) {
                 Log.d("um_usrs_pr", "RPC is " + responseValues.getResult().toString());
-                mUModsView.showUserApprovalSuccess();
+                mUModsView.showUserDeletionSuccessMessage();
+                loadUModUsers(true);
             }
         });
     }
 
     @Override
-    public void upDownAdminLevel(String userPhoneNum, boolean toAdmin) {
+    public void upDownAdminLevel(String userPhoneNum, final boolean toAdmin) {
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
@@ -417,13 +411,15 @@ todo inmediato
             @Override
             public void onError(Throwable e) {
                 Log.e("um_usrs_pr", e.getMessage());
-                mUModsView.showLoadingUModUsersError();
+                mUModsView.showUserLevelUpdateFailMessage(toAdmin);
+                loadUModUsers(true);
             }
 
             @Override
             public void onNext(UpdateUserType.ResponseValues responseValues) {
                 Log.d("um_usrs_pr", "RPC is " + responseValues.getResult().toString());
-                mUModsView.showUserApprovalSuccess();
+                mUModsView.showUserLevelUpdateSuccessMessage(toAdmin);
+                loadUModUsers(true);
             }
         });
     }

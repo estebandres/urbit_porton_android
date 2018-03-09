@@ -71,27 +71,33 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical">
 
-                <TextView
+                <LinearLayout
+                    android:id="@+id/wifi_settings"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="WiFi Credentials"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="WiFi Credentials"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
 
-                <EditText
-                    android:id="@+id/wifi_ssid"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="top"
-                    android:hint="WiFi SSID" />
+                    <EditText
+                        android:id="@+id/wifi_ssid"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top"
+                        android:hint="WiFi SSID" />
 
-                <EditText
-                    android:id="@+id/wifi_password"
-                    android:inputType="textPassword"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="top"
-                    android:hint="WiFi Password" />
+                    <EditText
+                        android:id="@+id/wifi_password"
+                        android:inputType="textPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top"
+                        android:hint="WiFi Password" />
 
+                </LinearLayout>
                 <Button
                     android:id="@+id/users_button"
                     android:layout_width="match_parent"

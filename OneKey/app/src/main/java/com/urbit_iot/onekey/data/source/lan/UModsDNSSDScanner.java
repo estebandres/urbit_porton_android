@@ -10,6 +10,8 @@ import com.github.druk.rxdnssd.RxDnssdBindable;
 import com.urbit_iot.onekey.data.UMod;
 
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import rx.Observable;
 import rx.functions.Action0;
@@ -29,7 +31,7 @@ public class UModsDNSSDScanner {
     }
 
     //Keeps browsing the LAN for 4 seconds maximum.
-    //@RxLogObservable
+    @RxLogObservable
     public Observable<UMod> browseLANForUMods(){
         return Observable.defer(new Func0<Observable<UMod>>() {
             @Override
@@ -49,7 +51,13 @@ public class UModsDNSSDScanner {
                         })
                         .map(new Func1<BonjourService,UMod>(){
                             public UMod call(BonjourService discovery){
-                                return new UMod(discovery.getHostname(),
+                                Pattern pattern = Pattern.compile("urbit_(.*?)\\.local\\.");
+                                Matcher matcher = pattern.matcher(discovery.getHostname());
+                                String uModUUID = "DEFAULTUUID";
+                                if (matcher.find()){
+                                    uModUUID = matcher.group(1);
+                                }
+                                return new UMod(uModUUID,
                                         discovery.getInet4Address().getHostAddress(),
                                         true);
                             }
@@ -90,7 +98,13 @@ public class UModsDNSSDScanner {
                         .take(1)
                         .map(new Func1<BonjourService,UMod>(){
                             public UMod call(BonjourService discovery){
-                                return new UMod(discovery.getHostname(),
+                                Pattern pattern = Pattern.compile("urbit_(.*?)\\.local\\.");
+                                Matcher matcher = pattern.matcher(discovery.getHostname());
+                                String uModUUID = "DEFAULTUUID";
+                                if (matcher.find()){
+                                    uModUUID = matcher.group(1);
+                                }
+                                return new UMod(uModUUID,
                                         discovery.getInet4Address().getHostAddress(),
                                         true);
                             }

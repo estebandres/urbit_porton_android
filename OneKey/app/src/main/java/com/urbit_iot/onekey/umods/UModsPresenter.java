@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.urbit_iot.onekey.RxUseCase;
+import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
@@ -195,7 +196,8 @@ public class UModsPresenter implements UModsContract.Presenter {
     }
 
     //TODO peer review view model creation rules
-    private UModViewModel createViewModel(final UMod uMod){
+    private UModViewModel createViewModel(UMod uMod){
+        Log.d("umods_pres", uMod.hashCode() + "\n" + uMod.toString());
         final String uModUUID;
         String itemMainText;
         String itemLowerText;
@@ -223,55 +225,78 @@ public class UModsPresenter implements UModsContract.Presenter {
         buttonText = "OFF";
         buttonVisible = false;
 
-        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){
+        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){//LAN_SCAN means online but can be dnssd/ap/ble discovery
             //shows action button only when online and is in station mode.
-            if (uMod.getState() == UMod.State.STATION_MODE){
-                buttonVisible = true;
+            if (uMod.getState() == UMod.State.STATION_MODE) {
                 //TODO add button text alternatives as String resource or GlobalConstants??.
-                if(uMod.belongsToAppUser()){
-                    buttonText = "TRIG";
-                } else {
-                    buttonText = "ASK";
+                switch (uMod.getAppUserLevel()) {
+                    case PENDING:
+                        buttonText = "WAIT";
+                        buttonVisible = false;
+                        break;
+                    case AUTHORIZED:
+                        buttonText = "TRIG";
+                        buttonVisible = true;
+                        break;
+                    case ADMINISTRATOR:
+                        buttonText = "TRIG";
+                        buttonVisible = true;
+                        break;
+                    case UNAUTHORIZED:
+                        buttonText = "ASK";
+                        buttonVisible = true;
+                        break;
+                    default:
+                        buttonText = "NON";
+                        buttonVisible = false;
+                        break;
                 }
-            } else {
-                buttonVisible = false;
-                buttonText = "NON";
             }
         }
 
         checkboxChecked = uMod.isOngoingNotificationEnabled();
 
-
-        //Default until all states are defined i.e. what about BLE_MODE and OTA_UPDATE??
-        itemOnClickListenerEnabled = false;
-        itemLowerText = "UNKNOWN";
-
-        if (uMod.getState()== UMod.State.AP_MODE
-                && uMod.getuModSource() == UMod.UModSource.LAN_SCAN){
-            itemOnClickListenerEnabled = true;
+        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){
             itemLowerText = "ONLINE";
-        }
-        if(uMod.getState()== UMod.State.STATION_MODE
-                && uMod.getuModSource() == UMod.UModSource.LAN_SCAN){
-            itemOnClickListenerEnabled = true;
-            itemLowerText = "ONLINE";
-        }
-
-        if(uMod.getuModSource() != UMod.UModSource.LAN_SCAN){
-            itemOnClickListenerEnabled = false;
+        } else {
             itemLowerText = "OFFLINE";
         }
 
-        return new UModViewModel(uModUUID, this, itemMainText, itemLowerText,
+        //TODO Default until all states are defined i.e. what about BLE_MODE and OTA_UPDATE??
+
+        switch (uMod.getAppUserLevel()){
+            case ADMINISTRATOR:
+                itemOnClickListenerEnabled = true;
+                break;
+            case AUTHORIZED:
+                itemOnClickListenerEnabled = true;
+                break;
+            case PENDING:
+                itemOnClickListenerEnabled = false;
+                itemLowerText = itemLowerText + " - ESPERANDO AUTORIZACIÓN";
+                break;
+            case UNAUTHORIZED:
+                itemOnClickListenerEnabled = false;
+                break;
+            default:
+                itemOnClickListenerEnabled = false;
+                break;
+        }
+
+        if (uMod.getState() == UMod.State.AP_MODE){
+            itemOnClickListenerEnabled = true;
+        }
+
+        return new UModViewModel(uMod, uModUUID, this, itemMainText, itemLowerText,
                 checkboxChecked, checkboxVisible, buttonText, buttonVisible, itemOnClickListenerEnabled) {
             @Override
             public void onButtonClicked() {
                 //TODO this code shouldnt depend on external objects.
-                if(uMod.belongsToAppUser()){
+                if(this.getuMod().belongsToAppUser()){
                     this.getPresenter().triggerUMod(getuModUUID());
                 } else {
                     //TODO this code shouldnt depend on external objects.
-                    if (uMod.getState() == UMod.State.STATION_MODE){
+                    if (this.getuMod().getState() == UMod.State.STATION_MODE){
                         this.getPresenter().requestAccess(getuModUUID());
                     }
                 }

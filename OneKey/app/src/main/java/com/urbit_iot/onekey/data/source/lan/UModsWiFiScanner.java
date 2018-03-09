@@ -7,11 +7,14 @@ import android.net.wifi.ScanResult;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
+import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.github.pwittchen.reactivewifi.ReactiveWifi;
 import com.urbit_iot.onekey.data.UMod;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import rx.Observable;
 import rx.functions.Action1;
@@ -36,6 +39,7 @@ public class UModsWiFiScanner {
         return scanWiFi(uModUUID);
     }
 
+    @RxLogObservable
     private Observable<UMod> scanWiFi(final String filterUModUUID) {
         if (ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -77,7 +81,14 @@ public class UModsWiFiScanner {
                 .map(new Func1<ScanResult, UMod>() {
                     @Override
                     public UMod call(ScanResult scanResult) {
-                        UMod mappedUMod = new UMod(scanResult.SSID);
+                        Pattern pattern = Pattern.compile("urbit_(.*?)$");
+                        Matcher matcher = pattern.matcher(scanResult.SSID);
+                        String uModUUID = "DEFAULTUUID";
+                        if (matcher.find()){
+                            uModUUID = matcher.group(1);
+                        }
+                        UMod mappedUMod = new UMod(uModUUID);
+                        mappedUMod.setAlias(scanResult.SSID);
                         mappedUMod.setState(UMod.State.AP_MODE);
                         return mappedUMod;
                     }
@@ -85,6 +96,7 @@ public class UModsWiFiScanner {
                 .filter(new Func1<UMod, Boolean>() {
                     @Override
                     public Boolean call(UMod uMod) {
+                        Log.d("wifi_scan", "Filter:" + filterUModUUID + "UMOD: " + uMod.getUUID() + "  " + uMod.getAlias());
                         if (filterUModUUID != null){
                             return filterUModUUID.contentEquals(uMod.getUUID());
                         }

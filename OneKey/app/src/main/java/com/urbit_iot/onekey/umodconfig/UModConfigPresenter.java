@@ -22,7 +22,6 @@ import android.util.Log;
 
 import com.google.common.base.Strings;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.FactoryResetUMod;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModAndUpdateInfo;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModSystemInfo;
@@ -300,6 +299,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                 uMod.getConnectionAddress() + "\n" +
                 uMod.getSWVersion();
         String wifiPasswordText = null;
+        boolean wifiSettingsVisible = uMod.getState() == UMod.State.AP_MODE;
 
         UModConfigViewModel viewModel =
                 new UModConfigViewModel(uModUUID,
@@ -308,7 +308,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         wifiSSIDText,
                         adminLayoutVisible,
                         uModSysInfoText,
-                        wifiPasswordText);
+                        wifiPasswordText,
+                        wifiSettingsVisible);
 
         return viewModel;
     }

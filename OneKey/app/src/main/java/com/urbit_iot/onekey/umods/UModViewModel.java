@@ -3,12 +3,14 @@ package com.urbit_iot.onekey.umods;
 import android.graphics.Color;
 
 import com.google.common.base.Objects;
+import com.urbit_iot.onekey.data.UMod;
 
 /**
  * Created by steve-urbit on 27/11/17.
  */
 
 public abstract class UModViewModel {
+    private UMod uMod;
     private String uModUUID;
     private UModsPresenter presenter;
     private String itemMainText;
@@ -20,10 +22,11 @@ public abstract class UModViewModel {
     private boolean itemOnClickListenerEnabled;
     private Color cardBackgroundColor;
 
-    public UModViewModel(String uModUUID, UModsPresenter presenter, String itemMainText,
+    public UModViewModel(UMod uMod, String uModUUID, UModsPresenter presenter, String itemMainText,
                          String itemLowerText, boolean checkboxChecked, boolean checkboxVisible,
                          String buttonText, boolean buttonVisible,
                          boolean itemOnClickListenerEnabled) {
+        this.uMod = uMod;
         this.uModUUID = uModUUID;
         this.presenter = presenter;
         this.itemMainText = itemMainText;
@@ -113,6 +116,14 @@ public abstract class UModViewModel {
         this.cardBackgroundColor = cardBackgroundColor;
     }
 
+    public UMod getuMod() {
+        return uMod;
+    }
+
+    public void setuMod(UMod uMod) {
+        this.uMod = uMod;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -124,10 +135,13 @@ public abstract class UModViewModel {
     @Override
     public String toString() {
         return "UModViewModel{" +
-                "presenter=" + presenter +
+                "uMod=" + uMod.hashCode() +
+                ", uModUUID='" + uModUUID + '\'' +
+                ", presenter=" + presenter +
                 ", itemMainText='" + itemMainText + '\'' +
                 ", itemLowerText='" + itemLowerText + '\'' +
                 ", checkboxChecked=" + checkboxChecked +
+                ", checkboxVisible=" + checkboxVisible +
                 ", buttonText='" + buttonText + '\'' +
                 ", buttonVisible=" + buttonVisible +
                 ", itemOnClickListenerEnabled=" + itemOnClickListenerEnabled +

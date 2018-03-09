@@ -91,6 +91,8 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private LinearLayout mAllSettingsLinearLayout;
 
+    private LinearLayout mWiFiSettings;
+
     public static UModConfigFragment newInstance() {
         return new UModConfigFragment();
     }
@@ -173,6 +175,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mAdminSettingsLayout = (LinearLayout) root.findViewById(R.id.admin_settings);
         mPorgressBar = (ProgressBar) root.findViewById(R.id.umod_config_load_bar);
         mAllSettingsLinearLayout = (LinearLayout) root.findViewById(R.id.all_settings);
+        mWiFiSettings = (LinearLayout) root.findViewById(R.id.wifi_settings);
 
         mTextWatcher = new TextWatcher() {
             @Override
@@ -318,6 +321,11 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                 }
             });
 
+            if (viewModel.isWifiSettingsVisible()){
+                mWiFiSettings.setVisibility(View.VISIBLE);
+            } else {
+                mWiFiSettings.setVisibility(View.GONE);
+            }
             mAdminSettingsLayout.setVisibility(View.VISIBLE);
         } else {
             mAdminSettingsLayout.setVisibility(View.INVISIBLE);

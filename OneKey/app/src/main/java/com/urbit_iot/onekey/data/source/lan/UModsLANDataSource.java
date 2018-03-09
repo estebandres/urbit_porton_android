@@ -168,7 +168,7 @@ public class UModsLANDataSource implements UModsDataSource {
     //@RxLogObservable
     public Observable<UMod> getUModsOneByOne(){
         return Observable.mergeDelayError(
-                Observable.from(UMODS_SERVICE_DATA.values()),
+                //Observable.from(UMODS_SERVICE_DATA.values()),
                 mUModsDNSSDScanner.browseLANForUMods(),
                 mUModsBLEScanner.bleScanForUMods(),
                 mUModsWiFiScanner.browseWiFiForUMods())
@@ -185,7 +185,7 @@ public class UModsLANDataSource implements UModsDataSource {
         Observable<UMod> mockedUModObs;
         if (mockedUMod != null){
             mockedUModObs = Observable.just(mockedUMod);
-            Log.d("lan_ds", mockedUMod.toString());
+            Log.d("lan_data-source", mockedUMod.toString());
         } else {
             mockedUModObs = Observable.empty();
         }
@@ -196,7 +196,7 @@ public class UModsLANDataSource implements UModsDataSource {
                 .doOnNext(new Action1<UMod>() {
                     @Override
                     public void call(UMod uMod) {
-                        Log.e("lan_ds", uMod.toString());
+                        Log.e("lan_data-source", uMod.toString());
                     }
                 })
         //return mUModsDNSSDScanner.browseLANForUMod(uModUUID)
@@ -346,14 +346,15 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<DeleteUserRPC.Result> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Arguments request) {
-        /*
+
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return this.appUserUModsService.deleteUser(request);
-        */
 
+        /*
         DeleteUserRPC.Result result = new DeleteUserRPC.Result("user deleted");
 
         return Observable.just(result).delay(500L, TimeUnit.MILLISECONDS);
+        */
     }
 
     @Override
@@ -410,21 +411,22 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<SetWiFiAPRPC.Result> setWiFiAP(UMod uMod, SetWiFiAPRPC.Arguments request) {
-        /*
+
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
-        return appUserUModsService.setWiFiAP(
-                request.getMethodArguments().getSsid(),
-                request.getMethodArguments().getPassword());
-        */
+        return appUserUModsService.postWiFiAPCredentials(request);
+
         //TODO remove mock
         /*
         SetWiFiAPRPC.Response response = new SetWiFiAPRPC.Response(new SetWiFiAPRPC.Result(),
                 "SetWiFiAP",
                 null);
          */
+
+        /*
         final SetWiFiAPRPC.Result mockedResult = new SetWiFiAPRPC.Result();
         return Observable.just(mockedResult)
                 .delay(880L, TimeUnit.MILLISECONDS);
+         */
     }
 
     @Override
@@ -434,6 +436,7 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<Response<ResponseBody>> postFirmwareUpdateToUMod(UMod uMod, File newFirmwareFile) {
+        /*
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         //RequestBody requestFile = RequestBody.create(MediaType.parse("application/zip"),newFirmwareFile);
         //MultipartBody.Part multipartBody = MultipartBody.Part.create(requestFile);
@@ -443,33 +446,39 @@ public class UModsLANDataSource implements UModsDataSource {
 
         RequestBody timeoutBody =
                 RequestBody.create(MediaType.parse("text/plain"), String.valueOf(75L));
+        return this.appUserUModsService.startFirmwareUpdate(timeoutBody, fileMultipartBody);
+        */
 
         //TODO remove mock
         Response<ResponseBody> mockedResp = Response.success(ResponseBody.create(MediaType.parse("text/plain"), "MOCKED"));
         return Observable.just(mockedResp).delay(500L, TimeUnit.MILLISECONDS);
-        //return this.appUserUModsService.startFirmwareUpdate(timeoutBody, fileMultipartBody);
+
     }
 
     @Override
     public Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Arguments request) {
-        /*
+
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());//TODO could be composed
         return this.appUserUModsService.otaCommit(request);
-         */
+
         //TODO remove mock
+        /*
         Response<ResponseBody> mockedResp = Response.success(ResponseBody.create(MediaType.parse("text/plain"), "MOCKED"));
         return Observable.just(mockedResp).delay(500L, TimeUnit.MILLISECONDS);
+        */
     }
 
     @Override
     public Observable<FactoryResetRPC.Result> factoryResetUMod(UMod uMod, FactoryResetRPC.Arguments request) {
-        /*
+
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());//TODO could be composed
         return this.appUserUModsService.postFactoryReset(request);
-         */
+
         //TODO remove mock
+        /*
         //FactoryResetRPC.Response response = new FactoryResetRPC.Response(null, "MOCKED", null);
         final FactoryResetRPC.Result mockedResult = new FactoryResetRPC.Result();
         return Observable.just(mockedResult).delay(600L, TimeUnit.MILLISECONDS);
+        */
     }
 }

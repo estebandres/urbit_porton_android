@@ -56,11 +56,14 @@ public class GetMyUserLevelRPC {
     }
 
     public static class Result{
+        @SerializedName("user_name")
+        private String userName;
 
         @SerializedName("user_type")
         private APIUserType APIUserType;
 
-        public Result(APIUserType APIUserType){
+        public Result(String userName, APIUserType APIUserType){
+            this.userName = userName;
             this.APIUserType = APIUserType;
         }
 
@@ -74,6 +77,14 @@ public class GetMyUserLevelRPC {
 
         public void setAPIUserType(APIUserType APIUserType) {
             this.APIUserType = APIUserType;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public void setUserName(String userName) {
+            this.userName = userName;
         }
 
         @Override

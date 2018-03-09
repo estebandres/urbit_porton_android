@@ -12,6 +12,7 @@ public class UModConfigViewModel {
     private boolean adminLayoutVisible;
     private String uModSysInfoText;
     private String wifiPasswordText;
+    private boolean wifiSettingsVisible;
 
     public UModConfigViewModel(String uModUUID,
                                String connectionStatusText,
@@ -19,7 +20,8 @@ public class UModConfigViewModel {
                                String wifiSSIDText,
                                boolean adminLayoutVisible,
                                String uModSysInfoText,
-                               String wifiPasswordText) {
+                               String wifiPasswordText,
+                               boolean wifiSettingsVisible) {
         this.uModUUID = uModUUID;
         this.connectionStatusText = connectionStatusText;
         this.aliasText = aliasText;
@@ -27,6 +29,7 @@ public class UModConfigViewModel {
         this.adminLayoutVisible = adminLayoutVisible;
         this.uModSysInfoText = uModSysInfoText;
         this.wifiPasswordText = wifiPasswordText;
+        this.wifiSettingsVisible = wifiSettingsVisible;
     }
 
     public String getuModUUID() {
@@ -83,6 +86,14 @@ public class UModConfigViewModel {
 
     public void setConnectionStatusText(String connectionStatusText) {
         this.connectionStatusText = connectionStatusText;
+    }
+
+    public boolean isWifiSettingsVisible() {
+        return wifiSettingsVisible;
+    }
+
+    public void setWifiSettingsVisible(boolean wifiSettingsVisible) {
+        this.wifiSettingsVisible = wifiSettingsVisible;
     }
 
     @Override

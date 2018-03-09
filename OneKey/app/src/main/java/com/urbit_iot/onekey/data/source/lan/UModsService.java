@@ -6,6 +6,7 @@ import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
+import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
@@ -59,6 +60,9 @@ public interface UModsService {
 
     @POST("/rpc/Admin.UpdateUser")
     Observable<UpdateUserRPC.Result> postUpdateUser(@Body UpdateUserRPC.Arguments requestArguments);
+
+    @POST("/rpc/Admin.SetWifi")
+    Observable<SetWiFiAPRPC.Result> postWiFiAPCredentials(@Body SetWiFiAPRPC.Arguments requestArguments);
 
     /*
     @GET

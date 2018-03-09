@@ -24,7 +24,7 @@ public class FirmwareFileDownloader {
     }
 
     public Observable<File> downloadFirmwareFile(){
-        String downloadUrl = "http://192.168.100.116:3000/mosfirm";
+        String downloadUrl = "http://172.18.189.144:8000/";
 
         File firmwareFile = new File(this.appContext.getFilesDir(), "firmware_update.zip");
         try{

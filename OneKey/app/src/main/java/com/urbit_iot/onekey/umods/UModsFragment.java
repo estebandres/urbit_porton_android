@@ -33,14 +33,9 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.UModConfigFragment;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
 
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -215,12 +210,12 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
     @Override
     public void showOpenCloseSuccess() {
-        showMessage(getString(R.string.open_close_success_message));
+        showMessage(getString(R.string.authorize_user_success_message));
     }
 
     @Override
     public void showOpenCloseFail() {
-        showMessage(getString(R.string.open_close_fail_message));
+        showMessage(getString(R.string.authorize_user_fail_message));
     }
 
     @Override
@@ -345,7 +340,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         // to show some Intent stubbing.
         Intent intent = new Intent(getContext(), UModConfigActivity.class);
         intent.putExtra(UModConfigFragment.ARGUMENT_CONFIG_UMOD_ID, uModUUID);
-            startActivityForResult(intent,REQUEST_UMOD_CONFIG);
+        startActivityForResult(intent,REQUEST_UMOD_CONFIG);
     }
 
     @Override
@@ -467,7 +462,16 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         }
 
         public void addItem(final UModViewModel viewModel){
+            Log.d("umods_frag", "ViewModel: " + viewModel.hashCode() + "\nVM: " + viewModel.toString());
             //refreshList();
+            String vmsCodes = "";
+            for (UModViewModel vm:
+                 mViewModelsList) {
+                vmsCodes = vmsCodes + ", " + vm.hashCode();
+            }
+
+            Log.d("umods_frag", "VMS: " + vmsCodes);
+
             if( ! mViewModelsList.contains(viewModel)){
                 mViewModelsList.add(viewModel);
                 notifyDataSetChanged();
@@ -480,14 +484,14 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                     }
                 }
                 mViewModelsList.add(viewModel);
-
+                /*
                 Collections.sort(mViewModelsList, new Comparator<UModViewModel>() {
                     @Override
                     public int compare(UModViewModel uModViewModel, UModViewModel t1) {
                         return uModViewModel.getItemMainText().compareTo(t1.getItemMainText());
                     }
                 });
-
+                */
                 notifyDataSetChanged();
             }
         }
@@ -527,7 +531,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         }
 
         @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
+        public View getView(final int i, View view, ViewGroup viewGroup) {
             View rowView = view;
             if (rowView == null) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
@@ -595,7 +599,9 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 rowView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Log.d("STEVE_listit",viewModel.toString());
+                        Log.d("umods_frag","INDEX:" + i
+                                + "VM_HashCode: " + viewModel.hashCode()
+                                + "\nVM: " + viewModel.toString());
                         viewModel.onItemClicked();
                     }
                 });

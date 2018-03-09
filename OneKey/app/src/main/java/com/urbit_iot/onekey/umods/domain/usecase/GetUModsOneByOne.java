@@ -112,11 +112,9 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                                                     return Observable.just(uMod);
                                                                 }
                                                             }
-                                                            if (throwable instanceof SocketTimeoutException){
-                                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                                return Observable.just(uMod);
-                                                            }
-                                                            return Observable.error(throwable);
+                                                            //If it is an unhandled error then return the umod untouched (pending)
+                                                            uMod.setAppUserLevel(UModUser.Level.PENDING);
+                                                            return Observable.just(uMod);
                                                         }
                                                     });
                                         }

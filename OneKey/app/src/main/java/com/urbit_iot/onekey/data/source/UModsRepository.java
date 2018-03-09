@@ -211,9 +211,9 @@ public class UModsRepository implements UModsDataSource {
                             //TODO should make only an update of connectionAddress and updateDate only (partial update).
                             Log.d("umods_rep", "db update");
                             mUModsLocalDataSource.saveUMod(uMod);
+                            //TODO move to cacheDataSource ASAP
+                            mCachedUMods.put(uMod.getUUID(),uMod);
                         }
-                        //TODO move to cacheDataSource ASAP
-                        mCachedUMods.put(uMod.getUUID(),uMod);
                     }
                 })
                 .doOnError(new Action1<Throwable>() {

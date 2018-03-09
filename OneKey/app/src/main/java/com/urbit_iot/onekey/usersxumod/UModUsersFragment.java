@@ -208,23 +208,41 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
     }
 
     @Override
-    public void showUserDeletionSuccess() {
-        showMessage(getString(R.string.open_close_success_message));
+    public void showUserDeletionSuccessMessage() {
+        showMessage(getString(R.string.delete_user_success_message));
     }
 
     @Override
-    public void showUserDeletionFail() {
-        showMessage(getString(R.string.open_close_fail_message));
+    public void showUserDeletionFailMessage() {
+        showMessage(getString(R.string.delete_user_fail_message));
     }
 
     @Override
-    public void showUserApprovalSuccess() {
-        showMessage(getString(R.string.open_close_success_message));
+    public void showUserApprovalSuccessMessage() {
+        showMessage(getString(R.string.authorize_user_success_message));
     }
 
     @Override
-    public void showUserApprovalFail() {
-        showMessage(getString(R.string.open_close_fail_message));
+    public void showUserApprovalFailMessage() {
+        showMessage(getString(R.string.authorize_user_fail_message));
+    }
+
+    @Override
+    public void showUserLevelUpdateFailMessage(boolean toAdmin) {
+        if (toAdmin){
+            showMessage(getString(R.string.upgrade_user_type_fail_message));
+        } else {
+            showMessage(getString(R.string.downgrade_user_type_fail_message));
+        }
+    }
+
+    @Override
+    public void showUserLevelUpdateSuccessMessage(boolean toAdmin) {
+        if (toAdmin){
+            showMessage(getString(R.string.upgrade_user_type_success_message));
+        } else {
+            showMessage(getString(R.string.downgrade_user_type_success_message));
+        }
     }
 
     @Override

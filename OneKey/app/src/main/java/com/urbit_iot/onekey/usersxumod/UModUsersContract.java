@@ -52,19 +52,23 @@ public interface UModUsersContract {
 
         void showFilteringPopUpMenu();
 
-        void showUserDeletionSuccess();
+        void showUserDeletionSuccessMessage();
 
-        void showUserDeletionFail();
+        void showUserDeletionFailMessage();
 
-        void showUserApprovalSuccess();
+        void showUserApprovalSuccessMessage();
 
-        void showUserApprovalFail();
+        void showUserApprovalFailMessage();
 
         String getContactNameFromPhoneNumber(String phoneNumber);
 
         void showProgressBar();
 
         void hideProgressBar();
+
+        void showUserLevelUpdateFailMessage(boolean toAdmin);
+
+        void showUserLevelUpdateSuccessMessage(boolean toAdmin);
     }
 
     interface Presenter extends BasePresenter {

@@ -32,8 +32,8 @@
     <string name="successfully_saved_umod_message">TO-DO saved</string>
 
 
-    <string name="open_close_success_message">OPEN CLOSE OK :)</string>
-    <string name="open_close_fail_message">OPEN CLOSE FAILED :(</string>
+    <string name="authorize_user_success_message">USUARIO AUTORIZADO</string>
+    <string name="authorize_user_fail_message">FALLO AL AUTORIZAR.</string>
 
     <string name="list_title">Modules List</string>
     <string name="statistics_title">Statistics</string>
@@ -81,5 +81,11 @@
     <string name="firmware_update_title">Actualización de Firmware</string>
     <string name="firmware_update_started_message">Actualización iniciada. Este proceso podría tomar hasta 60 segundos...</string>
     <string name="firmware_update_cancel_text">Cancelar</string>
+    <string name="delete_user_success_message">USUARIO ELIMINADO</string>
+    <string name="delete_user_fail_message">EL USUARIO NO PUDO ELIMINARSE</string>
+    <string name="upgrade_user_type_fail_message">UPGRADE TO ADMIN FAILED</string>
+    <string name="downgrade_user_type_fail_message">REMOCION DE PRIVILEGIOS FALLIDA</string>
+    <string name="upgrade_user_type_success_message">USUARIO CON PRIVILEGIOS DE ADMINISTRADOR</string>
+    <string name="downgrade_user_type_success_message">REMOCION DE PRIVILEGIOS EXITOSA</string>
 
 </resources>
