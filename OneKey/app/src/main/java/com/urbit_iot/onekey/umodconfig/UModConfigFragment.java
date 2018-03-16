@@ -320,12 +320,13 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                     mPresenter.adminUModUsers();
                 }
             });
-
+            /*
             if (viewModel.isWifiSettingsVisible()){
                 mWiFiSettings.setVisibility(View.VISIBLE);
             } else {
                 mWiFiSettings.setVisibility(View.GONE);
             }
+            */
             mAdminSettingsLayout.setVisibility(View.VISIBLE);
         } else {
             mAdminSettingsLayout.setVisibility(View.INVISIBLE);
