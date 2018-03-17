@@ -104,7 +104,6 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                 .onErrorResumeNext(new Func1<Throwable, Observable<CreateUserRPC.Result>>() {
                                                     @Override
                                                     public Observable<CreateUserRPC.Result> call(Throwable throwable) {
-
                                                         if (throwable instanceof HttpException){
                                                             //Check for HTTP UNAUTHORIZED error code
                                                             String errorMessage = "";
@@ -114,51 +113,77 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                                 return Observable.error(exc);
                                                             }
                                                             int httpErrorCode = ((HttpException) throwable).response().code();
-                                                            Log.e("req_access_uc", "CreateUser Failed: " + httpErrorCode);
+
+                                                            Log.e("req_access_uc", "CreateUser (urbit:urbit) Failed on error CODE:"
+                                                                    + httpErrorCode
+                                                                    + " MESSAGE: "
+                                                                    + errorMessage);
+
                                                             if (CreateUserRPC.DOC_ERROR_CODES.contains(httpErrorCode)){
                                                                 if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
                                                                 || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
                                                                     Log.e("req_access_uc", "CreateUser failed to Auth with urbit:urbit CODE: " + httpErrorCode);
                                                                 }
-                                                                if (httpErrorCode == HttpURLConnection.HTTP_CONFLICT
-                                                                        || errorMessage.contains("already")){
-                                                                    //TODO evaluate the benefit of getting the user_type in the error body.
-                                                                    //That may save us the next request (Deserialization using JSONObject)
-                                                                    GetMyUserLevelRPC.Arguments getUserLevelArgs =
-                                                                            new GetMyUserLevelRPC.Arguments(appUser.getUserName());
-                                                                    return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)
-                                                                            .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<CreateUserRPC.Result>>() {
-                                                                                @Override
-                                                                                public Observable<CreateUserRPC.Result> call(GetMyUserLevelRPC.Result result) {
-                                                                                    Log.d("getumod+info_uc","Get User Level Succeeded! " + result.toString());
-                                                                                    uMod.setAppUserLevel(result.getUserLevel());
-                                                                                    mUModsRepository.saveUMod(uMod);
-                                                                                    return Observable.just(new CreateUserRPC.Result(result.getAPIUserType()));
-                                                                                }
-                                                                            })
-                                                                            .onErrorResumeNext(new Func1<Throwable, Observable<? extends CreateUserRPC.Result>>() {
-                                                                                @Override
-                                                                                public Observable<? extends CreateUserRPC.Result> call(Throwable throwable) {
-                                                                                    Log.e("getumod+info_uc","Get User Level Failed: " + throwable.getMessage());
-                                                                                    if (throwable instanceof HttpException) {
-                                                                                        int httpErrorCode = ((HttpException) throwable).response().code();
-                                                                                        if (GetMyUserLevelRPC.ALLOWED_ERROR_CODES.contains(httpErrorCode)) {
-                                                                                            if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
-                                                                                                    || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
-                                                                                                Log.e("req_access_uc", "GetLevel failed to Auth with urbit:urbit CODE: " + httpErrorCode);
+                                                                if (httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR){
+                                                                    if(errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_CONFLICT))){
+                                                                        //TODO evaluate the benefit of getting the user_type in the error body.
+                                                                        //That may save us the next request (Deserialization using JSONObject)
+                                                                        GetMyUserLevelRPC.Arguments getUserLevelArgs =
+                                                                                new GetMyUserLevelRPC.Arguments(appUser.getUserName());
+                                                                        return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)
+                                                                                .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<CreateUserRPC.Result>>() {
+                                                                                    @Override
+                                                                                    public Observable<CreateUserRPC.Result> call(GetMyUserLevelRPC.Result result) {
+                                                                                        Log.d("getumod+info_uc","Get User Level Succeeded! " + result.toString());
+                                                                                        uMod.setAppUserLevel(result.getUserLevel());
+                                                                                        mUModsRepository.saveUMod(uMod);
+                                                                                        return Observable.just(new CreateUserRPC.Result(result.getAPIUserType()));
+                                                                                    }
+                                                                                })
+                                                                                .onErrorResumeNext(new Func1<Throwable, Observable<? extends CreateUserRPC.Result>>() {
+                                                                                    @Override
+                                                                                    public Observable<? extends CreateUserRPC.Result> call(Throwable throwable) {
+                                                                                        Log.e("getumod+info_uc","Get User Level Failed: " + throwable.getMessage());
+                                                                                        if (throwable instanceof HttpException) {
+                                                                                            String errorMessage = "";
+                                                                                            try {
+                                                                                                errorMessage = ((HttpException) throwable).response().errorBody().string();
+                                                                                            }catch (IOException exc){
+                                                                                                return Observable.error(exc);
                                                                                             }
-                                                                                            if ((httpErrorCode == HttpURLConnection.HTTP_NOT_FOUND)) {
-                                                                                                Log.e("req_access_uc", "CreateUser Failed: " + httpErrorCode);
-                                                                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                                                                mUModsRepository.saveUMod(uMod);
-                                                                                                return Observable.error(throwable);
+                                                                                            int httpErrorCode = ((HttpException) throwable).response().code();
+
+                                                                                            Log.e("req_access_uc", "GetUserStatus (urbit:urbit) Failed on error CODE:"
+                                                                                                    + httpErrorCode
+                                                                                                    + " MESSAGE: "
+                                                                                                    + errorMessage);
+
+                                                                                            if (GetMyUserLevelRPC.ALLOWED_ERROR_CODES.contains(httpErrorCode)) {
+                                                                                                if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
+                                                                                                        || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
+                                                                                                    Log.e("req_access_uc", "GetLevel failed to Auth with urbit:urbit CODE: " + httpErrorCode);
+                                                                                                }
+                                                                                                if ((httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR
+                                                                                                        && errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_NOT_FOUND)))) {
+                                                                                                    Log.e("req_access_uc", "GetLevel failed User NOT FOUND.");
+                                                                                                    uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                                                                    mUModsRepository.saveUMod(uMod);
+                                                                                                    return Observable.error(throwable);
+                                                                                                }
                                                                                             }
                                                                                         }
+                                                                                        return Observable.error(throwable);
                                                                                     }
-                                                                                    return Observable.error(throwable);
-                                                                                }
-                                                                            });
+                                                                                });
+                                                                    }
+                                                                    if(errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_INTERNAL_ERROR))){
+                                                                        return Observable.error(new FailedToWriteUserFilesException(uMod.getUUID()));
+                                                                    }
+                                                                    if(errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_PRECON_FAILED))){
+                                                                        return Observable.error(new MaxUModUsersQuantityReachedException(uMod.getUUID()));
+                                                                    }
                                                                 }
+
                                                             }
                                                         }
                                                         uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
@@ -179,7 +204,9 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                     @Override
                     public Boolean call(Integer retryCount, Throwable throwable) {
                         Log.e("req_access_uc", "Retry count: " + retryCount + "\n Excep msge: " + throwable.getMessage());
-                        if (retryCount < 3 && (throwable instanceof IOException)){
+                        if (retryCount <= 3
+                                && (throwable instanceof IOException
+                                || throwable instanceof FailedToWriteUserFilesException)){
                             mUModsRepository.refreshUMods();
                             return true;
                         } else {
@@ -217,6 +244,28 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
         }
         public CreateUserRPC.Result getResult() {
             return result;
+        }
+    }
+
+    public static class MaxUModUsersQuantityReachedException extends Exception{
+        private String mUModUUID;
+        public MaxUModUsersQuantityReachedException(String uModUUID){
+            super("Maximum UMod Users reached: " + uModUUID);
+            this.mUModUUID = uModUUID;
+        }
+        public String getUModUUID(){
+            return this.mUModUUID;
+        }
+    }
+
+    public static class FailedToWriteUserFilesException extends Exception{
+        private String mUModUUID;
+        public FailedToWriteUserFilesException(String uModUUID){
+            super("Failed to write user files in server: " + uModUUID);
+            this.mUModUUID = uModUUID;
+        }
+        public String getUModUUID(){
+            return this.mUModUUID;
         }
     }
 }

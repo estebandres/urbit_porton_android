@@ -16,14 +16,15 @@ import java.util.List;
 
 public class CreateUserRPC extends RPC {
     public static final List<Integer> DOC_ERROR_CODES = Arrays.asList(
-                HttpURLConnection.HTTP_BAD_REQUEST,
-                HttpURLConnection.HTTP_NOT_FOUND,
-                HttpURLConnection.HTTP_INTERNAL_ERROR,
-                HttpURLConnection.HTTP_BAD_REQUEST,
-                HttpURLConnection.HTTP_PRECON_FAILED,
-                //Digest Auth + ACL this call is performed with urbit:urbit so never should fail.
+                //HttpURLConnection.HTTP_BAD_REQUEST,
+                //HttpURLConnection.HTTP_INTERNAL_ERROR,
+                //HttpURLConnection.HTTP_BAD_REQUEST,
+                //HttpURLConnection.HTTP_PRECON_FAILED,
+                //(Mongoose side) Digest Auth + ACL this call is performed with urbit:urbit so never should fail.
                 HttpURLConnection.HTTP_UNAUTHORIZED,
-                HttpURLConnection.HTTP_FORBIDDEN);
+                HttpURLConnection.HTTP_FORBIDDEN,
+                //(Mongoose side) Any Error.
+                HttpURLConnection.HTTP_INTERNAL_ERROR);
 
     public static class Arguments{
 

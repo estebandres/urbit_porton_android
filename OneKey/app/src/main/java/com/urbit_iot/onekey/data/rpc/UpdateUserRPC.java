@@ -13,11 +13,13 @@ import java.util.List;
 
 public class UpdateUserRPC extends RPC {
     public static final List<Integer> DOC_ERROR_CODES = Arrays.asList(
-            HttpURLConnection.HTTP_NOT_FOUND,
-            HttpURLConnection.HTTP_BAD_REQUEST,
+            //HttpURLConnection.HTTP_NOT_FOUND,
+            //HttpURLConnection.HTTP_BAD_REQUEST,
             //Digest Auth + ACL this call is performed with user:pass COULD fail.
             HttpURLConnection.HTTP_UNAUTHORIZED,
-            HttpURLConnection.HTTP_FORBIDDEN);
+            HttpURLConnection.HTTP_FORBIDDEN,
+            //(Mongoose side) Any Error.
+            HttpURLConnection.HTTP_INTERNAL_ERROR);
 
     public static class Arguments{
 

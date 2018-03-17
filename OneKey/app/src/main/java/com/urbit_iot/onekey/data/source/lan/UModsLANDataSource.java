@@ -179,8 +179,6 @@ public class UModsLANDataSource implements UModsDataSource {
     @Override
     @RxLogObservable
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
-        //Log.d("lan_ds", uModUUID);
-        //Log.d("lan_ds", UMODS_SERVICE_DATA.get(uModUUID).toString());
         UMod mockedUMod = UMODS_SERVICE_DATA.get(uModUUID);
         Observable<UMod> mockedUModObs;
         if (mockedUMod != null){
@@ -190,16 +188,16 @@ public class UModsLANDataSource implements UModsDataSource {
             mockedUModObs = Observable.empty();
         }
 
-        return Observable.mergeDelayError(mockedUModObs,
-                mUModsDNSSDScanner.browseLANForUMod(uModUUID),
-                mUModsWiFiScanner.browseWiFiForUMod(uModUUID))
+        return Observable.mergeDelayError(
+                //mockedUModObs,
+                mUModsWiFiScanner.browseWiFiForUMod(uModUUID),
+                mUModsDNSSDScanner.browseLANForUMod(uModUUID))
                 .doOnNext(new Action1<UMod>() {
                     @Override
                     public void call(UMod uMod) {
                         Log.e("lan_data-source", uMod.toString());
                     }
                 })
-        //return mUModsDNSSDScanner.browseLANForUMod(uModUUID)
                 .first()
                 .compose(this.uModLANBrander);
     }

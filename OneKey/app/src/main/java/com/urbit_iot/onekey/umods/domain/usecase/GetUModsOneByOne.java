@@ -16,6 +16,7 @@ import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 
 import javax.inject.Inject;
@@ -23,6 +24,7 @@ import javax.inject.Inject;
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.functions.Func1;
+import rx.functions.Func2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -91,7 +93,8 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                                     .onErrorResumeNext(new Func1<Throwable, Observable<? extends UMod>>() {
                                                         @Override
                                                         public Observable<? extends UMod> call(Throwable throwable) {
-                                                            Log.e("getumods1x1_uc", "Get User Status Fail: " + throwable.getMessage() + "ExcType: " + throwable.getClass().getSimpleName());
+                                                            Log.e("getumods1x1_uc", "Get User Status Fail: " + throwable.getMessage()
+                                                                    + "ExcType: " + throwable.getClass().getSimpleName());
                                                             if (throwable instanceof HttpException) {
                                                                 String errorMessage = "";
                                                                 //Check for HTTP UNAUTHORIZED error code
@@ -101,18 +104,39 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                                                     return Observable.error(exc);
                                                                 }
                                                                 int httpErrorCode = ((HttpException) throwable).response().code();
-                                                                Log.e("getumods1x1_uc", "Get User Status Failure Response: " + errorMessage + "Status Code: " + httpErrorCode);
+
+                                                                Log.e("getumods1x1_uc", "Get User Status (urbit:urbit) Failed on error CODE:"
+                                                                        + httpErrorCode
+                                                                        + " MESSAGE: "
+                                                                        + errorMessage);
+
                                                                 //401 and 403 aren't considered because the call is made with urbit:urbit
-                                                                if (httpErrorCode != 0 && (httpErrorCode == 404)) {
-                                                                    uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                                    return Observable.just(uMod);
-                                                                }
-                                                                if (httpErrorCode == 500){
-                                                                    uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                                    return Observable.just(uMod);
+                                                                if (httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR){
+                                                                    if (errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_NOT_FOUND))) {
+                                                                        uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                                        return Observable.just(uMod);
+                                                                    }
                                                                 }
                                                             }
-                                                            //If it is an unhandled error then return the umod untouched (pending)
+                                                            return Observable.error(throwable);
+                                                        }
+                                                    })
+                                                    .retry(new Func2<Integer, Throwable, Boolean>() {
+                                                        @Override
+                                                        public Boolean call(Integer retryCount, Throwable throwable) {
+                                                            Log.e("getumods1x1_uc", "Retry GetUserLevel. Count: " + retryCount + "\n Excep msge: " + throwable.getMessage());
+                                                            if (retryCount <= 2){
+                                                                mUModsRepository.refreshUMods();
+                                                                return true;
+                                                            } else {
+                                                                return false;
+                                                            }
+                                                        }
+                                                    })
+                                                    .onErrorResumeNext(new Func1<Throwable, Observable<UMod>>() {
+                                                        @Override
+                                                        public Observable<UMod> call(Throwable throwable) {
+                                                            //If it is an unhandled error then return the umod untouched (pending) so the flow isn't interrupted.
                                                             uMod.setAppUserLevel(UModUser.Level.PENDING);
                                                             return Observable.just(uMod);
                                                         }

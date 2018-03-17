@@ -22,14 +22,17 @@ import android.util.Log;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 
 import javax.inject.Inject;
 
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
@@ -66,6 +69,38 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
                     public Observable<SetWiFiAPRPC.Result> call(final UMod uMod) {
                         SetWiFiAPRPC.Arguments setWiFiArgs = new SetWiFiAPRPC.Arguments(values.getmWiFiSSID(), values.getmWiFiPassword());
                         return uModsRepository.setWiFiAP(uMod,setWiFiArgs)
+                                .onErrorResumeNext(new Func1<Throwable, Observable<? extends SetWiFiAPRPC.Result>>() {
+                                    @Override
+                                    public Observable<SetWiFiAPRPC.Result> call(Throwable throwable) {
+                                        Log.e("setwifi_uc","Set WiFi Failure: " + throwable.getMessage());
+                                        if (throwable instanceof HttpException) {
+                                            String errorMessage = "";
+                                            try {
+                                                errorMessage = ((HttpException) throwable).response().errorBody().string();
+                                            }catch (IOException exc){
+                                                return Observable.error(exc);
+                                            }
+                                            int httpErrorCode = ((HttpException) throwable).response().code();
+
+                                            Log.e("setwifi_uc", "Set WiFi Failure on error CODE:"
+                                                    + httpErrorCode
+                                                    + " MESSAGE: "
+                                                    + errorMessage);
+
+                                            if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
+                                                    || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
+                                                Log.e("setwifi_uc", "Set WiFi Failure on AUTH CODE: " + httpErrorCode);
+                                            }
+                                            if ((httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR
+                                                    && errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_OK)))) {
+                                                Log.e("setwifi_uc", "Set WiFi in progress!");
+                                                SetWiFiAPRPC.Result result = new SetWiFiAPRPC.Result();
+                                                return Observable.just(result);
+                                            }
+                                        }
+                                        return Observable.error(throwable);
+                                    }
+                                })
                                 .flatMap(new Func1<SetWiFiAPRPC.Result, Observable<SetWiFiAPRPC.Result>>() {
                                     @Override
                                     public Observable<SetWiFiAPRPC.Result> call(SetWiFiAPRPC.Result result) {
@@ -83,9 +118,9 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
                 .retry(new Func2<Integer, Throwable, Boolean>() {
                     @Override
                     public Boolean call(Integer retryCount, Throwable throwable) {
-                        Log.e("factory-reset_uc", "Retry count: " + retryCount +
+                        Log.e("setwifi_uc", "Retry count: " + retryCount +
                                 "\n Excep msge: " + throwable.getMessage());
-                        if (retryCount < 4 &&
+                        if (retryCount <= 2 &&
                                 (throwable instanceof IOException)){
                             uModsRepository.refreshUMods();
                             return true;

@@ -19,6 +19,7 @@ package com.urbit_iot.onekey.umodconfig.domain.usecase;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.common.base.Strings;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
@@ -73,7 +74,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                     public Observable<UMod> call(final UMod uMod) {
                         if (uMod.getState() == UMod.State.AP_MODE
                                 && !values.getmConnectedWiFiAP().contains(uMod.getUUID())){
-                            Log.d("getumod+info_uc","Not connected to an AP_MODE UMod!");
+                            Log.d("getumod+info_uc","Not connected to an AP_MODE UMod!\n" + uMod.toString());
                             //return Observable.just(uMod);
                             return Observable.error(new UnconnectedFromAPModeUModException(uMod.getUUID()));
                         }
@@ -90,6 +91,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                         //User Creation Succeeded
                                                         Log.d("getumod+info_uc","User Creation Succeeded!");
                                                         uMod.setAppUserLevel(result.getUserLevel());
+                                                        mUModsRepository.saveUMod(uMod);
                                                         return Observable.just(uMod);
                                                     }
                                                 })
@@ -205,7 +207,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                         Log.d("getumod+info_uc", result.toString());
                                         uMod.setSWVersion(result.getFwVersion());
                                         uMod.setWifiSSID(result.getWifi().getSsid());
-                                        if (uMod.getState() == UMod.State.STATION_MODE){
+                                        if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){
                                             uMod.setConnectionAddress(result.getWifi().getStaIp());
                                         }
                                         return Observable.just(uMod);

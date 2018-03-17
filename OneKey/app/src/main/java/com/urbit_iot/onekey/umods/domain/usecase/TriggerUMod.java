@@ -95,7 +95,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                     +httpErrorCode
                                                     +" MESSAGE: "
                                                     + errorMessage);
-
+                                            //401 occurs when some admin deleted me
                                             if (httpErrorCode != 0 && (httpErrorCode == 401 || httpErrorCode == 403)){
                                                 uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
                                                 mUModsRepository.saveUMod(uMod);
@@ -103,8 +103,8 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                 //return Observable.error(new Exception("Forces umods UI Refresh"));
                                                 //return Observable.error(throwable);
                                             }
-                                            //If the user was Admin but now is User...
-                                            if (httpErrorCode == 500 && errorMessage.contains("unauthorized")){
+                                            //If the user was Admin but now is User and vice versa...
+                                            if (httpErrorCode == 500){//body: "unauthorized"
                                                 return mAppUserRepository.getAppUser()
                                                         .flatMap(new Func1<AppUser, Observable<TriggerRPC.Result>>() {
                                                             @Override
@@ -132,7 +132,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                                                             + errorMessage);
                                                                                     if (httpErrorCode != 0
                                                                                         && httpErrorCode == 500
-                                                                                            && errorMessage.contains("user not found")) {
+                                                                                            && errorMessage.contains("404")) {
                                                                                                 uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
                                                                                                 mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
                                                                                                 return Observable.error(throwable);//TODO Replace by custom exception
@@ -144,6 +144,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                                         .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<TriggerRPC.Result>>() {
                                                                             @Override
                                                                             public Observable<TriggerRPC.Result> call(GetMyUserLevelRPC.Result result) {
+                                                                                //TODO what about when someone changed my status to Guest????? (This is not allowed by the app)
                                                                                 Log.d("trigger_uc", "Get User Level Success: "+result.toString());
                                                                                 uMod.setAppUserLevel(result.getUserLevel());
                                                                                 return mUModsRepository.triggerUMod(uMod, requestArguments);
@@ -167,7 +168,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                     public Boolean call(Integer retryCount, Throwable throwable) {
                         Log.e("trigger_uc", "Retry count: " + retryCount +
                                 " -- Excep msge: " + throwable.getMessage() + "Excep Type: " + throwable.getClass().getSimpleName());
-                        if (retryCount < 4 &&
+                        if (retryCount == 1 &&
                                 (throwable instanceof IOException)){
                             mUModsRepository.refreshUMods();
                             return true;

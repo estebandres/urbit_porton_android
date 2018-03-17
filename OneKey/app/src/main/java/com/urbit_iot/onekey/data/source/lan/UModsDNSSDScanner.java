@@ -92,7 +92,9 @@ public class UModsDNSSDScanner {
                         .filter(new Func1<BonjourService, Boolean>() {
                             @Override
                             public Boolean call(BonjourService bonjourService) {
-                                return bonjourService.getHostname() != null && bonjourService.getHostname().contains(uModUUID);
+                                return bonjourService.getHostname() != null
+                                        && bonjourService.getHostname().contains(uModUUID)
+                                        && bonjourService.getInet4Address() != null;
                             }
                         })
                         .take(1)

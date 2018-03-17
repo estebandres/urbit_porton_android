@@ -418,9 +418,21 @@ public class UModsRepository implements UModsDataSource {
                             Log.e("umod_repo", throwable.getMessage());
                         }
                     })
-                    .first();
+                    .first()
+                    .doOnUnsubscribe(new Action0() {
+                        @Override
+                        public void call() {
+                            mCacheIsDirty = false;//prevents the getUMod to refresh
+                        }
+                    });
         } else {
-            return getSingleUModFromLanAndUpdateDBEntry(uModUUID);
+            return getSingleUModFromLanAndUpdateDBEntry(uModUUID)
+                    .doOnUnsubscribe(new Action0() {
+                        @Override
+                        public void call() {
+                            mCacheIsDirty = false;//prevents the getUMod to refresh
+                        }
+                    });
         }
     }
 
