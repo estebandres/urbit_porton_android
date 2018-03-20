@@ -31,7 +31,7 @@ public class UModsDNSSDScanner {
     }
 
     //Keeps browsing the LAN for 4 seconds maximum.
-    @RxLogObservable
+    //@RxLogObservable
     public Observable<UMod> browseLANForUMods(){
         return Observable.defer(new Func0<Observable<UMod>>() {
             @Override

@@ -2,6 +2,10 @@ package com.urbit_iot.onekey.umods;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
@@ -10,8 +14,10 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.PopupMenu;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -20,12 +26,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
@@ -37,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import ng.max.slideview.SlideView;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
@@ -81,7 +88,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mListAdapter = new UModsAdapter(new ArrayList<UModViewModel>(0), mItemListener);
+        mListAdapter = new UModsAdapter(new ArrayList<UModViewModel>(0), mItemListener, getResources());
         mVibrator = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
@@ -111,7 +118,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         // Set up tasks view
         ListView listView = (ListView) root.findViewById(R.id.umods_list);
         listView.setAdapter(mListAdapter);
-        mFilteringLabelView = (TextView) root.findViewById(R.id.umods_filtering_label);
+        //mFilteringLabelView = (TextView) root.findViewById(R.id.umods_filtering_label);
         mTasksView = (LinearLayout) root.findViewById(R.id.umods_linear_layout);
 
         // Set up  no tasks view
@@ -446,10 +453,12 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
         private List<UModViewModel> mViewModelsList;
         private UModItemListener mItemListener;
+        private Resources resources;
 
-        public UModsAdapter(List<UModViewModel> uMods, UModItemListener itemListener) {
+        public UModsAdapter(List<UModViewModel> uMods, UModItemListener itemListener, Resources resources) {
             setList(uMods);
             mItemListener = itemListener;
+            this.resources = resources;
         }
 
         public void replaceData(List<UModViewModel> uMods) {
@@ -499,7 +508,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         public void makeButtonVisible(String uModUUID){
             for (UModViewModel viewModel : mViewModelsList){
                 if (viewModel.getuModUUID().equals(uModUUID)){
-                    viewModel.setButtonVisible(true);
+                    viewModel.setSliderVisible(true);
+                    viewModel.setSliderEnabled(true);
                     notifyDataSetChanged();
                 }
             }
@@ -533,38 +543,78 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         @Override
         public View getView(final int i, View view, ViewGroup viewGroup) {
             View rowView = view;
+
+            LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
+            rowView = inflater.inflate(R.layout.umod_item_card2, viewGroup, false);
+            /*
             if (rowView == null) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-                rowView = inflater.inflate(R.layout.umod_item, viewGroup, false);
+                rowView = inflater.inflate(R.layout.umod_item_card2, viewGroup, false);
             }
-
+            */
             final UModViewModel viewModel = getItem(i);
             //TODO if R.id.title is renamed then the project doesn't build. Why??
-            TextView mainText = (TextView) rowView.findViewById(R.id.title);
+            TextView mainText = (TextView) rowView.findViewById(R.id.card_main_text);
 
             mainText.setText(viewModel.getItemMainText());
 
-            TextView lowerText = (TextView) rowView.findViewById(R.id.lower_text);
+            TextView lowerText = (TextView) rowView.findViewById(R.id.card_lower_text);
 
             lowerText.setText(viewModel.getItemLowerText());
 
-            final CheckBox notifEnCB = (CheckBox) rowView.findViewById(R.id.umod_notif_enabler);
+            final ToggleButton notifToggle = (ToggleButton) rowView.findViewById(R.id.card_item_notif_button);
 
-            final Button actionButton = (Button) rowView.findViewById(R.id.umod_action_button);
+            final SlideView actionSlider = (SlideView) rowView.findViewById(R.id.card_slider);
 
-            if(viewModel.isButtonVisible()){
-                actionButton.setVisibility(View.VISIBLE);
+            final RelativeLayout upperLayout = (RelativeLayout) rowView.findViewById(R.id.umod_item_upper_layout);
+
+            //actionSlider.getTextView().setSingleLine();
+            //actionSlider.getTextView().setEllipsize(TextUtils.TruncateAt.END);
+            //actionSlider.getTextView().setText(Integer.toString(actionSlider.getTextView().getWidth()) + "  " + Integer.toString(actionSlider.getWidth()));
+
+            if(viewModel.isSliderVisible()){
+                actionSlider.setVisibility(View.VISIBLE);
+                ColorStateList sliderTextColorCSL = null;
+                ColorStateList sliderBackgroundCSL = null;
+                try{
+                    sliderBackgroundCSL = ResourcesCompat.getColorStateList(this.resources,viewModel.getSliderBackgroundColor().asActualResource(), null);
+                    sliderTextColorCSL = ResourcesCompat.getColorStateList(this.resources,viewModel.getSliderTextColor().asActualResource(),null);
+                }catch (Resources.NotFoundException nfExc){
+                    //sliderBackgroundCSL = sliderBackgroundCSL==null?ResourcesCompat.getColorStateList(this.resources,R.color.colorPrimaryDark, null):sliderBackgroundCSL;
+                    sliderBackgroundCSL = sliderBackgroundCSL==null?ColorStateList.valueOf(Color.DKGRAY):sliderBackgroundCSL;
+                    //sliderTextColorCSL = sliderTextColorCSL==null?ResourcesCompat.getColorStateList(this.resources,R.color.white, null):sliderTextColorCSL;
+                    sliderTextColorCSL = sliderTextColorCSL==null?ColorStateList.valueOf(Color.WHITE):sliderTextColorCSL;
+                }
+                actionSlider.setSlideBackgroundColor(sliderBackgroundCSL);
+                actionSlider.setTextColor(sliderTextColorCSL);
+                actionSlider.setEnabled(viewModel.isSliderEnabled());
+                /*
+                else {
+                    ColorStateList disabledSliderBackgroundCSL = null;
+                    int disabledSliderTextColorRes = -1;
+                    try{
+                        disabledSliderBackgroundCSL = ResourcesCompat.getColorStateList(this.resources,UModViewModelColors.DISABLED_SLIDER_BACKGROUND.asActualResource(), null);
+                        disabledSliderTextColorRes = ResourcesCompat.getColor(resources,UModViewModelColors.DISABLED_SLIDER_TEXT.asActualResource(),null);
+                    }catch (Resources.NotFoundException nfExc){
+                        disabledSliderBackgroundCSL = disabledSliderBackgroundCSL==null?ResourcesCompat.getColorStateList(this.resources,R.color.colorPrimaryDark, null):disabledSliderBackgroundCSL;
+                        disabledSliderTextColorRes = disabledSliderTextColorRes==-1?ResourcesCompat.getColor(this.resources,R.color.white, null):disabledSliderTextColorRes;
+                    }
+                    actionSlider.setSlideBackgroundColor(disabledSliderBackgroundCSL);
+                    actionSlider.setTextColor(disabledSliderTextColorRes);
+                    actionSlider.setEnabled(false);
+                }
+                */
             } else {
-                actionButton.setVisibility(View.INVISIBLE);
+                actionSlider.setVisibility(View.GONE);
             }
-            actionButton.setText(viewModel.getButtonText());
+            actionSlider.setText(viewModel.getSliderText());
 
             // NotifEnabled checkbox state
-            notifEnCB.setChecked(viewModel.isCheckboxChecked());
-            if (viewModel.isCheckboxVisible()){
-                notifEnCB.setVisibility(View.VISIBLE);
+            notifToggle.setChecked(viewModel.isToggleButtonChecked());
+            if (viewModel.isToggleButtonVisible()){
+                notifToggle.setVisibility(View.VISIBLE);
             } else {
-                notifEnCB.setVisibility(View.INVISIBLE);
+                notifToggle.setVisibility(View.INVISIBLE);
             }
 
 
@@ -578,25 +628,25 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             }
             */
 
-            notifEnCB.setOnClickListener(new View.OnClickListener() {
+            notifToggle.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
-                public void onClick(View v) {
-                    viewModel.onCheckBoxClicked(notifEnCB.isChecked());
-                }
-            });
-
-            actionButton.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    viewModel.onButtonClicked();
-                    mItemListener.vibrateOnActionButtonClick();
-                    actionButton.setVisibility(View.INVISIBLE);
+                public boolean onLongClick(View view) {
+                    viewModel.onButtonToggled(!viewModel.isToggleButtonChecked());
                     return true;
                 }
             });
 
+            actionSlider.setOnSlideCompleteListener(new SlideView.OnSlideCompleteListener() {
+                @Override
+                public void onSlideComplete(SlideView slideView) {
+                    viewModel.onSlideCompleted();
+                    mItemListener.vibrateOnActionButtonClick();
+                    actionSlider.setEnabled(false);
+                }
+            });
+
             if(viewModel.isItemOnClickListenerEnabled()){
-                rowView.setOnClickListener(new View.OnClickListener() {
+                upperLayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         Log.d("umods_frag","INDEX:" + i
@@ -624,6 +674,46 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         //void onRequestAccess(UMod requestedUMod);
 
         void vibrateOnActionButtonClick();
+    }
+
+    public enum UModViewModelColors{
+        TRIGGER_SLIDER_BACKGROUND {
+            @Override
+            public int asActualResource() {
+                return R.drawable.trigger_slider_background_selector;
+            }
+        },
+        TRIGGER_SLIDER_TEXT{
+            @Override
+            public int asActualResource() {
+                return R.drawable.trigger_slider_text_selector;
+            }
+        },
+        OFFLINE_RED{
+            @Override
+            public int asActualResource() {
+                return R.color.offline_red;
+            }
+        },
+        ONLINE_GREEN{
+            @Override
+            public int asActualResource() {
+                return R.color.online_green;
+            }
+        },
+        ACCESS_REQUEST_SLIDER_BACKGROUND{
+            @Override
+            public int asActualResource() {
+                return R.drawable.request_access_slider_background_selector;
+            }
+        },
+        ACCESS_REQUEST_SLIDER_TEXT{
+            @Override
+            public int asActualResource() {
+                return R.drawable.request_access_slider_text_selector;
+            }
+        };
+        public abstract int asActualResource();
     }
 
 }

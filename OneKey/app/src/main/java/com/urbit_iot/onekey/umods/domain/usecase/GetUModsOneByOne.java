@@ -59,7 +59,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                         Log.d("GetUM1x1", uMod.toString());
                         //TODO Replace actual isOpen logic or remove it completely
                         //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
-                        return (uMod.isOpen() || uMod.belongsToAppUser() || uMod.isInAPMode());
+                        return (uMod.isOpen() || uMod.isInAPMode()) && (uMod.getuModSource() == UMod.UModSource.LAN_SCAN) ;
                     }
                 })
                 //Asks to the esp if the admin has authorized me when PENDING.
@@ -111,7 +111,8 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                                                         + errorMessage);
 
                                                                 //401 and 403 aren't considered because the call is made with urbit:urbit
-                                                                if (httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR){
+                                                                if (httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR
+                                                                        || httpErrorCode == HttpURLConnection.HTTP_NOT_FOUND){
                                                                     if (errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_NOT_FOUND))) {
                                                                         uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
                                                                         return Observable.just(uMod);

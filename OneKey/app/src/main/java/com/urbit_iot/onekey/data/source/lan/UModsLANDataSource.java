@@ -137,7 +137,7 @@ public class UModsLANDataSource implements UModsDataSource {
 
     private static void addUMod(String uModUUID, String onLANIPAddress) {
         UMod uMod = new UMod(uModUUID, onLANIPAddress, true);
-        uMod.setAppUserLevel(UModUser.Level.PENDING);
+        uMod.setAppUserLevel(UModUser.Level.ADMINISTRATOR);
         UMODS_SERVICE_DATA.put(uMod.getUUID(), uMod);
     }
 
@@ -177,7 +177,7 @@ public class UModsLANDataSource implements UModsDataSource {
 
 
     @Override
-    @RxLogObservable
+    //@RxLogObservable
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
         UMod mockedUMod = UMODS_SERVICE_DATA.get(uModUUID);
         Observable<UMod> mockedUModObs;

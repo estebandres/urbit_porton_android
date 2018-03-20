@@ -39,7 +39,7 @@ public class UModsWiFiScanner {
         return scanWiFi(uModUUID);
     }
 
-    @RxLogObservable
+    //@RxLogObservable
     private Observable<UMod> scanWiFi(final String filterUModUUID) {
         if (ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling

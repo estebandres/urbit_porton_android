@@ -5,9 +5,6 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.urbit_iot.onekey.RxUseCase;
-import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
-import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
@@ -19,7 +16,7 @@ import com.urbit_iot.onekey.umods.domain.usecase.RequestAccess;
 import com.urbit_iot.onekey.umods.domain.usecase.SetOngoingNotificationStatus;
 import com.urbit_iot.onekey.umods.domain.usecase.TriggerUMod;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
-import com.urbit_iot.onekey.util.retrofit2.RetrofitUtils;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -203,9 +200,11 @@ public class UModsPresenter implements UModsContract.Presenter {
         String itemLowerText;
         boolean checkboxChecked;
         boolean checkboxVisible;
-        String buttonText;
-        boolean buttonVisible;
+        String sliderText;
+        boolean sliderVisible;
         boolean itemOnClickListenerEnabled;
+        boolean sliderEnabled;
+        UModsFragment.UModViewModelColors lowerTextColor, sliderBackgroundColor, sliderTextColor;
 
         uModUUID = uMod.getUUID();
 
@@ -222,33 +221,48 @@ public class UModsPresenter implements UModsContract.Presenter {
         }
 
         //Default values
-        buttonText = "OFF";
-        buttonVisible = false;
+        sliderText = null;
+        sliderVisible = false;
+        sliderEnabled = false;
+        sliderBackgroundColor = null;
+        sliderTextColor = null;
 
         if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){//LAN_SCAN means online but can be dnssd/ap/ble discovery
             //shows action button only when online and is in station mode.
             if (uMod.getState() == UMod.State.STATION_MODE) {
                 //TODO add button text alternatives as String resource or GlobalConstants??.
+                sliderEnabled = true;
                 switch (uMod.getAppUserLevel()) {
                     case PENDING:
-                        buttonText = "WAIT";
-                        buttonVisible = false;
+                        sliderText = GlobalConstants.PENDING_SLIDER_TEXT;
+                        sliderTextColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_TEXT;
+                        sliderBackgroundColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_BACKGROUND;
+                        sliderVisible = true;
+                        sliderEnabled = false;
                         break;
                     case AUTHORIZED:
-                        buttonText = "TRIG";
-                        buttonVisible = true;
+                        sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
+                        sliderBackgroundColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_BACKGROUND;
+                        sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
+                        sliderVisible = true;
                         break;
                     case ADMINISTRATOR:
-                        buttonText = "TRIG";
-                        buttonVisible = true;
+                        sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
+                        sliderBackgroundColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_BACKGROUND;
+                        sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
+                        sliderVisible = true;
                         break;
                     case UNAUTHORIZED:
-                        buttonText = "ASK";
-                        buttonVisible = true;
+                        sliderText = GlobalConstants.REQUEST_ACCESS_SLIDER_TEXT;
+                        sliderBackgroundColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_BACKGROUND;
+                        sliderTextColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_TEXT;
+                        sliderVisible = true;
                         break;
                     default:
-                        buttonText = "NON";
-                        buttonVisible = false;
+                        sliderText = "DEFAULT_NON";
+                        sliderBackgroundColor = UModsFragment.UModViewModelColors.OFFLINE_RED;
+                        sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
+                        sliderVisible = false;
                         break;
                 }
             }
@@ -257,9 +271,11 @@ public class UModsPresenter implements UModsContract.Presenter {
         checkboxChecked = uMod.isOngoingNotificationEnabled();
 
         if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){
-            itemLowerText = "ONLINE";
+            itemLowerText = GlobalConstants.ONLINE_LOWER_TEXT;
+            lowerTextColor = UModsFragment.UModViewModelColors.ONLINE_GREEN;
         } else {
-            itemLowerText = "OFFLINE";
+            itemLowerText = GlobalConstants.OFFLINE_LOWER_TEXT;
+            lowerTextColor = UModsFragment.UModViewModelColors.OFFLINE_RED;
         }
 
         //TODO Default until all states are defined i.e. what about BLE_MODE and OTA_UPDATE??
@@ -273,7 +289,6 @@ public class UModsPresenter implements UModsContract.Presenter {
                 break;
             case PENDING:
                 itemOnClickListenerEnabled = false;
-                itemLowerText = itemLowerText + " - ESPERANDO AUTORIZACIÓN";
                 break;
             case UNAUTHORIZED:
                 itemOnClickListenerEnabled = false;
@@ -288,9 +303,10 @@ public class UModsPresenter implements UModsContract.Presenter {
         }
 
         return new UModViewModel(uMod, uModUUID, this, itemMainText, itemLowerText,
-                checkboxChecked, checkboxVisible, buttonText, buttonVisible, itemOnClickListenerEnabled) {
+                checkboxChecked, checkboxVisible, sliderText, sliderVisible, sliderEnabled, itemOnClickListenerEnabled,
+                lowerTextColor, sliderBackgroundColor, sliderTextColor) {
             @Override
-            public void onButtonClicked() {
+            public void onSlideCompleted() {
                 //TODO this code shouldnt depend on external objects.
                 if(this.getuMod().belongsToAppUser()){
                     this.getPresenter().triggerUMod(getuModUUID());
@@ -303,8 +319,8 @@ public class UModsPresenter implements UModsContract.Presenter {
             }
 
             @Override
-            public void onCheckBoxClicked(Boolean cbChecked) {
-                this.getPresenter().setNotificationStatus(getuModUUID(), cbChecked);
+            public void onButtonToggled(Boolean toggleState) {
+                this.getPresenter().setNotificationStatus(getuModUUID(), toggleState);
             }
 
             @Override

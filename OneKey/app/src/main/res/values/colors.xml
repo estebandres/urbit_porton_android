@@ -28,4 +28,14 @@
     <color name="text_shadow">#55000000</color>
     <color name="text_shadow_white">#FFFFFF</color>
 
+    <color name="trigger_slider_background">#165044</color>
+    <color name="online_green">#00aa00</color>
+    <color name="offline_red">#d40000</color>
+    <color name="card_background_offline_grey">#dbe3e2</color>
+    <color name="request_access_slider_background">#f9c700</color>
+    <color name="request_access_slider_text">#554400</color>
+    <color name="trigger_slider_text">#88FFFFFF</color>
+    <color name="disabled_slider_background">#A2A3A3</color>
+    <color name="disabled_slider_text">#88FFFFFF</color>
+
 </resources>

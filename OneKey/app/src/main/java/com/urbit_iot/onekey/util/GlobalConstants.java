@@ -27,4 +27,12 @@ public final class GlobalConstants {
 
     public static final String CREDENTIALS_REALM_SEPARATOR = ":urbit:";
 
+    //UModViewModel
+    public static final String TRIGGER_SLIDER_TEXT = "DESLICE PARA ACCIONAR";
+    public static final String PENDING_SLIDER_TEXT = "ESPERANDO AUTORIZACIÓN";
+    public static final String REQUEST_ACCESS_SLIDER_TEXT = "SOLICITAR ACCESO";
+
+    public static final String ONLINE_LOWER_TEXT = "online";
+    public static final String OFFLINE_LOWER_TEXT = "desconectado";
+
 }

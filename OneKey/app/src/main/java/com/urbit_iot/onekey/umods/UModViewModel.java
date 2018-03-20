@@ -1,7 +1,5 @@
 package com.urbit_iot.onekey.umods;
 
-import android.graphics.Color;
-
 import com.google.common.base.Objects;
 import com.urbit_iot.onekey.data.UMod;
 
@@ -15,32 +13,44 @@ public abstract class UModViewModel {
     private UModsPresenter presenter;
     private String itemMainText;
     private String itemLowerText;
-    private boolean checkboxChecked;
-    private boolean checkboxVisible;
-    private String buttonText;
-    private boolean buttonVisible;
+    private boolean toggleButtonChecked;
+    private boolean toggleButtonVisible;
+    private String sliderText;
+    private boolean sliderVisible;
+    private boolean sliderEnabled;
     private boolean itemOnClickListenerEnabled;
-    private Color cardBackgroundColor;
+    private UModsFragment.UModViewModelColors itemBackgroundColor;
+    private UModsFragment.UModViewModelColors lowerTextColor;
+    private UModsFragment.UModViewModelColors sliderBackgroundColor;
+    private UModsFragment.UModViewModelColors sliderTextColor;
+
 
     public UModViewModel(UMod uMod, String uModUUID, UModsPresenter presenter, String itemMainText,
-                         String itemLowerText, boolean checkboxChecked, boolean checkboxVisible,
-                         String buttonText, boolean buttonVisible,
-                         boolean itemOnClickListenerEnabled) {
+                         String itemLowerText, boolean toggleButtonChecked, boolean toggleButtonVisible,
+                         String sliderText, boolean sliderVisible,
+                         boolean sliderEnabled, boolean itemOnClickListenerEnabled,
+                         UModsFragment.UModViewModelColors lowerTextColor,
+                         UModsFragment.UModViewModelColors sliderBackgroundColor,
+                         UModsFragment.UModViewModelColors sliderTextColor) {
         this.uMod = uMod;
         this.uModUUID = uModUUID;
         this.presenter = presenter;
         this.itemMainText = itemMainText;
         this.itemLowerText = itemLowerText;
-        this.checkboxChecked = checkboxChecked;
-        this.checkboxVisible = checkboxVisible;
-        this.buttonText = buttonText;
-        this.buttonVisible = buttonVisible;
+        this.toggleButtonChecked = toggleButtonChecked;
+        this.toggleButtonVisible = toggleButtonVisible;
+        this.sliderText = sliderText;
+        this.sliderVisible = sliderVisible;
+        this.sliderEnabled = sliderEnabled;
         this.itemOnClickListenerEnabled = itemOnClickListenerEnabled;
+        this.lowerTextColor = lowerTextColor;
+        this.sliderBackgroundColor = sliderBackgroundColor;
+        this.sliderTextColor = sliderTextColor;
     }
 
-    public abstract void onButtonClicked();
+    public abstract void onSlideCompleted();
 
-    public abstract void onCheckBoxClicked(Boolean cbChecked);
+    public abstract void onButtonToggled(Boolean toggleState);
 
     public abstract void onItemClicked();
 
@@ -76,28 +86,28 @@ public abstract class UModViewModel {
         this.itemLowerText = itemLowerText;
     }
 
-    public boolean isCheckboxChecked() {
-        return checkboxChecked;
+    public boolean isToggleButtonChecked() {
+        return toggleButtonChecked;
     }
 
-    public void setCheckboxChecked(boolean checkboxChecked) {
-        this.checkboxChecked = checkboxChecked;
+    public void setToggleButtonChecked(boolean toggleButtonChecked) {
+        this.toggleButtonChecked = toggleButtonChecked;
     }
 
-    public String getButtonText() {
-        return buttonText;
+    public String getSliderText() {
+        return sliderText;
     }
 
-    public void setButtonText(String buttonText) {
-        this.buttonText = buttonText;
+    public void setSliderText(String sliderText) {
+        this.sliderText = sliderText;
     }
 
-    public boolean isButtonVisible() {
-        return buttonVisible;
+    public boolean isSliderVisible() {
+        return sliderVisible;
     }
 
-    public void setButtonVisible(boolean buttonVisible) {
-        this.buttonVisible = buttonVisible;
+    public void setSliderVisible(boolean sliderVisible) {
+        this.sliderVisible = sliderVisible;
     }
 
     public boolean isItemOnClickListenerEnabled() {
@@ -108,20 +118,53 @@ public abstract class UModViewModel {
         this.itemOnClickListenerEnabled = itemOnClickListenerEnabled;
     }
 
-    public Color getCardBackgroundColor() {
-        return cardBackgroundColor;
-    }
-
-    public void setCardBackgroundColor(Color cardBackgroundColor) {
-        this.cardBackgroundColor = cardBackgroundColor;
-    }
-
     public UMod getuMod() {
         return uMod;
     }
 
     public void setuMod(UMod uMod) {
         this.uMod = uMod;
+    }
+
+
+    public UModsFragment.UModViewModelColors getItemBackgroundColor() {
+        return itemBackgroundColor;
+    }
+
+    public void setItemBackgroundColor(UModsFragment.UModViewModelColors itemBackgroundColor) {
+        this.itemBackgroundColor = itemBackgroundColor;
+    }
+
+    public UModsFragment.UModViewModelColors getLowerTextColor() {
+        return lowerTextColor;
+    }
+
+    public void setLowerTextColor(UModsFragment.UModViewModelColors lowerTextColor) {
+        this.lowerTextColor = lowerTextColor;
+    }
+
+    public UModsFragment.UModViewModelColors getSliderBackgroundColor() {
+        return sliderBackgroundColor;
+    }
+
+    public void setSliderBackgroundColor(UModsFragment.UModViewModelColors sliderBackgroundColor) {
+        this.sliderBackgroundColor = sliderBackgroundColor;
+    }
+
+    public UModsFragment.UModViewModelColors getSliderTextColor() {
+        return sliderTextColor;
+    }
+
+    public void setSliderTextColor(UModsFragment.UModViewModelColors sliderTextColor) {
+        this.sliderTextColor = sliderTextColor;
+    }
+
+    public boolean isSliderEnabled() {
+        return sliderEnabled;
+    }
+
+    public void setSliderEnabled(boolean sliderEnabled) {
+        this.sliderEnabled = sliderEnabled;
     }
 
     @Override
@@ -135,25 +178,29 @@ public abstract class UModViewModel {
     @Override
     public String toString() {
         return "UModViewModel{" +
-                "uMod=" + uMod.hashCode() +
+                "uModHashCode=" + uMod.hashCode() +
                 ", uModUUID='" + uModUUID + '\'' +
-                ", presenter=" + presenter +
+                ", presenterHashCode=" + presenter.hashCode() +
                 ", itemMainText='" + itemMainText + '\'' +
                 ", itemLowerText='" + itemLowerText + '\'' +
-                ", checkboxChecked=" + checkboxChecked +
-                ", checkboxVisible=" + checkboxVisible +
-                ", buttonText='" + buttonText + '\'' +
-                ", buttonVisible=" + buttonVisible +
+                ", toggleButtonChecked=" + toggleButtonChecked +
+                ", toggleButtonVisible=" + toggleButtonVisible +
+                ", sliderText='" + sliderText + '\'' +
+                ", sliderVisible=" + sliderVisible +
+                ", sliderEnabled=" + sliderEnabled +
                 ", itemOnClickListenerEnabled=" + itemOnClickListenerEnabled +
-                ", cardBackgroundColor=" + cardBackgroundColor +
+                ", itemBackgroundColor=" + itemBackgroundColor +
+                ", lowerTextColor=" + lowerTextColor +
+                ", sliderBackgroundColor=" + sliderBackgroundColor +
+                ", sliderTextColor=" + sliderTextColor +
                 '}';
     }
 
-    public boolean isCheckboxVisible() {
-        return checkboxVisible;
+    public boolean isToggleButtonVisible() {
+        return toggleButtonVisible;
     }
 
-    public void setCheckboxVisible(boolean checkboxVisible) {
-        this.checkboxVisible = checkboxVisible;
+    public void setToggleButtonVisible(boolean toggleButtonVisible) {
+        this.toggleButtonVisible = toggleButtonVisible;
     }
 }

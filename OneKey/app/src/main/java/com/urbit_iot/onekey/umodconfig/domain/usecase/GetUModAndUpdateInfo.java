@@ -207,8 +207,10 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                         Log.d("getumod+info_uc", result.toString());
                                         uMod.setSWVersion(result.getFwVersion());
                                         uMod.setWifiSSID(result.getWifi().getSsid());
-                                        if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){
-                                            uMod.setConnectionAddress(result.getWifi().getStaIp());
+                                        if (uMod.getState() == UMod.State.AP_MODE){
+                                            if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){
+                                                uMod.setConnectionAddress(result.getWifi().getStaIp());
+                                            }
                                         }
                                         return Observable.just(uMod);
                                     }

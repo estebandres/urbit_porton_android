@@ -233,7 +233,7 @@ public class UModsRepository implements UModsDataSource {
 
     //TODO make a revision of this method!
     @Override
-    @RxLogObservable
+    //@RxLogObservable
     public Observable<UMod> getUModsOneByOne() {
         //Observable<UMod> cacheOrDBUModObs = Observable.empty();
         Observable<UMod> cacheOrDBUModObs = this.getUModsOneByOneFromCacheOrDisk();
@@ -397,7 +397,7 @@ public class UModsRepository implements UModsDataSource {
      * uses the network data source. This is done to simplify the sample.
      */
     @Override
-    @RxLogObservable
+    //@RxLogObservable
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
         checkNotNull(uModUUID);
 

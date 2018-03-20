@@ -34,7 +34,7 @@ public class UModsDbHelper extends SQLiteOpenHelper {
     private static final String DATE_TYPE = " INTEGER";
 
     private static final String COMMA_SEP = ",";
-//UUID should be the primary key isn't it?
+//UUID should be the primary key_urbit_green isn't it?
     //UModsPersistenceContract.UModEntry._ID + TEXT_TYPE + " PRIMARY KEY," +
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + UModsPersistenceContract.UModEntry.UMODS_TABLE_NAME + " (" +
