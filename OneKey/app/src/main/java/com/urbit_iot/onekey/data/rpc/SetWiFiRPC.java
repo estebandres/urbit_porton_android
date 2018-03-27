@@ -1,14 +1,13 @@
 package com.urbit_iot.onekey.data.rpc;
 
 import com.google.gson.annotations.SerializedName;
-import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
 /**
  * Created by andresteve07 on 8/11/17.
  */
 
-public class SetWiFiAPRPC extends RPC {
+public class SetWiFiRPC extends RPC {
     public static class Arguments{
 
         @SerializedName("ssid")
@@ -40,7 +39,7 @@ public class SetWiFiAPRPC extends RPC {
 
     public static class Request extends RPC.Request{
         @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
-        private SetWiFiAPRPC.Arguments methodArguments;
+        private SetWiFiRPC.Arguments methodArguments;
 
         public Request(Arguments args, String uModTag, int id) {
             super("Admin.SetWiFiAP",uModTag,id);
@@ -57,12 +56,44 @@ public class SetWiFiAPRPC extends RPC {
     }
 
     public static class Result{
-        public Result(){}
+        @SerializedName("code")
+        private Integer code;
+        @SerializedName("message")
+        private String message;
+
+        public Result(Integer code, String message){
+            this.code = code;
+            this.message = message;
+        }
+
+        public Integer getCode() {
+            return code;
+        }
+
+        public void setCode(Integer code) {
+            this.code = code;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "code=" + code +
+                    ", message='" + message + '\'' +
+                    '}';
+        }
     }
 
     public static class Response extends RPC.Response {
         @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
-        private SetWiFiAPRPC.Result responseResult;
+        private SetWiFiRPC.Result responseResult;
 
         public Response(Result result, String callTag, ResponseError responseError) {
             super(callTag, responseError);

@@ -19,19 +19,17 @@ package com.urbit_iot.onekey.data.source.lan;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.rpc.APIUserType;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
-import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
+import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
@@ -39,12 +37,10 @@ import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -408,20 +404,20 @@ public class UModsLANDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<SetWiFiAPRPC.Result> setWiFiAP(UMod uMod, SetWiFiAPRPC.Arguments request) {
+    public Observable<SetWiFiRPC.Result> setWiFiAP(UMod uMod, SetWiFiRPC.Arguments request) {
 
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return appUserUModsService.postWiFiAPCredentials(request);
 
         //TODO remove mock
         /*
-        SetWiFiAPRPC.Response response = new SetWiFiAPRPC.Response(new SetWiFiAPRPC.Result(),
+        SetWiFiRPC.Response response = new SetWiFiRPC.Response(new SetWiFiRPC.Result(),
                 "SetWiFiAP",
                 null);
          */
 
         /*
-        final SetWiFiAPRPC.Result mockedResult = new SetWiFiAPRPC.Result();
+        final SetWiFiRPC.Result mockedResult = new SetWiFiRPC.Result();
         return Observable.just(mockedResult)
                 .delay(880L, TimeUnit.MILLISECONDS);
          */
@@ -434,7 +430,6 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<Response<ResponseBody>> postFirmwareUpdateToUMod(UMod uMod, File newFirmwareFile) {
-        /*
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         //RequestBody requestFile = RequestBody.create(MediaType.parse("application/zip"),newFirmwareFile);
         //MultipartBody.Part multipartBody = MultipartBody.Part.create(requestFile);
@@ -445,11 +440,12 @@ public class UModsLANDataSource implements UModsDataSource {
         RequestBody timeoutBody =
                 RequestBody.create(MediaType.parse("text/plain"), String.valueOf(75L));
         return this.appUserUModsService.startFirmwareUpdate(timeoutBody, fileMultipartBody);
-        */
 
+        /*
         //TODO remove mock
         Response<ResponseBody> mockedResp = Response.success(ResponseBody.create(MediaType.parse("text/plain"), "MOCKED"));
         return Observable.just(mockedResp).delay(500L, TimeUnit.MILLISECONDS);
+        */
 
     }
 
@@ -457,7 +453,7 @@ public class UModsLANDataSource implements UModsDataSource {
     public Observable<Response<ResponseBody>> otaCommit(UMod uMod, OTACommitRPC.Arguments request) {
 
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());//TODO could be composed
-        return this.appUserUModsService.otaCommit(request);
+        return this.defaultUModsService.otaCommit(request);
 
         //TODO remove mock
         /*

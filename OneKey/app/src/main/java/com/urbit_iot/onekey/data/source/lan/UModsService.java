@@ -6,26 +6,20 @@ import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
-import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
+import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
-
-import javax.inject.Inject;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 import retrofit2.http.Body;
-import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
-import retrofit2.http.Streaming;
-import retrofit2.http.Url;
 import rx.Observable;
-import rx.Single;
 
 
 /**
@@ -62,7 +56,7 @@ public interface UModsService {
     Observable<UpdateUserRPC.Result> postUpdateUser(@Body UpdateUserRPC.Arguments requestArguments);
 
     @POST("/rpc/Admin.SetWifi")
-    Observable<SetWiFiAPRPC.Result> postWiFiAPCredentials(@Body SetWiFiAPRPC.Arguments requestArguments);
+    Observable<SetWiFiRPC.Result> postWiFiAPCredentials(@Body SetWiFiRPC.Arguments requestArguments);
 
     /*
     @GET
@@ -76,6 +70,7 @@ public interface UModsService {
     startFirmwareUpdate(@Part("commit_timeout") RequestBody timeoutBody,
                         @Part MultipartBody.Part firmwareImageFile);
 
-    @POST("/rpc/OTA.Commit")
+    //@POST("/rpc/OTA.Commit")
+    @POST("/update/commit")
     Observable<Response<ResponseBody>> otaCommit(@Body OTACommitRPC.Arguments arguments);
 }

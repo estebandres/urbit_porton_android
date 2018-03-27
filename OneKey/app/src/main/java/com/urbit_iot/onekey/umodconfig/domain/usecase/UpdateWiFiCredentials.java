@@ -22,8 +22,7 @@ import android.util.Log;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
-import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
-import com.urbit_iot.onekey.data.rpc.SetWiFiAPRPC;
+import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -57,21 +56,21 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
         /*
-        final SetWiFiAPRPC.Request request =
-                new SetWiFiAPRPC.Request(
-                        new SetWiFiAPRPC.Arguments(values.getmWiFiSSID(),
+        final SetWiFiRPC.Request request =
+                new SetWiFiRPC.Request(
+                        new SetWiFiRPC.Arguments(values.getmWiFiSSID(),
                                 values.getmWiFiPassword()),"SetWiFiAP", 666);
         */
 
         return uModsRepository.getUMod(values.getmUModUUID())
-                .flatMap(new Func1<UMod, Observable<SetWiFiAPRPC.Result>>() {
+                .flatMap(new Func1<UMod, Observable<SetWiFiRPC.Result>>() {
                     @Override
-                    public Observable<SetWiFiAPRPC.Result> call(final UMod uMod) {
-                        SetWiFiAPRPC.Arguments setWiFiArgs = new SetWiFiAPRPC.Arguments(values.getmWiFiSSID(), values.getmWiFiPassword());
+                    public Observable<SetWiFiRPC.Result> call(final UMod uMod) {
+                        SetWiFiRPC.Arguments setWiFiArgs = new SetWiFiRPC.Arguments(values.getmWiFiSSID(), values.getmWiFiPassword());
                         return uModsRepository.setWiFiAP(uMod,setWiFiArgs)
-                                .onErrorResumeNext(new Func1<Throwable, Observable<? extends SetWiFiAPRPC.Result>>() {
+                                .onErrorResumeNext(new Func1<Throwable, Observable<? extends SetWiFiRPC.Result>>() {
                                     @Override
-                                    public Observable<SetWiFiAPRPC.Result> call(Throwable throwable) {
+                                    public Observable<SetWiFiRPC.Result> call(Throwable throwable) {
                                         Log.e("setwifi_uc","Set WiFi Failure: " + throwable.getMessage());
                                         if (throwable instanceof HttpException) {
                                             String errorMessage = "";
@@ -94,20 +93,22 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
                                             if ((httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR
                                                     && errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_OK)))) {
                                                 Log.e("setwifi_uc", "Set WiFi in progress!");
-                                                SetWiFiAPRPC.Result result = new SetWiFiAPRPC.Result();
+                                                SetWiFiRPC.Result result = new SetWiFiRPC.Result(500, "no se");
                                                 return Observable.just(result);
                                             }
                                         }
+                                        throwable.printStackTrace();
                                         return Observable.error(throwable);
                                     }
                                 })
-                                .flatMap(new Func1<SetWiFiAPRPC.Result, Observable<SetWiFiAPRPC.Result>>() {
+                                .flatMap(new Func1<SetWiFiRPC.Result, Observable<SetWiFiRPC.Result>>() {
                                     @Override
-                                    public Observable<SetWiFiAPRPC.Result> call(SetWiFiAPRPC.Result result) {
-                                            UMod tempUMod = uMod;
-                                            tempUMod.setWifiSSID(values.getmWiFiSSID());
-                                            Log.d("update_wifi", tempUMod.getWifiSSID());
-                                            uModsRepository.saveUMod(tempUMod);
+                                    public Observable<SetWiFiRPC.Result> call(SetWiFiRPC.Result result) {
+                                            //UMod tempUMod = uMod;
+                                            //tempUMod.setWifiSSID(values.getmWiFiSSID());
+                                            //Log.d("update_wifi", tempUMod.getWifiSSID());
+                                            Log.d("update_wifi", result.toString());
+                                            //uModsRepository.saveUMod(tempUMod);
                                         return Observable.just(result);
                                     }
                                 });
@@ -129,9 +130,9 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
                         }
                     }
                 })
-                .map(new Func1<SetWiFiAPRPC.Result, ResponseValues>() {
+                .map(new Func1<SetWiFiRPC.Result, ResponseValues>() {
             @Override
-            public ResponseValues call(SetWiFiAPRPC.Result rpcResponse) {
+            public ResponseValues call(SetWiFiRPC.Result rpcResponse) {
                 return new ResponseValues(rpcResponse);
             }
         });
@@ -165,13 +166,13 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
 
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
-        private SetWiFiAPRPC.Result rpcResult;
+        private SetWiFiRPC.Result rpcResult;
 
-        public ResponseValues(@NonNull SetWiFiAPRPC.Result rpcResult) {
+        public ResponseValues(@NonNull SetWiFiRPC.Result rpcResult) {
             this.rpcResult = checkNotNull(rpcResult, "rpcResult cannot be null!");
         }
 
-        public SetWiFiAPRPC.Result getRpcResult() {
+        public SetWiFiRPC.Result getRpcResult() {
             return this.rpcResult;
         }
     }

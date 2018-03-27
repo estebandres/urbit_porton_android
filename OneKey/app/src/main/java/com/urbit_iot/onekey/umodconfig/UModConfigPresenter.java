@@ -462,7 +462,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                     public void onCompleted() {
                         if (onNextCount.getValue() <= 0){
                             Log.e("conf_pr","factoryResetUMod didn't retreive any result: "+ onNextCount);
-                            mUModConfigView.finishActivity();
+                            mUModConfigView.showResetFailMsg();
                         }
                     }
 

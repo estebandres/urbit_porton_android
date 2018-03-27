@@ -212,6 +212,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                 uMod.setConnectionAddress(result.getWifi().getStaIp());
                                             }
                                         }
+                                        mUModsRepository.saveUMod(uMod);
                                         return Observable.just(uMod);
                                     }
                                 });

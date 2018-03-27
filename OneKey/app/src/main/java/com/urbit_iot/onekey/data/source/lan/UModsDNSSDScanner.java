@@ -77,6 +77,16 @@ public class UModsDNSSDScanner {
                         .compose(rxDnssd.queryRecords())
                         .distinct()
                         .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
+                        .filter(new Func1<BonjourService, Boolean>() {
+                            @Override
+                            public Boolean call(BonjourService bonjourService) {
+                                return bonjourService != null
+                                        && bonjourService.getHostname() != null
+                                        && bonjourService.getHostname().contains(uModUUID)
+                                        && bonjourService.getInet4Address() != null;
+                            }
+                        })
+                        .take(1)
                         .doOnError(new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
@@ -89,15 +99,6 @@ public class UModsDNSSDScanner {
                                 Log.d("dns-sd_scan",bonjourService.getHostname() + " - " + bonjourService.getInet4Address().getHostAddress());
                             }
                         })
-                        .filter(new Func1<BonjourService, Boolean>() {
-                            @Override
-                            public Boolean call(BonjourService bonjourService) {
-                                return bonjourService.getHostname() != null
-                                        && bonjourService.getHostname().contains(uModUUID)
-                                        && bonjourService.getInet4Address() != null;
-                            }
-                        })
-                        .take(1)
                         .map(new Func1<BonjourService,UMod>(){
                             public UMod call(BonjourService discovery){
                                 Pattern pattern = Pattern.compile("urbit_(.*?)\\.local\\.");
