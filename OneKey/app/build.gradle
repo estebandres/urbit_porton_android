@@ -114,6 +114,8 @@ dependencies {
     implementation 'com.ncorti:slidetoact:0.2.0'
 
     implementation 'com.github.MAXDeliveryNG:slideview:1.1.0'
+    //ping LAN addresses to determine reachable host
+    implementation 'com.github.stealthcopter:AndroidNetworkTools:0.3.08'
 
 
     // Dependencies for local unit tests

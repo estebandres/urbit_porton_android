@@ -19,6 +19,7 @@ import retrofit2.http.Body;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
+import retrofit2.http.Url;
 import rx.Observable;
 
 
@@ -30,6 +31,9 @@ public interface UModsService {
 
     @POST("/rpc/Sys.GetInfo")
     Observable<SysGetInfoRPC.Result> getSystemInfo(@Body SysGetInfoRPC.Arguments request);
+
+    @POST
+    Observable<SysGetInfoRPC.Result> getSystemInfo(@Url String url, @Body SysGetInfoRPC.Arguments request);
 
     @POST("/rpc/User.Trigger")
     Observable<TriggerRPC.Result> userTriggerUMod(@Body TriggerRPC.Arguments request);

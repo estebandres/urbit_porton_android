@@ -35,6 +35,9 @@ import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
@@ -42,6 +45,7 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
@@ -146,14 +150,32 @@ public class UModsRepositoryModule {
 
     @Provides
     @Singleton
+    Dispatcher provideDispatcher(){
+        /*
+        ExecutorService exec = new ThreadPoolExecutor(
+                20,
+                20,
+                1,
+                TimeUnit.HOURS,
+                new LinkedBlockingQueue<>());
+        return new Dispatcher(exec);
+        */
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.setMaxRequests(10);
+        return dispatcher;
+    }
+
+    @Provides
+    @Singleton
     @Named("default")
-    OkHttpClient provideDigestAuthDefaultOkHttpClient(UrlHostSelectionInterceptor urlHostSelectionInterceptor){
+    OkHttpClient provideDigestAuthDefaultOkHttpClient(UrlHostSelectionInterceptor urlHostSelectionInterceptor, Dispatcher dispatcher){
         final DigestAuthenticator digestAuthenticator = new DigestAuthenticator(new Credentials("urbit", "urbit"));
         final Map<String, CachingAuthenticator> authCache = new ConcurrentHashMap<>();
         return new OkHttpClient.Builder()
                 .addInterceptor(urlHostSelectionInterceptor)
                 .authenticator(new CachingAuthenticatorDecorator(digestAuthenticator,authCache))
                 .addInterceptor(new AuthenticationCacheInterceptor(authCache))
+                .dispatcher(dispatcher)
                 .connectTimeout(1500L, TimeUnit.MILLISECONDS)
                 .readTimeout(8000L, TimeUnit.MILLISECONDS)
                 .build();

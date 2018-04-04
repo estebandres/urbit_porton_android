@@ -41,6 +41,7 @@ public class UModsDbHelper extends SQLiteOpenHelper {
                     UModsPersistenceContract.UModEntry.UUID_CN + TEXT_TYPE + " PRIMARY KEY," +
                     UModsPersistenceContract.UModEntry.ALIAS_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.WIFI_SSID_CN + TEXT_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.MAC_ADDRESS_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.CONNECTION_ADDRESS_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.UMOD_STATE_CN + INTEGER_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.LAST_REPORT_CN + TEXT_TYPE + COMMA_SEP +

@@ -95,6 +95,9 @@ public final class UMod {
     private String alias;
 
     @Nullable
+    private  String macAddress;
+
+    @Nullable
     private String connectionAddress;
 
     @Nullable
@@ -210,6 +213,7 @@ public final class UMod {
      * @param uModState
      * @param userLevel
      * @param ongoingNotifEnabled
+     * @param macAddress
      * @param lastReport
      * @param productUUID
      * @param hwVersion
@@ -222,6 +226,7 @@ public final class UMod {
                 @NonNull State uModState,
                 @NonNull UModUser.Level userLevel,
                 boolean ongoingNotifEnabled,
+                @Nullable String macAddress,
                 @Nullable String lastReport,
                 @Nullable String productUUID,
                 @Nullable String hwVersion,
@@ -234,6 +239,7 @@ public final class UMod {
         this.state = uModState;
         this.appUserLevel = userLevel;
         this.ongoingNotificationEnabled = ongoingNotifEnabled;
+        this.macAddress = macAddress;
         this.uModLastReport = lastReport;
         this.productUUID = productUUID;
         this.hwVersion = hwVersion;
@@ -423,6 +429,15 @@ public final class UMod {
 
     public boolean belongsToAppUser(){
         return this.getAppUserLevel() != UModUser.Level.UNAUTHORIZED ;
+    }
+
+    @Nullable
+    public String getMacAddress() {
+        return macAddress;
+    }
+
+    public void setMacAddress(@Nullable String macAddress) {
+        this.macAddress = macAddress;
     }
 
     @Override

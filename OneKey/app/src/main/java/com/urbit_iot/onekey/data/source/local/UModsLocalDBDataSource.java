@@ -85,6 +85,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 String uuid = c.getString(c.getColumnIndexOrThrow(UModEntry.UUID_CN));
                 String alias = c.getString(c.getColumnIndexOrThrow(UModEntry.ALIAS_CN));
                 String wifiSSID = c.getString(c.getColumnIndexOrThrow(UModEntry.WIFI_SSID_CN));
+                String macAddress = c.getString(c.getColumnIndexOrThrow(UModEntry.MAC_ADDRESS_CN));
                 boolean notifEnabled = c.getInt(c.getColumnIndexOrThrow(UModEntry.NOTIF_ENABLED_CN))>0;
                 String connectionAddress = c.getString(c.getColumnIndexOrThrow(UModEntry.CONNECTION_ADDRESS_CN));
                 UMod.State state = UMod.State.from(c.getInt(c.getColumnIndexOrThrow(UModEntry.UMOD_STATE_CN)));
@@ -94,7 +95,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 String hwVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.HW_VERSION_CN));
                 String swVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.SW_VERSION_CN));
                 return new UMod(uuid, alias, wifiSSID, connectionAddress, state, userStatus, notifEnabled,
-                        lastReport, productUUID, hwVersion, swVersion);
+                        macAddress, lastReport, productUUID, hwVersion, swVersion);
             }
         };
         this.uModLocalDBBrander = new Observable.Transformer<UMod, UMod>() {
@@ -142,6 +143,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 UModEntry.UUID_CN,
                 UModEntry.ALIAS_CN,
                 UModEntry.WIFI_SSID_CN,
+                UModEntry.MAC_ADDRESS_CN,
                 UModEntry.CONNECTION_ADDRESS_CN,
                 UModEntry.NOTIF_ENABLED_CN,
                 UModEntry.APP_USER_STATUS_CN,
@@ -172,6 +174,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         String[] projection = {
                 UModEntry.UUID_CN,
                 UModEntry.ALIAS_CN,
+                UModEntry.MAC_ADDRESS_CN,
                 UModEntry.WIFI_SSID_CN,
                 UModEntry.CONNECTION_ADDRESS_CN,
                 UModEntry.NOTIF_ENABLED_CN,
@@ -199,6 +202,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         values.put(UModEntry.UUID_CN, uMod.getUUID());
         values.put(UModEntry.ALIAS_CN, uMod.getAlias());
         values.put(UModEntry.WIFI_SSID_CN, uMod.getWifiSSID());
+        values.put(UModEntry.MAC_ADDRESS_CN, uMod.getMacAddress());
         values.put(UModEntry.CONNECTION_ADDRESS_CN, uMod.getConnectionAddress());
         values.put(UModEntry.NOTIF_ENABLED_CN, uMod.isOngoingNotificationEnabled());
         values.put(UModEntry.APP_USER_STATUS_CN,uMod.getAppUserLevel().getStatusID());

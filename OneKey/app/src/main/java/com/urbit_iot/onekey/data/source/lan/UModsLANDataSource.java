@@ -19,8 +19,12 @@ package com.urbit_iot.onekey.data.source.lan;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.fernandocejas.frodo.annotation.RxLogObservable;
+import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.stealthcopter.networktools.SubnetDevices;
+import com.stealthcopter.networktools.subnet.Device;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
@@ -34,9 +38,12 @@ import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
+import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +60,7 @@ import retrofit2.Response;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -165,12 +173,95 @@ public class UModsLANDataSource implements UModsDataSource {
     public Observable<UMod> getUModsOneByOne(){
         return Observable.mergeDelayError(
                 //Observable.from(UMODS_SERVICE_DATA.values()),
-                mUModsDNSSDScanner.browseLANForUMods(),
+                //TODO review!!!
+                mUModsDNSSDScanner.browseLANForUMods()
+                        .switchIfEmpty(getUModsByLanPingingAndApiCalling()),
+                /*
+                Observable.mergeDelayError(
+                        //mUModsDNSSDScanner.browseLANForUMods(),
+                        Observable.<UMod>empty(),
+                        getUModsByLanPingingAndApiCalling()).distinct(),
+                */
                 mUModsBLEScanner.bleScanForUMods(),
                 mUModsWiFiScanner.browseWiFiForUMods())
                 .compose(this.uModLANBrander);
     }
 
+    @RxLogObservable
+    private Observable<UMod> getUModsByLanPingingAndApiCalling(){
+        //TODO reduce the amount of API calls by mapping ARP cache entries with saved umod mac addresses.
+        return Observable.just(true)
+                .subscribeOn(Schedulers.io())
+                .flatMap(new Func1<Boolean, Observable<Device>>() {
+                    @Override
+                    public Observable<Device> call(Boolean aBoolean) {
+                        final List<Device> lanReachableDevices=new ArrayList<>();
+                        SubnetDevices.fromLocalAddress().findDevices(new SubnetDevices.OnSubnetDeviceFound() {
+                            @Override
+                            public void onDeviceFound(Device device) {
+                                Log.d("REACHABLE DEVICES", device.toString());
+                            }
+
+                            @Override
+                            public void onFinished(ArrayList<Device> devicesFound) {
+                                lanReachableDevices.addAll(devicesFound);
+                            }
+                        });
+                        while (lanReachableDevices.remove(null)){}
+                        return Observable.from(lanReachableDevices);
+                    }
+                })
+                .flatMap(new Func1<Device, Observable<UMod>>() {
+                    @Override
+                    public Observable<UMod> call(Device device) {
+                        return Observable.just(device)
+                                .subscribeOn(Schedulers.io())
+                                .flatMap(new Func1<Device, Observable<UMod>>() {
+                                    @Override
+                                    public Observable<UMod> call(final Device device) {
+                                        Log.d("STEVE_LAN", "Calling API for device: " + device.toString() +
+                                                " on " + Thread.currentThread().getName());
+                                        //urlHostSelectionInterceptor.setHost(device.ip);
+                                        return defaultUModsService.getSystemInfo(
+                                                "http://" + device.ip + "/rpc/Sys.GetInfo",
+                                                new SysGetInfoRPC.Arguments())
+                                                .flatMap(new Func1<SysGetInfoRPC.Result, Observable<UMod>>() {
+                                                    @Override
+                                                    public Observable<UMod> call(SysGetInfoRPC.Result result) {
+                                                        if (!Strings.isNullOrEmpty(device.mac)){
+                                                            UMod respondentUMod = new UMod(
+                                                                    convertMacAddressToUModUUID(result.getMac()),
+                                                                    device.ip,
+                                                                    true);
+                                                            return Observable.just(respondentUMod);
+                                                        } else {
+                                                            return Observable.empty();
+                                                        }
+                                                    }
+                                                })
+                                                .onErrorReturn(new Func1<Throwable, UMod>() {
+                                                    @Override
+                                                    public UMod call(Throwable throwable) {
+                                                        //TODO change for rxjava2 compatibility. Null is a bad word.
+                                                        return null;
+                                                    }
+                                                });
+                                    }
+                                });
+                    }
+                })
+                .filter(new Func1<UMod, Boolean>() {
+                    @Override
+                    public Boolean call(UMod uMod) {
+                        return uMod != null;
+                    }
+                });
+    }
+
+    private String convertMacAddressToUModUUID(String macAddress){
+        String macAddressWithoutColons = macAddress.replaceAll(":","");
+        return macAddressWithoutColons.substring(macAddressWithoutColons.length()-6).toUpperCase();
+    }
 
     @Override
     //@RxLogObservable
@@ -187,7 +278,8 @@ public class UModsLANDataSource implements UModsDataSource {
         return Observable.mergeDelayError(
                 //mockedUModObs,
                 mUModsWiFiScanner.browseWiFiForUMod(uModUUID),
-                mUModsDNSSDScanner.browseLANForUMod(uModUUID))
+                mUModsDNSSDScanner.browseLANForUMod(uModUUID),
+                getSingleUModByLanPingingAndApiCalling(uModUUID))
                 .doOnNext(new Action1<UMod>() {
                     @Override
                     public void call(UMod uMod) {
@@ -196,6 +288,93 @@ public class UModsLANDataSource implements UModsDataSource {
                 })
                 .first()
                 .compose(this.uModLANBrander);
+    }
+
+    private Observable<UMod> getSingleUModByLanPingingAndApiCalling(final String uModUUID){
+
+
+        //lanReachableDevices.removeAll(Collections.singleton(null));
+
+        return Observable.just(true)
+                .subscribeOn(Schedulers.computation())
+                .flatMap(new Func1<Boolean, Observable<List<Device>>>() {
+                    @Override
+                    public Observable<List<Device>> call(Boolean aBoolean) {
+                        final List<Device> lanReachableDevices=new ArrayList<>();
+                        SubnetDevices.fromLocalAddress().findDevices(new SubnetDevices.OnSubnetDeviceFound() {
+                            @Override
+                            public void onDeviceFound(Device device) {
+                                Log.d("REACHABLE DEVICES", device.toString());
+                            }
+
+                            @Override
+                            public void onFinished(ArrayList<Device> devicesFound) {
+                                lanReachableDevices.addAll(devicesFound);
+                            }
+                        });
+                        return Observable.just(lanReachableDevices);
+                    }
+                })
+                .flatMap(new Func1<List<Device>, Observable<UMod>>() {
+                    @Override
+                    public Observable<UMod> call(List<Device> lanReachableDevices) {
+                        while (lanReachableDevices.remove(null)){}
+
+                        for (Device device :
+                                lanReachableDevices) {
+                            if (!Strings.isNullOrEmpty(device.mac)
+                                    && convertMacAddressToUModUUID(device.mac).contentEquals(uModUUID)) {
+                                return Observable.just(new UMod(uModUUID, device.ip, true));
+                            }
+                        }
+                        return Observable.from(lanReachableDevices)
+                                .flatMap(new Func1<Device, Observable<UMod>>() {
+                                    @Override
+                                    public Observable<UMod> call(Device device) {
+                                        return Observable.just(device)
+                                                .subscribeOn(Schedulers.io())//Launch parallel threads for each API call.
+                                                .flatMap(new Func1<Device, Observable<UMod>>() {
+                                                    @Override
+                                                    public Observable<UMod> call(final Device device) {
+                                                        urlHostSelectionInterceptor.setHost(device.ip);
+                                                        return defaultUModsService.getSystemInfo(new SysGetInfoRPC.Arguments())
+                                                                .flatMap(new Func1<SysGetInfoRPC.Result, Observable<UMod>>() {
+                                                                    @Override
+                                                                    public Observable<UMod> call(SysGetInfoRPC.Result result) {
+                                                                        if (!Strings.isNullOrEmpty(device.mac)
+                                                                                && convertMacAddressToUModUUID(device.mac).contentEquals(uModUUID)){
+                                                                            UMod respondentUMod;
+                                                                            //TODO - NOW BUG: will produce en AP_MODE umod in the odd case when network 192.168.4.0 and the DHCP server assigns the first address to the ESP.
+                                                                            if (device.ip.equalsIgnoreCase(GlobalConstants.AP_DEFAULT_IP_ADDRESS)){
+                                                                                respondentUMod = new UMod(uModUUID);
+                                                                            } else {
+                                                                                respondentUMod = new UMod(uModUUID,device.ip,true);
+                                                                            }
+                                                                            return Observable.just(respondentUMod);
+                                                                        }
+                                                                        return Observable.empty();
+                                                                    }
+                                                                })
+                                                                .onErrorReturn(new Func1<Throwable, UMod>() {
+                                                                    @Override
+                                                                    public UMod call(Throwable throwable) {
+                                                                        //TODO change for rxjava2 compatibility. Null is a bad word.
+                                                                        return null;//TODO what happens if I return Observer.empty()
+                                                                    }
+                                                                });
+                                                    }
+                                                });
+                                    }
+                                })
+                                //TODO would be unnecessary if no null values were injected in onErrorReturn...
+                                .filter(new Func1<UMod, Boolean>() {
+                                    @Override
+                                    public Boolean call(UMod uMod) {
+                                        return uMod != null;
+                                    }
+                                });
+                    }
+                });
     }
 
     @Override

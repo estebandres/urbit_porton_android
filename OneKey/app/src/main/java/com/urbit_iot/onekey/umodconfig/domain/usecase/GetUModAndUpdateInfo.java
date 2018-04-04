@@ -207,6 +207,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                         Log.d("getumod+info_uc", result.toString());
                                         uMod.setSWVersion(result.getFwVersion());
                                         uMod.setWifiSSID(result.getWifi().getSsid());
+                                        uMod.setMacAddress(result.getMac());
                                         if (uMod.getState() == UMod.State.AP_MODE){
                                             if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){
                                                 uMod.setConnectionAddress(result.getWifi().getStaIp());
