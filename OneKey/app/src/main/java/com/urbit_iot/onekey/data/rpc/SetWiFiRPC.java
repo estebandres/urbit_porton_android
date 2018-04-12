@@ -38,11 +38,13 @@ public class SetWiFiRPC extends RPC {
     }
 
     public static class Request extends RPC.Request{
-        @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private SetWiFiRPC.Arguments methodArguments;
 
-        public Request(Arguments args, String uModTag, int id) {
-            super("Admin.SetWiFiAP",uModTag,id);
+        public Request(Arguments args, String callTag, int id) {
+            super(GlobalConstants.RPC_METHOD_NAME__SET_WIFI,
+                    GlobalConstants.RPC_METHOD_CODE__SET_WIFI,
+                    callTag,id);
             this.methodArguments = args;
         }
 
@@ -56,22 +58,10 @@ public class SetWiFiRPC extends RPC {
     }
 
     public static class Result{
-        @SerializedName("code")
-        private Integer code;
         @SerializedName("message")
         private String message;
-
-        public Result(Integer code, String message){
-            this.code = code;
+        public Result(String message){
             this.message = message;
-        }
-
-        public Integer getCode() {
-            return code;
-        }
-
-        public void setCode(Integer code) {
-            this.code = code;
         }
 
         public String getMessage() {
@@ -85,18 +75,17 @@ public class SetWiFiRPC extends RPC {
         @Override
         public String toString() {
             return "Result{" +
-                    "code=" + code +
-                    ", message='" + message + '\'' +
+                    "message='" + message + '\'' +
                     '}';
         }
     }
 
     public static class Response extends RPC.Response {
-        @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__RESULT)
         private SetWiFiRPC.Result responseResult;
 
-        public Response(Result result, String callTag, ResponseError responseError) {
-            super(callTag, responseError);
+        public Response(Result result, int responseId, String callTag, ResponseError responseError) {
+            super(responseId, callTag, responseError);
             this.responseResult = result;
         }
 
@@ -111,7 +100,7 @@ public class SetWiFiRPC extends RPC {
         @Override
         public String toString() {
             return "Response{" +
-                    "callTag=" + this.getCallTag() + ", " +
+                    super.toString() + ", " +
                     "responseResult=" + responseResult +
                     '}';
         }

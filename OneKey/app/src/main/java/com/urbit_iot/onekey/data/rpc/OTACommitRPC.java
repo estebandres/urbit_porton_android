@@ -13,10 +13,10 @@ public class OTACommitRPC extends RPC {
     }
 
     public static class Request extends RPC.Request{
-        @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private OTACommitRPC.Arguments methodArguments;
         public Request(Arguments args, String callTag, int id) {
-            super("OTA.Commit",callTag,id);
+            super("OTA.Commit",333,callTag,id);
             this.methodArguments = args;
         }
 
@@ -34,11 +34,11 @@ public class OTACommitRPC extends RPC {
     }
 
     public static class Response extends RPC.Response {
-        @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__RESULT)
         private OTACommitRPC.Result responseResult;
 
-        public Response(Result result, String callTag, ResponseError responseError) {
-            super(callTag, responseError);
+        public Response(Result result, int responseId, String callTag, ResponseError responseError) {
+            super(responseId, callTag, responseError);
             this.responseResult = result;
         }
 
@@ -53,7 +53,7 @@ public class OTACommitRPC extends RPC {
         @Override
         public String toString() {
             return "Response{" +
-                    "callTag=" + this.getCallTag() + ", " +
+                    "callTag=" + this.getRequestTag() + ", " +
                     "responseResult=" + responseResult +
                     '}';
         }

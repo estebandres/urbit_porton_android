@@ -26,7 +26,7 @@ import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
@@ -328,6 +328,7 @@ public class UModsRepository implements UModsDataSource {
         checkNotNull(uMod);
         mUModsLANDataSource.saveUMod(uMod);
         mUModsLocalDataSource.saveUMod(uMod);
+        mUModsInternetDataSource.saveUMod(uMod);
 
         // Do in memory cache update to keep the app UI up to date
         if (mCachedUMods == null) {
@@ -537,14 +538,21 @@ public class UModsRepository implements UModsDataSource {
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.Result>
-    getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Arguments request) {
+    public Observable<GetUserLevelRPC.Result>
+    getUserLevel(@NonNull UMod uMod, @NonNull GetUserLevelRPC.Arguments request) {
         return mUModsLANDataSource.getUserLevel(uMod, request);
     }
 
     @Override
     public Observable<TriggerRPC.Result>
     triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Arguments request) {
+        /*
+        return Observable.concatDelayError(
+                mUModsInternetDataSource.triggerUMod(uMod,request),
+                mUModsLANDataSource.triggerUMod(uMod,request))
+                .first();
+        */
+
         return mUModsLANDataSource.triggerUMod(uMod,request);
     }
 

@@ -22,7 +22,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
@@ -171,7 +171,7 @@ public class FakeUModsLANDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.Result> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Arguments requestArguments) {
+    public Observable<GetUserLevelRPC.Result> getUserLevel(@NonNull UMod uMod, @NonNull GetUserLevelRPC.Arguments requestArguments) {
         return null;
     }
 

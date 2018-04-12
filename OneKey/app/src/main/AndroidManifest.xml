@@ -19,6 +19,11 @@
     package="com.urbit_iot.onekey"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
+    //Paho
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
     <uses-permission android:name="android.permission.INTERNET"/>
     <!--Gets contact information to humanize the getUsers view-->
     <uses-permission android:name="android.permission.READ_CONTACTS"/>

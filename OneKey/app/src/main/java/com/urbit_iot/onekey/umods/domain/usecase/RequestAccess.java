@@ -26,7 +26,7 @@ import com.urbit_iot.onekey.appuser.domain.AppUser;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -128,12 +128,12 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                                     if(errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_CONFLICT))){
                                                                         //TODO evaluate the benefit of getting the user_type in the error body.
                                                                         //That may save us the next request (Deserialization using JSONObject)
-                                                                        GetMyUserLevelRPC.Arguments getUserLevelArgs =
-                                                                                new GetMyUserLevelRPC.Arguments(appUser.getUserName());
+                                                                        GetUserLevelRPC.Arguments getUserLevelArgs =
+                                                                                new GetUserLevelRPC.Arguments(appUser.getUserName());
                                                                         return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)
-                                                                                .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<CreateUserRPC.Result>>() {
+                                                                                .flatMap(new Func1<GetUserLevelRPC.Result, Observable<CreateUserRPC.Result>>() {
                                                                                     @Override
-                                                                                    public Observable<CreateUserRPC.Result> call(GetMyUserLevelRPC.Result result) {
+                                                                                    public Observable<CreateUserRPC.Result> call(GetUserLevelRPC.Result result) {
                                                                                         Log.d("getumod+info_uc","Get User Level Succeeded! " + result.toString());
                                                                                         uMod.setAppUserLevel(result.getUserLevel());
                                                                                         mUModsRepository.saveUMod(uMod);
@@ -158,7 +158,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                                                                     + " MESSAGE: "
                                                                                                     + errorMessage);
 
-                                                                                            if (GetMyUserLevelRPC.ALLOWED_ERROR_CODES.contains(httpErrorCode)) {
+                                                                                            if (GetUserLevelRPC.ALLOWED_ERROR_CODES.contains(httpErrorCode)) {
                                                                                                 if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
                                                                                                         || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
                                                                                                     Log.e("req_access_uc", "GetLevel failed to Auth with urbit:urbit CODE: " + httpErrorCode);

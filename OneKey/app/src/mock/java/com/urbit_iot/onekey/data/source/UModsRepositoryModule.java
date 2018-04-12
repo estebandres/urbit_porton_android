@@ -1,6 +1,7 @@
 package com.urbit_iot.onekey.data.source;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.burgstaller.okhttp.AuthenticationCacheInterceptor;
 import com.burgstaller.okhttp.CachingAuthenticatorDecorator;
@@ -18,6 +19,7 @@ import com.google.gson.GsonBuilder;
 import com.polidea.rxandroidble.RxBleClient;
 
 import com.urbit_iot.onekey.data.source.internet.FirmwareFileDownloader;
+import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.data.source.internet.UModsInternetDataSource;
 import com.urbit_iot.onekey.data.source.lan.UModsBLEScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsDNSSDScanner;
@@ -33,11 +35,15 @@ import com.urbit_iot.onekey.util.dagger.LanOnly;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
+import net.eusashead.iot.mqtt.ObservableMqttClient;
+import net.eusashead.iot.mqtt.paho.PahoObservableMqttClient;
+
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Named;
@@ -108,8 +114,8 @@ public class UModsRepositoryModule {
     @Singleton
     @Provides
     @Internet
-    UModsDataSource provideUModsInternetDataSource(Context context){
-        return new UModsInternetDataSource(new FirmwareFileDownloader(context));
+    UModsDataSource provideUModsInternetDataSource(Context context, UModMqttService uModMqttService){
+        return new UModsInternetDataSource(new FirmwareFileDownloader(context), uModMqttService);
     }
     //TODO separate those into ints own network module
 
@@ -233,5 +239,36 @@ public class UModsRepositoryModule {
     @Named("app_user")
     UModsService provideAppUserUModsService(@Named("app_user") Retrofit retrofit){
         return retrofit.create(UModsService.class);
+    }
+
+    @Provides
+    @Singleton
+    ObservableMqttClient provideObservableMqttClient(){
+        MqttAsyncClient asyncClient = null;
+        MemoryPersistence persistence = new MemoryPersistence();
+        try {
+            asyncClient = new MqttAsyncClient("tcp://35.196.19.239:1883",this.appUserName,persistence);
+        } catch (Exception mqttExc){
+            mqttExc.printStackTrace();
+            Log.e("provideMqtt", mqttExc.getMessage());
+            if (mqttExc instanceof MqttException) {
+                Log.e("provideMqtt","message"
+                        + ((MqttException) mqttExc).getMessage()
+                        + "\n reason "
+                        + ((MqttException) mqttExc).getReasonCode()
+                        + "\n cause " + ((MqttException) mqttExc).getCause());
+            }
+        }
+        if (asyncClient == null){
+            return null;
+        } else {
+            return PahoObservableMqttClient.builder(asyncClient).build();
+        }
+    }
+
+    @Provides
+    @Singleton
+    UModMqttService provideUModMqttService(ObservableMqttClient observableMqttClient, Gson gson){
+        return new UModMqttService(observableMqttClient,gson,this.appUserName);
     }
 }

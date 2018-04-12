@@ -19,9 +19,10 @@ package com.urbit_iot.onekey.data.source.internet;
 import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
@@ -30,9 +31,11 @@ import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.io.File;
 import java.util.List;
+import java.util.Random;
 
 import javax.inject.Inject;
 
@@ -45,11 +48,19 @@ import rx.Observable;
  */
 public class UModsInternetDataSource implements UModsDataSource {
 
+    @NonNull
     private FirmwareFileDownloader mFirmwareFileDownloader;
+    @NonNull
+    private UModMqttService mUModMqttService;
+
+    private Random randomGenerator;
 
     @Inject
-    public UModsInternetDataSource(FirmwareFileDownloader firmwareDownloader) {
+    public UModsInternetDataSource(@NonNull FirmwareFileDownloader firmwareDownloader,
+                                   @NonNull UModMqttService mUModMqttService) {
         this.mFirmwareFileDownloader = firmwareDownloader;
+        this.mUModMqttService = mUModMqttService;
+        randomGenerator = new Random();
     }
 
     @Override
@@ -108,13 +119,23 @@ public class UModsInternetDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.Result> getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Arguments requestArguments) {
+    public Observable<GetUserLevelRPC.Result> getUserLevel(@NonNull UMod uMod, @NonNull GetUserLevelRPC.Arguments requestArguments) {
         return null;
     }
 
     @Override
     public Observable<TriggerRPC.Result> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Arguments requestArguments) {
-        return null;
+        TriggerRPC.Request triggerRequest = new TriggerRPC.Request(
+                requestArguments,
+                uMod.getUUID(),
+                this.randomGenerator.nextInt());
+
+        triggerRequest.changeMethod(uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR);
+
+        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),
+                triggerRequest,
+                TriggerRPC.Response.class)
+                .map(TriggerRPC.Response::getResponseResult);
     }
 
     @Override
@@ -136,7 +157,6 @@ public class UModsInternetDataSource implements UModsDataSource {
     public Observable<GetUsersRPC.Result> getUModUsers(@NonNull UMod uMod, @NonNull GetUsersRPC.Arguments requestArgs) {
         return null;
     }
-
 
     @Override
     public Observable<SysGetInfoRPC.Result> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Arguments request) {
@@ -167,6 +187,4 @@ public class UModsInternetDataSource implements UModsDataSource {
     public Observable<Response<ResponseBody>> postFirmwareUpdateToUMod(UMod uMod, File newFirmwareFile) {
         return null;
     }
-
-
 }

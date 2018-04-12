@@ -51,11 +51,13 @@ public class UpdateUserRPC extends RPC {
     }
 
     public static class Request extends RPC.Request{
-        @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private UpdateUserRPC.Arguments methodArguments;
 
         public Request(Arguments args, String uModTag, int id) {
-            super("Admin.UpdateUser",uModTag,id);
+            super(GlobalConstants.RPC_METHOD_NAME___UPDATE_USER,
+                    GlobalConstants.RPC_METHOD_CODE__UPDATE_USER,
+                    uModTag,id);
             this.methodArguments = args;
         }
 
@@ -69,34 +71,34 @@ public class UpdateUserRPC extends RPC {
     }
 
     public static class Result{
-        @SerializedName("Response")
-        private String response;
-        public Result(String response){
-            this.response = response;
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__MSGE)
+        private String message;
+        public Result(String message){
+            this.message = message;
         }
 
-        public String getResponse() {
-            return response;
+        public String getMessage() {
+            return message;
         }
 
-        public void setResponse(String response) {
-            this.response = response;
+        public void setMessage(String message) {
+            this.message = message;
         }
 
         @Override
         public String toString() {
             return "Result{" +
-                    "response='" + response + '\'' +
+                    "message='" + message + '\'' +
                     '}';
         }
     }
 
     public static class Response extends RPC.Response {
-        @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__RESULT)
         private UpdateUserRPC.Result responseResult;
 
-        public Response(Result result, String callTag, ResponseError responseError) {
-            super(callTag, responseError);
+        public Response(Result result, int responseId, String callTag, ResponseError responseError) {
+            super(responseId, callTag, responseError);
             this.responseResult = result;
         }
 
@@ -111,7 +113,7 @@ public class UpdateUserRPC extends RPC {
         @Override
         public String toString() {
             return "Response{" +
-                    "callTag=" + this.getCallTag() + ", " +
+                    super.toString() + ", " +
                     "responseResult=" + responseResult +
                     '}';
         }

@@ -22,10 +22,7 @@ import android.util.Log;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
-import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -91,12 +88,14 @@ public class FactoryResetUMod extends SimpleUseCase<FactoryResetUMod.RequestValu
                                                     || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
                                                 Log.e("factory-reset_uc", "Factory Reset Failure on AUTH CODE: " + httpErrorCode);
                                             }
+                                            /*
                                             if ((httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR
                                                     && errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_OK)))) {
                                                 Log.e("factory-reset_uc", "Factory Succeed!");
                                                 FactoryResetRPC.Result result = new FactoryResetRPC.Result();
                                                 return Observable.just(result);
                                             }
+                                            */
                                         }
                                         return Observable.error(throwable);
                                     }

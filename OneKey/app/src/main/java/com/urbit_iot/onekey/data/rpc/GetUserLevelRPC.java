@@ -7,13 +7,12 @@ import com.urbit_iot.onekey.util.GlobalConstants;
 import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by andresteve07 on 12/1/17.
  */
 
-public class GetMyUserLevelRPC {
+public class GetUserLevelRPC {
     public static final List<Integer> ALLOWED_ERROR_CODES = Arrays.asList(
             //HttpURLConnection.HTTP_BAD_REQUEST,
             //HttpURLConnection.HTTP_NOT_FOUND,
@@ -41,10 +40,12 @@ public class GetMyUserLevelRPC {
     }
 
     public static class Request extends RPC.Request{
-        @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
-        private GetMyUserLevelRPC.Arguments methodArguments;
-        public Request(Arguments args, String uModTag){
-            super("Guest.UserStatus", uModTag, (new Random().nextInt()));
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
+        private GetUserLevelRPC.Arguments methodArguments;
+        public Request(Arguments args, String callTag, int id){
+            super(GlobalConstants.RPC_METHOD_NAME__USER_STATUS,
+                    GlobalConstants.RPC_METHOD_CODE__USER_STATUS,
+                    callTag,id);
             this.methodArguments = args;
         }
 
@@ -98,10 +99,10 @@ public class GetMyUserLevelRPC {
     }
 
     public static class Response extends RPC.Response {
-        @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
-        private GetMyUserLevelRPC.Result responseResult;
-        public Response(Result result, String callTag, RPC.ResponseError responseError){
-            super(callTag, responseError);
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__RESULT)
+        private GetUserLevelRPC.Result responseResult;
+        public Response(Result result, int responseId, String callTag, RPC.ResponseError responseError){
+            super(responseId, callTag, responseError);
             this.responseResult = result;
         }
 
@@ -116,7 +117,7 @@ public class GetMyUserLevelRPC {
         @Override
         public String toString() {
             return "Response{" +
-                    "callTag=" + this.getCallTag() + ", " +
+                    super.toString() + ", " +
                     "responseResult=" + responseResult +
                     "} ";
         }

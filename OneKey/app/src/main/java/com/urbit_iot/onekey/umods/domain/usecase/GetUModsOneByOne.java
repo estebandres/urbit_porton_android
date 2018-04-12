@@ -3,21 +3,19 @@ package com.urbit_iot.onekey.umods.domain.usecase;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
 import com.urbit_iot.onekey.appuser.domain.AppUser;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
 
 import javax.inject.Inject;
 
@@ -75,15 +73,15 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                         @Override
                                         public Observable<UMod> call(AppUser appUser) {
                                             /*
-                                            GetMyUserLevelRPC.Request request =
-                                                    new GetMyUserLevelRPC.Request(new GetMyUserLevelRPC.Arguments(appUser.getPhoneNumber()),uMod.getUUID());
+                                            GetUserLevelRPC.Request request =
+                                                    new GetUserLevelRPC.Request(new GetUserLevelRPC.Arguments(appUser.getPhoneNumber()),uMod.getUUID());
                                              */
                                             Log.d("getumods1x1_uc", appUser.toString());
-                                            GetMyUserLevelRPC.Arguments getMyLevelArgs = new GetMyUserLevelRPC.Arguments(appUser.getUserName());
+                                            GetUserLevelRPC.Arguments getMyLevelArgs = new GetUserLevelRPC.Arguments(appUser.getUserName());
                                             return mUModsRepository.getUserLevel(uMod,getMyLevelArgs)//TODO should be called from other UseCase??
-                                                    .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<UMod>>() {
+                                                    .flatMap(new Func1<GetUserLevelRPC.Result, Observable<UMod>>() {
                                                         @Override
-                                                        public Observable<UMod> call(GetMyUserLevelRPC.Result result) {
+                                                        public Observable<UMod> call(GetUserLevelRPC.Result result) {
                                                             Log.d("getumods1x1_uc", "Get User Status Success: " + result.toString());
                                                             uMod.setAppUserLevel(result.getUserLevel());
                                                             mUModsRepository.saveUMod(uMod);

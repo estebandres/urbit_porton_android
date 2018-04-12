@@ -25,7 +25,7 @@ import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
 import com.urbit_iot.onekey.appuser.domain.AppUser;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
@@ -110,12 +110,12 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                             @Override
                                                             public Observable<TriggerRPC.Result> call(AppUser appUser) {
                                                                 Log.d("trigger_uc", "Get AppUser Success: "+appUser.toString());
-                                                                GetMyUserLevelRPC.Arguments getUserLevelArgs =
-                                                                        new GetMyUserLevelRPC.Arguments(appUser.getUserName());
+                                                                GetUserLevelRPC.Arguments getUserLevelArgs =
+                                                                        new GetUserLevelRPC.Arguments(appUser.getUserName());
                                                                 return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)
-                                                                        .onErrorResumeNext(new Func1<Throwable, Observable<? extends GetMyUserLevelRPC.Result>>() {
+                                                                        .onErrorResumeNext(new Func1<Throwable, Observable<? extends GetUserLevelRPC.Result>>() {
                                                                             @Override
-                                                                            public Observable<? extends GetMyUserLevelRPC.Result> call(Throwable throwable) {
+                                                                            public Observable<? extends GetUserLevelRPC.Result> call(Throwable throwable) {
                                                                                 if (throwable instanceof HttpException) {
 
                                                                                     String errorMessage = "";
@@ -141,9 +141,9 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                                                 return Observable.error(throwable);
                                                                             }
                                                                         })
-                                                                        .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<TriggerRPC.Result>>() {
+                                                                        .flatMap(new Func1<GetUserLevelRPC.Result, Observable<TriggerRPC.Result>>() {
                                                                             @Override
-                                                                            public Observable<TriggerRPC.Result> call(GetMyUserLevelRPC.Result result) {
+                                                                            public Observable<TriggerRPC.Result> call(GetUserLevelRPC.Result result) {
                                                                                 //TODO what about when someone changed my status to Guest????? (This is not allowed by the app)
                                                                                 Log.d("trigger_uc", "Get User Level Success: "+result.toString());
                                                                                 uMod.setAppUserLevel(result.getUserLevel());

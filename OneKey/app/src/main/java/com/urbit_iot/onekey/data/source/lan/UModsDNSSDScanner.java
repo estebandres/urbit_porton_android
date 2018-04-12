@@ -51,7 +51,7 @@ public class UModsDNSSDScanner {
                         })
                         .map(new Func1<BonjourService,UMod>(){
                             public UMod call(BonjourService discovery){
-                                Pattern pattern = Pattern.compile("urbit_(.*?)\\.local\\.");
+                                Pattern pattern = Pattern.compile("urbit-(.*?)\\.local\\.");
                                 Matcher matcher = pattern.matcher(discovery.getHostname());
                                 String uModUUID = "DEFAULTUUID";
                                 if (matcher.find()){
@@ -101,7 +101,7 @@ public class UModsDNSSDScanner {
                         })
                         .map(new Func1<BonjourService,UMod>(){
                             public UMod call(BonjourService discovery){
-                                Pattern pattern = Pattern.compile("urbit_(.*?)\\.local\\.");
+                                Pattern pattern = Pattern.compile("urbit-(.*?)\\.local\\.");
                                 Matcher matcher = pattern.matcher(discovery.getHostname());
                                 String uModUUID = "DEFAULTUUID";
                                 if (matcher.find()){

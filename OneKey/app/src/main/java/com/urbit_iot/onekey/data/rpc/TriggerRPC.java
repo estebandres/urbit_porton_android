@@ -13,11 +13,24 @@ public class TriggerRPC extends RPC {
     }
 
     public static class Request extends RPC.Request{
-        @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private TriggerRPC.Arguments methodArguments;
-        public Request(Arguments args, String callTag, int id) {
-            super("User.Trigger",callTag,id);
+        public Request(Arguments args, String tagPrefix, int id) {
+            super(
+                    GlobalConstants.RPC_METHOD_NAME__ADMIN_TRIGGER,
+                    GlobalConstants.RPC_METHOD_CODE__ADMIN_TRIGGER,
+                    tagPrefix,id);
             this.methodArguments = args;
+        }
+
+        public void changeMethod(boolean isAdmin){
+            if (isAdmin){
+                super.setMethodName(GlobalConstants.RPC_METHOD_NAME__ADMIN_TRIGGER);
+                super.setMethodCode(GlobalConstants.RPC_METHOD_CODE__ADMIN_TRIGGER);
+            } else {
+                super.setMethodName(GlobalConstants.RPC_METHOD_NAME__USER_TRIGGER);
+                super.setMethodCode(GlobalConstants.RPC_METHOD_CODE__USER_TRIGGER);
+            }
         }
 
         public Arguments getMethodArguments() {
@@ -30,15 +43,34 @@ public class TriggerRPC extends RPC {
     }
 
     public static class Result{
-        public Result(){}
+        @SerializedName("message")
+        private String message;
+        public Result(String message){
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "message='" + message + '\'' +
+                    '}';
+        }
     }
 
     public static class Response extends RPC.Response {
-        @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__RESULT)
         private TriggerRPC.Result responseResult;
 
-        public Response(Result result, String callTag, ResponseError responseError) {
-            super(callTag, responseError);
+        public Response(Result result, int responseId, String callTag, ResponseError responseError) {
+            super(responseId, callTag, responseError);
             this.responseResult = result;
         }
 
@@ -50,10 +82,11 @@ public class TriggerRPC extends RPC {
             this.responseResult = responseResult;
         }
 
+
         @Override
         public String toString() {
             return "Response{" +
-                    "callTag=" + this.getCallTag() + ", " +
+                    super.toString() + ", " +
                     "responseResult=" + responseResult +
                     '}';
         }

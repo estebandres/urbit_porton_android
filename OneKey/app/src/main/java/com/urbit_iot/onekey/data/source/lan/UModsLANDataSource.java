@@ -30,7 +30,7 @@ import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
@@ -43,7 +43,6 @@ import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -174,8 +173,11 @@ public class UModsLANDataSource implements UModsDataSource {
         return Observable.mergeDelayError(
                 //Observable.from(UMODS_SERVICE_DATA.values()),
                 //TODO review!!!
+                /*
                 mUModsDNSSDScanner.browseLANForUMods()
                         .switchIfEmpty(getUModsByLanPingingAndApiCalling()),
+                        */
+                mUModsDNSSDScanner.browseLANForUMods(),
                 /*
                 Observable.mergeDelayError(
                         //mUModsDNSSDScanner.browseLANForUMods(),
@@ -278,8 +280,8 @@ public class UModsLANDataSource implements UModsDataSource {
         return Observable.mergeDelayError(
                 //mockedUModObs,
                 mUModsWiFiScanner.browseWiFiForUMod(uModUUID),
-                mUModsDNSSDScanner.browseLANForUMod(uModUUID),
-                getSingleUModByLanPingingAndApiCalling(uModUUID))
+                mUModsDNSSDScanner.browseLANForUMod(uModUUID))
+                //getSingleUModByLanPingingAndApiCalling(uModUUID))
                 .doOnNext(new Action1<UMod>() {
                     @Override
                     public void call(UMod uMod) {
@@ -426,22 +428,22 @@ public class UModsLANDataSource implements UModsDataSource {
     }
 
     @Override
-    public Observable<GetMyUserLevelRPC.Result>
-    getUserLevel(@NonNull UMod uMod, @NonNull GetMyUserLevelRPC.Arguments request) {
+    public Observable<GetUserLevelRPC.Result>
+    getUserLevel(@NonNull UMod uMod, @NonNull GetUserLevelRPC.Arguments request) {
 
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return this.defaultUModsService.getAppUserLevel(request);
 
         //TODO remove mock
         /*
-        GetMyUserLevelRPC.Response response = new GetMyUserLevelRPC.Response(
-                new GetMyUserLevelRPC.Result(GetMyUserLevelRPC.UModUserType.Admin),
-                request.getCallTag(),
+        GetUserLevelRPC.Response response = new GetUserLevelRPC.Response(
+                new GetUserLevelRPC.Result(GetUserLevelRPC.UModUserType.Admin),
+                request.getRequestTag(),
                 new RPC.ResponseError(null,null));
         */
         /*
-        GetMyUserLevelRPC.Result result =
-                new GetMyUserLevelRPC.Result(APIUserType.Admin);
+        GetUserLevelRPC.Result result =
+                new GetUserLevelRPC.Result(APIUserType.Admin);
 
         return Observable.just(result)
                 .delay(300L, TimeUnit.MILLISECONDS);
@@ -461,7 +463,7 @@ public class UModsLANDataSource implements UModsDataSource {
         //TODO remove mock
         /*
         final TriggerRPC.Response response = new TriggerRPC.Response(new TriggerRPC.Result(),
-                request.getCallTag(),
+                request.getRequestTag(),
                 new RPC.ResponseError(401,"Unauthenticated"));
          */
 
@@ -486,8 +488,8 @@ public class UModsLANDataSource implements UModsDataSource {
         //TODO remove mock
         /*
         final CreateUserRPC.Response response = new CreateUserRPC.Response(
-                new CreateUserRPC.Result(GetMyUserLevelRPC.UModUserType.Admin),
-                request.getCallTag(),
+                new CreateUserRPC.Result(GetUserLevelRPC.UModUserType.Admin),
+                request.getRequestTag(),
                 null
         );
          */

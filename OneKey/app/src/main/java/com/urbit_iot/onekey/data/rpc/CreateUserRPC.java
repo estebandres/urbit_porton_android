@@ -4,9 +4,7 @@ import com.google.gson.annotations.SerializedName;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -45,11 +43,13 @@ public class CreateUserRPC extends RPC {
     }
 
     public static class Request extends RPC.Request{
-        @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private CreateUserRPC.Arguments methodArguments;
 
-        public Request(Arguments args, String uModTag, int id) {
-            super("Guest.CreateUser",uModTag,id);
+        public Request(Arguments args, String callTag, int id) {
+            super(GlobalConstants.RPC_METHOD_NAME__CREATE_USER,
+                    GlobalConstants.RPC_METHOD_CODE__CREATE_USER,
+                    callTag,id);
             this.methodArguments = args;
         }
 
@@ -91,11 +91,11 @@ public class CreateUserRPC extends RPC {
     }
 
     public static class Response extends RPC.Response {
-        @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__RESULT)
         private CreateUserRPC.Result responseResult;
 
-        public Response(Result result, String callTag, ResponseError responseError) {
-            super(callTag, responseError);
+        public Response(Result result, int responseId, String callTag, ResponseError responseError) {
+            super(responseId, callTag, responseError);
             this.responseResult = result;
         }
 
@@ -110,7 +110,7 @@ public class CreateUserRPC extends RPC {
         @Override
         public String toString() {
             return "Response{" +
-                    "callTag=" + this.getCallTag() + ", " +
+                    super.toString() + ", " +
                     "responseResult=" + responseResult +
                     '}';
         }

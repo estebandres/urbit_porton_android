@@ -15,10 +15,12 @@ public class GetUsersRPC extends RPC {
     }
 
     public static class Request extends RPC.Request{
-        @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private GetUsersRPC.Arguments methodArguments;
         public Request(Arguments args, String callTag, int id) {
-            super("Admin.GetUsers",callTag,id);
+            super(GlobalConstants.RPC_METHOD_NAME__GET_USERS,
+                    GlobalConstants.RPC_METHOD_CODE__GET_USERS,
+                    callTag,id);
             this.methodArguments = args;
         }
 
@@ -68,7 +70,7 @@ public class GetUsersRPC extends RPC {
     }
 
     public static class Result{
-        @SerializedName("Response")
+        @SerializedName("users")
         private List<UserResult> users;
 
         public Result(List<UserResult> users) {
@@ -92,11 +94,11 @@ public class GetUsersRPC extends RPC {
     }
 
     public static class Response extends RPC.Response {
-        @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__RESULT)
         private GetUsersRPC.Result responseResult;
 
-        public Response(Result result, String callTag, ResponseError responseError) {
-            super(callTag, responseError);
+        public Response(Result result, int responseId, String callTag, ResponseError responseError) {
+            super(responseId, callTag, responseError);
             this.responseResult = result;
         }
 
@@ -111,7 +113,7 @@ public class GetUsersRPC extends RPC {
         @Override
         public String toString() {
             return "Response{" +
-                    "callTag=" + this.getCallTag() + ", " +
+                    super.toString() + ", " +
                     "responseResult=" + responseResult +
                     '}';
         }

@@ -13,10 +13,12 @@ public class FactoryResetRPC extends RPC {
     }
 
     public static class Request extends RPC.Request{
-        @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private FactoryResetRPC.Arguments methodArguments;
         public Request(Arguments args, String callTag, int id) {
-            super("Admin.FactoryReset",callTag,id);
+            super(GlobalConstants.RPC_METHOD_NAME__FACTORY_RESET,
+                    GlobalConstants.RPC_METHOD_CODE__FACTORY_RESET,
+                    callTag,id);
             this.methodArguments = args;
         }
 
@@ -30,15 +32,34 @@ public class FactoryResetRPC extends RPC {
     }
 
     public static class Result{
-        public Result(){}
+        @SerializedName("message")
+        private String message;
+        public Result(String message){
+            this.message = message;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "message='" + message + '\'' +
+                    '}';
+        }
     }
 
     public static class Response extends RPC.Response {
-        @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__RESULT)
         private FactoryResetRPC.Result responseResult;
 
-        public Response(Result result, String callTag, ResponseError responseError) {
-            super(callTag, responseError);
+        public Response(Result result, int responseId, String callTag, ResponseError responseError) {
+            super(responseId, callTag, responseError);
             this.responseResult = result;
         }
 
@@ -53,7 +74,7 @@ public class FactoryResetRPC extends RPC {
         @Override
         public String toString() {
             return "Response{" +
-                    "callTag=" + this.getCallTag() + ", " +
+                    super.toString() + ", " +
                     "responseResult=" + responseResult +
                     '}';
         }

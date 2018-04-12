@@ -65,6 +65,10 @@ android {
         }
     }
     buildToolsVersion '26.0.2'
+    compileOptions {
+        targetCompatibility 1.8
+        sourceCompatibility 1.8
+    }
 }
 
 /*
@@ -116,7 +120,10 @@ dependencies {
     implementation 'com.github.MAXDeliveryNG:slideview:1.1.0'
     //ping LAN addresses to determine reachable host
     implementation 'com.github.stealthcopter:AndroidNetworkTools:0.3.08'
+    //mqtt paho wrapper uses rxjava2
+    implementation "net.eusashead.mqtt:rxmqtt:1.1.1.RELEASE"
 
+    implementation "com.github.akarnokd:rxjava2-interop:0.12.6"
 
     // Dependencies for local unit tests
     testImplementation "junit:junit:$rootProject.ext.junitVersion"

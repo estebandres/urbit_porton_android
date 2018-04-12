@@ -247,6 +247,10 @@ public final class UMod {
         this.lastUpdateDate = new Date();
     }
 
+    public String getUModRequestTopic(){
+        return "urbit-" + this.uModUUID + "/request";
+    }
+
     @Nullable
     public UModSource getuModSource() {
         return uModSource;

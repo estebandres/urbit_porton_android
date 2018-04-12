@@ -22,7 +22,7 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
@@ -70,9 +70,9 @@ public interface UModsDataSource {
 
     //Observable<RPC.CommandResponse> postCommand(@NonNull RPC.CommandRequest commandRequest);
 
-    Observable<GetMyUserLevelRPC.Result>
+    Observable<GetUserLevelRPC.Result>
     getUserLevel(@NonNull UMod uMod,
-                 @NonNull GetMyUserLevelRPC.Arguments requestArguments);
+                 @NonNull GetUserLevelRPC.Arguments requestArguments);
     //GET /rpc/ && /umods/UMOD_ID/rpc?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
     Observable<TriggerRPC.Result> triggerUMod(@NonNull UMod uMod,

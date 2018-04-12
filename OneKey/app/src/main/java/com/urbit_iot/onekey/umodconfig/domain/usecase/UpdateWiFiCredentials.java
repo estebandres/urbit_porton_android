@@ -90,12 +90,14 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
                                                     || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
                                                 Log.e("setwifi_uc", "Set WiFi Failure on AUTH CODE: " + httpErrorCode);
                                             }
+                                            /*
                                             if ((httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR
                                                     && errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_OK)))) {
                                                 Log.e("setwifi_uc", "Set WiFi in progress!");
                                                 SetWiFiRPC.Result result = new SetWiFiRPC.Result(500, "no se");
                                                 return Observable.just(result);
                                             }
+                                            */
                                         }
                                         throwable.printStackTrace();
                                         return Observable.error(throwable);

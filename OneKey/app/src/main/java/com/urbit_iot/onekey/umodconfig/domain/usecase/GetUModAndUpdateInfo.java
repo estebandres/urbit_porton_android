@@ -26,7 +26,7 @@ import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
 import com.urbit_iot.onekey.appuser.domain.AppUser;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.onekey.data.UMod;
@@ -127,8 +127,8 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                         || errorMessage.contains("already")){
                                                                     //TODO evaluate the benefit of getting the user_type in the error body.
                                                                     //That may save us the next request (Deserialization using JSONObject)
-                                                                    GetMyUserLevelRPC.Arguments getUserLevelArgs =
-                                                                            new GetMyUserLevelRPC.Arguments(appUser.getUserName());
+                                                                    GetUserLevelRPC.Arguments getUserLevelArgs =
+                                                                            new GetUserLevelRPC.Arguments(appUser.getUserName());
                                                                     return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)//Careful icarus!!! uMod may change
                                                                             // This
                                                                             .doOnError(new Action1<Throwable>() {
@@ -137,9 +137,9 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                                     Log.e("getumod+info_uc","Get User Level Failed: " + throwable.getMessage());
                                                                                 }
                                                                             })
-                                                                            .flatMap(new Func1<GetMyUserLevelRPC.Result, Observable<UMod>>() {
+                                                                            .flatMap(new Func1<GetUserLevelRPC.Result, Observable<UMod>>() {
                                                                                 @Override
-                                                                                public Observable<UMod> call(GetMyUserLevelRPC.Result result) {
+                                                                                public Observable<UMod> call(GetUserLevelRPC.Result result) {
                                                                                     Log.d("getumod+info_uc","Get User Level Succeeded!: "+result.toString());
                                                                                     uMod.setAppUserLevel(result.getUserLevel());
                                                                                     mUModsRepository.saveUMod(uMod);

@@ -3,7 +3,7 @@ package com.urbit_iot.onekey.data.source.lan;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
-import com.urbit_iot.onekey.data.rpc.GetMyUserLevelRPC;
+import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
@@ -48,7 +48,7 @@ public interface UModsService {
     Observable<DeleteUserRPC.Result> deleteUser(@Body DeleteUserRPC.Arguments requestArgs);
 
     @POST("/rpc/Guest.UserStatus")
-    Observable<GetMyUserLevelRPC.Result> getAppUserLevel(@Body GetMyUserLevelRPC.Arguments request);
+    Observable<GetUserLevelRPC.Result> getAppUserLevel(@Body GetUserLevelRPC.Arguments request);
 
     @POST("/rpc/Admin.GetUsers")
     Observable<GetUsersRPC.Result> getUsers(@Body GetUsersRPC.Arguments arguments);

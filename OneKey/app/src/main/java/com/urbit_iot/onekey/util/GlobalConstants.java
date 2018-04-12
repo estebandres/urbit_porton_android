@@ -14,16 +14,47 @@ public final class GlobalConstants {
 
     public static final String AP_DEFAULT_IP_ADDRESS = "192.168.4.1";
 
-    public static final String RPC_REQ_METHOD_ATTR_NAME = "method";
-    public static final String RPC_REQ_ARGS_ATTR_NAME = "args";
-    public static final String RPC_REQ_TAG_ATTR_NAME = "tag";
-    public static final String RPC_REQ_ID_ATTR_NAME = "id";
+    //------------COMMON RPC_FIELD_NAMES-----------------
+    public static final String RPC_FIELD_NAME__METHOD   = "method";
+    public static final String RPC_FIELD_NAME__METHOD_CODE   = "method_code";
+    public static final String RPC_FIELD_NAME__REQUESTER   = "requester";
+    public static final String RPC_FIELD_NAME__ARGS     = "args";
+    public static final String RPC_FIELD_NAME__TAG      = "tag";
+    public static final String RPC_FIELD_NAME__ID       = "id";
+    public static final String RPC_FIELD_NAME__RESULT = "result";
+    public static final String RPC_FIELD_NAME__ERROR = "error";
+    public static final String RPC_FIELD_NAME__MSGE = "message";
+    public static final String RPC_FIELD_NAME__CODE = "code";
 
-    public static final String RPC_SUCC_RESP_RESULT_ATTR_NAME = "result";
-    public static final String RPC_SUCC_RESP_TAG_ATTR_NAME = "tag";
+    //------------RPC_METHOD_NAMES-----------------
+    public static final String RPC_METHOD_NAME__FACTORY_RESET   = "Admin.FactoryReset";
+    public static final String RPC_METHOD_NAME__SET_WIFI        = "Admin.SetWifi";
+    public static final String RPC_METHOD_NAME__GET_USERS       = "Admin.GetUsers";
+    public static final String RPC_METHOD_NAME___UPDATE_USER    = "Admin.UpdateUser";
+    public static final String RPC_METHOD_NAME__DELETE_USER     = "Admin.DeleteUser";
+    public static final String RPC_METHOD_NAME__ADMIN_TRIGGER   = "Admin.Trigger";
 
-    public static final String RPC_FAIL_RESP_CODE_ATTR_NAME = "result";
-    public static final String RPC_FAIL_RESP_TAG_ATTR_NAME = "tag";
+    public static final String RPC_METHOD_NAME__CREATE_USER     = "Guest.CreateUser";
+    public static final String RPC_METHOD_NAME__USER_STATUS     = "Guest.UserStatus";
+    public static final String RPC_METHOD_NAME__GET_INFO        = "Sys.GetInfo";
+
+    public static final String RPC_METHOD_NAME__USER_TRIGGER    = "User.Trigger";
+
+    //------------RPC_METHOD_CODES-----------------
+    public static final int RPC_METHOD_CODE__FACTORY_RESET  = 100;
+    public static final int RPC_METHOD_CODE__SET_WIFI       = 101;
+    public static final int RPC_METHOD_CODE__GET_USERS      = 102;
+    public static final int RPC_METHOD_CODE__UPDATE_USER    = 103;
+    public static final int RPC_METHOD_CODE__DELETE_USER    = 104;
+    public static final int RPC_METHOD_CODE__ADMIN_TRIGGER  = 105;
+
+    public static final int RPC_METHOD_CODE__CREATE_USER    = 200;
+    public static final int RPC_METHOD_CODE__USER_STATUS    = 201;
+    public static final int RPC_METHOD_CODE__GET_INFO       = 203;
+
+    public static final int RPC_METHOD_CODE__USER_TRIGGER   = 305;
+
+    //----------------------------------------------------
 
     public static final String CREDENTIALS_REALM_SEPARATOR = ":urbit:";
 

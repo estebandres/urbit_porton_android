@@ -14,11 +14,13 @@ public class SysGetInfoRPC extends RPC {
     }
 
     public static class Request extends RPC.Request{
-        @SerializedName(GlobalConstants.RPC_REQ_ARGS_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private SysGetInfoRPC.Arguments methodArguments;
 
         public Request(Arguments methodArguments, String callTag, int callID) {
-            super("Sys.GetInfo",callTag,callID);
+            super(GlobalConstants.RPC_METHOD_NAME__GET_INFO,
+                    GlobalConstants.RPC_METHOD_CODE__GET_INFO,
+                    callTag,callID);
             this.methodArguments = methodArguments;
         }
 
@@ -304,11 +306,11 @@ public class SysGetInfoRPC extends RPC {
     }
 
     public static class Response extends RPC.Response {
-        @SerializedName(GlobalConstants.RPC_SUCC_RESP_RESULT_ATTR_NAME)
+        @SerializedName(GlobalConstants.RPC_FIELD_NAME__RESULT)
         private SysGetInfoRPC.Result responseResult;
 
-        public Response(Result responseResult, String callTag, ResponseError responseError) {
-            super(callTag, responseError);
+        public Response(Result responseResult, int responseId, String callTag, ResponseError responseError) {
+            super(responseId, callTag, responseError);
             this.responseResult = responseResult;
         }
 
@@ -323,8 +325,9 @@ public class SysGetInfoRPC extends RPC {
         @Override
         public String toString() {
             return "Response{" +
+                    super.toString() + ", " +
                     "responseResult=" + responseResult +
-                    "} " + super.toString();
+                    "} ";
         }
     }
 }
