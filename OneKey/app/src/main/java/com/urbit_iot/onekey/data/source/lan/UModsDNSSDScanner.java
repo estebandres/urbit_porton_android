@@ -9,6 +9,8 @@ import com.github.druk.rxdnssd.RxDnssd;
 import com.github.druk.rxdnssd.RxDnssdBindable;
 import com.urbit_iot.onekey.data.UMod;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,6 +20,7 @@ import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func0;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by andresteve07 on 8/11/17.
@@ -25,11 +28,72 @@ import rx.functions.Func1;
 
 public class UModsDNSSDScanner {
     private RxDnssd rxDnssd;
+    private Map<String, UMod> mCachedUMods;
 
     public UModsDNSSDScanner(RxDnssd rxDnssd){
+        this.mCachedUMods = new LinkedHashMap<>();
         this.rxDnssd = rxDnssd;
+        this.continuousBrowseLANForUMods();
+        /*
+        Observable.interval(5, TimeUnit.SECONDS)
+                .doOnNext(n -> this.browseLANForUMods())
+                .subscribe();
+        */
+
     }
 
+    private void continuousBrowseLANForUMods(){
+        rxDnssd.browse("_http._tcp.","local.")
+                .compose(rxDnssd.resolve())
+                .compose(rxDnssd.queryRecords())
+                .filter(bonjourService -> {
+                    //TODO improve filter using regex
+                    return bonjourService != null
+                            && bonjourService.getHostname() != null
+                            && bonjourService.getHostname().contains("urbit")
+                            && bonjourService.getInet4Address() != null;
+                })
+                .doOnNext(bonjourService -> {
+                    String uModUUID = getUUIDFromDiscoveryHostName(bonjourService.getHostname());
+                    if (bonjourService.isLost()){
+                        Log.d("dnssd_cont","LOST " + uModUUID);
+                        mCachedUMods.remove(uModUUID);
+                    } else {
+                        Log.d("dnssd_cont","FOUND " + uModUUID);
+                        mCachedUMods.put(uModUUID, new UMod(uModUUID,
+                                bonjourService.getInet4Address().getHostAddress(),
+                                true));
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+    }
+
+    private String getUUIDFromDiscoveryHostName(String hostName){
+        String uModUUID = "DEFAULTUUID";
+
+        Pattern pattern = Pattern.compile("urbit-(.*?)\\.local\\.");
+        Matcher matcher = pattern.matcher(hostName);
+
+        if (matcher.find()){
+            uModUUID = matcher.group(1);
+        }
+        return uModUUID;
+    }
+
+    public Observable<UMod> browseLANForUMods(){
+        return Observable.from(this.mCachedUMods.values());
+    }
+
+    public Observable<UMod> browseLANForUMod(final String uModUUID){
+        UMod cachedUMod = this.mCachedUMods.get(uModUUID);
+        if (cachedUMod == null){
+            return Observable.empty();
+        } else {
+            return Observable.just(cachedUMod);
+        }
+    }
+    /*
     //Keeps browsing the LAN for 4 seconds maximum.
     //@RxLogObservable
     public Observable<UMod> browseLANForUMods(){
@@ -65,7 +129,10 @@ public class UModsDNSSDScanner {
             }
         });
     }
+    */
 
+
+    /*
     //TODO as proof of concept we should try send a regular DNS query(A/AAAA) to 224.0.0.251:5353 (DNS server)
     //there are several java android libraries that could work well. But it seems that mongoose os only implements the advertise method.
     public Observable<UMod> browseLANForUMod(final String uModUUID){
@@ -103,7 +170,7 @@ public class UModsDNSSDScanner {
                             public UMod call(BonjourService discovery){
                                 Pattern pattern = Pattern.compile("urbit-(.*?)\\.local\\.");
                                 Matcher matcher = pattern.matcher(discovery.getHostname());
-                                String uModUUID = "DEFAULTUUID";
+                                String uModUUID = " DEFAULTUUID";
                                 if (matcher.find()){
                                     uModUUID = matcher.group(1);
                                 }
@@ -121,4 +188,5 @@ public class UModsDNSSDScanner {
             }
         });
     }
+    */
 }

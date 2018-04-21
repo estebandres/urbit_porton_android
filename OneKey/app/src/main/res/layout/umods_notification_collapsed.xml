@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <RelativeLayout
+        android:id="@+id/notif_icon_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/notif_big_icon"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:paddingBottom="1dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="6dp"
+            android:src="@drawable/logo"/>
+
+        <ImageView
+            android:id="@+id/notif_small_icon"
+            android:layout_width="18.2dp"
+            android:layout_height="18.2dp"
+            android:layout_alignBottom="@id/notif_big_icon"
+            android:layout_alignEnd="@id/notif_big_icon"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/notification_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="false"
+        android:layout_marginTop="3dp"
+        android:layout_toEndOf="@+id/notif_icon_container"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/notif_title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Notification Sample App" />
+
+        <TextView
+            android:id="@+id/notif_body_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Expand me to see a detailed message!"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/notif_update_button"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:text="UP"
+        android:paddingTop="8dp"/>
+
+</RelativeLayout>

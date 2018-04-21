@@ -25,6 +25,7 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
+
 // Define versions in a single place
 ext {
     // Sdk and tools
@@ -50,7 +51,7 @@ ext {
     dexmakerVersion = '1.2'
     gsonVersion = '2.8.1'
     DNSSDVersion = '0.9.1'
-    rxDNSSDVersion = '0.9.1'
+    rxDNSSDVersion = '0.9.7'
     libphonenumber = '8.2.0'
     rxPreferences = '2.0.0-RC3'//forces rxjava2.x to the project
     retrofit = '2.3.0'

@@ -39,8 +39,8 @@ public abstract class SimpleUseCase<Q extends RxUseCase.RequestValues,
     public void execute(Q requestValues, Subscriber<P> subscriber) {
         unsubscribe();
         mSubscription = buildUseCase(requestValues)
-                .subscribeOn(mSubscribeOn)
-                .observeOn(mObserveOn)
+                .subscribeOn(this.mSubscribeOn)
+                .observeOn(this.mObserveOn)
                 .subscribe(subscriber);
     }
 

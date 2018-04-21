@@ -66,4 +66,22 @@ public final class GlobalConstants {
     public static final String ONLINE_LOWER_TEXT = "online";
     public static final String OFFLINE_LOWER_TEXT = "desconectado";
 
+    public interface ACTION {
+        String MAIN = "com.urbit-iot.onekey.action.main";
+        String INIT = "com.urbit-iot.onekey.action.init";
+        String UPDATE_UMODS = "com.urbit-iot.onekey.action.update";
+        String ACTION_UMOD = "com.urbit-iot.onekey.action.actuate";
+        String NEXT_UMOD = "com.urbit-iot.onekey.action.next";
+        String STARTFOREGROUND = "com.urbit-iot.onekey.action.startforeground";
+        String STOPFOREGROUND = "com.urbit-iot.onekey.action.stopforeground";
+        String BACK_UMOD = "com.urbit-iot.onekey.action.back";
+        String UNLOCK = "com.urbit-iot.onekey.action.unlock";
+        String TRIGGER = "com.urbit-iot.onekey.action.trigger";
+        String REQUEST_ACCESS = "com.urbit-iot.onekey.action.request";
+    }
+
+    public interface NOTIFICATION_ID {
+        public static int FOREGROUND_SERVICE = 101;
+    }
+
 }

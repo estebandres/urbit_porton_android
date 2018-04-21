@@ -39,6 +39,7 @@ import net.eusashead.iot.mqtt.ObservableMqttClient;
 import net.eusashead.iot.mqtt.paho.PahoObservableMqttClient;
 
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
@@ -246,6 +247,11 @@ public class UModsRepositoryModule {
     ObservableMqttClient provideObservableMqttClient(){
         MqttAsyncClient asyncClient = null;
         MemoryPersistence persistence = new MemoryPersistence();
+
+        MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+        mqttConnectOptions.setAutomaticReconnect(true);
+        mqttConnectOptions.setCleanSession(false);
+
         try {
             asyncClient = new MqttAsyncClient("tcp://35.196.19.239:1883",this.appUserName,persistence);
         } catch (Exception mqttExc){
@@ -262,7 +268,9 @@ public class UModsRepositoryModule {
         if (asyncClient == null){
             return null;
         } else {
-            return PahoObservableMqttClient.builder(asyncClient).build();
+            return PahoObservableMqttClient.builder(asyncClient)
+                    .setConnectOptions(mqttConnectOptions)
+                    .build();
         }
     }
 

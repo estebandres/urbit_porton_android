@@ -23,6 +23,7 @@ import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
+import rx.schedulers.Schedulers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -38,7 +39,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
     public GetUModsOneByOne(@NonNull UModsRepository tasksRepository,
                             @NonNull AppUserRepository appUserRepository,
                             @NonNull BaseSchedulerProvider schedulerProvider) {
-        super(schedulerProvider.io(), schedulerProvider.ui());
+        super(Schedulers.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
         mAppUserRepository = checkNotNull(appUserRepository, "appUserRepository cannot be null!");
     }
