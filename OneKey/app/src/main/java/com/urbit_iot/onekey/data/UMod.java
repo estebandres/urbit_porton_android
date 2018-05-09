@@ -435,6 +435,10 @@ public final class UMod {
         return this.getAppUserLevel() != UModUser.Level.UNAUTHORIZED ;
     }
 
+    public boolean canBeTriggeredByAppUser(){
+        return this.getAppUserLevel() == UModUser.Level.ADMINISTRATOR || this.getAppUserLevel() == UModUser.Level.AUTHORIZED;
+    }
+
     @Nullable
     public String getMacAddress() {
         return macAddress;

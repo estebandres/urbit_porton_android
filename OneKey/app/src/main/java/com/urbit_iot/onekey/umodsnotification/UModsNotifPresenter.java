@@ -6,7 +6,6 @@ import android.util.Log;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.umods.domain.usecase.RequestAccess;
-import com.urbit_iot.onekey.umods.domain.usecase.TriggerUMod;
 import com.urbit_iot.onekey.umodsnotification.domain.usecase.GetUModsForNotif;
 import com.urbit_iot.onekey.umodsnotification.domain.usecase.TriggerUModByNotif;
 
@@ -180,7 +179,6 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     @Override
     public void previousUMod() {
         rotateUModsList(false);
-
     }
 
     @Override
@@ -189,11 +187,24 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     }
 
     private void rotateUModsList(boolean rotateForward){
-        if (mCachedKeysList.size()>1){
-            if (rotateForward){
-                Collections.rotate(mCachedKeysList,-1);
-            } else {
-                Collections.rotate(mCachedKeysList,+1);
+        if (mCachedUModsMap.size()>0){
+            this.mCachedKeysList = new ArrayList<>(this.mCachedUModsMap.keySet());
+            if (mCachedKeysList.size()>1){
+                if (rotateForward){
+                    Collections.rotate(mCachedKeysList,-1);
+                } else {
+                    Collections.rotate(mCachedKeysList,+1);
+                }
+            }
+            UMod currentUMod = mCachedUModsMap.get(mCachedKeysList.get(0));
+            if (currentUMod == null){
+                currentUMod = mCachedUModsMap.get(this.mCachedUModsMap.keySet().iterator().next());
+            }
+            if (currentUMod.canBeTriggeredByAppUser()){
+                mUModsNotifView.showTriggerView(currentUMod.getUUID(), currentUMod.getAlias());
+            }
+            if (currentUMod.getAppUserLevel() == UModUser.Level.UNAUTHORIZED){
+                mUModsNotifView.showRequestAccessView(currentUMod.getUUID(), currentUMod.getAlias());
             }
         }
     }

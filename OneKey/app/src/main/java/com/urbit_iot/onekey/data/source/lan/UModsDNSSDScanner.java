@@ -81,11 +81,11 @@ public class UModsDNSSDScanner {
         return uModUUID;
     }
 
-    public Observable<UMod> browseLANForUMods(){
+    synchronized public Observable<UMod> browseLANForUMods(){
         return Observable.from(this.mCachedUMods.values());
     }
 
-    public Observable<UMod> browseLANForUMod(final String uModUUID){
+    synchronized public Observable<UMod> browseLANForUMod(final String uModUUID){
         UMod cachedUMod = this.mCachedUMods.get(uModUUID);
         if (cachedUMod == null){
             return Observable.empty();
