@@ -32,7 +32,12 @@ public class UModsWiFiScanner {
     public UModsWiFiScanner(Context appContext) {
         this.appContext = appContext;
         this.mCachedAPModeUMods = new LinkedHashMap<>();
-        this.continuousWiFiScann();
+        //this.continuousWiFiScann();
+        Observable.interval(10, TimeUnit.SECONDS)
+                .startWith(1L)
+                .subscribeOn(Schedulers.io())
+                .doOnNext(n -> continuousWiFiScann())
+                .subscribe();
     }
 
     synchronized public Observable<UMod> browseWiFiForUMods() {
@@ -42,12 +47,14 @@ public class UModsWiFiScanner {
 
     synchronized public Observable<UMod> browseWiFiForUMod(String uModUUID) {
         //return scanWiFi(uModUUID);
+
         UMod cachedUMod = this.mCachedAPModeUMods.get(uModUUID);
         if (cachedUMod == null){
             return Observable.empty();
         } else {
             return Observable.just(cachedUMod);
         }
+
     }
 
 
@@ -118,9 +125,9 @@ public class UModsWiFiScanner {
     }
 
     private void continuousWiFiScann(){
+        mCachedAPModeUMods.clear();
         observableWiFiScanResults()
                 .doOnNext(uMod -> mCachedAPModeUMods.put(uMod.getUUID(),uMod))
-                .subscribeOn(Schedulers.io())
                 .subscribe();
     }
 
@@ -136,15 +143,14 @@ public class UModsWiFiScanner {
             return Observable.error(new Exception("Unsatisfied WiFi permissions"));
         }
         return ReactiveWifi.observeWifiAccessPoints(this.appContext)
-                .flatMap(scanResults -> {
-                    mCachedAPModeUMods.clear();
-                    return Observable.from(scanResults);})
+                .flatMap(Observable::from)
                 .distinct((Func1<ScanResult, Object>) scanResult -> scanResult.SSID)
                 .filter(scanResult -> scanResult.level > -75)
                 .filter(scanResult -> {
                     //TODO improve filter using regex
                     return scanResult.SSID.contains("urbit");
                 })
+                .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
                 .map(scanResult -> {
                     Pattern pattern = Pattern.compile("urbit_(.*?)$");
                     Matcher matcher = pattern.matcher(scanResult.SSID);

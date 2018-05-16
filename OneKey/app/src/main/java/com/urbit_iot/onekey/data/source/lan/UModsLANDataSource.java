@@ -168,7 +168,7 @@ public class UModsLANDataSource implements UModsDataSource {
                 .toList();
     }
 
-    //@RxLogObservable
+    @RxLogObservable
     public Observable<UMod> getUModsOneByOne(){
         return Observable.mergeDelayError(
                 //Observable.from(UMODS_SERVICE_DATA.values()),
@@ -184,7 +184,7 @@ public class UModsLANDataSource implements UModsDataSource {
                         Observable.<UMod>empty(),
                         getUModsByLanPingingAndApiCalling()).distinct(),
                 */
-                mUModsBLEScanner.bleScanForUMods(),
+                //mUModsBLEScanner.bleScanForUMods(),
                 mUModsWiFiScanner.browseWiFiForUMods())
                 .compose(this.uModLANBrander);
     }

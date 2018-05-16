@@ -33,6 +33,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.ncorti.slidetoact.SlideToActView;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UMod;
@@ -88,7 +89,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mListAdapter = new UModsAdapter(new ArrayList<UModViewModel>(0), mItemListener, getResources());
+        mListAdapter = new UModsAdapter(this.getContext(), new ArrayList<>(0), mItemListener, getResources());
         mVibrator = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
@@ -268,10 +269,14 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     }
 
     public void showUMod(UModViewModel uModViewModel){
+        /*
         if(mNoTaskAddView.getVisibility() == View.VISIBLE){
             mNoTasksView.setVisibility(View.GONE);
         }
+        */
         mListAdapter.addItem(uModViewModel);
+        mTasksView.setVisibility(View.VISIBLE);
+        mNoTasksView.setVisibility(View.GONE);
     }
 
     @Override
@@ -390,7 +395,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
     @Override
     public void clearAllItems() {
-        mListAdapter.replaceData(new ArrayList<UModViewModel>());
+        mListAdapter.replaceData(new ArrayList<>());
     }
 
     /**
@@ -454,8 +459,13 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         private List<UModViewModel> mViewModelsList;
         private UModItemListener mItemListener;
         private Resources resources;
+        private Context activityContext;
 
-        public UModsAdapter(List<UModViewModel> uMods, UModItemListener itemListener, Resources resources) {
+        public UModsAdapter(Context context,
+                            List<UModViewModel> uMods,
+                            UModItemListener itemListener,
+                            Resources resources) {
+            this.activityContext = context;
             setList(uMods);
             mItemListener = itemListener;
             this.resources = resources;
@@ -545,7 +555,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             View rowView = view;
 
             LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-            rowView = inflater.inflate(R.layout.umod_item_card2, viewGroup, false);
+            rowView = inflater.inflate(R.layout.umod_item_card3, viewGroup, false);
             /*
             if (rowView == null) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
@@ -564,14 +574,31 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
             final ToggleButton notifToggle = (ToggleButton) rowView.findViewById(R.id.card_item_notif_button);
 
-            final SlideView actionSlider = (SlideView) rowView.findViewById(R.id.card_slider);
+            //final SlideView actionSlider = (SlideView) rowView.findViewById(R.id.card_slider);
 
             final RelativeLayout upperLayout = (RelativeLayout) rowView.findViewById(R.id.umod_item_upper_layout);
 
             //actionSlider.getTextView().setSingleLine();
             //actionSlider.getTextView().setEllipsize(TextUtils.TruncateAt.END);
             //actionSlider.getTextView().setText(Integer.toString(actionSlider.getTextView().getWidth()) + "  " + Integer.toString(actionSlider.getWidth()));
+            final SlideToActView actionSlider = (SlideToActView) rowView.findViewById(R.id.card_slider);
 
+            if(viewModel.isSliderVisible()){
+                actionSlider.setVisibility(View.VISIBLE);
+                //actionSlider.setOuterColor(viewModel.getSliderBackgroundColor().asActualResource());
+                actionSlider.setOuterColor(
+                        ContextCompat.getColor(this.activityContext,
+                                viewModel.getSliderBackgroundColor().asActualResource()));
+                actionSlider.setInnerColor(ContextCompat.getColor(this.activityContext,viewModel.getSliderTextColor().asActualResource()));
+                actionSlider.setLocked(!viewModel.isSliderEnabled());
+                actionSlider.setEnabled(viewModel.isSliderEnabled());
+                actionSlider.setText(viewModel.getSliderText());
+            } else {
+                actionSlider.setVisibility(View.GONE);
+            }
+
+
+            /*
             if(viewModel.isSliderVisible()){
                 actionSlider.setVisibility(View.VISIBLE);
                 ColorStateList sliderTextColorCSL = null;
@@ -588,26 +615,12 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 actionSlider.setSlideBackgroundColor(sliderBackgroundCSL);
                 actionSlider.setTextColor(sliderTextColorCSL);
                 actionSlider.setEnabled(viewModel.isSliderEnabled());
-                /*
-                else {
-                    ColorStateList disabledSliderBackgroundCSL = null;
-                    int disabledSliderTextColorRes = -1;
-                    try{
-                        disabledSliderBackgroundCSL = ResourcesCompat.getColorStateList(this.resources,UModViewModelColors.DISABLED_SLIDER_BACKGROUND.asActualResource(), null);
-                        disabledSliderTextColorRes = ResourcesCompat.getColor(resources,UModViewModelColors.DISABLED_SLIDER_TEXT.asActualResource(),null);
-                    }catch (Resources.NotFoundException nfExc){
-                        disabledSliderBackgroundCSL = disabledSliderBackgroundCSL==null?ResourcesCompat.getColorStateList(this.resources,R.color.colorPrimaryDark, null):disabledSliderBackgroundCSL;
-                        disabledSliderTextColorRes = disabledSliderTextColorRes==-1?ResourcesCompat.getColor(this.resources,R.color.white, null):disabledSliderTextColorRes;
-                    }
-                    actionSlider.setSlideBackgroundColor(disabledSliderBackgroundCSL);
-                    actionSlider.setTextColor(disabledSliderTextColorRes);
-                    actionSlider.setEnabled(false);
-                }
-                */
             } else {
                 actionSlider.setVisibility(View.GONE);
             }
             actionSlider.setText(viewModel.getSliderText());
+             */
+
 
             // NotifEnabled checkbox state
             notifToggle.setChecked(viewModel.isToggleButtonChecked());
@@ -636,6 +649,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 }
             });
 
+            /*
             actionSlider.setOnSlideCompleteListener(new SlideView.OnSlideCompleteListener() {
                 @Override
                 public void onSlideComplete(SlideView slideView) {
@@ -643,6 +657,15 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                     mItemListener.vibrateOnActionButtonClick();
                     actionSlider.setEnabled(false);
                 }
+            });
+            */
+
+            actionSlider.setOnSlideCompleteListener(slideToActView -> {
+                Log.d("umods_frag","ON SLIDE COMPLETE");
+                viewModel.onSlideCompleted();
+                mItemListener.vibrateOnActionButtonClick();
+                actionSlider.setLocked(true);
+                actionSlider.setEnabled(false);
             });
 
             if(viewModel.isItemOnClickListenerEnabled()){
@@ -680,13 +703,13 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         TRIGGER_SLIDER_BACKGROUND {
             @Override
             public int asActualResource() {
-                return R.drawable.trigger_slider_background_selector;
+                return R.color.trigger_slider_background;
             }
         },
         TRIGGER_SLIDER_TEXT{
             @Override
             public int asActualResource() {
-                return R.drawable.trigger_slider_text_selector;
+                return R.color.trigger_slider_text;
             }
         },
         OFFLINE_RED{
@@ -704,13 +727,13 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         ACCESS_REQUEST_SLIDER_BACKGROUND{
             @Override
             public int asActualResource() {
-                return R.drawable.request_access_slider_background_selector;
+                return R.color.request_access_slider_background;
             }
         },
         ACCESS_REQUEST_SLIDER_TEXT{
             @Override
             public int asActualResource() {
-                return R.drawable.request_access_slider_text_selector;
+                return R.color.request_access_slider_text;
             }
         };
         public abstract int asActualResource();

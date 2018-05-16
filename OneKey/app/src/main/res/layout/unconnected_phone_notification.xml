@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="2dp"
+    android:background="#be0006">
+
+    <RelativeLayout
+        android:id="@+id/notif_icon_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true">
+
+        <ImageView
+            android:id="@+id/notif_big_icon"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:paddingBottom="1dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="6dp"
+            android:src="@drawable/logo"/>
+
+        <ImageView
+            android:id="@+id/notif_small_icon"
+            android:layout_width="18.2dp"
+            android:layout_height="18.2dp"
+            android:layout_alignBottom="@id/notif_big_icon"
+            android:layout_alignEnd="@id/notif_big_icon"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/notification_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginTop="3dp"
+        android:layout_toEndOf="@+id/notif_icon_container"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/notif_title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:text="SIN CONEXIÓN"
+            android:textColor="@color/white"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/notif_subtitle_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="normal"
+                android:textSize="16sp"
+                android:text="Conecte su teléfono a la red"
+                android:textColor="@color/white"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+
+
+    <ImageView
+        android:id="@+id/notif_search_button"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/ic_update_search_black_24dp" />
+
+</RelativeLayout>

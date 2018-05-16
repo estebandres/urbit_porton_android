@@ -45,6 +45,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         this.mContext = mContext;
         this.notificationManager = (NotificationManager) this.mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         this.setupControlCollapsedView();
+        this.setupNoUModsFoundCollapsedView();
         this.setupNotification();
 
         this.isLocked = true;
@@ -52,6 +53,18 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
             this.metrics = mContext.getResources().getDisplayMetrics();
         */
+    }
+
+    private void setupNoUModsFoundCollapsedView() {
+        this.noUModsFoundCollapsedViews = new RemoteViews(getPackageName(),
+                R.layout.no_umods_found_notification);
+
+        Intent updateUModsIntent = new Intent(this.mContext, UModsNotifService.class);
+        updateUModsIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
+        PendingIntent updateUModsPendingIntent = PendingIntent.getService(this.mContext, 0,
+                updateUModsIntent, 0);
+
+        this.noUModsFoundCollapsedViews.setOnClickPendingIntent(R.id.notif_search_button, updateUModsPendingIntent);
     }
 
     private void buildNotification(){
@@ -144,7 +157,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     @Override
     public void showNoUModsFound() {
-
+        this.setupNotification(this.noUModsFoundCollapsedViews);
     }
 
     @Override
@@ -181,13 +194,6 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     private void setupControlCollapsedView(){
         this.controlCollapsedViews = new RemoteViews(getPackageName(),
                 R.layout.umods_notification);
-
-        Intent notificationIntent = new Intent(this.mContext, UModsActivity.class);
-        notificationIntent.setAction(GlobalConstants.ACTION.MAIN);
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this.mContext, 0,
-                notificationIntent, 0);
 
         Intent updateUModsIntent = new Intent(this.mContext, UModsNotifService.class);
         updateUModsIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
@@ -253,6 +259,31 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
                 .setLargeIcon();
         */
         notification.contentView = this.controlCollapsedViews;
+        //notification.bigContentView = expandedViews;
+        notification.flags = Notification.FLAG_ONGOING_EVENT;
+        notification.icon = R.drawable.logo;
+        notification.contentIntent = pendingIntent;
+        notification.visibility = Notification.VISIBILITY_PUBLIC;
+        ((Service) this.mContext).startForeground(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, this.notification);
+    }
+
+    private void setupNotification(RemoteViews views){
+        Intent notificationIntent = new Intent(this.mContext, UModsActivity.class);
+        notificationIntent.setAction(GlobalConstants.ACTION.MAIN);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this.mContext, 0,
+                notificationIntent, 0);
+
+        this.notification = new Notification.Builder(this.mContext).build();
+        /*
+        Notification notification = new Notification.Builder(this.mContext)
+                .setOngoing(true)
+                .setCustomContentView(controlCollapsedViews)
+                .setCustomBigContentView(expandedViews)
+                .setLargeIcon();
+        */
+        notification.contentView = views;
         //notification.bigContentView = expandedViews;
         notification.flags = Notification.FLAG_ONGOING_EVENT;
         notification.icon = R.drawable.logo;

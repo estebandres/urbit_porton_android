@@ -17,6 +17,7 @@ import com.urbit_iot.onekey.umods.domain.usecase.SetOngoingNotificationStatus;
 import com.urbit_iot.onekey.umods.domain.usecase.TriggerUMod;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
 import com.urbit_iot.onekey.util.GlobalConstants;
+import com.urbit_iot.onekey.util.IntegerContainer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -168,6 +169,9 @@ public class UModsPresenter implements UModsContract.Presenter {
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
+        //this.mUModsView.clearAllItems();
+        final IntegerContainer onNextCount = new IntegerContainer(0);
+
         GetUModsOneByOne.RequestValues requestValue = new GetUModsOneByOne.RequestValues(forceUpdate,
                 mCurrentFiltering);
         mGetUModsOneByOne.execute(requestValue, new Subscriber<GetUModsOneByOne.ResponseValues>() {
@@ -175,6 +179,10 @@ public class UModsPresenter implements UModsContract.Presenter {
             @Override
             public void onCompleted() {
                 mUModsView.setLoadingIndicator(false);
+                if (onNextCount.getValue() <= 0) {
+                    Log.e("umods_pr", "getUModsOnexOne didn't retreive any result: " + onNextCount);
+                    mUModsView.showNoUMods();
+                }
             }
 
             @Override
@@ -188,6 +196,7 @@ public class UModsPresenter implements UModsContract.Presenter {
             public void onNext(GetUModsOneByOne.ResponseValues values) {
                 Log.d("umods_pr", values.getUMod().toString());
                 mUModsView.showUMod(createViewModel(values.getUMod()));
+                onNextCount.plusOne();
             }
         });
     }

@@ -77,7 +77,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
 
     @Override
     public void loadUMods(boolean forceUpdate) {
-
+        mCachedUModsMap.clear();
         this.mGetUModsForNotif.execute(
                 new GetUModsForNotif.RequestValues(forceUpdate),
                 new Subscriber<GetUModsForNotif.ResponseValues>() {

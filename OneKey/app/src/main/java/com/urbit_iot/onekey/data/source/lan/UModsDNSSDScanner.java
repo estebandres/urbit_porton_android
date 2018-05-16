@@ -33,12 +33,13 @@ public class UModsDNSSDScanner {
     public UModsDNSSDScanner(RxDnssd rxDnssd){
         this.mCachedUMods = new LinkedHashMap<>();
         this.rxDnssd = rxDnssd;
-        this.continuousBrowseLANForUMods();
-        /*
-        Observable.interval(5, TimeUnit.SECONDS)
-                .doOnNext(n -> this.browseLANForUMods())
+        //this.continuousBrowseLANForUMods();
+
+        Observable.interval(10, TimeUnit.SECONDS)
+                .startWith(1L)
+                .subscribeOn(Schedulers.io())
+                .doOnNext(n -> singleScan())
                 .subscribe();
-        */
 
     }
 
@@ -93,6 +94,39 @@ public class UModsDNSSDScanner {
             return Observable.just(cachedUMod);
         }
     }
+
+
+    //Keeps browsing the LAN for 5 seconds maximum.
+    //@RxLogObservable
+    public void singleScan(){
+        this.mCachedUMods.clear();
+        rxDnssd.browse("_http._tcp.","local.")
+            .compose(rxDnssd.resolve())
+            .compose(rxDnssd.queryRecords())
+            .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
+            .distinct()
+            .filter(bonjourService -> {
+                //TODO improve filter using regex
+                return bonjourService != null
+                        && bonjourService.getHostname() != null
+                        && bonjourService.getHostname().contains("urbit")
+                        && bonjourService.getInet4Address() != null;
+            })
+            .doOnNext(bonjourService -> {
+                String uModUUID = getUUIDFromDiscoveryHostName(bonjourService.getHostname());
+                if (bonjourService.isLost()){
+                    Log.d("dnssd_cont","LOST " + uModUUID);
+                    mCachedUMods.remove(uModUUID);
+                } else {
+                    Log.d("dnssd_cont","FOUND " + uModUUID);
+                    mCachedUMods.put(uModUUID, new UMod(uModUUID,
+                            bonjourService.getInet4Address().getHostAddress(),
+                            true));
+                }
+            })
+            .subscribe();
+    }
+
     /*
     //Keeps browsing the LAN for 4 seconds maximum.
     //@RxLogObservable
