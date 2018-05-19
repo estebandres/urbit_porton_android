@@ -15,7 +15,7 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.urbit_iot.onekey">
-    //Paho
+    <!-- Paho -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -54,7 +54,12 @@
         <service
             android:name=".umodsnotification.UModsNotifService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
+        <receiver android:name=".umodsnotification.WifiStateReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.wifi.WIFI_STATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

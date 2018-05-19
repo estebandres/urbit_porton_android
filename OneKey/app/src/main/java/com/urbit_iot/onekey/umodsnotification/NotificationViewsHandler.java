@@ -6,7 +6,14 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.urbit_iot.onekey.R;
@@ -46,6 +53,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         this.notificationManager = (NotificationManager) this.mContext.getSystemService(Context.NOTIFICATION_SERVICE);
         this.setupControlCollapsedView();
         this.setupNoUModsFoundCollapsedView();
+        this.setupUnconnectedPhoneCollapsedViews();
         this.setupNotification();
 
         this.isLocked = true;
@@ -53,6 +61,46 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
             this.metrics = mContext.getResources().getDisplayMetrics();
         */
+    }
+
+    /*
+    @Override
+    public boolean isWiFiConnected(){
+        //WifiManager wifiManager = (WifiManager) this.mContext.getSystemService(Context.WIFI_SERVICE);
+        ConnectivityManager connectivityManager = (ConnectivityManager) this.mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            if (activeNetworkInfo != null && activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI){
+                return activeNetworkInfo.isConnected();
+            } else {
+                return false;
+            }
+        } else {
+            NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            if (networkInfo != null){
+                return networkInfo.isConnected();
+            } else {
+                return false;
+            }
+        }
+    }
+    */
+
+
+    public boolean isWiFiConnected(){
+        WifiManager wifiManager = (WifiManager) this.mContext.getSystemService(Context.WIFI_SERVICE);
+        return wifiManager != null && wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED;
+    }
+
+    private void setupUnconnectedPhoneCollapsedViews() {
+        this.unconnectedPhoneCollapsedViews = new RemoteViews(getPackageName(),
+                R.layout.unconnected_phone_notification);
+        Intent launchWifiIntent = new Intent(this.mContext, UModsNotifService.class);
+        launchWifiIntent.setAction(GlobalConstants.ACTION.LAUNCH_WIFI_SETTINGS);
+        PendingIntent launchWifiPendingIntent = PendingIntent.getService(this.mContext, 0,
+                launchWifiIntent, 0);
+
+        this.unconnectedPhoneCollapsedViews.setOnClickPendingIntent(R.id.notif_wifi_button, launchWifiPendingIntent);
     }
 
     private void setupNoUModsFoundCollapsedView() {
@@ -152,7 +200,8 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     @Override
     public void showUnconnectedPhone() {
-
+        Log.d("NOTIF", "UNCONNECTED");
+        this.setupNotification(this.unconnectedPhoneCollapsedViews);
     }
 
     @Override
@@ -309,14 +358,14 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     @Override
     public void showRequestAccessView(String uModUUID, String uModAlias) {
-        //TODO change layout to reflect request acccess behaviour
+        //TODO change layout to reflect request access behaviour
         this.setIntentAction(GlobalConstants.ACTION.TRIGGER);
         this.changeMainTextAndSetDumbActionIntent(uModUUID, uModAlias);
     }
 
     @Override
     public void showTriggerView(String uModUUID, String uModAlias) {
-        //TODO change layout to reflect request acccess behaviour
+        //TODO change layout to reflect request access behaviour
         this.setIntentAction(GlobalConstants.ACTION.TRIGGER);
         this.changeMainTextAndSetDumbActionIntent(uModUUID, uModAlias);
     }

@@ -77,6 +77,10 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
 
     @Override
     public void loadUMods(boolean forceUpdate) {
+        if (!this.mUModsNotifView.isWiFiConnected()){
+            this.mUModsNotifView.showUnconnectedPhone();
+            return;
+        }
         mCachedUModsMap.clear();
         this.mGetUModsForNotif.execute(
                 new GetUModsForNotif.RequestValues(forceUpdate),
@@ -100,14 +104,15 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
                             index++;
                         }
                         Collections.rotate(mCachedKeysList,-(index));
+                    }
+
+                    UMod selectionUMod = mCachedUModsMap.get(mCachedKeysList.get(0));
+
+                    if (selectionUMod.getAppUserLevel() == UModUser.Level.AUTHORIZED
+                            || selectionUMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR){
+                        mUModsNotifView.showTriggerView(selectionUMod.getUUID(), selectionUMod.getAlias());
                     } else {
-                        UMod selectionUMod = mCachedUModsMap.get(mCachedKeysList.get(0));
-                        if (selectionUMod.getAppUserLevel() == UModUser.Level.AUTHORIZED
-                                || selectionUMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR){
-                            mUModsNotifView.showTriggerView(selectionUMod.getUUID(), selectionUMod.getAlias());
-                        } else {
-                            mUModsNotifView.showRequestAccessView(selectionUMod.getUUID(), selectionUMod.getAlias());
-                        }
+                        mUModsNotifView.showRequestAccessView(selectionUMod.getUUID(), selectionUMod.getAlias());
                     }
                     if (mCachedKeysList.size()==1){
                         mUModsNotifView.hideSelectionControls();
@@ -184,6 +189,17 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     @Override
     public void nextUMod() {
         rotateUModsList(true);
+    }
+
+    @Override
+    public void wifiIsOn() {
+
+        this.loadUMods(true);
+    }
+
+    @Override
+    public void wifiIsOff() {
+        this.mUModsNotifView.showUnconnectedPhone();
     }
 
     private void rotateUModsList(boolean rotateForward){

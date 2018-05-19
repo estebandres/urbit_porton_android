@@ -45,6 +45,7 @@ public interface UModsNotifContract {
 
         void disableOperationButton();
 
+        boolean isWiFiConnected();
     }
 
     interface Presenter extends BasePresenter {
@@ -61,5 +62,9 @@ public interface UModsNotifContract {
         void previousUMod();
 
         void nextUMod();
+
+        void wifiIsOn();
+
+        void wifiIsOff();
     }
 }

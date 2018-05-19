@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textStyle="bold"
-            android:textSize="20sp"
+            android:textSize="16sp"
             android:text="SIN CONEXIÓN"
             android:textColor="@color/white"/>
 
@@ -59,7 +59,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textStyle="normal"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:text="Conecte su teléfono a la red"
                 android:textColor="@color/white"/>
 
@@ -69,12 +69,12 @@
 
 
     <ImageView
-        android:id="@+id/notif_search_button"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:id="@+id/notif_wifi_button"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_centerVertical="true"
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="10dp"
-        android:background="@drawable/ic_update_search_black_24dp" />
+        android:background="@drawable/ic_wifi_white_24dp" />
 
 </RelativeLayout>

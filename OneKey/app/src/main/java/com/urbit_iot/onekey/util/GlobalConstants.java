@@ -78,6 +78,9 @@ public final class GlobalConstants {
         String UNLOCK = "com.urbit-iot.onekey.action.unlock";
         String TRIGGER = "com.urbit-iot.onekey.action.trigger";
         String REQUEST_ACCESS = "com.urbit-iot.onekey.action.request";
+        String WIFI_CONNECTED = "com.urbit-iot.onekey.action.wifienabled";
+        String WIFI_UNUSABLE = "com.urbit-iot.onekey.action.wifiunusable";
+        String LAUNCH_WIFI_SETTINGS = "com.urbit-iot.onekey.action.launchwifisettings";
     }
 
     public interface NOTIFICATION_ID {

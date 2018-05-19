@@ -3,6 +3,7 @@ package com.urbit_iot.onekey.umodsnotification;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.urbit_iot.onekey.OneKeyApplication;
@@ -104,7 +105,24 @@ public class UModsNotifService extends Service{
                 //Toast.makeText(this, "UPDATE UMOD", Toast.LENGTH_SHORT).show();
                 this.mPresenter.loadUMods(true);
                 break;
+            case GlobalConstants.ACTION.WIFI_CONNECTED:
+                this.mPresenter.wifiIsOn();
+                break;
+            case GlobalConstants.ACTION.WIFI_UNUSABLE:
+                Log.d("UMOD_SERVICE", "LAUNCH WIFI SETTINGS");
+                this.mPresenter.wifiIsOff();
+                break;
+            case GlobalConstants.ACTION.LAUNCH_WIFI_SETTINGS:
+                Log.d("UMOD_SERVICE", "LAUNCH WIFI SETTINGS");
+                startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+                break;
         }
+    }
+
+    /*
+    private boolean wifiState(){
+        final WifiManager wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
 
     }
+    */
 }
