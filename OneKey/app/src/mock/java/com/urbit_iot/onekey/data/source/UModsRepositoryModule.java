@@ -18,6 +18,7 @@ import com.google.gson.GsonBuilder;
 
 import com.polidea.rxandroidble.RxBleClient;
 
+import com.urbit_iot.onekey.data.FakeUModsLANDataSource;
 import com.urbit_iot.onekey.data.source.internet.FirmwareFileDownloader;
 import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.data.source.internet.UModsInternetDataSource;
@@ -109,7 +110,8 @@ public class UModsRepositoryModule {
                                                  UrlHostSelectionInterceptor urlHostSelectionInterceptor,
                                                  @Named("default") UModsService defaultUModsService,
                                                  @Named("app_user") UModsService appUserUModsService) {
-        return new UModsLANDataSource(uModsDNSSDScanner, uModsBLEScanner, uModsWiFiScanner, urlHostSelectionInterceptor,defaultUModsService, appUserUModsService);
+        //return new UModsLANDataSource(uModsDNSSDScanner, uModsBLEScanner, uModsWiFiScanner, urlHostSelectionInterceptor,defaultUModsService, appUserUModsService);
+        return new FakeUModsLANDataSource();
     }
 
     @Singleton

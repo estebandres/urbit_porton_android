@@ -16,7 +16,8 @@
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/colorControlHighlight">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -27,19 +28,57 @@
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin">
 
-        <TextView
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:src="@drawable/logo" />
+
+        <android.support.v7.widget.CardView
+            android:layout_gravity="center_horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/app_user_phone_tag"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title"/>
-        <EditText
-            android:id="@+id/app_user_phone_number"
-            android:inputType="phone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/app_user_phone_hint"
-            android:singleLine="true"
-            android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            app:cardElevation="7dp"
+            app:cardCornerRadius="2dp"
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            app:cardBackgroundColor="@color/colorAccent"
+            android:layout_marginTop="10dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_user_phone_tag"
+                    android:textStyle="bold"
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"/>
+
+                <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <EditText
+                        android:id="@+id/app_user_phone_number"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="phone"
+                        android:digits="0123456789+"
+                        android:text="0351 499-9999"
+                        android:hint="@string/app_user_phone_hint"
+                        android:singleLine="true"
+                        android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                </android.support.design.widget.TextInputLayout>
+
+            </LinearLayout>
+        </android.support.v7.widget.CardView>
+
 
     </LinearLayout>
 </ScrollView>

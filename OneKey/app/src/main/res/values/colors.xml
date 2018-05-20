@@ -15,9 +15,11 @@
   -->
 
 <resources>
-    <color name="colorPrimary">#455A64</color>
-    <color name="colorPrimaryDark">#263238</color>
-    <color name="colorAccent">#D50000</color>
+    <color name="colorPrimary">#00796b</color>
+    <color name="colorPrimaryDark">#004d40</color>
+    <color name="colorAccent">#00bfa5</color>
+    <color name="colorControlActivated">#64ffda</color>
+    <color name="colorControlHighlight">#00796b</color>
 
     <drawable name="completedTaskBackground">#CCCCCC</drawable>
 
@@ -37,5 +39,6 @@
     <color name="trigger_slider_text">#88FFFFFF</color>
     <color name="disabled_slider_background">#A2A3A3</color>
     <color name="disabled_slider_text">#88FFFFFF</color>
+    <color name="lightBackground">#00897b</color>
 
 </resources>

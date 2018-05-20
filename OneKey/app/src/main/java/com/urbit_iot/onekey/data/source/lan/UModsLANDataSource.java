@@ -27,6 +27,7 @@ import com.stealthcopter.networktools.SubnetDevices;
 import com.stealthcopter.networktools.subnet.Device;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.APIUserType;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
@@ -47,6 +48,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -171,7 +173,7 @@ public class UModsLANDataSource implements UModsDataSource {
     @RxLogObservable
     public Observable<UMod> getUModsOneByOne(){
         return Observable.mergeDelayError(
-                //Observable.from(UMODS_SERVICE_DATA.values()),
+                Observable.from(UMODS_SERVICE_DATA.values()),
                 //TODO review!!!
                 /*
                 mUModsDNSSDScanner.browseLANForUMods()
@@ -269,6 +271,7 @@ public class UModsLANDataSource implements UModsDataSource {
     //@RxLogObservable
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
         UMod mockedUMod = UMODS_SERVICE_DATA.get(uModUUID);
+        mockedUMod.setState(UMod.State.AP_MODE);
         Observable<UMod> mockedUModObs;
         if (mockedUMod != null){
             mockedUModObs = Observable.just(mockedUMod);
@@ -278,7 +281,7 @@ public class UModsLANDataSource implements UModsDataSource {
         }
 
         return Observable.mergeDelayError(
-                //mockedUModObs,
+                mockedUModObs,
                 mUModsWiFiScanner.browseWiFiForUMod(uModUUID),
                 mUModsDNSSDScanner.browseLANForUMod(uModUUID))
                 //getSingleUModByLanPingingAndApiCalling(uModUUID))
@@ -481,9 +484,10 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<CreateUserRPC.Result> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Arguments request) {
-
+        /*
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return this.defaultUModsService.createUser(request);
+        */
 
         //TODO remove mock
         /*
@@ -494,11 +498,11 @@ public class UModsLANDataSource implements UModsDataSource {
         );
          */
 
-        /*
+
         final CreateUserRPC.Result result =
                 new CreateUserRPC.Result(APIUserType.Admin);
         return Observable.just(result).delay(680, TimeUnit.MILLISECONDS);
-        */
+
     }
 
     @Override
@@ -552,15 +556,16 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @Override
     public Observable<SysGetInfoRPC.Result> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Arguments request) {
-
+        /*
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return defaultUModsService.getSystemInfo(request);
+        */
 
         //TODO remove mock
         /*
         SysGetInfoRPC.Response mockedResponse = new SysGetInfoRPC.Response(new SysGetInfoRPC.Result(null, "v1.0.2", null, null, null, null, null, null, null, null, null, new SysGetInfoRPC.Result.Wifi("192.168.212.134","192.168.212.1",null,"MOCKED_SSID"), null),"STEVE MOCK", null);
          */
-        /*
+
         final SysGetInfoRPC.Result mockedResult =
                 new SysGetInfoRPC.Result(
                         null,
@@ -581,7 +586,7 @@ public class UModsLANDataSource implements UModsDataSource {
                                 "MOCKED_SSID"),
                         null);
         return Observable.just(mockedResult).delay(330L, TimeUnit.MILLISECONDS);
-        */
+
     }
 
     @Override

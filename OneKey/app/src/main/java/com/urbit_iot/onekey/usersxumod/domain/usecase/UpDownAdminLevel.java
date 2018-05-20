@@ -44,7 +44,7 @@ public class UpDownAdminLevel extends SimpleUseCase<UpDownAdminLevel.RequestValu
                 new UpdateUserRPC.Result("updated???"));
 
         if(values.isUModUserToBeAdmin()){
-            //If for some reason app tries to ADMIN an ADMIN
+            //If for some reason app tries to ADMIN_CROWN an ADMIN_CROWN
             if(values.getUModUser().isAdmin()){
                 return Observable.just(defaultResponse);
             }

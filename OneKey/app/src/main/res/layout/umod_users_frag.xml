@@ -23,7 +23,8 @@
         android:id="@+id/umod_users_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@color/colorControlHighlight">
 
         <LinearLayout
             android:id="@+id/umod_users_ll"
@@ -47,12 +48,34 @@
                 android:layout_marginLeft="@dimen/list_item_padding"
                 android:layout_marginRight="@dimen/list_item_padding"
                 android:layout_marginTop="@dimen/activity_vertical_margin"
-                android:layout_marginBottom="@dimen/activity_vertical_margin" />
+                android:layout_marginBottom="@dimen/activity_vertical_margin"
+                android:visibility="gone"/>
+            <LinearLayout
+                android:id="@+id/umod_users__upper_hint"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:background="#ffe922"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MANTENGA PRESIONADO"
+                    android:textStyle="bold"
+                    android:textColor="#967f10"
+                    android:layout_gravity="center"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Widget.PopupMenu.Small"
+                    />
+            </LinearLayout>
 
             <ListView
                 android:id="@+id/umod_users_list"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:divider="@color/colorAccent"
+                android:dividerHeight="1dp"/>
         </LinearLayout>
 
         <LinearLayout

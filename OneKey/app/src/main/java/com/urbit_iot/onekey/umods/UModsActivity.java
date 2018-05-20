@@ -36,7 +36,7 @@ public class UModsActivity extends AppCompatActivity {
     private static final String CURRENT_FILTERING_KEY = "CURRENT_FILTERING_KEY";
     public static final String APP_USER_NAME = "APP_USER_NAME";
     public static final String APP_UUID = "APP_UUID";
-    public static final int APP_PERMISSIONS_REQUEST_FINE_AND_COARSE = 666;
+
     private static final int REQUEST_APP_USER = 1;
     private DrawerLayout mDrawerLayout;
 
@@ -78,14 +78,6 @@ public class UModsActivity extends AppCompatActivity {
 
         OneKeyApplication oneKeyApplication = (OneKeyApplication) getApplication();
 
-        if (!AccessRequester.isLocationEnabled(getApplicationContext())){
-            AccessRequester.requestLocationAccess(this);
-        }
-
-        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                || ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, APP_PERMISSIONS_REQUEST_FINE_AND_COARSE);
-        }
         // Create the presenter
         DaggerUModsComponent.builder()
                 .uModsRepositoryComponent(oneKeyApplication.createUModsRepositoryComponentSingleton(appUserPhoneNumber,appUUID))

@@ -22,8 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -68,6 +67,8 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
 
     private PhoneNumberUtil phoneUtil;
 
+    private LinearLayout mUpperHint;
+
     public UModUsersFragment() {
         // Requires empty public constructor
     }
@@ -107,6 +108,8 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
 
         mProgressBar = (ProgressBar) root.findViewById(R.id.umod_users_load_bar);
         mProgressBar.setVisibility(View.INVISIBLE);
+        mUpperHint = (LinearLayout) root.findViewById(R.id.umod_users__upper_hint);
+        mUpperHint.setVisibility(View.GONE);
         // Set up tasks view
         ListView listView = (ListView) root.findViewById(R.id.umod_users_list);
         listView.setAdapter(mListAdapter);
@@ -409,47 +412,76 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
             View rowView = view;
             if (rowView == null) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-                rowView = inflater.inflate(R.layout.umod_user_item, viewGroup, false);
+                rowView = inflater.inflate(R.layout.umod_user_item2, viewGroup, false);
             }
 
             final UModUserViewModel viewModel = getItem(i);
             //TODO: After an admin upgrade or downgrade is performed the users checkbox state should be updated acordingly.
             final int viewIndex = i;
 
-            TextView titleTV = (TextView) rowView.findViewById(R.id.umod_user_title);
+            TextView titleTV = (TextView) rowView.findViewById(R.id.umod_user__title);
             titleTV.setText(viewModel.getItemMainText());
             //titleTV.setText(getContactNameFromPhoneNumber(uModUser.getPhoneNumber()));
 
-            Button actionButton = (Button) rowView.findViewById(R.id.umod_user_action_button);
-            actionButton.setText(viewModel.getButtonText());
+            ImageButton acceptButton = (ImageButton) rowView.findViewById(R.id.umod_user__accept_button);
+            ImageButton deleteButton = (ImageButton) rowView.findViewById(R.id.umod_user__delete_button);
+            ImageButton levelButton = (ImageButton) rowView.findViewById(R.id.umod_user__level_button);
+            ImageView levelIcon = (ImageView) rowView.findViewById(R.id.umod_user__level_icon);
 
-            final CheckBox isAdminCB = (CheckBox) rowView.findViewById(R.id.umod_user_is_admin_checkbox);
-
-            if (viewModel.isCheckboxVisible()){
-                isAdminCB.setVisibility(View.VISIBLE);
+            if (viewModel.isAcceptButtonVisible()){
+                acceptButton.setVisibility(View.VISIBLE);
             } else {
-                isAdminCB.setVisibility(View.INVISIBLE);
+                acceptButton.setVisibility(View.GONE);
+            }
+            if (viewModel.isDeleteButtonVisible()){
+                deleteButton.setVisibility(View.VISIBLE);
+            } else {
+                deleteButton.setVisibility(View.GONE);
+            }
+            if (viewModel.isLevelButtonVisible()){
+                levelButton.setVisibility(View.VISIBLE);
+                switch (viewModel.getLevelButtonImage()){
+                    case FULL_CROWN:
+                        levelButton.setImageResource(R.drawable.ic_put_crown);
+                        break;
+                    case CROSSED_CROWN:
+                        levelButton.setImageResource(R.drawable.ic_remove_crown);
+                        break;
+                    default:
+                        levelButton.setVisibility(View.INVISIBLE);
+                        break;
+                }
+            } else {
+                levelButton.setVisibility(View.GONE);
+            }
+            if (viewModel.isLevelIconVisible()){
+                levelIcon.setVisibility(View.VISIBLE);
+                switch (viewModel.getLevelIcon()){
+                    case ADMIN_CROWN:
+                        levelIcon.setImageResource(R.drawable.ic_admin_crown);
+                        break;
+                    case REGULAR_UNLOCK:
+                        levelIcon.setImageResource(R.drawable.ic_regular_unlock);
+                        break;
+                    case TEMPORAL_CLOCK:
+                        break;
+                    default:
+                        levelIcon.setVisibility(View.GONE);
+                        break;
+                }
+            } else {
+                levelIcon.setVisibility(View.INVISIBLE);
             }
 
-            if(viewModel.isCheckboxChecked()){
-                isAdminCB.setChecked(true);
-            } else {
-                isAdminCB.setChecked(false);
-            }
+            //TODO ripple effect doesn't work on any button
+            //TODO: Potential bug, customer could play with the buttons so many times the actual module may hang or reboot.
+            acceptButton.setOnClickListener(view1 -> viewModel.onAcceptButtonClicked());
 
-            actionButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    viewModel.onButtonClicked();
-                }
-            });
-            //TODO: Potential bug, customer could play with the checkbox so many times the actual umod may hang or reboot.
-            // Analyse the posibility of changing default checkbox behavior to long click!!
-            isAdminCB.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    viewModel.onCheckBoxClicked(isAdminCB.isChecked());
-                }
+            levelButton.setOnClickListener(view1 -> viewModel.onLevelButtonClicked());
+
+            deleteButton.setOnLongClickListener(view1 -> {
+                viewModel.onDeleteButtonClicked();
+                return true;
             });
 
             return rowView;

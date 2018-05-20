@@ -203,8 +203,8 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     }
 
     private void rotateUModsList(boolean rotateForward){
-        if (mCachedUModsMap.size()>0){
-            this.mCachedKeysList = new ArrayList<>(this.mCachedUModsMap.keySet());
+        if (mCachedUModsMap.size()>0 && this.mCachedKeysList.size()==mCachedUModsMap.size()){
+            //this.mCachedKeysList = new ArrayList<>(this.mCachedUModsMap.keySet());//TODO is it always correct??
             if (mCachedKeysList.size()>1){
                 if (rotateForward){
                     Collections.rotate(mCachedKeysList,-1);
@@ -219,9 +219,12 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
             if (currentUMod.canBeTriggeredByAppUser()){
                 mUModsNotifView.showTriggerView(currentUMod.getUUID(), currentUMod.getAlias());
             }
-            if (currentUMod.getAppUserLevel() == UModUser.Level.UNAUTHORIZED){
+            if (currentUMod.getAppUserLevel() == UModUser.Level.UNAUTHORIZED
+                    || currentUMod.getAppUserLevel() == UModUser.Level.PENDING){
                 mUModsNotifView.showRequestAccessView(currentUMod.getUUID(), currentUMod.getAlias());
             }
+        } else {
+            this.loadUMods(true);
         }
     }
 }

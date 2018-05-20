@@ -4,10 +4,10 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.APIUserType;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
-import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.umods.UModsFragment;
@@ -16,7 +16,8 @@ import com.urbit_iot.onekey.usersxumod.domain.usecase.DeleteUModUser;
 import com.urbit_iot.onekey.usersxumod.domain.usecase.GetUModUsers;
 import com.urbit_iot.onekey.usersxumod.domain.usecase.UpDownAdminLevel;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
-
+import com.urbit_iot.onekey.usersxumod.UModUserViewModel.LevelIcon;
+import com.urbit_iot.onekey.usersxumod.UModUserViewModel.LevelButtonImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -153,9 +154,14 @@ todo inmediato
     private List<UModUserViewModel> mapResponseToViewModels(GetUsersRPC.Result result){
         List<UModUserViewModel> userVMsList = new ArrayList<>();
         String itemMainText;
-        String buttonText;
-        boolean checkboxChecked;
-        boolean checkboxVisible;
+        boolean deleteButtonVisible;
+        boolean acceptButtonVisible;
+        boolean levelButtonVisible;
+        LevelButtonImage levelButtonImage;
+        boolean levelIconVisible;
+        LevelIcon levelIcon;
+
+        deleteButtonVisible = true;
 
         for(GetUsersRPC.UserResult userResult : result.getUsers()){
 
@@ -167,71 +173,71 @@ todo inmediato
 
             switch (userResult.getUserType()){
                 case Admin:
-                    buttonText = "DEL";
-                    checkboxChecked = true;
-                    checkboxVisible = true;
+                    acceptButtonVisible = false;
+                    levelButtonVisible = true;
+                    levelButtonImage = LevelButtonImage.CROSSED_CROWN;
+                    levelIconVisible = true;
+                    levelIcon = LevelIcon.ADMIN_CROWN;
                     break;
                 case User:
-                    buttonText = "DEL";
-                    checkboxChecked = false;
-                    checkboxVisible = true;
+                    acceptButtonVisible = false;
+                    levelButtonVisible = true;
+                    levelButtonImage = LevelButtonImage.FULL_CROWN;
+                    levelIconVisible = true;
+                    levelIcon = LevelIcon.REGULAR_UNLOCK;
                     break;
                 case Guest:
-                    buttonText = "AUTH";
-                    checkboxChecked = false;
-                    checkboxVisible = false;
+                    acceptButtonVisible = true;
+                    levelButtonVisible = false;
+                    levelButtonImage = null;
+                    levelIconVisible = false;
+                    levelIcon = null;
                     break;
                 case NotUser:
-                    buttonText = "BUG";
-                    checkboxChecked = false;
-                    checkboxVisible = false;
+                    deleteButtonVisible = false;
+                    acceptButtonVisible = false;
+                    levelButtonVisible = false;
+                    levelButtonImage = null;
+                    levelIconVisible = false;
+                    levelIcon = null;
                     break;
                 default:
-                    buttonText = "DEF";
-                    checkboxChecked = false;
-                    checkboxVisible = false;
+                    deleteButtonVisible = false;
+                    acceptButtonVisible = false;
+                    levelButtonVisible = false;
+                    levelButtonImage = null;
+                    levelIconVisible = false;
+                    levelIcon = null;
             }
+
 
             userVMsList.add(
                     new UModUserViewModel(userResult,
                             this,
                             itemMainText,
-                            buttonText,
-                            checkboxChecked,
-                            checkboxVisible) {
-                @Override
-                public void onButtonClicked() {
-                    switch (getUserResult().getUserType()) {
-                        case Admin:
-                            getPresenter().deleteUser(getUserResult().getUserName());
-                            break;
-                        case User:
-                            getPresenter().deleteUser(getUserResult().getUserName());
-                            break;
-                        case Guest:
+                            deleteButtonVisible,
+                            acceptButtonVisible,
+                            levelButtonVisible,
+                            levelButtonImage,
+                            levelIconVisible,
+                            levelIcon) {
+                        @Override
+                        public void onAcceptButtonClicked() {
                             getPresenter().authorizeUser(getUserResult().getUserName());
-                            break;
-                        default:
-                            break;
-                    }
-                }
+                        }
 
-                @Override
-                public void onCheckBoxClicked(Boolean cbChecked) {
-                    switch (getUserResult().getUserType()) {
-                        case Admin:
-                            getPresenter().upDownAdminLevel(getUserResult().getUserName(),false);
-                            break;
-                        case User:
-                            getPresenter().upDownAdminLevel(getUserResult().getUserName(),true);
-                            break;
-                        case Guest:
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            });
+                        @Override
+                        public void onLevelButtonClicked() {
+                            boolean toAdmin = getUserResult().getUserType().asUModUserLevel() != UModUser.Level.ADMINISTRATOR;
+                            getPresenter().upDownAdminLevel(getUserResult().getUserName(),toAdmin);
+                        }
+
+                        @Override
+                        public void onDeleteButtonClicked() {
+                            getPresenter().deleteUser(getUserResult().getUserName());
+                        }
+
+                        });
         }
         return userVMsList;
     }

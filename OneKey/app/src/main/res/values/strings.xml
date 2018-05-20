@@ -26,7 +26,7 @@
     <string name="menu_clear_umods">Clear completed</string>
     <string name="menu_delete_task">Delete task</string>
     <string name="navigation_view_header_title">OneKey</string>
-    <string name="title_hint">Title</string>
+    <string name="alias_hint">Alias de Apertura</string>
     <string name="description_hint">Enter your TO-DO here.</string>
     <string name="empty_task_message">TO DOs cannot be empty</string>
     <string name="successfully_saved_umod_message">TO-DO saved</string>
@@ -70,8 +70,8 @@
     <string name="umod_users_label_all">All Users</string>
     <string name="umod_users_label_admins">Administrators</string>
     <string name="umod_users_label_not_admins">Normal Users</string>
-    <string name="app_user_phone_tag">Numero Celular</string>
-    <string name="app_user_phone_hint">0351 499-9999</string>
+    <string name="app_user_phone_tag">REGISTRO</string>
+    <string name="app_user_phone_hint">Número de Celular</string>
     <string name="umod_action_button_when_owned">O/C</string>
     <string name="umod_action_button_when_open_alien">REQ</string>
     <string name="request_access_failed_message">Solicitud de acceso fallida.</string>
@@ -87,5 +87,7 @@
     <string name="downgrade_user_type_fail_message">REMOCION DE PRIVILEGIOS FALLIDA</string>
     <string name="upgrade_user_type_success_message">USUARIO CON PRIVILEGIOS DE ADMINISTRADOR</string>
     <string name="downgrade_user_type_success_message">REMOCION DE PRIVILEGIOS EXITOSA</string>
-
+    <!-- Solves annoying issue with password-eye -->
+    <item name="visible" type="id"/>
+    <item name="masked" type="id"/>
 </resources>

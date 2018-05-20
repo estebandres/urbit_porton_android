@@ -17,7 +17,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="?android:attr/listPreferredItemHeight"
-    android:background="@drawable/touch_feedback"
+    android:background="@color/colorControlHighlight"
     android:orientation="horizontal"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
@@ -32,11 +32,13 @@
 
     <TextView
         android:id="@+id/umod_user_title"
-        android:layout_width="300px"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
-        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+        android:singleLine="true"
+        android:text="Esteban Andres Morales"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium.Inverse" />
     <Button
         android:id="@+id/umod_user_action_button"
         android:layout_width="match_parent"

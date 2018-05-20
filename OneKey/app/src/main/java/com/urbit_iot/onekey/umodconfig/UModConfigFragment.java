@@ -40,6 +40,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -47,6 +48,8 @@ import android.widget.TextView;
 import com.google.common.base.Strings;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.usersxumod.UModUsersActivity;
+
+import org.w3c.dom.Text;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -73,11 +76,11 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private LinearLayout mAdminSettingsLayout;
 
-    private Button mUsersButton;
+    private ImageButton mUsersButton;
 
-    private Button mFactoryResetButton;
+    private ImageButton mFactoryResetButton;
 
-    private Button mFirmwareUpdateButton;
+    private ImageButton mFirmwareUpdateButton;
 
     private UModConfigViewModel mViewModel;
 
@@ -169,13 +172,16 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mUModSysInfoTextInput = (TextView) root.findViewById(R.id.umod_sys_info);
         mWiFiSSIDTextInput = (EditText) root.findViewById(R.id.wifi_ssid);
         mWiFiPasswordTextInput = (EditText) root.findViewById(R.id.wifi_password);
-        mUsersButton = (Button) root.findViewById(R.id.users_button);
-        mFactoryResetButton = (Button) root.findViewById(R.id.factory_reset_button);
-        mFirmwareUpdateButton = (Button) root.findViewById(R.id.firmware_update_button);
+        mUsersButton = (ImageButton) root.findViewById(R.id.users_button);
+        mFactoryResetButton = (ImageButton) root.findViewById(R.id.factory_reset_button);
+        mFirmwareUpdateButton = (ImageButton) root.findViewById(R.id.firmware_update_button);
         mAdminSettingsLayout = (LinearLayout) root.findViewById(R.id.admin_settings);
         mPorgressBar = (ProgressBar) root.findViewById(R.id.umod_config_load_bar);
+        mPorgressBar.setVisibility(View.GONE);
         mAllSettingsLinearLayout = (LinearLayout) root.findViewById(R.id.all_settings);
         mWiFiSettings = (LinearLayout) root.findViewById(R.id.wifi_settings);
+        TextView upgradeSubtext = (TextView) root.findViewById(R.id.upgrade_button_subtext);
+        upgradeSubtext.setSelected(true);
 
         mTextWatcher = new TextWatcher() {
             @Override
@@ -390,6 +396,6 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     @Override
     public void hideProgressBar() {
-        this.mPorgressBar.setVisibility(View.INVISIBLE);
+        this.mPorgressBar.setVisibility(View.GONE);
     }
 }
