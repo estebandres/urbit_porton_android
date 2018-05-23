@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:textStyle="bold"
             android:textSize="16sp"
-            android:text="Accionando Modulo" />
+            android:text="Accionando Modulo..." />
 
         <ProgressBar
             android:layout_width="match_parent"

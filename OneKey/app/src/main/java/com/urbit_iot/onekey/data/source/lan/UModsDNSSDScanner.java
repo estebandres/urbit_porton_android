@@ -21,6 +21,7 @@ import rx.functions.Action1;
 import rx.functions.Func0;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
 /**
  * Created by andresteve07 on 8/11/17.
@@ -29,10 +30,14 @@ import rx.schedulers.Schedulers;
 public class UModsDNSSDScanner {
     private RxDnssd rxDnssd;
     private Map<String, UMod> mCachedUMods;
+    private PublishSubject<UMod> freshUModDnsScan;
+    private PublishSubject<Long> uModDnsScanTrigger;
 
     public UModsDNSSDScanner(RxDnssd rxDnssd){
         this.mCachedUMods = new LinkedHashMap<>();
         this.rxDnssd = rxDnssd;
+        this.freshUModDnsScan = PublishSubject.create();
+        this.uModDnsScanTrigger = PublishSubject.create();
         //this.continuousBrowseLANForUMods();
 
         Observable.interval(10, TimeUnit.SECONDS)

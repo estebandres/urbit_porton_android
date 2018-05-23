@@ -114,7 +114,11 @@ public class UModsNotifService extends Service{
                 break;
             case GlobalConstants.ACTION.LAUNCH_WIFI_SETTINGS:
                 Log.d("UMOD_SERVICE", "LAUNCH WIFI SETTINGS");
-                startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+                Intent closeNotificationsTreyIntent = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+                sendBroadcast(closeNotificationsTreyIntent);
+                Intent androidWifiSettingsIntent = new Intent(Settings.ACTION_WIFI_SETTINGS);
+                androidWifiSettingsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(androidWifiSettingsIntent);
                 break;
         }
     }

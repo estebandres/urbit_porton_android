@@ -46,6 +46,12 @@ public interface UModsNotifContract {
         void disableOperationButton();
 
         boolean isWiFiConnected();
+
+        void showLoadingProgress();
+
+        void showTriggerProgress();
+
+        void showAccessRequestProgress();
     }
 
     interface Presenter extends BasePresenter {

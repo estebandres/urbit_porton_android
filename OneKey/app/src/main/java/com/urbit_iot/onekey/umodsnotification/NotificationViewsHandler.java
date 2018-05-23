@@ -92,6 +92,21 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         return wifiManager != null && wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED;
     }
 
+    @Override
+    public void showLoadingProgress() {
+        
+    }
+
+    @Override
+    public void showTriggerProgress() {
+
+    }
+
+    @Override
+    public void showAccessRequestProgress() {
+
+    }
+
     private void setupUnconnectedPhoneCollapsedViews() {
         this.unconnectedPhoneCollapsedViews = new RemoteViews(getPackageName(),
                 R.layout.unconnected_phone_notification);
