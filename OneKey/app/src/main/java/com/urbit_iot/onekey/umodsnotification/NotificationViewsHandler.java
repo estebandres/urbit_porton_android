@@ -14,6 +14,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.view.View;
 import android.widget.RemoteViews;
 
 import com.urbit_iot.onekey.R;
@@ -99,12 +100,21 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     @Override
     public void showTriggerProgress() {
-
+        this.controlCollapsedViews.setViewVisibility(R.id.progress_layout, View.VISIBLE);
+        this.controlCollapsedViews.setViewVisibility(R.id.notif_control_buttons, View.GONE);
+        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
     }
 
     @Override
     public void showAccessRequestProgress() {
 
+    }
+
+    @Override
+    public void hideTriggerProgress() {
+        this.controlCollapsedViews.setViewVisibility(R.id.progress_layout, View.GONE);
+        this.controlCollapsedViews.setViewVisibility(R.id.notif_control_buttons, View.VISIBLE);
+        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
     }
 
     private void setupUnconnectedPhoneCollapsedViews() {
@@ -257,7 +267,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     private void setupControlCollapsedView(){
         this.controlCollapsedViews = new RemoteViews(getPackageName(),
-                R.layout.umods_notification);
+                R.layout.umods_notification_control_and_progress);
 
         Intent updateUModsIntent = new Intent(this.mContext, UModsNotifService.class);
         updateUModsIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
@@ -390,7 +400,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         this.mPresenter = presenter;
     }
 
-
+    @Override
     public boolean isLocked() {
         return isLocked;
     }

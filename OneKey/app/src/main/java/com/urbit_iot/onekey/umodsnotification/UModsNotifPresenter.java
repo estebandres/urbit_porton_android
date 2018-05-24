@@ -143,6 +143,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
 
         mUModsNotifView.disableOperationButton();
         mUModsNotifView.showLocked();
+        mUModsNotifView.showTriggerProgress();
 
         this.mTriggerUModByNotif.execute(
                 new TriggerUModByNotif.RequestValues(uModUUID),
@@ -150,11 +151,13 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
             @Override
             public void onCompleted() {
                 Log.d("triggerByNotification","Trigger Completo!!" + Thread.currentThread().getName());
+                mUModsNotifView.hideTriggerProgress();
             }
 
             @Override
             public void onError(Throwable e) {
                 Log.e("triggerByNotification","" + e.getMessage() + Thread.currentThread().getName());
+                mUModsNotifView.hideTriggerProgress();
             }
 
             @Override

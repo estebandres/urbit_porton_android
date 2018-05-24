@@ -28,29 +28,33 @@
 
     </RelativeLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/notification_main"
-        android:layout_width="match_parent"
+        android:layout_width="180dp"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:layout_marginTop="3dp"
-        android:layout_toEndOf="@+id/notif_icon_container"
-        android:gravity="center_vertical"
-        android:orientation="vertical">
+        android:layout_toEndOf="@+id/notif_icon_container">
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:indeterminate="true" />
 
         <TextView
             android:id="@+id/progress_reason"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textStyle="bold"
-            android:textSize="16sp"
-            android:text="Accionando Modulo..." />
+            android:textSize="12sp"
+            android:textAllCaps="true"
+            android:text="Accionando Modulo..."
+            android:layout_below="@id/progress_bar"
+            android:layout_alignEnd="@id/progress_bar"
+            />
 
-        <ProgressBar
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:indeterminate="true" />
-    </LinearLayout>
+
+    </RelativeLayout>
 
 </RelativeLayout>

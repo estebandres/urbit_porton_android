@@ -21,9 +21,11 @@
 
         <ImageView
             android:id="@+id/notif_small_icon"
-            android:layout_width="18.2dp"
+            android:layout_width="25dp"
             android:layout_height="18.2dp"
-            android:layout_alignBottom="@id/notif_big_icon"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="5dp"
+            android:layout_alignTop="@id/notif_big_icon"
             android:layout_alignEnd="@id/notif_big_icon"/>
 
     </RelativeLayout>
@@ -44,9 +46,11 @@
             android:layout_height="wrap_content"
             android:textStyle="bold"
             android:textSize="16sp"
-            android:text="Notification Sample App" />
+            android:text="Notification Sample App"
+            android:textColor="@color/colorPrimaryDark"/>
 
         <LinearLayout
+            android:id="@+id/notif_control_buttons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="0dp"
@@ -90,9 +94,36 @@
 
         </LinearLayout>
 
+        <RelativeLayout
+            android:id="@+id/progress_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:indeterminate="true" />
+            <!-- android:progressDrawable="@drawable/notification_progressbar_drawable" -->
+
+            <TextView
+                android:id="@+id/progress_reason_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:textAllCaps="true"
+                android:text="Intentanto acción..."
+                android:textColor="@color/colorPrimary"
+                android:layout_below="@id/progress_bar"
+                android:layout_alignEnd="@id/progress_bar"/>
+
+
+        </RelativeLayout>
+
     </LinearLayout>
-
-
 
     <ImageButton
         android:id="@+id/notif_action_button"

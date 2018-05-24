@@ -50,7 +50,7 @@ public class UModMqttService {
         mMqttClient.connect()
                 .doOnComplete(this::subscribeToResponseTopic)
                 .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
-                        throwable -> Log.e("umodsMqttService","FAILED TO CONNECT"));
+                        throwable -> Log.e("umodsMqttService","FAILED TO CONNECT" + throwable.getMessage()));
 
     }
 

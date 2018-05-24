@@ -41,6 +41,8 @@ public interface UModsNotifContract {
 
         void showLocked();
 
+        boolean isLocked();
+
         void enableOperationButton();
 
         void disableOperationButton();
@@ -52,6 +54,8 @@ public interface UModsNotifContract {
         void showTriggerProgress();
 
         void showAccessRequestProgress();
+
+        void hideTriggerProgress();
     }
 
     interface Presenter extends BasePresenter {
