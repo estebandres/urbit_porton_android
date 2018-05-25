@@ -37,11 +37,9 @@ public interface UModsNotifContract {
 
         void setSecondaryText(String newText);
 
-        void showUnlocked();
+        void showUnlockedView();
 
-        void showLocked();
-
-        boolean isLocked();
+        void showLockedView();
 
         void enableOperationButton();
 
@@ -49,13 +47,19 @@ public interface UModsNotifContract {
 
         boolean isWiFiConnected();
 
-        void showLoadingProgress();
-
         void showTriggerProgress();
 
         void showAccessRequestProgress();
 
-        void hideTriggerProgress();
+        void hideProgressView();
+
+        void toggleLockState();
+
+        boolean getLockState();
+
+        void setLockState(boolean lockState);
+
+        void showLoadProgress();
     }
 
     interface Presenter extends BasePresenter {
@@ -66,7 +70,7 @@ public interface UModsNotifContract {
 
         void requestAccess(String uModUUID);
 
-        void lockUModOperation(boolean lockState);
+        void lockUModOperation();
 
 
         void previousUMod();

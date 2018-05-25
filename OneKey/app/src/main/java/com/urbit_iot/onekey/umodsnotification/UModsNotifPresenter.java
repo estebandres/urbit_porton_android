@@ -16,10 +16,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import rx.Observable;
 import rx.Subscriber;
+import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
 /**
  * Created by andresteve07 on 4/20/18.
@@ -40,6 +44,8 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     @NonNull
     private final RequestAccess mRequestAccess;
 
+    private final PublishSubject<Boolean> cancelPreventiveLockingSubject;
+
     @Inject
     public UModsNotifPresenter(@NonNull UModsNotifContract.View mUModsNotifView,
                                @NonNull GetUModsForNotif mGetUModsForNotif,
@@ -51,6 +57,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
         this.mRequestAccess = mRequestAccess;
         this.mCachedUModsMap = new LinkedHashMap<>();
         this.mCachedKeysList = new ArrayList<>();
+        this.cancelPreventiveLockingSubject = PublishSubject.create();
     }
 
     /**
@@ -81,6 +88,10 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
             this.mUModsNotifView.showUnconnectedPhone();
             return;
         }
+
+        mUModsNotifView.showLockedView();
+        mUModsNotifView.showLoadProgress();
+
         mCachedUModsMap.clear();
         this.mGetUModsForNotif.execute(
                 new GetUModsForNotif.RequestValues(forceUpdate),
@@ -123,11 +134,13 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
                     Log.d("notif_presenter", "NO UMODS FOUND!!" + Thread.currentThread().getName());
                     mUModsNotifView.showNoUModsFound();
                 }
+                mUModsNotifView.hideProgressView();
             }
 
             @Override
             public void onError(Throwable e) {
                 Log.e("notif_presenter", e.getMessage());
+                mUModsNotifView.hideProgressView();
             }
 
             @Override
@@ -140,9 +153,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
 
     @Override
     public void triggerUMod(String uModUUID) {
-
-        mUModsNotifView.disableOperationButton();
-        mUModsNotifView.showLocked();
+        mUModsNotifView.showLockedView();
         mUModsNotifView.showTriggerProgress();
 
         this.mTriggerUModByNotif.execute(
@@ -151,13 +162,13 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
             @Override
             public void onCompleted() {
                 Log.d("triggerByNotification","Trigger Completo!!" + Thread.currentThread().getName());
-                mUModsNotifView.hideTriggerProgress();
+                mUModsNotifView.hideProgressView();
             }
 
             @Override
             public void onError(Throwable e) {
                 Log.e("triggerByNotification","" + e.getMessage() + Thread.currentThread().getName());
-                mUModsNotifView.hideTriggerProgress();
+                mUModsNotifView.hideProgressView();
             }
 
             @Override
@@ -173,15 +184,30 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     }
 
     @Override
-    public void lockUModOperation(boolean isLocked) {
-        if (isLocked){
-            mUModsNotifView.showLocked();
-            mUModsNotifView.disableOperationButton();
+    public void lockUModOperation() {
+        //this.mUModsNotifView.toggleLockState();
+        if (mUModsNotifView.getLockState()){
+            mUModsNotifView.showUnlockedView();
+            preventiveLock();
         } else {
-            mUModsNotifView.showUnlocked();
-            mUModsNotifView.enableOperationButton();
-        }
+            mUModsNotifView.showLockedView();
+            this.cancelPreventiveLockingSubject.onNext(true);
 
+        }
+    }
+
+    private void preventiveLock(){
+        Observable.just(true)
+                .delay(5000, TimeUnit.MILLISECONDS)
+                .takeUntil(cancelPreventiveLockingSubject)
+                .doOnNext(aBoolean -> {
+                    if (!mUModsNotifView.getLockState()){
+                        mUModsNotifView.showLockedView();
+                    }
+                })
+                //TODO replace scheduler for dagger instance
+                .subscribeOn(Schedulers.io())
+                .subscribe();
     }
 
     @Override
@@ -206,6 +232,10 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     }
 
     private void rotateUModsList(boolean rotateForward){
+        this.cancelPreventiveLockingSubject.onNext(true);
+        if(!mUModsNotifView.getLockState()){
+            mUModsNotifView.showLockedView();
+        }
         if (mCachedUModsMap.size()>0 && this.mCachedKeysList.size()==mCachedUModsMap.size()){
             //this.mCachedKeysList = new ArrayList<>(this.mCachedUModsMap.keySet());//TODO is it always correct??
             if (mCachedKeysList.size()>1){

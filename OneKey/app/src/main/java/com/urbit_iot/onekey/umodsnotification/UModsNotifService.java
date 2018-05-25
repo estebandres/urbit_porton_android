@@ -90,8 +90,7 @@ public class UModsNotifService extends Service{
                 break;
             case GlobalConstants.ACTION.UNLOCK:
                 //Toast.makeText(this, "UNLOCKED", Toast.LENGTH_SHORT).show();
-                this.mNotificationViewsHandler.toggleLock();
-                this.mPresenter.lockUModOperation(this.mNotificationViewsHandler.isLocked());
+                this.mPresenter.lockUModOperation();
                 break;
             case GlobalConstants.ACTION.BACK_UMOD:
                 this.mPresenter.previousUMod();

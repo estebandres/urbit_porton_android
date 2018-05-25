@@ -6,13 +6,8 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
@@ -20,8 +15,6 @@ import android.widget.RemoteViews;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umods.UModsActivity;
 import com.urbit_iot.onekey.util.GlobalConstants;
-
-import java.util.Random;
 
 
 /**
@@ -39,7 +32,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     private Notification notification;
     private NotificationManager notificationManager;
-    private boolean isLocked;
+    private boolean lockState;
     //private DisplayMetrics metrics;
 
     private String uModUUID;
@@ -57,7 +50,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         this.setupUnconnectedPhoneCollapsedViews();
         this.setupNotification();
 
-        this.isLocked = true;
+        this.lockState = true;
         /*
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
             this.metrics = mContext.getResources().getDisplayMetrics();
@@ -94,27 +87,37 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     }
 
     @Override
-    public void showLoadingProgress() {
-        
+    public void showLoadProgress() {
+        this.controlCollapsedViews.setTextViewText(R.id.progress_reason_text,
+                this.mContext.getResources().getString(R.string.notif_loading_progress_subtext));
+        this.showProgressView();
     }
 
     @Override
     public void showTriggerProgress() {
-        this.controlCollapsedViews.setViewVisibility(R.id.progress_layout, View.VISIBLE);
-        this.controlCollapsedViews.setViewVisibility(R.id.notif_control_buttons, View.GONE);
-        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        this.controlCollapsedViews.setTextViewText(R.id.progress_reason_text,
+                this.mContext.getResources().getString(R.string.notif_triggering_progress_subtext));
+        this.showProgressView();
     }
 
     @Override
     public void showAccessRequestProgress() {
+        this.controlCollapsedViews.setTextViewText(R.id.progress_reason_text,
+                this.mContext.getResources().getString(R.string.notif_accessing_progress_subtext));
+        this.showProgressView();
+    }
 
+    private void showProgressView(){
+        this.controlCollapsedViews.setViewVisibility(R.id.progress_layout, View.VISIBLE);
+        this.controlCollapsedViews.setViewVisibility(R.id.notif_control_buttons, View.GONE);
+        updateNotification();
     }
 
     @Override
-    public void hideTriggerProgress() {
+    public void hideProgressView() {
         this.controlCollapsedViews.setViewVisibility(R.id.progress_layout, View.GONE);
         this.controlCollapsedViews.setViewVisibility(R.id.notif_control_buttons, View.VISIBLE);
-        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        updateNotification();
     }
 
     private void setupUnconnectedPhoneCollapsedViews() {
@@ -148,8 +151,10 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     }
 
-    public void toggleLock(){
-        this.isLocked = !this.isLocked;
+    @Override
+    public void toggleLockState(){
+        Log.d("notif_view", "TOGGLE");
+        this.lockState = !this.lockState;
     }
 
     /*
@@ -168,7 +173,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     @Override
     public void setTitleText(String newTitle) {
         this.controlCollapsedViews.setTextViewText(R.id.notif_title_text, newTitle);
-        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        updateNotification();
     }
 
     @Override
@@ -177,21 +182,25 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     }
 
     @Override
-    public void showUnlocked() {
+    public void showUnlockedView() {
+        setLockState(false);
+        enableOperationButton();
         controlCollapsedViews.setImageViewResource(R.id.notif_lock_button,R.drawable.ic_lock_open_gray_24dp);
         //Bitmap unlockedIconBitmap = BitmapFactory.decodeResource(this.mContext.getResources(), R.drawable.ic_lock_open_gray_24dp);
         //controlCollapsedViews.setImageViewBitmap(R.id.notif_lock_button,unlockedIconBitmap);
         //controlCollapsedViews.setViewVisibility(R.id.notif_lock_button, View.INVISIBLE);
-        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        updateNotification();
     }
 
     @Override
-    public void showLocked() {
+    public void showLockedView() {
         //Bitmap unlockedIconBitmap = BitmapFactory.decodeResource(this.mContext.getResources(), R.drawable.ic_lock_open_gray_24dp);
         //controlCollapsedViews.setImageViewBitmap(R.id.notif_lock_button,unlockedIconBitmap);
         //controlCollapsedViews.setImageViewResource(R.id.notif_lock_button,R.drawable.lock_unlock_icon);
+        setLockState(true);
+        disableOperationButton();
         controlCollapsedViews.setImageViewResource(R.id.notif_lock_button,R.drawable.ic_lock_outline_black_24dp);
-        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        updateNotification();
     }
 
     @Override
@@ -204,7 +213,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
                 actionUModIntent, 0);
         controlCollapsedViews.setImageViewResource(R.id.notif_action_button, R.drawable.ic_eject_black_24dp);
         controlCollapsedViews.setOnClickPendingIntent(R.id.notif_action_button, actionUModPendingIntent);
-        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        //this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
     }
 
     @Override
@@ -216,7 +225,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         //TODO change icon with setImageIcon...Icon.createWithResource...
         controlCollapsedViews.setImageViewResource(R.id.notif_action_button, R.drawable.ic_eject_gray_24dp);
         controlCollapsedViews.setOnClickPendingIntent(R.id.notif_action_button, actionUModPendingIntent);
-        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        //this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
         /*
         controlCollapsedViews.setViewVisibility(R.id.notif_action_button, View.INVISIBLE);
         this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
@@ -262,6 +271,10 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         this.controlCollapsedViews.setTextViewText(R.id.notif_title_text, this.uModAlias);
         this.controlCollapsedViews.setOnClickPendingIntent(R.id.notif_action_button, actionUModPendingIntent);
         //this.controlCollapsedViews.setImageViewResource(R.id.notif_action_button, iconViewId);
+        updateNotification();
+    }
+
+    private void updateNotification(){
         this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
     }
 
@@ -338,7 +351,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         notification.icon = R.drawable.logo;
         notification.contentIntent = pendingIntent;
         notification.visibility = Notification.VISIBILITY_PUBLIC;
-        ((Service) this.mContext).startForeground(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, this.notification);
+        dispatchNotification();
     }
 
     private void setupNotification(RemoteViews views){
@@ -362,8 +375,9 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         notification.flags = Notification.FLAG_ONGOING_EVENT;
         notification.icon = R.drawable.logo;
         notification.contentIntent = pendingIntent;
+        notification.priority = Notification.PRIORITY_MAX;
         notification.visibility = Notification.VISIBILITY_PUBLIC;
-        ((Service) this.mContext).startForeground(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, this.notification);
+        dispatchNotification();
     }
 
     @Override
@@ -373,12 +387,18 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     @Override
     public void showSelectionControls() {
-
+        this.controlCollapsedViews.setViewVisibility(R.id.notif_navigation_buttons, View.VISIBLE);
+        updateNotification();
     }
 
     @Override
     public void hideSelectionControls() {
+        this.controlCollapsedViews.setViewVisibility(R.id.notif_navigation_buttons, View.INVISIBLE);
+        updateNotification();
+    }
 
+    public void dispatchNotification(){
+        ((Service) this.mContext).startForeground(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, this.notification);
     }
 
     @Override
@@ -401,13 +421,15 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     }
 
     @Override
-    public boolean isLocked() {
-        return isLocked;
+    public boolean getLockState() {
+        return this.lockState;
     }
 
-    public void setLocked(boolean locked) {
-        isLocked = locked;
+    @Override
+    public void setLockState(boolean lockState) {
+        this.lockState = lockState;
     }
+
 
     public String getIntentAction() {
         return intentAction;

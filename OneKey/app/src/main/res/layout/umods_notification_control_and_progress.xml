@@ -66,23 +66,32 @@
                 android:src="@drawable/ic_lock_outline_black_24dp"
                 android:background="@null"/>
 
-            <ImageButton
-                android:id="@+id/notif_back_button"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginEnd="10dp"
-                android:src="@drawable/ic_skip_previous_black_24dp"
-                android:scaleType="fitCenter"
-                android:background="@null"/>
+            <LinearLayout
+                android:id="@+id/notif_navigation_buttons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="0dp"
+                android:gravity="center_vertical">
+                <ImageButton
+                    android:id="@+id/notif_back_button"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_skip_previous_black_24dp"
+                    android:scaleType="fitCenter"
+                    android:background="@null"/>
 
-            <ImageButton
-                android:id="@+id/notif_next_button"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginEnd="10dp"
-                android:src="@drawable/ic_skip_next_black_24dp"
-                android:scaleType="fitCenter"
-                android:background="@null"/>
+                <ImageButton
+                    android:id="@+id/notif_next_button"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_skip_next_black_24dp"
+                    android:scaleType="fitCenter"
+                    android:background="@null"/>
+            </LinearLayout>
+
+
 
             <ImageButton
                 android:id="@+id/notif_update_button"
