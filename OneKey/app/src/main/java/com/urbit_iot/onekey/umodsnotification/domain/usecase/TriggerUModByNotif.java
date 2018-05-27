@@ -59,7 +59,7 @@ public class TriggerUModByNotif extends SimpleUseCase<TriggerUModByNotif.Request
         this.mAppUserRepository = checkNotNull(mAppUserRepository,"mAppUserRepository cannot be null!");
     }
 
-    @RxLogObservable
+    //@RxLogObservable
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 

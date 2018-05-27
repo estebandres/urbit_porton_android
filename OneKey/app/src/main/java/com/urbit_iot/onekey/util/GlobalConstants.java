@@ -5,6 +5,8 @@ package com.urbit_iot.onekey.util;
  */
 
 public final class GlobalConstants {
+    public static final String LOGGLY_TOKEN = "cc7be772-d317-4820-9a71-02fd2a60eeb8";
+
     public static final String SP_SERIALIZED_APPUSER_KEY = "serialized_app_user";
     public static final String SP_APP_UUID_KEY = "app_uuid";
     public static final String SP_APP_UUID_HASH_KEY = "app_uuid_hash";

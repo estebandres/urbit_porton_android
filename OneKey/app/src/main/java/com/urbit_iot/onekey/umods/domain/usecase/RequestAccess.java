@@ -40,6 +40,7 @@ import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
 import rx.subjects.PublishSubject;
+import timber.log.Timber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -96,6 +97,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                     public Observable<CreateUserRPC.Result> call(final CreateUserRPC.Result createUserResult) {
                                                         //TODO ask if this is possible. Currently the API doc doesn't
                                                         // specify what data is returned as part of the result.
+                                                        Timber.d("CreateUser Success: " + createUserResult.toString());
                                                         uMod.setAppUserLevel(createUserResult.getUserLevel());
                                                         mUModsRepository.saveUMod(uMod);
                                                         return Observable.just(createUserResult);
@@ -119,10 +121,16 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                                     + " MESSAGE: "
                                                                     + errorMessage);
 
+                                                            Timber.e("CreateUser (urbit:urbit) Failed on error CODE:"
+                                                                    + httpErrorCode
+                                                                    + " MESSAGE: "
+                                                                    + errorMessage);
+
                                                             if (CreateUserRPC.DOC_ERROR_CODES.contains(httpErrorCode)){
                                                                 if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
                                                                 || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
                                                                     Log.e("req_access_uc", "CreateUser failed to Auth with urbit:urbit CODE: " + httpErrorCode);
+                                                                    Timber.e("CreateUser failed to Auth with urbit:urbit CODE: " + httpErrorCode);
                                                                 }
                                                                 if (httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR){
                                                                     if(errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_CONFLICT))){
@@ -135,6 +143,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                                                     @Override
                                                                                     public Observable<CreateUserRPC.Result> call(GetUserLevelRPC.Result result) {
                                                                                         Log.d("getumod+info_uc","Get User Level Succeeded! " + result.toString());
+                                                                                        Timber.d("Get User Level Succeeded! " + result.toString());
                                                                                         uMod.setAppUserLevel(result.getUserLevel());
                                                                                         mUModsRepository.saveUMod(uMod);
                                                                                         return Observable.just(new CreateUserRPC.Result(result.getAPIUserType()));
@@ -144,6 +153,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                                                     @Override
                                                                                     public Observable<? extends CreateUserRPC.Result> call(Throwable throwable) {
                                                                                         Log.e("getumod+info_uc","Get User Level Failed: " + throwable.getMessage());
+                                                                                        Timber.e("Get User Level Failed: " + throwable.getMessage());
                                                                                         if (throwable instanceof HttpException) {
                                                                                             String errorMessage = "";
                                                                                             try {
@@ -158,14 +168,21 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                                                                     + " MESSAGE: "
                                                                                                     + errorMessage);
 
+                                                                                            Timber.e("GetUserStatus (urbit:urbit) Failed on error CODE:"
+                                                                                                    + httpErrorCode
+                                                                                                    + " MESSAGE: "
+                                                                                                    + errorMessage);
+
                                                                                             if (GetUserLevelRPC.ALLOWED_ERROR_CODES.contains(httpErrorCode)) {
                                                                                                 if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
                                                                                                         || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
                                                                                                     Log.e("req_access_uc", "GetLevel failed to Auth with urbit:urbit CODE: " + httpErrorCode);
+                                                                                                    Timber.e( "GetLevel failed to Auth with urbit:urbit CODE: " + httpErrorCode);
                                                                                                 }
                                                                                                 if ((httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR
                                                                                                         && errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_NOT_FOUND)))) {
                                                                                                     Log.e("req_access_uc", "GetLevel failed User NOT FOUND.");
+                                                                                                    Timber.e( "GetLevel failed User NOT FOUND.");
                                                                                                     uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
                                                                                                     mUModsRepository.saveUMod(uMod);
                                                                                                     return Observable.error(throwable);
@@ -196,7 +213,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                 });
                     }
                 })
-                //TODO review retry policy
+                //TODO review retry policy is it necessesary for this or this profound in the chain??
                 //The RPC is executed in the saved umod connectionAddress
                 //only when that address is outdated and produces an error a retry is performed that
                 // forces a network lookup for the connected UMod.

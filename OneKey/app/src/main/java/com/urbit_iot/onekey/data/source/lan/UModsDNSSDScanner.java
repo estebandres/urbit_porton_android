@@ -38,6 +38,7 @@ public class UModsDNSSDScanner {
         this.rxDnssd = rxDnssd;
         this.freshUModDnsScan = PublishSubject.create();
         this.uModDnsScanTrigger = PublishSubject.create();
+        //TODO reconsider continuous dnssd discovery. When do I need to update constantly??
         //this.continuousBrowseLANForUMods();
 
         Observable.interval(10, TimeUnit.SECONDS)
@@ -62,10 +63,10 @@ public class UModsDNSSDScanner {
                 .doOnNext(bonjourService -> {
                     String uModUUID = getUUIDFromDiscoveryHostName(bonjourService.getHostname());
                     if (bonjourService.isLost()){
-                        Log.d("dnssd_cont","LOST " + uModUUID);
+                        //Log.d("dnssd_cont","LOST " + uModUUID);
                         mCachedUMods.remove(uModUUID);
                     } else {
-                        Log.d("dnssd_cont","FOUND " + uModUUID);
+                        //Log.d("dnssd_cont","FOUND " + uModUUID);
                         mCachedUMods.put(uModUUID, new UMod(uModUUID,
                                 bonjourService.getInet4Address().getHostAddress(),
                                 true));
@@ -120,10 +121,10 @@ public class UModsDNSSDScanner {
             .doOnNext(bonjourService -> {
                 String uModUUID = getUUIDFromDiscoveryHostName(bonjourService.getHostname());
                 if (bonjourService.isLost()){
-                    Log.d("dnssd_cont","LOST " + uModUUID);
+                    //Log.d("dnssd_cont","LOST " + uModUUID);
                     mCachedUMods.remove(uModUUID);
                 } else {
-                    Log.d("dnssd_cont","FOUND " + uModUUID);
+                    //Log.d("dnssd_cont","FOUND " + uModUUID);
                     mCachedUMods.put(uModUUID, new UMod(uModUUID,
                             bonjourService.getInet4Address().getHostAddress(),
                             true));

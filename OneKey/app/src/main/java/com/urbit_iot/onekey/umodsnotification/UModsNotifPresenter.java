@@ -3,6 +3,7 @@ package com.urbit_iot.onekey.umodsnotification;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.bugfender.sdk.Bugfender;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.umods.domain.usecase.RequestAccess;
@@ -24,6 +25,7 @@ import rx.Observable;
 import rx.Subscriber;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
+import timber.log.Timber;
 
 /**
  * Created by andresteve07 on 4/20/18.
@@ -168,12 +170,16 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 Log.e("triggerByNotification","" + e.getMessage() + Thread.currentThread().getName());
+                Bugfender.e("triggerByNotification","Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage() + Thread.currentThread().getName());
+                Timber.e("Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage() + Thread.currentThread().getName());
                 mUModsNotifView.hideProgressView();
             }
 
             @Override
             public void onNext(TriggerUModByNotif.ResponseValues responseValues) {
                 Log.d("triggerByNotification",responseValues.getResult().getMessage());
+                Bugfender.d("triggerByNotification","Successful Trigger UModUUID: " + uModUUID + " " +responseValues.getResult().toString());
+                Timber.d("Successful Trigger UModUUID: " + uModUUID + " " +responseValues.getResult().toString());
             }
         });
     }

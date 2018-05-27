@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.bugfender.sdk.Bugfender;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UMod;
@@ -25,6 +26,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import rx.Subscriber;
+import timber.log.Timber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -478,6 +480,8 @@ public class UModsPresenter implements UModsContract.Presenter {
                     RPC.ResponseError responseError =
                 }
                  */
+                Bugfender.e("trigger","Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage());
+                Timber.e("Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage());
                 mUModsView.showOpenCloseFail();
                 loadUMods(true);
             }
@@ -503,6 +507,8 @@ public class UModsPresenter implements UModsContract.Presenter {
                 //TODO after a successful answer enable action button on view
                  */
                 Log.d("umods_pr", "RPC is " + response.toString());
+                Bugfender.d("umods_pr", "Successful Trigger UModUUID: "+ uModUUID + " " + response.toString());
+                Timber.d("Successful Trigger UModUUID: "+ uModUUID + " " + response.toString());
                 mUModsView.showOpenCloseSuccess();
             }
         });
@@ -525,12 +531,16 @@ public class UModsPresenter implements UModsContract.Presenter {
             public void onError(Throwable e) {
                 //TODO make a method that process HTTP error codes for the given RPC.
                 Log.e("umods_pr", "Request Access Failed: " + e.getMessage());
+                Bugfender.e("umods_pr", "Request Access Failed: " + e.getMessage());
+                Timber.e("Request Access Failed: " + e.getMessage());
                 mUModsView.showRequestAccessFailedMessage();
             }
 
             @Override
             public void onNext(RequestAccess.ResponseValues responseValues) {
                 Log.d("umods_pr", responseValues.getResult().toString());
+                Bugfender.d("umods_pr", "Successful Access Request: " + responseValues.getResult().toString());
+                Timber.d( "Successful Access Request: " + responseValues.getResult().toString());
                 mUModsView.showRequestAccessCompletedMessage();
                 loadUModsOneByOne(true,true);
             }

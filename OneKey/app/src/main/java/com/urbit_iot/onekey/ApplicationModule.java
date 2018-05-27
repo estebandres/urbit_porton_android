@@ -20,6 +20,7 @@ import com.urbit_iot.onekey.data.source.lan.UModsService;
 import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.dagger.DigestAuth;
 import com.urbit_iot.onekey.util.dagger.Local;
+import com.urbit_iot.onekey.util.loggly.SteveLogglyTimberTree;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 
 import java.util.Map;
@@ -69,6 +70,13 @@ public final class ApplicationModule {
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .create();
     }
+
+    @Provides
+    @Singleton
+    SteveLogglyTimberTree provideSteveLogglyTimberTree(){
+        return new SteveLogglyTimberTree(GlobalConstants.LOGGLY_TOKEN);
+    }
+
     @Singleton
     @Provides
     @Local

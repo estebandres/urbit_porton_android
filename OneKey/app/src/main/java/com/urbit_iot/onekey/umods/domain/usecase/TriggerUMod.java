@@ -38,6 +38,7 @@ import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
+import timber.log.Timber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -95,6 +96,12 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                     +httpErrorCode
                                                     +" MESSAGE: "
                                                     + errorMessage);
+
+                                            Timber.e("Trigger Failed on error CODE:"
+                                                    +httpErrorCode
+                                                    +" MESSAGE: "
+                                                    + errorMessage);
+
                                             //401 occurs when some admin deleted me
                                             if (httpErrorCode != 0 && (httpErrorCode == 401 || httpErrorCode == 403)){
                                                 uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
@@ -130,6 +137,12 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                                                             + httpErrorCode
                                                                                             + " MESSAGE: "
                                                                                             + errorMessage);
+
+                                                                                    Timber.e("Get User Status (urbit:urbit) Failed on error CODE:"
+                                                                                            + httpErrorCode
+                                                                                            + " MESSAGE: "
+                                                                                            + errorMessage);
+
                                                                                     if (httpErrorCode != 0
                                                                                         && httpErrorCode == 500
                                                                                             && errorMessage.contains("404")) {
@@ -146,6 +159,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                                             public Observable<TriggerRPC.Result> call(GetUserLevelRPC.Result result) {
                                                                                 //TODO what about when someone changed my status to Guest????? (This is not allowed by the app)
                                                                                 Log.d("trigger_uc", "Get User Level Success: "+result.toString());
+                                                                                Timber.d("Get User Level Success: "+result.toString());
                                                                                 uMod.setAppUserLevel(result.getUserLevel());
                                                                                 return mUModsRepository.triggerUMod(uMod, requestArguments);
                                                                             }
@@ -180,6 +194,15 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                 .map(new Func1<TriggerRPC.Result, ResponseValues>() {
                     @Override
                     public ResponseValues call(TriggerRPC.Result result) {
+                        
+                        String todo = "";
+                        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+                        for (StackTraceElement element: stackTraceElements){
+                            if(element.getClassName().contains("urbit")){
+                                todo = todo + element.getClassName() + " + " + element.getMethodName() + "\n";
+                            }
+                        }
+                        Log.d("umods_trigg", "STACKTRACE:   " + todo);
                         return new ResponseValues(result);
                     }
                 });

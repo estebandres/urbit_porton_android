@@ -146,7 +146,11 @@ todo inmediato
             @Override
             public void onNext(GetUModUsers.ResponseValues values) {
                 Log.d("umod-users_pr", values.getResult().toString());
-                processUModUsersVM(mapResponseToViewModels(values.getResult()));
+                if(values.getResult().getUsers() == null || values.getResult().getUsers().isEmpty()){
+                    mUModsView.showNoUModUsers();
+                } else {
+                    processUModUsersVM(mapResponseToViewModels(values.getResult()));
+                }
             }
         });
     }

@@ -125,6 +125,10 @@ dependencies {
 
     implementation "com.github.akarnokd:rxjava2-interop:0.12.6"
 
+    implementation 'com.bugfender.sdk:android:1.+'
+
+    implementation 'com.github.tony19:timber-loggly:1.0.1'
+
     // Dependencies for local unit tests
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     testImplementation "org.mockito:mockito-all:$rootProject.ext.mockitoVersion"

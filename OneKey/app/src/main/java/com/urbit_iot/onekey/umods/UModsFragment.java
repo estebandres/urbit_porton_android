@@ -584,7 +584,6 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             final SlideToActView actionSlider = (SlideToActView) rowView.findViewById(R.id.card_slider);
 
             if(viewModel.isSliderVisible()){
-                actionSlider.setVisibility(View.VISIBLE);
                 //actionSlider.setOuterColor(viewModel.getSliderBackgroundColor().asActualResource());
                 actionSlider.setOuterColor(
                         ContextCompat.getColor(this.activityContext,
@@ -593,6 +592,11 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 actionSlider.setLocked(!viewModel.isSliderEnabled());
                 actionSlider.setEnabled(viewModel.isSliderEnabled());
                 actionSlider.setText(viewModel.getSliderText());
+                if (viewModel.isSliderEnabled()){
+                    //actionSlider.setLocked(false);
+                    actionSlider.setEnabled(true);
+                }
+                actionSlider.setVisibility(View.VISIBLE);
             } else {
                 actionSlider.setVisibility(View.GONE);
             }
@@ -661,10 +665,9 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             */
 
             actionSlider.setOnSlideCompleteListener(slideToActView -> {
-                Log.d("umods_frag","ON SLIDE COMPLETE");
                 viewModel.onSlideCompleted();
                 mItemListener.vibrateOnActionButtonClick();
-                actionSlider.setLocked(true);
+                //actionSlider.setLocked(true);
                 actionSlider.setEnabled(false);
             });
 
