@@ -45,7 +45,9 @@ public class UModsDNSSDScanner {
                 .startWith(1L)
                 .subscribeOn(Schedulers.io())
                 .doOnNext(n -> singleScan())
+                .onErrorResumeNext(Observable.just(1234L))
                 .subscribe();
+        //TODO unsubscribe when application is destroyed
 
     }
 

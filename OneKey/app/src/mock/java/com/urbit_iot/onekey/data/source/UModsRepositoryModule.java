@@ -110,8 +110,8 @@ public class UModsRepositoryModule {
                                                  UrlHostSelectionInterceptor urlHostSelectionInterceptor,
                                                  @Named("default") UModsService defaultUModsService,
                                                  @Named("app_user") UModsService appUserUModsService) {
-        //return new UModsLANDataSource(uModsDNSSDScanner, uModsBLEScanner, uModsWiFiScanner, urlHostSelectionInterceptor,defaultUModsService, appUserUModsService);
-        return new FakeUModsLANDataSource();
+        return new UModsLANDataSource(uModsDNSSDScanner, uModsBLEScanner, uModsWiFiScanner, urlHostSelectionInterceptor,defaultUModsService, appUserUModsService);
+        //return new FakeUModsLANDataSource();
     }
 
     @Singleton

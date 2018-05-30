@@ -4,6 +4,7 @@ import android.app.Application;
 import android.util.Log;
 
 import com.bugfender.sdk.Bugfender;
+import com.crashlytics.android.Crashlytics;
 import com.github.tony19.loggly.LogglyClient;
 import com.github.tony19.timber.loggly.LogglyTree;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepositoryComponent;
@@ -21,6 +22,7 @@ import com.urbit_iot.onekey.util.schedulers.SchedulerProviderModule;
 import com.urbit_iot.onekey.util.schedulers.DaggerSchedulerProviderComponent;
 import com.urbit_iot.onekey.data.source.DaggerUModsRepositoryComponent;
 
+import io.fabric.sdk.android.Fabric;
 import timber.log.Timber;
 
 /**
@@ -64,6 +66,8 @@ public class OneKeyApplication extends Application {
 
         //LOGGLY SETUP------------------------------------------------------------------
         //Done in the chooser activity...
+
+        Fabric.with(this, new Crashlytics());
 
 
 

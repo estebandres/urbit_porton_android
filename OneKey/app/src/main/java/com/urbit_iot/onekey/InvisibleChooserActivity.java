@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.bugfender.sdk.Bugfender;
+import com.crashlytics.android.Crashlytics;
 import com.f2prateek.rx.preferences2.Preference;
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.github.tony19.loggly.LogglyClient;
@@ -72,6 +73,11 @@ public class InvisibleChooserActivity extends AppCompatActivity {
             logglyTimberTree.tag("username." + appUser.getUserName()
                     + "," + "appuid." + appUser.getAppUUID());
             Timber.plant(logglyTimberTree);
+
+            Crashlytics.setUserIdentifier(appUser.getAppUUID());
+            //Crashlytics.setUserEmail("user@fabric.io");
+            Crashlytics.setUserName(appUser.getUserName());
+
 
         } else {
             firstActivityIntent = new Intent(this, AppUserActivity.class);

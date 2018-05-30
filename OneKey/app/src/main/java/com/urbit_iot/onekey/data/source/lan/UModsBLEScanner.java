@@ -33,7 +33,7 @@ public class UModsBLEScanner {
     }
 
     //Scans for BLE devices for 4 seconds.
-    //@RxLogObservable
+    @RxLogObservable
     public Observable<UMod> bleScanForUMods(){
         return Observable.defer(new Func0<Observable<UMod>>() {
             @Override

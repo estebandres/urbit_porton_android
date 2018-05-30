@@ -1,10 +1,13 @@
 package com.urbit_iot.onekey.util.loggly;
 
+import android.util.Log;
+
 import com.github.tony19.loggly.LogglyClient;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
@@ -138,10 +141,11 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
      * @return JSON string
      */
     private String toJson(SteveLogglyLevel steveLogglyLevel, String message, Object... args) {
-        return String.format("{\"level\": \"%1$s\", \"message\": \"%2$s\", \"device_timestamp\": \"%3$s\"}",
+        return String.format("{\"level\": \"%1$s\", \"message\": \"%2$s\", \"device_timestamp\": \"%3$s\", \"logger_trace\": %4$s}",
                 steveLogglyLevel,
                 String.format(message, args).replace("\"", "\\\""),
-                Calendar.getInstance().getTime().toString());
+                Calendar.getInstance().getTime().toString(),
+                this.getLoggerTraceJson());
     }
 
     /**
@@ -164,11 +168,84 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
      * @return JSON string
      */
     private String toJson(SteveLogglyLevel steveLogglyLevel, String message, Throwable t, Object... args) {
-        return String.format("{\"level\": \"%1$s\", \"message\": \"%2$s\", \"exception\": \"%3$s\", \"device_timestamp\": \"%4$s\"}",
+        //TODO gson library could be handy.
+        return String.format("{\"level\": \"%1$s\", \"message\": \"%2$s\", \"exception\": \"%3$s\", \"device_timestamp\": \"%4$s\", \"logger_trace\": %5$s}",
                 steveLogglyLevel,
                 String.format(message, args).replace("\"", "\\\""),
                 formatThrowable(t),
-                Calendar.getInstance().getTime().toString());
+                Calendar.getInstance().getTime().toString(),
+                this.getLoggerTraceJson());
+    }
+
+    private String getLoggerTraceJson(){
+        String className = "";
+        LoggerTrace loggerTrace = null;
+        //StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+        StackTraceElement[] stackTraceElements = new Throwable().getStackTrace();
+        //ArrayList<StackTraceElement> stackTraceElements = new ArrayList<>(Arrays.asList(new Throwable().getStackTrace()));
+        //Log.d("SteveTimber", Arrays.toString(stackTraceElements.toArray()));
+        for (StackTraceElement element: stackTraceElements){
+            if(element.getClassName().contains("urbit") && !element.getClassName().contains("Timber")){
+                className = element.getClassName();
+                loggerTrace = new LoggerTrace(className.substring(className.lastIndexOf('.') + 1),
+                        element.getMethodName(),
+                        element.getFileName(),
+                        element.getLineNumber());
+                break;
+            }
+        }
+        return String.format("{\"class_name\": \"%1$s\", \"method_name\": \"%2$s\", \"file_name\": \"%3$s\", \"line_number\": %4$d}",
+                loggerTrace.getClassName(),
+                loggerTrace.getMethodName(),
+                loggerTrace.getFileName(),
+                loggerTrace.getLineNumber());
+        //return loggerTrace;
+    }
+
+    private static class LoggerTrace{
+        private String className;
+        private String methodName;
+        private String fileName;
+        private int lineNumber;
+
+        public LoggerTrace(String className, String methodName, String fileName, int lineNumber) {
+            this.className = className;
+            this.methodName = methodName;
+            this.fileName = fileName;
+            this.lineNumber = lineNumber;
+        }
+
+        public String getClassName() {
+            return className;
+        }
+
+        public void setClassName(String className) {
+            this.className = className;
+        }
+
+        public String getMethodName() {
+            return methodName;
+        }
+
+        public void setMethodName(String methodName) {
+            this.methodName = methodName;
+        }
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
+        }
+
+        public int getLineNumber() {
+            return lineNumber;
+        }
+
+        public void setLineNumber(int lineNumber) {
+            this.lineNumber = lineNumber;
+        }
     }
 
     /**

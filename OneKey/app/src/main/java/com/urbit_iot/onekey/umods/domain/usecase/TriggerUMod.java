@@ -194,15 +194,6 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                 .map(new Func1<TriggerRPC.Result, ResponseValues>() {
                     @Override
                     public ResponseValues call(TriggerRPC.Result result) {
-                        
-                        String todo = "";
-                        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-                        for (StackTraceElement element: stackTraceElements){
-                            if(element.getClassName().contains("urbit")){
-                                todo = todo + element.getClassName() + " + " + element.getMethodName() + "\n";
-                            }
-                        }
-                        Log.d("umods_trigg", "STACKTRACE:   " + todo);
                         return new ResponseValues(result);
                     }
                 });

@@ -37,7 +37,9 @@ public class UModsWiFiScanner {
                 .startWith(1L)
                 .subscribeOn(Schedulers.io())
                 .doOnNext(n -> continuousWiFiScann())
+                .onErrorResumeNext(Observable.just(1234L))
                 .subscribe();
+        //TODO unsubscribe when application is destroyed
     }
 
     synchronized public Observable<UMod> browseWiFiForUMods() {

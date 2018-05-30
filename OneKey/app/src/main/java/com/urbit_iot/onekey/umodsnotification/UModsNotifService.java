@@ -58,7 +58,7 @@ public class UModsNotifService extends Service{
                 .doOnNext(this::processActionPendingIntent)
                 .subscribeOn(Schedulers.io())
                 .subscribe();
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
     private void processActionPendingIntent(Intent intent){
