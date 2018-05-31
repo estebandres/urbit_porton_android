@@ -16,6 +16,8 @@
 
 package com.urbit_iot.onekey.umodconfig;
 
+import android.support.annotation.NonNull;
+
 import com.urbit_iot.onekey.BasePresenter;
 import com.urbit_iot.onekey.BaseView;
 import com.urbit_iot.onekey.data.UMod;
@@ -68,6 +70,12 @@ public interface UModConfigContract {
         void hideProgressBar();
 
         void hideCompletely();
+
+        void showOngoingNotificationStatusChangeSuccess(Boolean notificationEnabled);
+
+        void showOngoingNotificationStatusChangeFail(Boolean notificationEnabled);
+
+        void refreshOngoingNotification();
     }
 
     interface Presenter extends BasePresenter {
@@ -89,5 +97,7 @@ public interface UModConfigContract {
         void factoryResetUMod();
 
         void cancelFirmwareUpgrade();
+
+        void setNotificationStatus(@NonNull String uModUUID, final Boolean notificationEnabled);
     }
 }

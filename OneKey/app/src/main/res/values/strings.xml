@@ -90,6 +90,8 @@
     <string name="notif_loading_progress_subtext">BUSCANDO MÓDULOS...</string>
     <string name="notif_triggering_progress_subtext">INTENTANDO ACCIONAR...</string>
     <string name="notif_accessing_progress_subtext">SOLICITANDO PERMISO...</string>
+    <string name="ongoing_notif_enabled_failed">Fallo al habilitar la notificación</string>
+    <string name="ongoing_notif_disbled_failed">Fallo al desabilitar la notificación</string>
     <!-- Solves annoying issue with password-eye -->
     <item name="visible" type="id"/>
     <item name="masked" type="id"/>

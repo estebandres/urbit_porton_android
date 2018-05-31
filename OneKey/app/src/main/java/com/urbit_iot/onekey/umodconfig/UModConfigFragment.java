@@ -43,11 +43,15 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.google.common.base.Strings;
 import com.urbit_iot.onekey.R;
+import com.urbit_iot.onekey.umodsnotification.UModsNotifService;
 import com.urbit_iot.onekey.usersxumod.UModUsersActivity;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import org.w3c.dom.Text;
 
@@ -95,6 +99,8 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     private LinearLayout mAllSettingsLinearLayout;
 
     private LinearLayout mWiFiSettings;
+
+    private Switch mOngoingNotifToggle;
 
     public static UModConfigFragment newInstance() {
         return new UModConfigFragment();
@@ -182,6 +188,8 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mWiFiSettings = (LinearLayout) root.findViewById(R.id.wifi_settings);
         TextView upgradeSubtext = (TextView) root.findViewById(R.id.upgrade_button_subtext);
         upgradeSubtext.setSelected(true);
+
+        mOngoingNotifToggle = (Switch) root.findViewById(R.id.umod_notif_switch);
 
         mTextWatcher = new TextWatcher() {
             @Override
@@ -302,6 +310,8 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mWiFiSSIDTextInput.addTextChangedListener(mTextWatcher);
         mWiFiPasswordTextInput.addTextChangedListener(mTextWatcher);
 
+        mOngoingNotifToggle.setOnCheckedChangeListener((compoundButton, isChecked) -> this.mPresenter.setNotificationStatus(viewModel.getuModUUID(),isChecked));
+
         if (viewModel.isAdminLayoutVisible()){
             mFirmwareUpdateButton.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
@@ -397,5 +407,40 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     @Override
     public void hideProgressBar() {
         this.mPorgressBar.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void showOngoingNotificationStatusChangeSuccess(Boolean notificationEnabled) {
+        if(notificationEnabled){
+            showMessage(getString(R.string.ongoing_notif_enabled));
+        } else {
+            showMessage(getString(R.string.ongoing_notif_disbled));
+        }
+    }
+
+    private void showMessage(String message) {
+        Snackbar.make(getView(), message, Snackbar.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void showOngoingNotificationStatusChangeFail(Boolean notificationEnabled) {
+        if(notificationEnabled){
+            showMessage(getString(R.string.ongoing_notif_enabled_failed));
+        } else {
+            showMessage(getString(R.string.ongoing_notif_disbled_failed));
+        }
+    }
+
+    @Override
+    public void refreshOngoingNotification() {
+        Context context = getContext();
+        if (context != null){
+            Intent serviceIntent = new Intent(context, UModsNotifService.class);
+            serviceIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
+            context.startService(serviceIntent);
+        } else {
+            Log.e("config_fr", "Context is null");
+        }
+
     }
 }

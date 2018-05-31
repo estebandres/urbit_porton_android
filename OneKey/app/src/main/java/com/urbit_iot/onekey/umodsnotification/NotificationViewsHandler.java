@@ -80,11 +80,17 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     }
     */
 
-
+    /*
     public boolean isWiFiConnected(){
         WifiManager wifiManager = (WifiManager) this.mContext.getSystemService(Context.WIFI_SERVICE);
         return wifiManager != null && wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED;
     }
+    */
+
+    public boolean isWiFiConnected(){
+        return ConnectivityReceiver.isNetworkAvailable(this.mContext);
+    }
+
 
     @Override
     public void showLoadProgress() {

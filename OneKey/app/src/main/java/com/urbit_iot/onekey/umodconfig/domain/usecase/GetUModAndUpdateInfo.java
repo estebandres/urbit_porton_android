@@ -72,12 +72,14 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
                     public Observable<UMod> call(final UMod uMod) {
+                        /*
                         if (uMod.getState() == UMod.State.AP_MODE
                                 && !values.getmConnectedWiFiAP().contains(uMod.getUUID())){
                             Log.d("getumod+info_uc","Not connected to an AP_MODE UMod!\n" + uMod.toString());
                             //return Observable.just(uMod);
                             return Observable.error(new UnconnectedFromAPModeUModException(uMod.getUUID()));
                         }
+                        */
                         //TODO review behaviour
                         return mAppUserRepository.getAppUser()
                                 .flatMap(new Func1<AppUser, Observable<UMod>>() {

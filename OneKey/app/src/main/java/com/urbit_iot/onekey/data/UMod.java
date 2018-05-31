@@ -83,7 +83,7 @@ public final class UMod {
 
     //TODO change to boolean
     @NonNull
-    private Boolean ongoingNotificationEnabled;
+    private boolean ongoingNotificationEnabled;
 
     //TODO change to LocalDate when java8 is supported
     @NonNull
@@ -293,7 +293,7 @@ public final class UMod {
     }
 
     @Nullable
-    public Boolean isOngoingNotificationEnabled() {
+    public boolean isOngoingNotificationEnabled() {
         return ongoingNotificationEnabled;
     }
 

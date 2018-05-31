@@ -142,6 +142,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 Log.e("notif_presenter", e.getMessage());
+                mUModsNotifView.showNoUModsFound();
                 mUModsNotifView.hideProgressView();
             }
 

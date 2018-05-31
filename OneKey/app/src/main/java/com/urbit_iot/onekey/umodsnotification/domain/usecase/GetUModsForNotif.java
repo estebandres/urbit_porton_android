@@ -57,7 +57,14 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
                 .filter(uMod -> {
                     //TODO Replace actual isOpen logic or remove it completely
                     //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
-                    return uMod.isOpen() && !uMod.isInAPMode();
+                    return uMod.isOngoingNotificationEnabled();
+                })
+                .switchIfEmpty(Observable.error(new NoUModsAreNotifEnabledException()))
+                .filter(uMod -> {
+                    //TODO Replace actual isOpen logic or remove it completely
+                    //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
+                    return uMod.isOpen()
+                            && !uMod.isInAPMode();
                 })
                 //Asks to the esp if the admin has authorized me when PENDING.
                 .flatMap(uMod -> {
@@ -147,6 +154,18 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
 
         public UMod getUMod() {
             return mUMod;
+        }
+    }
+
+    public static class NoUModsAreNotifEnabledException extends Exception{
+        public NoUModsAreNotifEnabledException() {
+            super("All UMods are notification disabled.");
+        }
+    }
+
+    public static class EmptyUModDataBaseException extends Exception{
+        public EmptyUModDataBaseException() {
+            super("There isn't any umod configured yet.");
         }
     }
 }

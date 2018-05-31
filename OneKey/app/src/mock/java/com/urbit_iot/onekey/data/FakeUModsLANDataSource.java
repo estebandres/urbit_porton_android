@@ -162,7 +162,7 @@ public class FakeUModsLANDataSource implements UModsDataSource {
     //@RxLogObservable
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
         UMod mockedUMod = UMODS_SERVICE_DATA.get(uModUUID);
-        mockedUMod.setState(UMod.State.AP_MODE);
+        //mockedUMod.setState(UMod.State.AP_MODE);
         Observable<UMod> mockedUModObs;
         if (mockedUMod != null){
             mockedUModObs = Observable.just(mockedUMod);

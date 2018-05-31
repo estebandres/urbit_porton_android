@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.base.Strings;
+import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.FactoryResetUMod;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModAndUpdateInfo;
@@ -30,6 +31,7 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.UpdateUModAlias;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.UpdateWiFiCredentials;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.UpgradeUModFirmware;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.SetOngoingNotificationStatus;
 import com.urbit_iot.onekey.util.IntegerContainer;
 
 import java.io.IOException;
@@ -44,6 +46,8 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Listens to user actions from the UI ({@link UModConfigFragment}), retrieves the data and
@@ -76,6 +80,9 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     @NonNull
     private final UpgradeUModFirmware mUpgradeUModFirmware;
 
+    @NonNull
+    private final SetOngoingNotificationStatus mSetOngoingNotificationStatus;
+
     @Nullable
     private UMod uModToConfig;
 
@@ -96,7 +103,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                                @NonNull UpdateWiFiCredentials mUpdateWiFiCredentials,
                                @NonNull GetUModSystemInfo mGetUModSystemInfo,
                                @NonNull FactoryResetUMod mFactoryReset,
-                               @NonNull UpgradeUModFirmware mUpgradeUModFirmware) {
+                               @NonNull UpgradeUModFirmware mUpgradeUModFirmware,
+                               @NonNull SetOngoingNotificationStatus mSetOngoingNotificationStatus) {
         this.mUModUUID = umodUUID;
         this.mUModConfigView = addTaskView;
         this.mGetUModAndUpdateInfo = getUModAndUpdateInfo;
@@ -106,6 +114,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         this.mGetUModSystemInfo = mGetUModSystemInfo;
         this.mFactoryReset = mFactoryReset;
         this.mUpgradeUModFirmware = mUpgradeUModFirmware;
+        this.mSetOngoingNotificationStatus = mSetOngoingNotificationStatus;
     }
 
     /**
@@ -133,6 +142,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         mGetUModAndUpdateInfo.unsubscribe();
         mSaveUMod.unsubscribe();
         this.mGetUModSystemInfo.unsubscribe();
+        mSetOngoingNotificationStatus.unsubscribe();
     }
 
     @Override
@@ -488,6 +498,30 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                                     }
                                 })
                                 .subscribe();
+                    }
+                });
+    }
+
+    @Override
+    public void setNotificationStatus(@NonNull String uModUUID, final Boolean notificationEnabled) {
+        checkNotNull(uModUUID, "umoduuid cannot be null!");
+        mSetOngoingNotificationStatus.unsubscribe();
+        mSetOngoingNotificationStatus.execute(new SetOngoingNotificationStatus.RequestValues(uModUUID, notificationEnabled),
+                new Subscriber<RxUseCase.NoResponseValues>() {
+                    @Override
+                    public void onCompleted() {
+                        mUModConfigView.showOngoingNotificationStatusChangeSuccess(notificationEnabled);
+                        mUModConfigView.refreshOngoingNotification();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        mUModConfigView.showOngoingNotificationStatusChangeFail(notificationEnabled);
+                    }
+
+                    @Override
+                    public void onNext(RxUseCase.NoResponseValues noResponseValues) {
+
                     }
                 });
     }

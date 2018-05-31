@@ -2,6 +2,8 @@ package com.urbit_iot.onekey.umodsnotification;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
@@ -38,6 +40,7 @@ public class UModsNotifService extends Service{
                 .uModsNotifPresenterModule(new UModsNotifPresenterModule(this.mNotificationViewsHandler))
                 .build()
                 .inject(this);
+        registerReceiver(new ConnectivityReceiver(), new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
     @Override

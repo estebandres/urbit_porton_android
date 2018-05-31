@@ -142,8 +142,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //mPresenter.loadUMods(true);
-                throw new RuntimeException("Forced testing crash on update fab!");
+                mPresenter.loadUMods(true);
             }
         });
 
