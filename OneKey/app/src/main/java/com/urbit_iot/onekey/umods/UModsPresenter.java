@@ -5,6 +5,8 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.bugfender.sdk.Bugfender;
+import com.f2prateek.rx.preferences2.Preference;
+import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UMod;
@@ -44,6 +46,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     private final GetUModsOneByOne mGetUModsOneByOne;
     private final SetOngoingNotificationStatus mSetOngoingNotificationStatus;
     private final RequestAccess mRequestAccess;
+    private RxSharedPreferences rxSharedPreferences;
     /*
     @NonNull
     private final RetrofitUtils mRetrofitUtils;
@@ -61,7 +64,8 @@ public class UModsPresenter implements UModsContract.Presenter {
                           @NonNull SetOngoingNotificationStatus setOngoingNotificationStatus,
                           @NonNull ClearAlienUMods clearAlienUMods,
                           @NonNull TriggerUMod triggerUMod,
-                          @NonNull RequestAccess requestAccess) {
+                          @NonNull RequestAccess requestAccess,
+                          @NonNull RxSharedPreferences rxSharedPreferences) {
         mUModsView = checkNotNull(umodsView, "tasksView cannot be null!");
         mGetUModsOneByOne = checkNotNull(getUModsOneByOne, "getUModsOneByOne cannot be null!");
         mGetUMods = checkNotNull(getUMods, "getUModUUID cannot be null!");
@@ -71,6 +75,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         mTriggerUMod = checkNotNull(triggerUMod, "userTriggerUMod cannot be null!");
         mRequestAccess = checkNotNull(requestAccess, "requestAccess cannot be null!");
         //this.mRetrofitUtils = mRetrofitUtils;
+        this.rxSharedPreferences = rxSharedPreferences;
     }
 
     /**
@@ -85,7 +90,16 @@ public class UModsPresenter implements UModsContract.Presenter {
     @Override
     public void subscribe() {
         mUModsView.clearAllItems();
-        loadUMods(false);
+        loadUMods(true);
+        Preference<Boolean> ongoingNotificationPref = rxSharedPreferences.getBoolean(GlobalConstants.ONGOING_NOTIFICATION_STATE_KEY);
+        if (ongoingNotificationPref.isSet()){
+            if (ongoingNotificationPref.get()){
+                mUModsView.startOngoingNotification();
+            }
+        } else {
+            mUModsView.startOngoingNotification();
+            ongoingNotificationPref.set(true);
+        }
     }
 
     @Override
@@ -545,5 +559,21 @@ public class UModsPresenter implements UModsContract.Presenter {
                 loadUModsOneByOne(true,true);
             }
         });
+    }
+
+    @Override
+    public void saveOngoingNotificationPreference(boolean isChecked) {
+        Preference<Boolean> ongoingNotificationPref = rxSharedPreferences.getBoolean(GlobalConstants.ONGOING_NOTIFICATION_STATE_KEY);
+        ongoingNotificationPref.set(isChecked);
+    }
+
+    @Override
+    public boolean fetchOngoingNotificationPreference() {
+        Preference<Boolean> ongoingNotificationPref = rxSharedPreferences.getBoolean(GlobalConstants.ONGOING_NOTIFICATION_STATE_KEY);
+        if (ongoingNotificationPref.isSet()){
+            return ongoingNotificationPref.get();
+        } else {
+            return true;//TODO review this
+        }
     }
 }

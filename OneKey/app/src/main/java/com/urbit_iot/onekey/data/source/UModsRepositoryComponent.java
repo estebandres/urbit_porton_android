@@ -1,5 +1,6 @@
 package com.urbit_iot.onekey.data.source;
 
+import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.urbit_iot.onekey.ApplicationModule;
 import com.urbit_iot.onekey.OneKeyApplication;
 import com.urbit_iot.onekey.appuser.AppUserPresenterModule;
@@ -26,5 +27,7 @@ public interface UModsRepositoryComponent {
     UModsRepository getUModsRepository();
 
     AppUserRepository getAppUserRepository();
+
+    RxSharedPreferences getRxSharedPreferences();
 
 }

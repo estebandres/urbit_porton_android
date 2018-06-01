@@ -92,11 +92,6 @@ public class UModsActivity extends AppCompatActivity {
                     (UModsFilterType) savedInstanceState.getSerializable(CURRENT_FILTERING_KEY);
             mUModsPresenter.setFiltering(currentFiltering);
         }
-
-        Intent serviceIntent = new Intent(this, UModsNotifService.class);
-        serviceIntent.setAction(GlobalConstants.ACTION.STARTFOREGROUND);
-        startService(serviceIntent);
-
     }
 
     public void fatalError(String message, Throwable exception){

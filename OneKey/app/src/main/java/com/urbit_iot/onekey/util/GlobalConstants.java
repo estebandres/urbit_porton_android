@@ -67,6 +67,7 @@ public final class GlobalConstants {
 
     public static final String ONLINE_LOWER_TEXT = "online";
     public static final String OFFLINE_LOWER_TEXT = "desconectado";
+    public static final String ONGOING_NOTIFICATION_STATE_KEY = "app_settings__ongoing_notification_state";
 
     public interface ACTION {
         String MAIN = "com.urbit-iot.onekey.action.main";
@@ -83,6 +84,7 @@ public final class GlobalConstants {
         String WIFI_CONNECTED = "com.urbit-iot.onekey.action.wifienabled";
         String WIFI_UNUSABLE = "com.urbit-iot.onekey.action.wifiunusable";
         String LAUNCH_WIFI_SETTINGS = "com.urbit-iot.onekey.action.launchwifisettings";
+        String SHUTDOWN_SERVICE = "com.urbit-iot.onekey.action.shutdownservice";
     }
 
     public static int NOTIFICATION_ID = 101;

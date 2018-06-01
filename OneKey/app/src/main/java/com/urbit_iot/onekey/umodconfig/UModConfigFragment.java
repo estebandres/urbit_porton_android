@@ -431,14 +431,15 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     @Override
     public void refreshOngoingNotification() {
-        Context context = getContext();
-        if (context != null){
-            Intent serviceIntent = new Intent(context, UModsNotifService.class);
-            serviceIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
-            context.startService(serviceIntent);
-        } else {
-            Log.e("config_fr", "Context is null");
+        if (UModsNotifService.SERVICE_IS_ALIVE){
+            Context context = getContext();
+            if (context != null){
+                Intent serviceIntent = new Intent(context, UModsNotifService.class);
+                serviceIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
+                context.startService(serviceIntent);
+            } else {
+                Log.e("config_fr", "Context is null");
+            }
         }
-
     }
 }

@@ -51,6 +51,31 @@
                 android:layout_marginTop="@dimen/activity_vertical_margin"
                 android:layout_marginBottom="@dimen/activity_vertical_margin" />
                 -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorPrimaryDark"
+                android:padding="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="20dp"
+                    android:fontFamily="sans-serif-smallcaps"
+                    android:text="Activar Notificacion Permanente"
+                    android:textColor="@color/white"/>
+
+                <Switch
+                    android:id="@+id/umods_frag__ongoing_notif_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginEnd="20dp"
+                    android:layout_centerVertical="true"/>
+
+            </RelativeLayout>
             <ListView
                 android:id="@+id/umods_list"
                 android:layout_width="match_parent"

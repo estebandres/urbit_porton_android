@@ -230,6 +230,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                     Log.e("conf_pr","updateUModAlias didn't retreive any result: "+ onNextCount);
                     mUModConfigView.finishActivity();
                 }
+                mUModConfigView.refreshOngoingNotification();
             }
 
             @Override

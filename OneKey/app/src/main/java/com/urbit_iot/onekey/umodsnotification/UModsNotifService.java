@@ -20,12 +20,14 @@ import rx.schedulers.Schedulers;
 
 public class UModsNotifService extends Service{
     public static String UMOD_UUID = "UMOD_UUID";
+    public static boolean SERVICE_IS_ALIVE = false;
 
     private boolean serviceWasAlreadyStarted = false;
 
     @Inject
     UModsNotifPresenter mPresenter;
 
+    private ConnectivityReceiver connectivityReceiver;
     private NotificationViewsHandler mNotificationViewsHandler;
 
     @Override
@@ -33,6 +35,7 @@ public class UModsNotifService extends Service{
         super.onCreate();
         Log.d("SERVICE", "created");
         this.mNotificationViewsHandler = new NotificationViewsHandler(this);
+        this.connectivityReceiver = new ConnectivityReceiver();
         OneKeyApplication oneKeyApplication = (OneKeyApplication) getApplication();
         DaggerUModsNotifComponent.builder()
                 .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponentSingleton())
@@ -40,13 +43,14 @@ public class UModsNotifService extends Service{
                 .uModsNotifPresenterModule(new UModsNotifPresenterModule(this.mNotificationViewsHandler))
                 .build()
                 .inject(this);
-        registerReceiver(new ConnectivityReceiver(), new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        registerReceiver(this.connectivityReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         this.mPresenter.unsubscribe();
+        unregisterReceiver(this.connectivityReceiver);
     }
 
     @Override
@@ -79,6 +83,7 @@ public class UModsNotifService extends Service{
                 if (!this.serviceWasAlreadyStarted){
                     this.mPresenter.subscribe();
                     this.serviceWasAlreadyStarted = true;
+                    SERVICE_IS_ALIVE = true;
                 }
                 break;
             case GlobalConstants.ACTION.TRIGGER:
@@ -122,7 +127,16 @@ public class UModsNotifService extends Service{
                 androidWifiSettingsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(androidWifiSettingsIntent);
                 break;
+            case GlobalConstants.ACTION.SHUTDOWN_SERVICE:
+                Log.d("UMOD_SERVICE", "SHUTTING DOWN SERVICE");
+                SERVICE_IS_ALIVE = false;
+                shutServiceDown();
+                break;
         }
+    }
+
+    private void shutServiceDown() {
+        stopSelf();
     }
 
     /*

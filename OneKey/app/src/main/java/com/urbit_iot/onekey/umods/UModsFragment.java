@@ -25,18 +25,25 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 
+import com.f2prateek.rx.preferences2.Preference;
+import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.ncorti.slidetoact.SlideToActView;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.UModConfigFragment;
+import com.urbit_iot.onekey.umodsnotification.UModsNotifService;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -70,6 +77,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     private TextView mFilteringLabelView;
 
     private Vibrator mVibrator;
+
+    private Switch ongoingNotificationSwitch;
 
     public UModsFragment() {
         // Requires empty public constructor
@@ -127,6 +136,19 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             }
         });
 
+        this.ongoingNotificationSwitch = (Switch) root.findViewById(R.id.umods_frag__ongoing_notif_switch);
+        this.ongoingNotificationSwitch.setChecked(this.mPresenter.fetchOngoingNotificationPreference());
+        this.ongoingNotificationSwitch.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+            mPresenter.saveOngoingNotificationPreference(isChecked);
+            if (isChecked){
+                startOngoingNotification();
+                mPresenter.saveOngoingNotificationPreference(true);
+            } else {
+                shutdownOngoingNotification();
+                mPresenter.saveOngoingNotificationPreference(false);
+            }
+
+        });
         // Set up floating action button
         FloatingActionButton fab =
                 (FloatingActionButton) getActivity().findViewById(R.id.fab_add_umod);
@@ -160,6 +182,31 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         setHasOptionsMenu(true);
 
         return root;
+    }
+
+    @Override
+    public void startOngoingNotification() {
+        Context fragmentContext = getContext();
+        if (fragmentContext != null){
+            Intent serviceIntent = new Intent(fragmentContext, UModsNotifService.class);
+            serviceIntent.setAction(GlobalConstants.ACTION.STARTFOREGROUND);
+            fragmentContext.startService(serviceIntent);
+        } else {
+            Log.e("umods_frag", "Fragment content returned null.");
+        }
+    }
+
+    @Override
+    public void shutdownOngoingNotification() {
+        Context fragmentContext = getContext();
+        if (fragmentContext != null){
+            Intent serviceIntent = new Intent(fragmentContext, UModsNotifService.class);
+            serviceIntent.setAction(GlobalConstants.ACTION.SHUTDOWN_SERVICE);
+            fragmentContext.startService(serviceIntent);
+        } else {
+            Log.e("umods_frag", "Fragment content returned null.");
+        }
+
     }
 
     @Override

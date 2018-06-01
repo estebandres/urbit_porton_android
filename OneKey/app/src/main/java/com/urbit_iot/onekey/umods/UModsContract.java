@@ -67,6 +67,10 @@ public interface UModsContract {
         void makeUModViewModelActionButtonVisible(String uModUUID);
 
         void clearAllItems();
+
+        void startOngoingNotification();
+
+        void shutdownOngoingNotification();
     }
 
     interface Presenter extends BasePresenter {
@@ -90,5 +94,9 @@ public interface UModsContract {
         void requestAccess(String uModUUID);
 
         void setNotificationStatus(String uModUUID, Boolean notificationEnabled);
+
+        void saveOngoingNotificationPreference(boolean isChecked);
+
+        boolean fetchOngoingNotificationPreference();
     }
 }
