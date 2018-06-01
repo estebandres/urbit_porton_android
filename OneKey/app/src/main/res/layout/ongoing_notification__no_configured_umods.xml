@@ -43,5 +43,13 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <ImageView
+        android:id="@+id/notif_search_button"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_centerVertical="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/ic_update_search_black_24dp" />
 
 </RelativeLayout>

@@ -559,6 +559,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             final UModViewModel viewModel = getItem(i);
             //TODO if R.id.title is renamed then the project doesn't build. Why??
             TextView mainText = (TextView) rowView.findViewById(R.id.card_main_text);
+            mainText.setSelected(true);//This will make the text rotate when too large.
 
             mainText.setText(viewModel.getItemMainText());
 

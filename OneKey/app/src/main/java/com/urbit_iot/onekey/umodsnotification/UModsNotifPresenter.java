@@ -171,6 +171,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
             public void onCompleted() {
                 Log.d("triggerByNotification","Trigger Completo!!" + Thread.currentThread().getName());
                 mUModsNotifView.hideProgressView();
+                cancelPreventiveLockingSubject.onNext(true);
             }
 
             @Override
@@ -179,6 +180,8 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
                 Bugfender.e("triggerByNotification","Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage() + Thread.currentThread().getName());
                 Timber.e("Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage() + Thread.currentThread().getName());
                 mUModsNotifView.hideProgressView();
+                cancelPreventiveLockingSubject.onNext(true);
+
             }
 
             @Override
