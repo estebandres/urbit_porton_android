@@ -60,6 +60,10 @@ public interface UModsNotifContract {
         void setLockState(boolean lockState);
 
         void showLoadProgress();
+
+        void showAllUModsAreNotifDisabled();
+
+        void showNoConfiguredUMods();
     }
 
     interface Presenter extends BasePresenter {

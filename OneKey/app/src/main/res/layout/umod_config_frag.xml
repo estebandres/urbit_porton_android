@@ -123,7 +123,7 @@
                             android:layout_height="wrap_content"
                             android:layout_alignParentStart="true"
                             android:layout_alignParentTop="true"
-                            android:text="Activar Notificaciones"
+                            android:text="Activar Panel de Control"
                             android:textAppearance="@style/TextAppearance.AppCompat.Small" />
                         <Switch
                             android:id="@+id/umod_notif_switch"

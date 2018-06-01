@@ -38,22 +38,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import com.google.common.base.Strings;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umodsnotification.UModsNotifService;
 import com.urbit_iot.onekey.usersxumod.UModUsersActivity;
 import com.urbit_iot.onekey.util.GlobalConstants;
-
-import org.w3c.dom.Text;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -100,7 +96,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private LinearLayout mWiFiSettings;
 
-    private Switch mOngoingNotifToggle;
+    private Switch mOngoingNotifSwitch;
 
     public static UModConfigFragment newInstance() {
         return new UModConfigFragment();
@@ -189,7 +185,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         TextView upgradeSubtext = (TextView) root.findViewById(R.id.upgrade_button_subtext);
         upgradeSubtext.setSelected(true);
 
-        mOngoingNotifToggle = (Switch) root.findViewById(R.id.umod_notif_switch);
+        mOngoingNotifSwitch = (Switch) root.findViewById(R.id.umod_notif_switch);
 
         mTextWatcher = new TextWatcher() {
             @Override
@@ -310,7 +306,9 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mWiFiSSIDTextInput.addTextChangedListener(mTextWatcher);
         mWiFiPasswordTextInput.addTextChangedListener(mTextWatcher);
 
-        mOngoingNotifToggle.setOnCheckedChangeListener((compoundButton, isChecked) -> this.mPresenter.setNotificationStatus(viewModel.getuModUUID(),isChecked));
+        mOngoingNotifSwitch.setChecked(viewModel.isOngoingNotifSwitchChecked());
+
+        mOngoingNotifSwitch.setOnCheckedChangeListener((compoundButton, isChecked) -> this.mPresenter.setNotificationStatus(viewModel.getuModUUID(),isChecked));
 
         if (viewModel.isAdminLayoutVisible()){
             mFirmwareUpdateButton.setOnLongClickListener(new View.OnLongClickListener() {

@@ -74,7 +74,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     @Override
     public void subscribe() {
         Log.d("notif_presenter", "subscribed." + Thread.currentThread().getName());
-        this.loadUMods(false);
+        this.loadUMods(true);
     }
 
     @Override
@@ -142,7 +142,12 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 Log.e("notif_presenter", e.getMessage());
-                mUModsNotifView.showNoUModsFound();
+                if (e instanceof GetUModsForNotif.NoUModsAreNotifEnabledException){
+                    mUModsNotifView.showAllUModsAreNotifDisabled();
+                }
+                if (e instanceof GetUModsForNotif.EmptyUModDataBaseException){
+                    mUModsNotifView.showNoConfiguredUMods();
+                }
                 mUModsNotifView.hideProgressView();
             }
 
@@ -205,7 +210,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
 
     private void preventiveLock(){
         Observable.just(true)
-                .delay(5000, TimeUnit.MILLISECONDS)
+                .delay(3000, TimeUnit.MILLISECONDS)
                 .takeUntil(cancelPreventiveLockingSubject)
                 .doOnNext(aBoolean -> {
                     if (!mUModsNotifView.getLockState()){

@@ -13,8 +13,8 @@ public abstract class UModViewModel {
     private UModsPresenter presenter;
     private String itemMainText;
     private String itemLowerText;
-    private boolean toggleButtonChecked;
-    private boolean toggleButtonVisible;
+    private boolean ongoingNotifIndicatorOn;
+    private boolean ongoingNotifVisible;
     private String sliderText;
     private boolean sliderVisible;
     private boolean sliderEnabled;
@@ -26,7 +26,7 @@ public abstract class UModViewModel {
 
 
     public UModViewModel(UMod uMod, String uModUUID, UModsPresenter presenter, String itemMainText,
-                         String itemLowerText, boolean toggleButtonChecked, boolean toggleButtonVisible,
+                         String itemLowerText, boolean ongoingNotifIndicatorOn, boolean ongoingNotifVisible,
                          String sliderText, boolean sliderVisible,
                          boolean sliderEnabled, boolean itemOnClickListenerEnabled,
                          UModsFragment.UModViewModelColors lowerTextColor,
@@ -37,8 +37,8 @@ public abstract class UModViewModel {
         this.presenter = presenter;
         this.itemMainText = itemMainText;
         this.itemLowerText = itemLowerText;
-        this.toggleButtonChecked = toggleButtonChecked;
-        this.toggleButtonVisible = toggleButtonVisible;
+        this.ongoingNotifIndicatorOn = ongoingNotifIndicatorOn;
+        this.ongoingNotifVisible = ongoingNotifVisible;
         this.sliderText = sliderText;
         this.sliderVisible = sliderVisible;
         this.sliderEnabled = sliderEnabled;
@@ -86,12 +86,12 @@ public abstract class UModViewModel {
         this.itemLowerText = itemLowerText;
     }
 
-    public boolean isToggleButtonChecked() {
-        return toggleButtonChecked;
+    public boolean isOngoingNotifIndicatorOn() {
+        return ongoingNotifIndicatorOn;
     }
 
-    public void setToggleButtonChecked(boolean toggleButtonChecked) {
-        this.toggleButtonChecked = toggleButtonChecked;
+    public void setOngoingNotifIndicatorOn(boolean ongoingNotifIndicatorOn) {
+        this.ongoingNotifIndicatorOn = ongoingNotifIndicatorOn;
     }
 
     public String getSliderText() {
@@ -183,8 +183,8 @@ public abstract class UModViewModel {
                 ", presenterHashCode=" + presenter.hashCode() +
                 ", itemMainText='" + itemMainText + '\'' +
                 ", itemLowerText='" + itemLowerText + '\'' +
-                ", toggleButtonChecked=" + toggleButtonChecked +
-                ", toggleButtonVisible=" + toggleButtonVisible +
+                ", ongoingNotifIndicatorOn=" + ongoingNotifIndicatorOn +
+                ", ongoingNotifVisible=" + ongoingNotifVisible +
                 ", sliderText='" + sliderText + '\'' +
                 ", sliderVisible=" + sliderVisible +
                 ", sliderEnabled=" + sliderEnabled +
@@ -196,11 +196,11 @@ public abstract class UModViewModel {
                 '}';
     }
 
-    public boolean isToggleButtonVisible() {
-        return toggleButtonVisible;
+    public boolean isOngoingNotifVisible() {
+        return ongoingNotifVisible;
     }
 
-    public void setToggleButtonVisible(boolean toggleButtonVisible) {
-        this.toggleButtonVisible = toggleButtonVisible;
+    public void setOngoingNotifVisible(boolean ongoingNotifVisible) {
+        this.ongoingNotifVisible = ongoingNotifVisible;
     }
 }

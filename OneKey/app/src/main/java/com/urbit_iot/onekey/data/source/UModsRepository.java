@@ -267,8 +267,9 @@ public class UModsRepository implements UModsDataSource {
         Log.d("umods_rep", "lanbrowse first");
 
         return Observable.concatDelayError(
-                cacheOrDBUModObs.defaultIfEmpty(null),
-                lanUModObs)
+                //cacheOrDBUModObs.defaultIfEmpty(null),
+                lanUModObs,
+                Observable.empty())
                 .doOnUnsubscribe(new Action0() {
                     @Override
                     public void call() {

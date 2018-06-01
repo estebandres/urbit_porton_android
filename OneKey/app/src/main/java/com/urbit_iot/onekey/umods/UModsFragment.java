@@ -2,10 +2,7 @@ package com.urbit_iot.onekey.umods;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.content.res.Resources;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
@@ -14,10 +11,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.PopupMenu;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,7 +26,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import com.ncorti.slidetoact.SlideToActView;
 import com.urbit_iot.onekey.R;
@@ -44,7 +38,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import ng.max.slideview.SlideView;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
@@ -64,15 +57,15 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
     private UModsAdapter mListAdapter;
 
-    private View mNoTasksView;
+    private View mNoUModsView;
 
-    private ImageView mNoTaskIcon;
+    private ImageView mNoUModsIcon;
 
-    private TextView mNoTaskMainView;
+    private TextView mNoUModsMainView;
 
-    private TextView mNoTaskAddView;
+    private TextView mNoUModsAddView;
 
-    private LinearLayout mTasksView;
+    private LinearLayout mUModsView;
 
     private TextView mFilteringLabelView;
 
@@ -120,14 +113,14 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         ListView listView = (ListView) root.findViewById(R.id.umods_list);
         listView.setAdapter(mListAdapter);
         //mFilteringLabelView = (TextView) root.findViewById(R.id.umods_filtering_label);
-        mTasksView = (LinearLayout) root.findViewById(R.id.umods_linear_layout);
+        mUModsView = (LinearLayout) root.findViewById(R.id.umods_linear_layout);
 
         // Set up  no tasks view
-        mNoTasksView = root.findViewById(R.id.no_umods);
-        mNoTaskIcon = (ImageView) root.findViewById(R.id.no_umods_icon);
-        mNoTaskMainView = (TextView) root.findViewById(R.id.no_umods_main);
-        mNoTaskAddView = (TextView) root.findViewById(R.id.no_umods_add_some);
-        mNoTaskAddView.setOnClickListener(new View.OnClickListener() {
+        mNoUModsView = root.findViewById(R.id.no_umods);
+        mNoUModsIcon = (ImageView) root.findViewById(R.id.no_umods_icon);
+        mNoUModsMainView = (TextView) root.findViewById(R.id.no_umods_main);
+        mNoUModsAddView = (TextView) root.findViewById(R.id.no_umods_add_some);
+        mNoUModsAddView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showAddUMod();
@@ -264,19 +257,19 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     public void showUMods(List<UModViewModel> uModViewModels) {
         mListAdapter.replaceData(uModViewModels);
 
-        mTasksView.setVisibility(View.VISIBLE);
-        mNoTasksView.setVisibility(View.GONE);
+        mUModsView.setVisibility(View.VISIBLE);
+        mNoUModsView.setVisibility(View.GONE);
     }
 
     public void showUMod(UModViewModel uModViewModel){
         /*
-        if(mNoTaskAddView.getVisibility() == View.VISIBLE){
-            mNoTasksView.setVisibility(View.GONE);
+        if(mNoUModsAddView.getVisibility() == View.VISIBLE){
+            mNoUModsView.setVisibility(View.GONE);
         }
         */
         mListAdapter.addItem(uModViewModel);
-        mTasksView.setVisibility(View.VISIBLE);
-        mNoTasksView.setVisibility(View.GONE);
+        mUModsView.setVisibility(View.VISIBLE);
+        mNoUModsView.setVisibility(View.GONE);
     }
 
     @Override
@@ -317,12 +310,12 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     }
 
     private void showNoTasksViews(String mainText, int iconRes, boolean showAddView) {
-        mTasksView.setVisibility(View.GONE);
-        mNoTasksView.setVisibility(View.VISIBLE);
+        mUModsView.setVisibility(View.GONE);
+        mNoUModsView.setVisibility(View.VISIBLE);
 
-        mNoTaskMainView.setText(mainText);
-        mNoTaskIcon.setImageDrawable(getResources().getDrawable(iconRes));
-        mNoTaskAddView.setVisibility(showAddView ? View.VISIBLE : View.GONE);
+        mNoUModsMainView.setText(mainText);
+        mNoUModsIcon.setImageDrawable(getResources().getDrawable(iconRes));
+        mNoUModsAddView.setVisibility(showAddView ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -555,6 +548,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             View rowView = view;
 
             LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
+            //TODO consider the view holder pattern. Or the below null check.
             rowView = inflater.inflate(R.layout.umod_item_card3, viewGroup, false);
             /*
             if (rowView == null) {
@@ -572,7 +566,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
             lowerText.setText(viewModel.getItemLowerText());
 
-            final ToggleButton notifToggle = (ToggleButton) rowView.findViewById(R.id.card_item_notif_button);
+            final ImageView ongoingNotifIndicator = (ImageView) rowView.findViewById(R.id.card_item_notif_indicator);
 
             //final SlideView actionSlider = (SlideView) rowView.findViewById(R.id.card_slider);
 
@@ -627,11 +621,16 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
 
             // NotifEnabled checkbox state
-            notifToggle.setChecked(viewModel.isToggleButtonChecked());
-            if (viewModel.isToggleButtonVisible()){
-                notifToggle.setVisibility(View.VISIBLE);
+
+            if (viewModel.isOngoingNotifVisible()){
+                if (viewModel.isOngoingNotifIndicatorOn()){
+                    ongoingNotifIndicator.setImageDrawable(activityContext.getResources().getDrawable(R.drawable.notif_enabled_icon));
+                } else {
+                    ongoingNotifIndicator.setImageDrawable(activityContext.getResources().getDrawable(R.drawable.notif_disabled_icon));
+                }
+                ongoingNotifIndicator.setVisibility(View.VISIBLE);
             } else {
-                notifToggle.setVisibility(View.INVISIBLE);
+                ongoingNotifIndicator.setVisibility(View.INVISIBLE);
             }
 
 
@@ -645,13 +644,15 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             }
             */
 
+            /*
             notifToggle.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
-                    viewModel.onButtonToggled(!viewModel.isToggleButtonChecked());
+                    viewModel.onButtonToggled(!viewModel.isOngoingNotifIndicatorOn());
                     return true;
                 }
             });
+            */
 
             /*
             actionSlider.setOnSlideCompleteListener(new SlideView.OnSlideCompleteListener() {

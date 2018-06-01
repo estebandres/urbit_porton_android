@@ -50,15 +50,15 @@
                     android:layout_alignStart="@+id/umod_card_image"
                     android:layout_alignTop="@+id/umod_card_image"
                     -->
-                <ToggleButton
-                    android:id="@+id/card_item_notif_button"
+                <ImageView
+                    android:id="@+id/card_item_notif_indicator"
                     android:layout_width="25dp"
                     android:layout_height="25dp"
                     android:layout_centerVertical="true"
                     android:layout_marginStart="10dp"
                     android:textOff=""
                     android:textOn=""
-                    android:background="@drawable/notif_toggle_selector"/>
+                    android:src="@drawable/notif_toggle_selector"/>
 
                 <!--
                 <TextView

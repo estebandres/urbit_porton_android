@@ -51,7 +51,7 @@
                     android:layout_alignTop="@+id/umod_card_image"
                     -->
                 <ToggleButton
-                    android:id="@+id/card_item_notif_button"
+                    android:id="@+id/card_item_notif_indicator"
                     android:layout_width="25dp"
                     android:layout_height="25dp"
                     android:layout_centerVertical="true"

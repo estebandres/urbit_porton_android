@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.net.wifi.WifiManager;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
@@ -28,9 +27,13 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     private RemoteViews noUModsFoundCollapsedViews;
     private RemoteViews unconnectedPhoneCollapsedViews;
 
+    private RemoteViews noConfiguredUModsCollapsedViews;
+    private RemoteViews allUModsAreNotifDisabledCollapsedViews;
+
     //private RemoteViews expandedViews;
 
-    private Notification notification;
+    private Notification mNotification;
+    private Notification.Builder mNotificationBuilder;
     private NotificationManager notificationManager;
     private boolean lockState;
     //private DisplayMetrics metrics;
@@ -48,6 +51,8 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         this.setupControlCollapsedView();
         this.setupNoUModsFoundCollapsedView();
         this.setupUnconnectedPhoneCollapsedViews();
+        this.setupNoConfiguredUMods();
+        this.setupAllUModsAreNotifDisabled();
         this.setupNotification();
 
         this.lockState = true;
@@ -56,6 +61,18 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
             this.metrics = mContext.getResources().getDisplayMetrics();
         */
     }
+
+    private void setupAllUModsAreNotifDisabled() {
+        this.allUModsAreNotifDisabledCollapsedViews = new RemoteViews(getPackageName(),
+                R.layout.ongoing_notification__notif_disabled_for_all_umods);
+    }
+
+    private void setupNoConfiguredUMods() {
+        this.noConfiguredUModsCollapsedViews = new RemoteViews(getPackageName(),
+                R.layout.ongoing_notification__no_configured_umods);
+    }
+
+
 
     /*
     @Override
@@ -100,6 +117,16 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     }
 
     @Override
+    public void showAllUModsAreNotifDisabled() {
+        this.changeNotificationViews(this.allUModsAreNotifDisabledCollapsedViews);
+    }
+
+    @Override
+    public void showNoConfiguredUMods() {
+        this.changeNotificationViews(this.noConfiguredUModsCollapsedViews);
+    }
+
+    @Override
     public void showTriggerProgress() {
         this.controlCollapsedViews.setTextViewText(R.id.progress_reason_text,
                 this.mContext.getResources().getString(R.string.notif_triggering_progress_subtext));
@@ -128,7 +155,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     private void setupUnconnectedPhoneCollapsedViews() {
         this.unconnectedPhoneCollapsedViews = new RemoteViews(getPackageName(),
-                R.layout.unconnected_phone_notification);
+                R.layout.ongoing_notification__unconnected_phone);
         Intent launchWifiIntent = new Intent(this.mContext, UModsNotifService.class);
         launchWifiIntent.setAction(GlobalConstants.ACTION.LAUNCH_WIFI_SETTINGS);
         PendingIntent launchWifiPendingIntent = PendingIntent.getService(this.mContext, 0,
@@ -139,7 +166,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     private void setupNoUModsFoundCollapsedView() {
         this.noUModsFoundCollapsedViews = new RemoteViews(getPackageName(),
-                R.layout.no_umods_found_notification);
+                R.layout.ongoing_notification__no_umods_found);
 
         Intent updateUModsIntent = new Intent(this.mContext, UModsNotifService.class);
         updateUModsIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
@@ -191,7 +218,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     public void showUnlockedView() {
         setLockState(false);
         enableOperationButton();
-        controlCollapsedViews.setImageViewResource(R.id.notif_lock_button,R.drawable.ic_lock_open_gray_24dp);
+        controlCollapsedViews.setImageViewResource(R.id.notif_lock_button,R.drawable.ic_lock_open_cyan_24dp);
         //Bitmap unlockedIconBitmap = BitmapFactory.decodeResource(this.mContext.getResources(), R.drawable.ic_lock_open_gray_24dp);
         //controlCollapsedViews.setImageViewBitmap(R.id.notif_lock_button,unlockedIconBitmap);
         //controlCollapsedViews.setViewVisibility(R.id.notif_lock_button, View.INVISIBLE);
@@ -205,7 +232,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         //controlCollapsedViews.setImageViewResource(R.id.notif_lock_button,R.drawable.lock_unlock_icon);
         setLockState(true);
         disableOperationButton();
-        controlCollapsedViews.setImageViewResource(R.id.notif_lock_button,R.drawable.ic_lock_outline_black_24dp);
+        controlCollapsedViews.setImageViewResource(R.id.notif_lock_button,R.drawable.ic_lock_outline_white_24dp);
         updateNotification();
     }
 
@@ -219,7 +246,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
                 actionUModIntent, 0);
         controlCollapsedViews.setImageViewResource(R.id.notif_action_button, R.drawable.ic_eject_black_24dp);
         controlCollapsedViews.setOnClickPendingIntent(R.id.notif_action_button, actionUModPendingIntent);
-        //this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        //this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.mNotification);
     }
 
     @Override
@@ -231,22 +258,22 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         //TODO change icon with setImageIcon...Icon.createWithResource...
         controlCollapsedViews.setImageViewResource(R.id.notif_action_button, R.drawable.ic_eject_gray_24dp);
         controlCollapsedViews.setOnClickPendingIntent(R.id.notif_action_button, actionUModPendingIntent);
-        //this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        //this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.mNotification);
         /*
         controlCollapsedViews.setViewVisibility(R.id.notif_action_button, View.INVISIBLE);
-        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.mNotification);
         */
     }
 
     @Override
     public void showUnconnectedPhone() {
         Log.d("NOTIF", "UNCONNECTED");
-        this.setupNotification(this.unconnectedPhoneCollapsedViews);
+        this.changeNotificationViews(this.unconnectedPhoneCollapsedViews);
     }
 
     @Override
     public void showNoUModsFound() {
-        this.setupNotification(this.noUModsFoundCollapsedViews);
+        this.changeNotificationViews(this.noUModsFoundCollapsedViews);
     }
 
     @Override
@@ -273,7 +300,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         PendingIntent actionUModPendingIntent = PendingIntent.getService(this.mContext, (int) System.currentTimeMillis(),
                 actionUModIntent, 0);
 
-        this.notification.contentView = this.controlCollapsedViews;
+        this.mNotification.contentView = this.controlCollapsedViews;
         this.controlCollapsedViews.setTextViewText(R.id.notif_title_text, this.uModAlias);
         this.controlCollapsedViews.setOnClickPendingIntent(R.id.notif_action_button, actionUModPendingIntent);
         //this.controlCollapsedViews.setImageViewResource(R.id.notif_action_button, iconViewId);
@@ -281,12 +308,12 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     }
 
     private void updateNotification(){
-        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE,this.notification);
+        this.notificationManager.notify(GlobalConstants.NOTIFICATION_ID,this.mNotification);
     }
 
     private void setupControlCollapsedView(){
         this.controlCollapsedViews = new RemoteViews(getPackageName(),
-                R.layout.umods_notification_control_and_progress);
+                R.layout.ongoing_notification__umod_control);
 
         Intent updateUModsIntent = new Intent(this.mContext, UModsNotifService.class);
         updateUModsIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
@@ -343,24 +370,40 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         PendingIntent pendingIntent = PendingIntent.getActivity(this.mContext, 0,
                 notificationIntent, 0);
 
-        this.notification = new Notification.Builder(this.mContext).build();
+        //this.mNotificationBuilder = new Notification.Builder(this.mContext);
+
+        this.mNotification = new Notification.Builder(this.mContext).build();
+
         /*
-        Notification notification = new Notification.Builder(this.mContext)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB){
+            mNotification.contentView = this.controlCollapsedViews;
+            //mNotification.bigContentView = expandedViews;
+            mNotification.flags = Notification.FLAG_ONGOING_EVENT;
+            mNotification.icon = R.drawable.logo;
+            mNotification.contentIntent = pendingIntent;
+            mNotification.visibility = Notification.VISIBILITY_PUBLIC;
+        }
+         this.mNotification = this.mNotificationBuilder
+                .setSmallIcon(R.drawable.ic_app_logo__white_untexted)
+                .setAutoCancel(false)
                 .setOngoing(true)
-                .setCustomContentView(controlCollapsedViews)
-                .setCustomBigContentView(expandedViews)
-                .setLargeIcon();
+                .setContent(controlCollapsedViews)
+                .setPriority(Notification.PRIORITY_MAX)
+                .build();
         */
-        notification.contentView = this.controlCollapsedViews;
-        //notification.bigContentView = expandedViews;
-        notification.flags = Notification.FLAG_ONGOING_EVENT;
-        notification.icon = R.drawable.logo;
-        notification.contentIntent = pendingIntent;
-        notification.visibility = Notification.VISIBILITY_PUBLIC;
+
+
+
+        mNotification.contentView = this.controlCollapsedViews;
+        mNotification.flags = Notification.FLAG_ONGOING_EVENT;
+        mNotification.icon = R.drawable.ic_app_logo__white_untexted;
+        mNotification.contentIntent = pendingIntent;
+        mNotification.visibility = Notification.VISIBILITY_PUBLIC;
+
         dispatchNotification();
     }
 
-    private void setupNotification(RemoteViews views){
+    private void changeNotificationViews(RemoteViews views){
         Intent notificationIntent = new Intent(this.mContext, UModsActivity.class);
         notificationIntent.setAction(GlobalConstants.ACTION.MAIN);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
@@ -368,21 +411,12 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         PendingIntent pendingIntent = PendingIntent.getActivity(this.mContext, 0,
                 notificationIntent, 0);
 
-        this.notification = new Notification.Builder(this.mContext).build();
-        /*
-        Notification notification = new Notification.Builder(this.mContext)
-                .setOngoing(true)
-                .setCustomContentView(controlCollapsedViews)
-                .setCustomBigContentView(expandedViews)
-                .setLargeIcon();
-        */
-        notification.contentView = views;
-        //notification.bigContentView = expandedViews;
-        notification.flags = Notification.FLAG_ONGOING_EVENT;
-        notification.icon = R.drawable.logo;
-        notification.contentIntent = pendingIntent;
-        notification.priority = Notification.PRIORITY_MAX;
-        notification.visibility = Notification.VISIBILITY_PUBLIC;
+        this.mNotification = new Notification.Builder(this.mContext).build();
+        mNotification.contentView = views;
+        mNotification.flags = Notification.FLAG_ONGOING_EVENT;
+        mNotification.icon = R.drawable.ic_app_logo__white_untexted;
+        mNotification.visibility = Notification.VISIBILITY_PUBLIC;
+        mNotification.contentIntent = pendingIntent;
         dispatchNotification();
     }
 
@@ -399,12 +433,12 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     @Override
     public void hideSelectionControls() {
-        this.controlCollapsedViews.setViewVisibility(R.id.notif_navigation_buttons, View.INVISIBLE);
+        this.controlCollapsedViews.setViewVisibility(R.id.notif_navigation_buttons, View.GONE);
         updateNotification();
     }
 
     public void dispatchNotification(){
-        ((Service) this.mContext).startForeground(GlobalConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, this.notification);
+        ((Service) this.mContext).startForeground(GlobalConstants.NOTIFICATION_ID, this.mNotification);
     }
 
     @Override
@@ -461,7 +495,7 @@ public static class PreO {
                             piStopService)
                             .build();
 
-            // Create a notification.
+            // Create a mNotification.
             Notification mNotification =
                     new NotificationCompat.Builder(context)
                             .setContentTitle(getNotificationTitle(context))
@@ -482,8 +516,8 @@ public static class PreO {
 
         public static void createNotification(Service context) {
             String channelId = createChannel(context);
-            Notification notification = buildNotification(context, channelId);
-            context.startForeground(ONGOING_NOTIFICATION_ID, notification);
+            Notification mNotification = buildNotification(context, channelId);
+            context.startForeground(ONGOING_NOTIFICATION_ID, mNotification);
         }
 
         private static Notification buildNotification(Service context, String channelId) {
@@ -499,7 +533,7 @@ public static class PreO {
                             piStopService)
                             .build();
 
-            // Create a notification.
+            // Create a mNotification.
             return new Notification.Builder(context, channelId)
                     .setContentTitle(getNotificationTitle(context))
                     .setContentText(getNotificationContent(context))

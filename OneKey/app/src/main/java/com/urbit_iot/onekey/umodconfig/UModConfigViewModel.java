@@ -13,6 +13,7 @@ public class UModConfigViewModel {
     private String uModSysInfoText;
     private String wifiPasswordText;
     private boolean wifiSettingsVisible;
+    private boolean ongoingNotifSwitchChecked;
 
     public UModConfigViewModel(String uModUUID,
                                String connectionStatusText,
@@ -21,7 +22,8 @@ public class UModConfigViewModel {
                                boolean adminLayoutVisible,
                                String uModSysInfoText,
                                String wifiPasswordText,
-                               boolean wifiSettingsVisible) {
+                               boolean wifiSettingsVisible,
+                               boolean ongoingNotifSwitchChecked) {
         this.uModUUID = uModUUID;
         this.connectionStatusText = connectionStatusText;
         this.aliasText = aliasText;
@@ -30,6 +32,7 @@ public class UModConfigViewModel {
         this.uModSysInfoText = uModSysInfoText;
         this.wifiPasswordText = wifiPasswordText;
         this.wifiSettingsVisible = wifiSettingsVisible;
+        this.ongoingNotifSwitchChecked = ongoingNotifSwitchChecked;
     }
 
     public String getuModUUID() {
@@ -96,8 +99,11 @@ public class UModConfigViewModel {
         this.wifiSettingsVisible = wifiSettingsVisible;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        return super.equals(obj);
+    public boolean isOngoingNotifSwitchChecked() {
+        return ongoingNotifSwitchChecked;
+    }
+
+    public void setOngoingNotifSwitchChecked(boolean ongoingNotifSwitchChecked) {
+        this.ongoingNotifSwitchChecked = ongoingNotifSwitchChecked;
     }
 }

@@ -85,8 +85,6 @@ public final class GlobalConstants {
         String LAUNCH_WIFI_SETTINGS = "com.urbit-iot.onekey.action.launchwifisettings";
     }
 
-    public interface NOTIFICATION_ID {
-        public static int FOREGROUND_SERVICE = 101;
-    }
+    public static int NOTIFICATION_ID = 101;
 
 }

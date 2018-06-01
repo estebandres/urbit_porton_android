@@ -310,6 +310,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                 uMod.getSWVersion();
         String wifiPasswordText = null;
         boolean wifiSettingsVisible = uMod.getState() == UMod.State.AP_MODE;
+        boolean ongoingNotifSwitchChecked = uMod.isOngoingNotificationEnabled();
 
         UModConfigViewModel viewModel =
                 new UModConfigViewModel(uModUUID,
@@ -319,7 +320,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         adminLayoutVisible,
                         uModSysInfoText,
                         wifiPasswordText,
-                        wifiSettingsVisible);
+                        wifiSettingsVisible,
+                        ongoingNotifSwitchChecked);
 
         return viewModel;
     }
