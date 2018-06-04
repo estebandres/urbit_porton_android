@@ -35,7 +35,9 @@ public final class UMod {
         AP_MODE(0),
         STATION_MODE(1),
         OTA_UPDATE(2),
-        BLE_MODE(3);
+        FACTORY_RESET(3),
+        REBOOTING(4),
+        BLE_MODE(5);
         private final Integer stateID;
         private static SparseArray<State> map = new SparseArray<>();
 
@@ -44,7 +46,6 @@ public final class UMod {
                 map.put(stateEnum.stateID, stateEnum);
             }
         }
-
         State(Integer stateID){
             this.stateID = stateID;
         }

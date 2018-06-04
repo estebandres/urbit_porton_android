@@ -1,4 +1,4 @@
-package com.urbit_iot.onekey.usersxumod;
+package com.urbit_iot.onekey.umodusers;
 
 import dagger.Module;
 import dagger.Provides;

@@ -58,7 +58,7 @@ public class FactoryResetUMod extends SimpleUseCase<FactoryResetUMod.RequestValu
         //final FactoryResetRPC.Request request = new FactoryResetRPC.Request(null,"FactoryReset",666);
         final FactoryResetRPC.Arguments requestArguments = new FactoryResetRPC.Arguments();
 
-        //TODO Is it neccesary? Perhaps the try and refresh-retry scheme is a good option.
+        //TODO Is it necessary? Perhaps the try and refresh-retry scheme is a good option.
         uModsRepository.refreshUMods();
 
         return uModsRepository.getUMod(values.getUModUUID())
@@ -101,7 +101,7 @@ public class FactoryResetUMod extends SimpleUseCase<FactoryResetUMod.RequestValu
                                     }
                                 })
                                 //wait 12 seconds for umod restart
-                                .delay(12L, TimeUnit.SECONDS)
+                                //.delay(12L, TimeUnit.SECONDS)
                                 .flatMap(new Func1<FactoryResetRPC.Result, Observable<FactoryResetRPC.Result>>() {
                                     @Override
                                     public Observable<FactoryResetRPC.Result> call(FactoryResetRPC.Result result) {

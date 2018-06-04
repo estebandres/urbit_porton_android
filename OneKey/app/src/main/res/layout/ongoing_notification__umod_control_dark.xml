@@ -60,7 +60,7 @@
             android:layout_alignParentEnd="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="3dp"
+            android:layout_marginEnd="2dp"
             android:padding="3dp"
             android:background="@drawable/ongoing_notification__controls_layout_shadowed_background">
 

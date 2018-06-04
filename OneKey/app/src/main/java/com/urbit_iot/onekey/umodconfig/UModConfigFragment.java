@@ -48,7 +48,7 @@ import android.widget.TextView;
 import com.google.common.base.Strings;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umodsnotification.UModsNotifService;
-import com.urbit_iot.onekey.usersxumod.UModUsersActivity;
+import com.urbit_iot.onekey.umodusers.UModUsersActivity;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -89,6 +89,10 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     private FloatingActionButton mUploadButton;
 
     private Dialog mFirmwareUpdateDialog;
+
+    private Dialog mFactoryResetDialog;
+
+    private Dialog mFirmwareUpdateProgressDialog;
 
     private ProgressBar mPorgressBar;
 
@@ -218,11 +222,74 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+                                //mPresenter.cancelFirmwareUpgrade();
+                                Log.d("OTADialog", "CANCEL");
+                            }
+                        })
+                .setPositiveButton("ACTUALIZAR", (dialogInterface, i) -> {
+                    mFirmwareUpdateProgressDialog.show();
+                    mPresenter.updateUModFirmware();
+                })
+                .setCancelable(false)
+                .create();
+
+        LayoutInflater dialogViewInflater = this.getLayoutInflater();
+        View dialogView = dialogViewInflater.inflate(R.layout.firmware_update__dialog, null);
+        TextView dialogMessage = dialogView.findViewById(R.id.firmware_update_dialog__message);
+        dialogMessage.setText("Este proceso podría tomar hasta 60 segundos.");
+        //ProgressBar dialogProgressBar = dialogView.findViewById(R.id.firmware_update_dialog__progress_bar);
+
+        mFirmwareUpdateProgressDialog =  new AlertDialog.Builder(getActivity())
+                .setTitle(R.string.firmware_update_title)
+                //.setView(R.layout.firmware_update__dialog)
+                .setView(dialogView)
+                .setNegativeButton(R.string.firmware_update_cancel_text,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
                                 mPresenter.cancelFirmwareUpgrade();
+                                Log.d("OTADialog", "CANCEL");
                             }
                         })
                 .setCancelable(false)
                 .create();
+
+        /*
+        LayoutInflater dialogViewInflater = this.getLayoutInflater();
+        View dialogView = dialogViewInflater.inflate(R.layout.firmware_update__dialog, null);
+        TextView dialogMessage = dialogView.findViewById(R.id.firmware_update_dialog__message);
+        ProgressBar dialogProgressBar = dialogView.findViewById(R.id.firmware_update_dialog__progress_bar);
+        mFirmwareUpdateDialog =  new AlertDialog.Builder(getActivity())
+                .setTitle(R.string.firmware_update_title)
+                //.setView(R.layout.firmware_update__dialog)
+                .setView(dialogView)
+                .setNegativeButton(R.string.firmware_update_cancel_text,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //mPresenter.cancelFirmwareUpgrade();
+                                Log.d("OTADialog", "CANCEL");
+                            }
+                        })
+                .setPositiveButton("ACTUALIZAR", (dialogInterface, i) -> {
+                    dialogMessage.setText("Este proceso podría tomar hasta 60 segundos.");
+                    dialogProgressBar.setVisibility(View.VISIBLE);
+                    //mPresenter.updateUModFirmware();
+                })
+                .setCancelable(false)
+                .create();
+        */
+        mFactoryResetDialog = new AlertDialog.Builder(getActivity())
+                .setTitle("Restauración de Fabrica")
+                .setMessage("Esta operacion restablecerá las configuraciones del módulo y eliminará todos los usuarios.")
+                .setNegativeButton("Cancelar",
+                        (dialogInterface, i) -> Log.d("FactoryDialog", "CANCEL"))
+                .setPositiveButton("RESTAURAR", (dialogInterface, i) -> {
+                    mPresenter.factoryResetUMod();
+                })
+                .setCancelable(false)
+                .create();
+
 
         setHasOptionsMenu(true);
         setRetainInstance(true);
@@ -314,19 +381,13 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
             mFirmwareUpdateButton.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    mPresenter.updateUModFirmware();
+                    //mPresenter.updateUModFirmware();
                     mFirmwareUpdateDialog.show();
                     return false;
                 }
             });
 
-            mFactoryResetButton.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    mPresenter.factoryResetUMod();
-                    return false;
-                }
-            });
+            mFactoryResetButton.setOnClickListener(view -> mFactoryResetDialog.show());
 
             mUsersButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -364,7 +425,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     @Override
     public void hideUpdateDialog() {
-        mFirmwareUpdateDialog.dismiss();
+        mFirmwareUpdateProgressDialog.dismiss();
     }
 
     @Override
@@ -384,7 +445,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     @Override
     public void showResetSuccessMsg() {
-        Snackbar.make(mAliasTextInput, "Restauración Exitosa.", Snackbar.LENGTH_LONG).show();
+        Snackbar.make(mAliasTextInput, "Restauración Iniciada.", Snackbar.LENGTH_LONG).show();
     }
 
     @Override

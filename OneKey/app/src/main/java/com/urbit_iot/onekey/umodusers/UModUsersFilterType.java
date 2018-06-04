@@ -1,4 +1,4 @@
-package com.urbit_iot.onekey.usersxumod;
+package com.urbit_iot.onekey.umodusers;
 
 /**
  * Used with the filter spinner in the umod users list.

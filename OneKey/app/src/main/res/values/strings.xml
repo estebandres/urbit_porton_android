@@ -79,7 +79,7 @@
     <string name="configuration_error"> falló al configurarse.</string>
     <string name="configuration_success"> configurado exitosamente!</string>
     <string name="firmware_update_title">Actualización de Firmware</string>
-    <string name="firmware_update_started_message">Actualización iniciada. Este proceso podría tomar hasta 60 segundos...</string>
+    <string name="firmware_update_started_message">Esta operación actualizará el software del módulo pero todas sus configuraciones seran conservadas.</string>
     <string name="firmware_update_cancel_text">Cancelar</string>
     <string name="delete_user_success_message">USUARIO ELIMINADO</string>
     <string name="delete_user_fail_message">EL USUARIO NO PUDO ELIMINARSE</string>
@@ -92,6 +92,7 @@
     <string name="notif_accessing_progress_subtext">SOLICITANDO PERMISO...</string>
     <string name="ongoing_notif_enabled_failed">Fallo al habilitar la notificación</string>
     <string name="ongoing_notif_disbled_failed">Fallo al desabilitar la notificación</string>
+    <string name="umod_users_bar_title">Usuarios</string>
     <!-- Solves annoying issue with password-eye -->
     <item name="visible" type="id"/>
     <item name="masked" type="id"/>

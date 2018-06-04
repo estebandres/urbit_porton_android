@@ -51,8 +51,8 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         this.setupControlCollapsedView();
         this.setupNoUModsFoundCollapsedView();
         this.setupUnconnectedPhoneCollapsedViews();
-        this.setupNoConfiguredUMods();
-        this.setupAllUModsAreNotifDisabled();
+        this.setupNoConfiguredUModsRemoteViews();
+        this.setupAllUModsAreNotifDisabledRemoteViews();
         this.setupNotification();
 
         this.lockState = true;
@@ -62,12 +62,22 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         */
     }
 
-    private void setupAllUModsAreNotifDisabled() {
+    private void setupAllUModsAreNotifDisabledRemoteViews() {
         this.allUModsAreNotifDisabledCollapsedViews = new RemoteViews(getPackageName(),
                 R.layout.ongoing_notification__notif_disabled_for_all_umods);
+        Intent openAppIntent = new Intent(this.mContext, UModsActivity.class);
+
+        openAppIntent.setAction(GlobalConstants.ACTION.MAIN);
+        openAppIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent openAppPendingIntent = PendingIntent.getActivity(this.mContext, 0,
+                openAppIntent, 0);
+
+        this.allUModsAreNotifDisabledCollapsedViews.setOnClickPendingIntent(R.id.ongoing_notification__notification_layout, openAppPendingIntent);
+
     }
 
-    private void setupNoConfiguredUMods() {
+    private void setupNoConfiguredUModsRemoteViews() {
         this.noConfiguredUModsCollapsedViews = new RemoteViews(getPackageName(),
                 R.layout.ongoing_notification__no_configured_umods);
 

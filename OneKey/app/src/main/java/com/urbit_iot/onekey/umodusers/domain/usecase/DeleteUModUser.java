@@ -1,4 +1,4 @@
-package com.urbit_iot.onekey.usersxumod.domain.usecase;
+package com.urbit_iot.onekey.umodusers.domain.usecase;
 
 import android.support.annotation.NonNull;
 import android.util.Log;

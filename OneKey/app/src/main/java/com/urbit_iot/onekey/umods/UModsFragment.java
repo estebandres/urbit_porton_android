@@ -210,6 +210,20 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     }
 
     @Override
+    public void refreshOngoingNotification() {
+        if (UModsNotifService.SERVICE_IS_ALIVE){
+            Context context = getContext();
+            if (context != null){
+                Intent serviceIntent = new Intent(context, UModsNotifService.class);
+                serviceIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
+                context.startService(serviceIntent);
+            } else {
+                Log.e("config_fr", "Context is null");
+            }
+        }
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_clear_umods:

@@ -1,4 +1,4 @@
-package com.urbit_iot.onekey.usersxumod;
+package com.urbit_iot.onekey.umodusers;
 
 import android.content.Context;
 import android.content.Intent;

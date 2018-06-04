@@ -177,7 +177,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 Log.e("triggerByNotification","" + e.getMessage() + Thread.currentThread().getName());
-                Bugfender.e("triggerByNotification","Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage() + Thread.currentThread().getName());
+                //Bugfender.e("triggerByNotification","Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage() + Thread.currentThread().getName());
                 Timber.e("Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage() + Thread.currentThread().getName());
                 mUModsNotifView.hideProgressView();
                 cancelPreventiveLockingSubject.onNext(true);
@@ -187,7 +187,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
             @Override
             public void onNext(TriggerUModByNotif.ResponseValues responseValues) {
                 Log.d("triggerByNotification",responseValues.getResult().getMessage());
-                Bugfender.d("triggerByNotification","Successful Trigger UModUUID: " + uModUUID + " " +responseValues.getResult().toString());
+                //Bugfender.d("triggerByNotification","Successful Trigger UModUUID: " + uModUUID + " " +responseValues.getResult().toString());
                 Timber.d("Successful Trigger UModUUID: " + uModUUID + " " +responseValues.getResult().toString());
             }
         });

@@ -71,6 +71,8 @@ public interface UModsContract {
         void startOngoingNotification();
 
         void shutdownOngoingNotification();
+
+        void refreshOngoingNotification();
     }
 
     interface Presenter extends BasePresenter {

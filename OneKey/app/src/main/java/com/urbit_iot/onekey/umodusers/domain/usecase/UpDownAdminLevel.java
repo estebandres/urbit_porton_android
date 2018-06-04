@@ -1,4 +1,4 @@
-package com.urbit_iot.onekey.usersxumod.domain.usecase;
+package com.urbit_iot.onekey.umodusers.domain.usecase;
 
 import android.support.annotation.NonNull;
 
@@ -6,7 +6,6 @@ import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;

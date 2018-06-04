@@ -1,4 +1,4 @@
-package com.urbit_iot.onekey.usersxumod;
+package com.urbit_iot.onekey.umodusers;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -10,6 +10,7 @@ import android.support.test.espresso.IdlingResource;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 
 
 import com.urbit_iot.onekey.R;
@@ -43,6 +44,8 @@ public class UModUsersActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setDisplayShowHomeEnabled(true);
+        actionBar.setTitle(R.string.umod_users_bar_title);
+        toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
         String uModUUID = getIntent().getStringExtra(UModConfigFragment.ARGUMENT_UMOD_USERS);
 

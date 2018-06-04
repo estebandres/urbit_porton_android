@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -593,6 +594,8 @@ public class UModsRepository implements UModsDataSource {
     @Override
     public Observable<File> getFirmwareImageFile(UMod uMod) {
         return mUModsInternetDataSource.getFirmwareImageFile(uMod);
+        // TODO remove mock
+        //return Observable.just(new File("dummy_file.txt")).delay(500, TimeUnit.MILLISECONDS);
     }
 
     @Override

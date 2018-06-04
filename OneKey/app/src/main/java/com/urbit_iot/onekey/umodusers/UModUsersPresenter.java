@@ -1,4 +1,4 @@
-package com.urbit_iot.onekey.usersxumod;
+package com.urbit_iot.onekey.umodusers;
 
 import android.app.Activity;
 import android.support.annotation.NonNull;
@@ -11,13 +11,13 @@ import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.umods.UModsFragment;
-import com.urbit_iot.onekey.usersxumod.domain.usecase.UpdateUserType;
-import com.urbit_iot.onekey.usersxumod.domain.usecase.DeleteUModUser;
-import com.urbit_iot.onekey.usersxumod.domain.usecase.GetUModUsers;
-import com.urbit_iot.onekey.usersxumod.domain.usecase.UpDownAdminLevel;
+import com.urbit_iot.onekey.umodusers.domain.usecase.UpdateUserType;
+import com.urbit_iot.onekey.umodusers.domain.usecase.DeleteUModUser;
+import com.urbit_iot.onekey.umodusers.domain.usecase.GetUModUsers;
+import com.urbit_iot.onekey.umodusers.domain.usecase.UpDownAdminLevel;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
-import com.urbit_iot.onekey.usersxumod.UModUserViewModel.LevelIcon;
-import com.urbit_iot.onekey.usersxumod.UModUserViewModel.LevelButtonImage;
+import com.urbit_iot.onekey.umodusers.UModUserViewModel.LevelIcon;
+import com.urbit_iot.onekey.umodusers.UModUserViewModel.LevelButtonImage;
 import java.util.ArrayList;
 import java.util.List;
 

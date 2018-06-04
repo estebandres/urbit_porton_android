@@ -1,4 +1,4 @@
-package com.urbit_iot.onekey.usersxumod;
+package com.urbit_iot.onekey.umodusers;
 
 import com.urbit_iot.onekey.OneKeyApplication;
 import com.urbit_iot.onekey.data.source.UModsRepositoryComponent;

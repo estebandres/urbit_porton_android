@@ -57,8 +57,8 @@ public class OneKeyApplication extends Application {
 
         //BUGFENDER SETUP------------------------------------------------------------------
         Bugfender.init(this, "MplxVduASCOpZgp9YLGsIH3gx0Ilnmq3", BuildConfig.DEBUG);
-        //Bugfender.enableLogcatLogging();
-        //Bugfender.enableUIEventLogging(this);
+        Bugfender.enableLogcatLogging();
+        Bugfender.enableUIEventLogging(this);
         Bugfender.enableCrashReporting();
         Bugfender.forceSendOnce();
         Log.e("Bugfender", "DEVICE ID:  " + Bugfender.getDeviceIdentifier());
@@ -66,7 +66,7 @@ public class OneKeyApplication extends Application {
 
         //LOGGLY SETUP------------------------------------------------------------------
         //Done in the chooser activity...
-
+        //CRASHLYTICS SETUP------------------------------------------------------------------
         Fabric.with(this, new Crashlytics());
 
 
