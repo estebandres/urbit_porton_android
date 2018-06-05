@@ -70,7 +70,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
     private TextView mNoUModsMainView;
 
-    private TextView mNoUModsAddView;
+    //private TextView mNoUModsAddView;
 
     private LinearLayout mUModsView;
 
@@ -128,6 +128,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         mNoUModsView = root.findViewById(R.id.no_umods);
         mNoUModsIcon = (ImageView) root.findViewById(R.id.no_umods_icon);
         mNoUModsMainView = (TextView) root.findViewById(R.id.no_umods_main);
+        /*
         mNoUModsAddView = (TextView) root.findViewById(R.id.no_umods_add_some);
         mNoUModsAddView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -135,6 +136,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 showAddUMod();
             }
         });
+        */
 
         this.ongoingNotificationSwitch = (Switch) root.findViewById(R.id.umods_frag__ongoing_notif_switch);
         this.ongoingNotificationSwitch.setChecked(this.mPresenter.fetchOngoingNotificationPreference());
@@ -351,7 +353,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     public void showNoUMods() {
         showNoTasksViews(
                 getResources().getString(R.string.no_umdos_all),
-                R.drawable.ic_assignment_turned_in_24dp,
+                R.drawable.ic__modules_not_found_black,
                 false
         );
     }
@@ -376,7 +378,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
         mNoUModsMainView.setText(mainText);
         mNoUModsIcon.setImageDrawable(getResources().getDrawable(iconRes));
-        mNoUModsAddView.setVisibility(showAddView ? View.VISIBLE : View.GONE);
+        //mNoUModsAddView.setVisibility(showAddView ? View.VISIBLE : View.GONE);
     }
 
     @Override

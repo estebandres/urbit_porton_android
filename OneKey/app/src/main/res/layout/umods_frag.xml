@@ -90,23 +90,31 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
+            android:layout_margin="50dp"
             android:orientation="vertical">
 
             <ImageView
                 android:id="@+id/no_umods_icon"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_assignment_turned_in_24dp" />
+                android:src="@drawable/ic__modules_not_found_black" />
 
             <TextView
                 android:id="@+id/no_umods_main"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:textAlignment="center"
                 android:text="@string/no_umdos_all"
-                android:layout_marginBottom="@dimen/list_item_padding" />
+                android:textColor="#8864ffda"
+                android:textSize="16sp"
+                android:textStyle="italic"
+                android:layout_margin="20dp"/>
 
+            <!--
+
+                android:layout_marginBottom="@dimen/list_item_padding"
             <TextView
                 android:id="@+id/no_umods_add_some"
                 android:layout_width="wrap_content"
@@ -115,6 +123,8 @@
                 android:background="@drawable/touch_feedback"
                 android:gravity="center"
                 android:text="@string/no_tasks_add" />
+            -->
+
 
         </LinearLayout>
     </RelativeLayout>
