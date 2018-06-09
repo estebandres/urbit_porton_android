@@ -16,6 +16,8 @@ import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -58,8 +60,14 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                         Log.d("GetUM1x1", uMod.toString());
                         //TODO Replace actual isOpen logic or remove it completely
                         //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
-                        return (uMod.isOpen() || uMod.isInAPMode()) && (uMod.getuModSource() == UMod.UModSource.LAN_SCAN) ;
+                        //return (uMod.isOpen() || uMod.isInAPMode()) && (uMod.getuModSource() == UMod.UModSource.LAN_SCAN) ;
+                        return (uMod.isOpen() || uMod.isInAPMode()) || uMod.belongsToAppUser() ;
                     }
+                })
+                .filter(uMod -> {
+                    long diffInMillies = Math.abs(new Date().getTime() -  uMod.getLastUpdateDate().getTime());
+                    long diffInHours = TimeUnit.HOURS.convert(diffInMillies, TimeUnit.MILLISECONDS);
+                    return diffInHours < 9L;
                 })
                 //Asks to the esp if the admin has authorized me when PENDING.
                 .flatMap(new Func1<UMod, Observable<UMod>>() {

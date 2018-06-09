@@ -90,7 +90,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     @Override
     public void subscribe() {
         mUModsView.clearAllItems();
-        loadUMods(true);
+        loadUMods(false);
         Preference<Boolean> ongoingNotificationPref = rxSharedPreferences.getBoolean(GlobalConstants.ONGOING_NOTIFICATION_STATE_KEY);
         if (ongoingNotificationPref.isSet()){
             if (ongoingNotificationPref.get()){
@@ -123,6 +123,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     @Override
     public void loadUMods(boolean forceUpdate) {
         // Simplification for sample: a network reload will be forced on first load.
+        Log.d("umods_pr","Forced UPDATE: " + forceUpdate + "  FIRST LOAD: " + mFirstLoad);
         loadUModsOneByOne(forceUpdate || mFirstLoad, true);
         mFirstLoad = false;
     }
@@ -185,7 +186,9 @@ public class UModsPresenter implements UModsContract.Presenter {
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
-        //this.mUModsView.clearAllItems();
+        if (forceUpdate){
+            this.mUModsView.clearAllItems();
+        }
         final IntegerContainer onNextCount = new IntegerContainer(0);
 
         GetUModsOneByOne.RequestValues requestValue = new GetUModsOneByOne.RequestValues(forceUpdate,
@@ -255,8 +258,8 @@ public class UModsPresenter implements UModsContract.Presenter {
 
         if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){//LAN_SCAN means online but can be dnssd/ap/ble discovery
             //shows action button only when online and is in station mode.
+            //TODO add button text alternatives as String resource or GlobalConstants??.
             if (uMod.getState() == UMod.State.STATION_MODE) {
-                //TODO add button text alternatives as String resource or GlobalConstants??.
                 sliderEnabled = true;
                 switch (uMod.getAppUserLevel()) {
                     case PENDING:

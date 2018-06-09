@@ -231,7 +231,8 @@ public final class UMod {
                 @Nullable String lastReport,
                 @Nullable String productUUID,
                 @Nullable String hwVersion,
-                @Nullable String swVersion){
+                @Nullable String swVersion,
+                @Nullable Date lastUpdateDate){
         this.uModUUID = uuid;
         this.ongoingNotificationEnabled =  ongoingNotifEnabled;
         this.alias = alias;
@@ -245,7 +246,7 @@ public final class UMod {
         this.productUUID = productUUID;
         this.hwVersion = hwVersion;
         this.swVersion = swVersion;
-        this.lastUpdateDate = new Date();
+        this.lastUpdateDate = lastUpdateDate;
     }
 
     public String getUModRequestTopic(){

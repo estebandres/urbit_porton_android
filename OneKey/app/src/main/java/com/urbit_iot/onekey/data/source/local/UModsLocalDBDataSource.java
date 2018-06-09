@@ -43,7 +43,9 @@ import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.File;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -94,8 +96,15 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 String productUUID = c.getString(c.getColumnIndexOrThrow(UModEntry.PROD_UUID_CN));
                 String hwVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.HW_VERSION_CN));
                 String swVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.SW_VERSION_CN));
+                Date lastUpdate;
+                try{
+                    lastUpdate = dateFormat.parse(c.getString(c.getColumnIndexOrThrow(UModEntry.LAST_UPDATE_DATE_CN)));
+                } catch (ParseException parseExc){
+                    lastUpdate = new Date(0L);
+                }
+
                 return new UMod(uuid, alias, wifiSSID, connectionAddress, state, userStatus, notifEnabled,
-                        macAddress, lastReport, productUUID, hwVersion, swVersion);
+                        macAddress, lastReport, productUUID, hwVersion, swVersion, lastUpdate);
             }
         };
         this.uModLocalDBBrander = new Observable.Transformer<UMod, UMod>() {
