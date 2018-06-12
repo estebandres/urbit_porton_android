@@ -1,25 +1,19 @@
 package com.urbit_iot.onekey.data.source.lan;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.fernandocejas.frodo.annotation.RxLogObservable;
-import com.github.druk.rxdnssd.BonjourService;
 import com.github.druk.rxdnssd.RxDnssd;
-import com.github.druk.rxdnssd.RxDnssdBindable;
 import com.urbit_iot.onekey.data.UMod;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import rx.Observable;
-import rx.functions.Action0;
-import rx.functions.Action1;
-import rx.functions.Func0;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
@@ -32,21 +26,44 @@ public class UModsDNSSDScanner {
     private Map<String, UMod> mCachedUMods;
     private PublishSubject<UMod> freshUModDnsScan;
     private PublishSubject<Long> uModDnsScanTrigger;
+    private AtomicBoolean scanInProgress;//TODO replace with atomicBoolean or a custom Lock that can be
+    //lock by one thread and unlocked by other.
+    /*
+    public class MyLock implements Lock {
 
+    private boolean isLocked = false;
+
+    public synchronized void lock() throws InterruptedException {
+        while (isLocked)
+            wait();
+        isLocked = true;
+    }
+
+    public synchronized void unlock() {
+        if (!isLocked)
+            throw new IllegalStateException();
+        isLocked = false;
+        notify();
+    }
+
+}
+     */
     public UModsDNSSDScanner(RxDnssd rxDnssd){
         this.mCachedUMods = new LinkedHashMap<>();
         this.rxDnssd = rxDnssd;
+        this.scanInProgress = new AtomicBoolean(false);
         this.freshUModDnsScan = PublishSubject.create();
         this.uModDnsScanTrigger = PublishSubject.create();
         //TODO reconsider continuous dnssd discovery. When do I need to update constantly??
         //this.continuousBrowseLANForUMods();
-
+        /*
         Observable.interval(10, TimeUnit.SECONDS)
                 .startWith(1L)
                 .subscribeOn(Schedulers.io())
                 .doOnNext(n -> singleScan())
                 .onErrorResumeNext(Observable.just(1234L))
                 .subscribe();
+        */
         //TODO unsubscribe when application is destroyed
 
     }
@@ -90,22 +107,69 @@ public class UModsDNSSDScanner {
         return uModUUID;
     }
 
+    //@RxLogObservable
     synchronized public Observable<UMod> browseLANForUMods(){
-        return Observable.from(this.mCachedUMods.values());
+        //Log.d("dnssd_scan", "BROWSE ALL THREAD: " + Thread.currentThread().getName() + "  scanInProgress: " + scanInProgress.get());
+        //return Observable.from(this.mCachedUMods.values());
+        return Observable.just(true)
+                .map(aBoolean -> scanInProgress.compareAndSet(false,true))
+                .flatMap(mutexWasAcquired -> {
+                    if (mutexWasAcquired){
+                        Log.d("dnssd_scan", "AQC");
+                        return singleScan();
+                    } else {
+                        Log.d("dnssd_scan", "NOT AQC");
+                        if (freshUModDnsScan.hasCompleted()){
+                            Log.d("dnssd_scan", "SUBJECT COMP");
+                            freshUModDnsScan = PublishSubject.create();
+                        }
+                        return freshUModDnsScan.asObservable()
+                                .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
+                                .doOnError(throwable -> scanInProgress.compareAndSet(true, false))
+                                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false))
+                                .doOnTerminate(() -> scanInProgress.compareAndSet(true, false))
+                                .doOnCompleted(() -> scanInProgress.compareAndSet(true, false));
+                    }
+                });
     }
 
     synchronized public Observable<UMod> browseLANForUMod(final String uModUUID){
+        /*
         UMod cachedUMod = this.mCachedUMods.get(uModUUID);
         if (cachedUMod == null){
             return Observable.empty();
         } else {
             return Observable.just(cachedUMod);
         }
+        */
+        return Observable.just(true)
+                .map(aBoolean -> scanInProgress.compareAndSet(false,true))
+                .flatMap(mutexWasAcquired -> {
+                    if (mutexWasAcquired){
+                        Log.d("dnssd_scan", "AQC");
+                        return singleScan()
+                                .filter(uMod -> uMod.getUUID().contains(uModUUID));//TODO improve filter using regex
+                    } else {
+                        Log.d("dnssd_scan", "NOT AQC");
+                        if (freshUModDnsScan.hasCompleted()){
+                            Log.d("dnssd_scan", "SUBJECT COMP");
+                            freshUModDnsScan = PublishSubject.create();
+                        }
+                        return freshUModDnsScan.asObservable()
+                                .filter(uMod -> uMod.getUUID().contains(uModUUID))//TODO improve filter using regex
+                                .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
+                                .doOnError(throwable -> scanInProgress.compareAndSet(true, false))
+                                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false))
+                                .doOnTerminate(() -> scanInProgress.compareAndSet(true, false))
+                                .doOnCompleted(() -> scanInProgress.compareAndSet(true, false));
+                    }
+                });
     }
 
 
     //Keeps browsing the LAN for 5 seconds maximum.
     //@RxLogObservable
+    /*
     public void singleScan(){
         this.mCachedUMods.clear();
         rxDnssd.browse("_http._tcp.","local.")
@@ -133,6 +197,32 @@ public class UModsDNSSDScanner {
                 }
             })
             .subscribe();
+    }
+    */
+    //@RxLogObservable
+    public Observable<UMod> singleScan(){
+        return rxDnssd.browse("_http._tcp.","local.")
+                .compose(rxDnssd.resolve())
+                .compose(rxDnssd.queryRecords())
+                .takeUntil(Observable.timer(6000L, TimeUnit.MILLISECONDS))
+                .distinct()
+                .filter(bonjourService ->
+                        bonjourService != null
+                        && !bonjourService.isLost()
+                        && bonjourService.getHostname() != null
+                        && bonjourService.getHostname().contains("urbit")//TODO improve filter using regex
+                        && bonjourService.getInet4Address() != null)
+                .map(bonjourService -> {
+                    String uModUUID = getUUIDFromDiscoveryHostName(bonjourService.getHostname());
+                    return new UMod(uModUUID,
+                            bonjourService.getInet4Address().getHostAddress(),
+                            true);
+                })
+                .doOnNext(uMod -> freshUModDnsScan.onNext(uMod))
+                .doOnError(throwable -> scanInProgress.compareAndSet(true, false))
+                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false))
+                .doOnTerminate(() -> scanInProgress.compareAndSet(true, false))
+                .doOnCompleted(() -> scanInProgress.compareAndSet(true, false));
     }
 
     /*

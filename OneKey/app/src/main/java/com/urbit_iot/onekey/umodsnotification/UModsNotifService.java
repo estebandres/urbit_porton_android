@@ -112,6 +112,9 @@ public class UModsNotifService extends Service{
                 //Toast.makeText(this, "UPDATE UMOD", Toast.LENGTH_SHORT).show();
                 this.mPresenter.loadUMods(true);
                 break;
+            case GlobalConstants.ACTION.REFRESH_ON_CACHED:
+                this.mPresenter.loadUMods(false);
+                break;
             case GlobalConstants.ACTION.WIFI_CONNECTED:
                 this.mPresenter.wifiIsOn();
                 break;

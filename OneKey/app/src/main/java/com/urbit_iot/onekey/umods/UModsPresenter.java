@@ -125,6 +125,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         // Simplification for sample: a network reload will be forced on first load.
         Log.d("umods_pr","Forced UPDATE: " + forceUpdate + "  FIRST LOAD: " + mFirstLoad);
         loadUModsOneByOne(forceUpdate || mFirstLoad, true);
+        //loadUModsOneByOne(forceUpdate, true);
         mFirstLoad = false;
     }
 
@@ -202,7 +203,9 @@ public class UModsPresenter implements UModsContract.Presenter {
                     Log.e("umods_pr", "getUModsOnexOne didn't retreive any result: " + onNextCount);
                     mUModsView.showNoUMods();
                 }
-                mUModsView.refreshOngoingNotification();
+                if (forceUpdate){
+                    mUModsView.refreshOngoingNotification();
+                }
             }
 
             @Override

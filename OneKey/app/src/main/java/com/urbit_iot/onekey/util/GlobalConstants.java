@@ -85,6 +85,7 @@ public final class GlobalConstants {
         String WIFI_UNUSABLE = "com.urbit-iot.onekey.action.wifiunusable";
         String LAUNCH_WIFI_SETTINGS = "com.urbit-iot.onekey.action.launchwifisettings";
         String SHUTDOWN_SERVICE = "com.urbit-iot.onekey.action.shutdownservice";
+        String REFRESH_ON_CACHED = "com.urbit-iot.onekey.action.refreshoncached";
     }
 
     public static int NOTIFICATION_ID = 101;

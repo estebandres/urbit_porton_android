@@ -38,6 +38,7 @@ import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.LanOnly;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -112,6 +113,7 @@ public class UModsRepository implements UModsDataSource {
         mUModsLANDataSource = checkNotNull(uModsRemoteDataSource);
         mUModsLocalDataSource = checkNotNull(uModsLocalDataSource);
         this.mUModsInternetDataSource = checkNotNull(uModsInternetDataSource);
+        this.mCachedUMods = new LinkedHashMap<>();
         this.uModCacheBrander = new Observable.Transformer<UMod, UMod>() {
             @Override
             public Observable<UMod> call(Observable<UMod> uModObservable) {
@@ -246,7 +248,8 @@ public class UModsRepository implements UModsDataSource {
             Log.d("umods_rep", "cached first" + mCachedUMods);
             return Observable.concatDelayError(
                     cacheOrDBUModObs.defaultIfEmpty(null),
-                    lanUModObs)
+                    //lanUModObs,
+                    Observable.empty())
                     .doOnUnsubscribe(new Action0() {
                         @Override
                         public void call() {

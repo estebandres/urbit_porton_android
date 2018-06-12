@@ -14,12 +14,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import rx.Observable;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
 /**
  * Created by steve-urbit on 30/01/18.
@@ -28,34 +30,84 @@ import rx.schedulers.Schedulers;
 public class UModsWiFiScanner {
     private final Context appContext;
     private Map<String, UMod> mCachedAPModeUMods;
+    private AtomicBoolean scanInProgress;
+    private PublishSubject<UMod> freshUModDnsScan;
 
     public UModsWiFiScanner(Context appContext) {
         this.appContext = appContext;
         this.mCachedAPModeUMods = new LinkedHashMap<>();
+        this.scanInProgress = new AtomicBoolean(false);
+        this.freshUModDnsScan = PublishSubject.create();
         //this.continuousWiFiScann();
+        /*
         Observable.interval(10, TimeUnit.SECONDS)
                 .startWith(1L)
                 .subscribeOn(Schedulers.io())
                 .doOnNext(n -> continuousWiFiScann())
                 .onErrorResumeNext(Observable.just(1234L))
                 .subscribe();
+        */
         //TODO unsubscribe when application is destroyed
     }
 
     synchronized public Observable<UMod> browseWiFiForUMods() {
         //return scanWiFi(null);
-        return Observable.from(this.mCachedAPModeUMods.values());
+        //return Observable.from(this.mCachedAPModeUMods.values());
+        return Observable.just(true)
+                .map(aBoolean -> scanInProgress.compareAndSet(false,true))
+                .flatMap(mutexWasAcquired -> {
+                    if (mutexWasAcquired){
+                        Log.d("wifi_scan", "AQC");
+                        return observableWiFiScanResults();
+                    } else {
+                        Log.d("wifi_scan", "NOT AQC");
+                        if (freshUModDnsScan.hasCompleted()){
+                            Log.d("wifi_scan", "SUBJECT COMP");
+                            freshUModDnsScan = PublishSubject.create();
+                        }
+                        return freshUModDnsScan.asObservable()
+                                .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
+                                .doOnError(throwable -> scanInProgress.compareAndSet(true, false))
+                                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false))
+                                .doOnTerminate(() -> scanInProgress.compareAndSet(true, false))
+                                .doOnCompleted(() -> scanInProgress.compareAndSet(true, false));
+                    }
+                });
     }
 
     synchronized public Observable<UMod> browseWiFiForUMod(String uModUUID) {
         //return scanWiFi(uModUUID);
 
+        /*
         UMod cachedUMod = this.mCachedAPModeUMods.get(uModUUID);
         if (cachedUMod == null){
             return Observable.empty();
         } else {
             return Observable.just(cachedUMod);
         }
+        */
+        return Observable.just(true)
+                .map(aBoolean -> scanInProgress.compareAndSet(false,true))
+                .flatMap(mutexWasAcquired -> {
+                    if (mutexWasAcquired){
+                        Log.d("wifi_scan", "AQC");
+                        return observableWiFiScanResults()
+                                .filter(uMod -> uMod.getUUID().contains(uModUUID));//TODO improve filter using regex
+                    } else {
+                        Log.d("wifi_scan", "NOT AQC");
+                        if (freshUModDnsScan.hasCompleted()){
+                            Log.d("wifi_scan", "SUBJECT COMP");
+                            freshUModDnsScan = PublishSubject.create();
+                        }
+                        return freshUModDnsScan.asObservable()
+                                .filter(uMod -> uMod.getUUID().contains(uModUUID))//TODO improve filter using regex
+                                .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
+                                .doOnError(throwable -> scanInProgress.compareAndSet(true, false))
+                                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false))
+                                .doOnTerminate(() -> scanInProgress.compareAndSet(true, false))
+                                .doOnCompleted(() -> scanInProgress.compareAndSet(true, false));
+                    }
+                });
 
     }
 
@@ -164,6 +216,11 @@ public class UModsWiFiScanner {
                     mappedUMod.setAlias(scanResult.SSID);
                     mappedUMod.setState(UMod.State.AP_MODE);
                     return mappedUMod;
-                });
+                })
+                .doOnNext(uMod -> freshUModDnsScan.onNext(uMod))
+                .doOnError(throwable -> scanInProgress.compareAndSet(true, false))
+                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false))
+                .doOnTerminate(() -> scanInProgress.compareAndSet(true, false))
+                .doOnCompleted(() -> scanInProgress.compareAndSet(true, false));
     }
 }

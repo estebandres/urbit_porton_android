@@ -24,6 +24,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -80,6 +81,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
     private Switch ongoingNotificationSwitch;
 
+    private ProgressBar umodsScanProgressBar;
+
     public UModsFragment() {
         // Requires empty public constructor
     }
@@ -128,6 +131,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         mNoUModsView = root.findViewById(R.id.no_umods);
         mNoUModsIcon = (ImageView) root.findViewById(R.id.no_umods_icon);
         mNoUModsMainView = (TextView) root.findViewById(R.id.no_umods_main);
+        this.umodsScanProgressBar = root.findViewById(R.id.umods_scan_load_bar);
+        this.umodsScanProgressBar.setVisibility(View.INVISIBLE);
         /*
         mNoUModsAddView = (TextView) root.findViewById(R.id.no_umods_add_some);
         mNoUModsAddView.setOnClickListener(new View.OnClickListener() {
@@ -163,6 +168,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             }
         });
 
+        /*
         // Set up progress indicator
         final ScrollChildSwipeRefreshLayout swipeRefreshLayout =
                 (ScrollChildSwipeRefreshLayout) root.findViewById(R.id.umods_refresh_layout);
@@ -180,6 +186,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 mPresenter.loadUMods(true);
             }
         });
+        */
 
         setHasOptionsMenu(true);
 
@@ -217,7 +224,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             Context context = getContext();
             if (context != null){
                 Intent serviceIntent = new Intent(context, UModsNotifService.class);
-                serviceIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
+                serviceIntent.setAction(GlobalConstants.ACTION.REFRESH_ON_CACHED);
                 context.startService(serviceIntent);
             } else {
                 Log.e("config_fr", "Context is null");
@@ -301,6 +308,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     @Override
     public void setLoadingIndicator(final boolean active) {
 
+        /*
         if (getView() == null) {
             return;
         }
@@ -314,6 +322,13 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 srl.setRefreshing(active);
             }
         });
+        */
+        if (active){
+            this.umodsScanProgressBar.setVisibility(View.VISIBLE);
+        } else {
+            this.umodsScanProgressBar.setVisibility(View.INVISIBLE);
+        }
+
     }
 
     @Override

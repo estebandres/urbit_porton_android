@@ -425,7 +425,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
         mNotification.contentView = this.controlCollapsedViews;
         mNotification.flags = Notification.FLAG_ONGOING_EVENT;
-        mNotification.icon = R.drawable.ic_app_logo__white_untexted;
+        mNotification.icon = R.drawable.ic_app_logo__white_uncircled_untexted;
         //mNotification.contentIntent = pendingIntent;
         mNotification.visibility = Notification.VISIBILITY_PUBLIC;
 
@@ -443,7 +443,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         this.mNotification = new Notification.Builder(this.mContext).build();
         mNotification.contentView = views;
         mNotification.flags = Notification.FLAG_ONGOING_EVENT;
-        mNotification.icon = R.drawable.ic_app_logo__white_untexted;
+        mNotification.icon = R.drawable.ic_app_logo__white_uncircled_untexted;
         mNotification.visibility = Notification.VISIBILITY_PUBLIC;
         //mNotification.contentIntent = pendingIntent;
         dispatchNotification();
