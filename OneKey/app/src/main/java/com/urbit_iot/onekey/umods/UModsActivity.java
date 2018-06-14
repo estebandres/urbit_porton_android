@@ -126,6 +126,7 @@ public class UModsActivity extends AppCompatActivity {
                             case R.id.list_navigation_menu_item:
                                 // Do nothing, we're already on that screen
                                 break;
+                                /*
                             case R.id.statistics_navigation_menu_item:
                                 Intent intent =
                                         new Intent(UModsActivity.this, StatisticsActivity.class);
@@ -133,6 +134,7 @@ public class UModsActivity extends AppCompatActivity {
                                         | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(intent);
                                 break;
+                                */
                             default:
                                 break;
                         }
