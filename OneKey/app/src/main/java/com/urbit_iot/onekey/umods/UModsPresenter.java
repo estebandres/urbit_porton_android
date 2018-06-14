@@ -112,15 +112,6 @@ public class UModsPresenter implements UModsContract.Presenter {
     }
 
     @Override
-    public void result(int requestCode, int resultCode) {
-        // If a task was successfully added, show snackbar
-        if (UModConfigActivity.REQUEST_ADD_TASK == requestCode
-                && Activity.RESULT_OK == resultCode) {
-            mUModsView.showSuccessfullySavedMessage();
-        }
-    }
-
-    @Override
     public void loadUMods(boolean forceUpdate) {
         // Simplification for sample: a network reload will be forced on first load.
         Log.d("umods_pr","Forced UPDATE: " + forceUpdate + "  FIRST LOAD: " + mFirstLoad);

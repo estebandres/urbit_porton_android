@@ -34,13 +34,11 @@ import com.urbit_iot.onekey.umodconfig.domain.usecase.UpgradeUModFirmware;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.SetOngoingNotificationStatus;
 import com.urbit_iot.onekey.util.IntegerContainer;
 
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 
-import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -146,15 +144,6 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     }
 
     @Override
-    public void saveUMod(String title, String description) {
-        if (isNewTask()) {
-            createTask(title, description);
-        } else {
-            updateTask(title, description);
-        }
-    }
-
-    @Override
     public void populateUModSettings() {
         mUModConfigView.hideCompletely();
         if (Strings.isNullOrEmpty(mUModUUID)) {
@@ -178,7 +167,6 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 Log.e("conf_pr",e.getMessage());
-                //showEmptyTaskError();
                 //TODO BUG-RISK Improve this with exception subclass polymorphism
                 if (e instanceof GetUModAndUpdateInfo.UnconnectedFromAPModeUModException){
                     //TODO should the presenter call finishActivity or the fragment do it as part of launchWiFiSettings??
@@ -212,11 +200,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
     @Override
     public void adminUModUsers() {
-        if (Strings.isNullOrEmpty(mUModUUID)) {
-            mUModConfigView.showEmptyUModError();
-            return;
-        }
-        mUModConfigView.showEditUModUsers(mUModUUID);
+        mUModConfigView.showUModUsers(mUModUUID);
     }
 
     @Override
@@ -235,14 +219,14 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
             @Override
             public void onError(Throwable e) {
-                mUModConfigView.showConfigurationFailureMessage("Alias");
+                mUModConfigView.showAliasConfigFailMsg();
             }
 
             @Override
             public void onNext(UpdateUModAlias.ResponseValues responseValues) {
                 if (responseValues.getUMod() != null){
                     onNextCount.plusOne();
-                    mUModConfigView.showConfigurationSuccessMessage("Alias");
+                    mUModConfigView.showAliasConfigSuccessMsg();
                 }
             }
         });
@@ -275,14 +259,14 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                     mUModConfigView.showConfigurationSuccessMessage("WiFi AP");
                 }
                  */
-                mUModConfigView.showConfigurationFailureMessage("WiFi AP");
+                mUModConfigView.showWiFiCredentialsConfigFailMsg();
                 Log.e("config_pr", e.getMessage());
             }
 
             @Override
             public void onNext(UpdateWiFiCredentials.ResponseValues responseValues) {
                 onNextCount.plusOne();
-                mUModConfigView.showConfigurationSuccessMessage("WiFi AP");
+                mUModConfigView.showWiFiCredentialsConfigSuccessMsg();
             }
         });
     }
@@ -327,109 +311,6 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         return viewModel;
     }
 
-    private void showSaveError() {
-        // Show error, log, etc.
-    }
-
-    private void showEmptyTaskError() {
-        // The view may not be able to handle UI updates anymore
-        if (mUModConfigView.isActive()) {
-            mUModConfigView.showEmptyUModError();
-        }
-    }
-
-    private boolean isNewTask() {
-        return mUModUUID == null;
-    }
-
-    private void createTask(String title, String description) {
-        UMod newTask = new UMod(title, description,true);
-        if (newTask.isEmpty()) {
-            mUModConfigView.showEmptyUModError();
-        } else {
-            mSaveUMod.execute(new SaveUMod.RequestValues(newTask), new Subscriber<SaveUMod.ResponseValues>() {
-                @Override
-                public void onCompleted() {
-
-                }
-
-                @Override
-                public void onError(Throwable e) {
-                    showSaveError();
-                }
-
-                @Override
-                public void onNext(SaveUMod.ResponseValues responseValues) {
-                    mUModConfigView.showUModsList();
-                }
-            });
-        }
-    }
-
-    private void updateTask(String title, String description) {
-        if (mUModUUID == null) {
-            throw new RuntimeException("updateTask() was called but task is new.");
-        }
-        UMod newTask = new UMod(title, description, true);
-        mSaveUMod.execute(new SaveUMod.RequestValues(newTask), new Subscriber<SaveUMod.ResponseValues>() {
-            @Override
-            public void onCompleted() {
-
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                showSaveError();
-            }
-
-            @Override
-            public void onNext(SaveUMod.ResponseValues responseValues) {
-                // After an edit, go back to the list.
-                mUModConfigView.showUModsList();
-            }
-        });
-    }
-
-    @Override
-    public void getUModSystemInfo(String uModUUID) {
-        final IntegerContainer onNextCount = new IntegerContainer(0);
-        this.mGetUModSystemInfo.execute(new GetUModSystemInfo.RequestValues(uModUUID), new Subscriber<GetUModSystemInfo.ResponseValues>() {
-            @Override
-            public void onCompleted() {
-                if (onNextCount.getValue() <= 0){
-                    Log.e("conf_pr","getUModSystemInfo didn't retreive any result: "+ onNextCount);
-                    mUModConfigView.finishActivity();
-                }
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.d("config_pr", "RESPUESTA: " + e.getMessage() + " TIPO : " + e.getClass());
-                if(e instanceof HttpException){
-                    if(((HttpException) e).response().errorBody() != null){
-                        try {
-                            Log.e("config_pr", ((HttpException) e).response().errorBody().string());
-                        } catch (IOException e1) {
-                            e1.printStackTrace();
-                        }
-                        Log.e("config_pr", " " + ((HttpException) e).response().code());
-                        Log.e("config_pr", " " + ((HttpException) e).response().message());
-                        Log.e("config_pr", " " + ((HttpException) e).response().toString());
-                        //((HttpException) e).response().toString();
-                    }
-                }
-                showEmptyTaskError();
-            }
-
-            @Override
-            public void onNext(GetUModSystemInfo.ResponseValues responseValues) {
-                onNextCount.plusOne();
-                Log.d("config_pr", "RESPUESTA: \n" + responseValues.getRPCResponse());
-            }
-        });
-
-    }
-
     @Override
     public void updateUModFirmware() {
         final IntegerContainer onNextCount = new IntegerContainer(0);
@@ -447,7 +328,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                     public void onError(Throwable e) {
                         Log.e("config_pr", e.getMessage(),e);
                         mUModConfigView.hideUpdateDialog();
-                        mUModConfigView.showUpdateErrorMessage();
+                        mUModConfigView.showFirmwareUpdateFailMsg();
                     }
 
                     @Override
@@ -455,7 +336,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         onNextCount.plusOne();
                         //mUModConfigView.setUpdateDialogMessage("Actualización Exitosa.");
                         mUModConfigView.hideUpdateDialog();
-                        mUModConfigView.showUpdateSucessMessage();
+                        mUModConfigView.showFirmwareUpdateSucessMsg();
                     }
                 });
     }

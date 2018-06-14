@@ -22,7 +22,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -58,7 +57,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class UModConfigFragment extends Fragment implements UModConfigContract.View {
 
-    public static final String ARGUMENT_CONFIG_UMOD_ID = "EDIT_TASK_ID";
+    public static final String ARGUMENT_CONFIG_UMOD_ID = "UMOD_UUID";
     public static final String ARGUMENT_UMOD_USERS = "UMOD_UUID";
     private static final int REQUEST_EDIT_TASK = 1;
 
@@ -216,9 +215,9 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
         //View dialogContentView = inflater.inflate();
         mFirmwareUpdateDialog =  new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.firmware_update_title)
-                .setMessage(R.string.firmware_update_started_message)
-                .setNegativeButton(R.string.firmware_update_cancel_text,
+                .setTitle(R.string.firmware_update_dialog__title)
+                .setMessage(R.string.firmware_update_dialog__started_message)
+                .setNegativeButton(R.string.firmware_update_dialog__cancel_button,
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -226,7 +225,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                                 Log.d("OTADialog", "CANCEL");
                             }
                         })
-                .setPositiveButton("ACTUALIZAR", (dialogInterface, i) -> {
+                .setPositiveButton(R.string.firmware_update_dialog__update_button, (dialogInterface, i) -> {
                     mFirmwareUpdateProgressDialog.show();
                     mPresenter.updateUModFirmware();
                 })
@@ -240,16 +239,13 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         //ProgressBar dialogProgressBar = dialogView.findViewById(R.id.firmware_update_dialog__progress_bar);
 
         mFirmwareUpdateProgressDialog =  new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.firmware_update_title)
+                .setTitle(R.string.firmware_update_dialog__title)
                 //.setView(R.layout.firmware_update__dialog)
                 .setView(dialogView)
-                .setNegativeButton(R.string.firmware_update_cancel_text,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                mPresenter.cancelFirmwareUpgrade();
-                                Log.d("OTADialog", "CANCEL");
-                            }
+                .setNegativeButton(R.string.firmware_update_dialog__cancel_button,
+                        (dialog, which) -> {
+                            mPresenter.cancelFirmwareUpgrade();
+                            Log.d("OTADialog", "CANCEL");
                         })
                 .setCancelable(false)
                 .create();
@@ -280,13 +276,12 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                 .create();
         */
         mFactoryResetDialog = new AlertDialog.Builder(getActivity())
-                .setTitle("Restauración de Fabrica")
-                .setMessage("Esta operacion restablecerá las configuraciones del módulo y eliminará todos los usuarios.")
-                .setNegativeButton("Cancelar",
+                .setTitle(R.string.factory_reset_dialog__title)
+                .setMessage(R.string.factory_reset_dialog__message)
+                .setNegativeButton(R.string.factory_reset_dialog__cancel_button,
                         (dialogInterface, i) -> Log.d("FactoryDialog", "CANCEL"))
-                .setPositiveButton("RESTAURAR", (dialogInterface, i) -> {
-                    mPresenter.factoryResetUMod();
-                })
+                .setPositiveButton(R.string.factory_reset_dialog__reset_button,
+                        (dialogInterface, i) -> mPresenter.factoryResetUMod())
                 .setCancelable(false)
                 .create();
 
@@ -294,11 +289,6 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         setHasOptionsMenu(true);
         setRetainInstance(true);
         return root;
-    }
-
-    @Override
-    public void showEmptyUModError() {
-        Snackbar.make(mAliasTextInput, getString(R.string.empty_task_message), Snackbar.LENGTH_LONG).show();
     }
 
     @Override
@@ -323,7 +313,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     }
 
     @Override
-    public void showEditUModUsers(@NonNull String taskId) {
+    public void showUModUsers(@NonNull String taskId) {
         Intent intent = new Intent(getContext(), UModUsersActivity.class);
         intent.putExtra(ARGUMENT_UMOD_USERS, taskId);
         startActivityForResult(intent, REQUEST_EDIT_TASK);
@@ -409,18 +399,25 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mAllSettingsLinearLayout.setVisibility(View.VISIBLE);
     }
 
+
     @Override
-    public void showConfigurationSuccessMessage(String config) {
-        Resources res = getResources();
-        String successMsg = res.getString(R.string.configuration_success);
-        Snackbar.make(mAliasTextInput, config + successMsg, Snackbar.LENGTH_LONG).show();
+    public void showAliasConfigFailMsg() {
+        showSnackBarMessage(getString(R.string.alias_config_fail_message));
     }
 
     @Override
-    public void showConfigurationFailureMessage(String config) {
-        Resources res = getResources();
-        String failureMsg = res.getString(R.string.configuration_error);
-        Snackbar.make(mAliasTextInput, config + failureMsg, Snackbar.LENGTH_LONG).show();
+    public void showAliasConfigSuccessMsg() {
+        showSnackBarMessage(getString(R.string.alias_config_success_message));
+    }
+
+    @Override
+    public void showWiFiCredentialsConfigFailMsg() {
+        showSnackBarMessage(getString(R.string.wifi_credentials_config_fail_message));
+    }
+
+    @Override
+    public void showWiFiCredentialsConfigSuccessMsg() {
+        showSnackBarMessage(getString(R.string.wifi_credentials_config_success_message));
     }
 
     @Override
@@ -429,33 +426,36 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     }
 
     @Override
-    public void showUpdateSucessMessage() {
-        Snackbar.make(mAliasTextInput, "Actualización Exitosa.", Snackbar.LENGTH_LONG).show();
+    public void showFirmwareUpdateSucessMsg() {
+        showSnackBarMessage(getString(R.string.firmware_update_success_message));
     }
 
     @Override
-    public void showUpdateErrorMessage() {
-        Snackbar.make(mAliasTextInput, "Falló la Actualización.", Snackbar.LENGTH_LONG).show();
+    public void showFirmwareUpdateFailMsg() {
+        showSnackBarMessage(getString(R.string.firmware_update_fail_message));
     }
 
     @Override
     public void showResetFailMsg() {
-        Snackbar.make(mAliasTextInput, "Restauración Fallida.", Snackbar.LENGTH_LONG).show();
+        showSnackBarMessage(getString(R.string.factory_reset_fail_message));
     }
 
     @Override
     public void showResetSuccessMsg() {
-        Snackbar.make(mAliasTextInput, "Restauración Iniciada.", Snackbar.LENGTH_LONG).show();
+        showSnackBarMessage(getString(R.string.factory_reset_started_message));
     }
 
     @Override
     public void finishActivity() {
-        this.getActivity().finish();
+        Activity configActivity = getActivity();
+        if (configActivity!=null){
+            configActivity.finish();
+        }
     }
 
     @Override
     public void showUpgradeCancellationMsg() {
-        Snackbar.make(mAliasTextInput, "Actualización Cancelada.", Snackbar.LENGTH_LONG).show();
+        showSnackBarMessage(getString(R.string.firmware_update_cancel_message));
     }
 
     @Override
@@ -471,22 +471,25 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     @Override
     public void showOngoingNotificationStatusChangeSuccess(Boolean notificationEnabled) {
         if(notificationEnabled){
-            showMessage(getString(R.string.ongoing_notif_enabled));
+            showSnackBarMessage(getString(R.string.ongoing_notif_enabled));
         } else {
-            showMessage(getString(R.string.ongoing_notif_disbled));
+            showSnackBarMessage(getString(R.string.ongoing_notif_disbled));
         }
     }
 
-    private void showMessage(String message) {
-        Snackbar.make(getView(), message, Snackbar.LENGTH_LONG).show();
+    private void showSnackBarMessage(String message) {
+        View configFragmentView = getView();
+        if (configFragmentView != null){
+            Snackbar.make(configFragmentView, message, Snackbar.LENGTH_LONG).show();
+        }
     }
 
     @Override
     public void showOngoingNotificationStatusChangeFail(Boolean notificationEnabled) {
         if(notificationEnabled){
-            showMessage(getString(R.string.ongoing_notif_enabled_failed));
+            showSnackBarMessage(getString(R.string.ongoing_notif_enabled_failed));
         } else {
-            showMessage(getString(R.string.ongoing_notif_disbled_failed));
+            showSnackBarMessage(getString(R.string.ongoing_notif_disbled_failed));
         }
     }
 
@@ -496,7 +499,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
             Context context = getContext();
             if (context != null){
                 Intent serviceIntent = new Intent(context, UModsNotifService.class);
-                serviceIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
+                serviceIntent.setAction(GlobalConstants.ACTION.REFRESH_UMODS);
                 context.startService(serviceIntent);
             } else {
                 Log.e("config_fr", "Context is null");

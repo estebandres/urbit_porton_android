@@ -108,7 +108,7 @@ public class UModsNotifService extends Service{
                 this.mPresenter.nextUMod();
                 //Toast.makeText(this, "NEXT UMOD", Toast.LENGTH_SHORT).show();
                 break;
-            case GlobalConstants.ACTION.UPDATE_UMODS:
+            case GlobalConstants.ACTION.REFRESH_UMODS:
                 //Toast.makeText(this, "UPDATE UMOD", Toast.LENGTH_SHORT).show();
                 this.mPresenter.loadUMods(true);
                 break;

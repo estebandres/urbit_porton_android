@@ -72,7 +72,7 @@ public final class GlobalConstants {
     public interface ACTION {
         String MAIN = "com.urbit-iot.onekey.action.main";
         String INIT = "com.urbit-iot.onekey.action.init";
-        String UPDATE_UMODS = "com.urbit-iot.onekey.action.update";
+        String REFRESH_UMODS = "com.urbit-iot.onekey.action.refresh";
         String ACTION_UMOD = "com.urbit-iot.onekey.action.actuate";
         String NEXT_UMOD = "com.urbit-iot.onekey.action.next";
         String STARTFOREGROUND = "com.urbit-iot.onekey.action.startforeground";

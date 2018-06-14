@@ -237,8 +237,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
 
     @Override
     public void wifiIsOn() {
-
-        this.loadUMods(true);
+        this.loadUMods(false);
     }
 
     @Override

@@ -34,8 +34,10 @@ public class UModConfigActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setDisplayShowHomeEnabled(true);
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+        }
 
         UModConfigFragment uModConfigFragment =
                 (UModConfigFragment) getSupportFragmentManager().findFragmentById(
@@ -47,14 +49,10 @@ public class UModConfigActivity extends AppCompatActivity {
         if (uModConfigFragment == null) {
             uModConfigFragment = UModConfigFragment.newInstance();
 
-            if (getIntent().hasExtra(UModConfigFragment.ARGUMENT_CONFIG_UMOD_ID)) {
-                actionBar.setTitle(R.string.umod_config_bar_title);
-                Bundle bundle = new Bundle();
-                bundle.putString(UModConfigFragment.ARGUMENT_CONFIG_UMOD_ID, uModUUID);
-                uModConfigFragment.setArguments(bundle);
-            } else {
-                actionBar.setTitle(R.string.add_task);
-            }
+            actionBar.setTitle(R.string.umod_config_bar_title);
+            Bundle bundle = new Bundle();
+            bundle.putString(UModConfigFragment.ARGUMENT_CONFIG_UMOD_ID, uModUUID);
+            uModConfigFragment.setArguments(bundle);
 
             ActivityUtils.addFragmentToActivity(getSupportFragmentManager(),
                     uModConfigFragment, R.id.appuser_content_frame);

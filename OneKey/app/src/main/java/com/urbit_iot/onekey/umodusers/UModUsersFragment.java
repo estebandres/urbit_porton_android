@@ -57,8 +57,6 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
 
     private TextView mNoUsersMainView;
 
-    private TextView mNoUsersAddView;
-
     private LinearLayout mUsersView;
 
     private TextView mFilteringLabelView;
@@ -95,11 +93,6 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
         mPresenter = checkNotNull(presenter);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        mPresenter.result(requestCode, resultCode);
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -120,6 +113,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
         mNoUsersView = root.findViewById(R.id.no_umod_users);
         mNoUsersIcon = (ImageView) root.findViewById(R.id.no_umod_users_icon);
         mNoUsersMainView = (TextView) root.findViewById(R.id.no_umod_users_main);
+        /*
         mNoUsersAddView = (TextView) root.findViewById(R.id.no_umod_users_add);
         mNoUsersAddView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -127,7 +121,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
                 showAddUModUser();
             }
         });
-
+        */
         // Set up floating action button
         FloatingActionButton fab =
                 (FloatingActionButton) getActivity().findViewById(R.id.fab_add_umod_user);
@@ -275,44 +269,38 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
     }
 
     @Override
-    public void showNoActiveTasks() {
-        showNoTasksViews(
-                getResources().getString(R.string.no_umods_active),
-                R.drawable.ic_check_circle_24dp,
+    public void showNoResultsForNoAdminUsers() {
+        showNoUModUsersViews(
+                getResources().getString(R.string.no_results_for_regular_users_message),
+                R.drawable.ic_no_other_umod_users,//TODO modify icon to show blue lock
                 false
         );
     }
 
     @Override
     public void showNoUModUsers() {
-        showNoTasksViews(
-                getResources().getString(R.string.no_umdos_all),
-                R.drawable.ic_assignment_turned_in_24dp,
+        showNoUModUsersViews(
+                getResources().getString(R.string.no_results_for_all_other_users),
+                R.drawable.ic_no_other_umod_users,
                 false
         );
     }
 
     @Override
-    public void showNoCompletedTasks() {
-        showNoTasksViews(
-                getResources().getString(R.string.no_umods_completed),
-                R.drawable.ic_verified_user_24dp,
+    public void showNoResultsForAdminUsers() {
+        showNoUModUsersViews(
+                getResources().getString(R.string.no_results_for_admin_users_message),
+                R.drawable.ic_no_other_umod_users,//TODO modify icon to show crown
                 false
         );
     }
 
-    @Override
-    public void showSuccessfullySavedMessage() {
-        showMessage(getString(R.string.successfully_saved_umod_message));
-    }
-
-    private void showNoTasksViews(String mainText, int iconRes, boolean showAddView) {
+    private void showNoUModUsersViews(String mainText, int iconRes, boolean showAddView) {
         mUsersView.setVisibility(View.GONE);
         mNoUsersView.setVisibility(View.VISIBLE);
 
         mNoUsersMainView.setText(mainText);
         mNoUsersIcon.setImageDrawable(getResources().getDrawable(iconRes));
-        mNoUsersAddView.setVisibility(showAddView ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -339,12 +327,12 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
 
     @Override
     public void showAllPendingUModUsersCleared() {
-        showMessage(getString(R.string.completed_tasks_cleared));
+        showMessage(getString(R.string.all_pending_users_cleared));
     }
 
     @Override
     public void showLoadingUModUsersError() {
-        showMessage(getString(R.string.loading_tasks_error));
+        showMessage(getString(R.string.loading_umod_users_error));
     }
 
     private void showMessage(String message) {

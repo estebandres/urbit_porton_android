@@ -1,13 +1,11 @@
 package com.urbit_iot.onekey.umodusers;
 
-import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.APIUserType;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
-import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.umods.UModsFragment;
@@ -97,15 +95,6 @@ todo inmediato
         getUModUsers.unsubscribe();
         mUpdateUserType.unsubscribe();
         mDeleteUModUser.unsubscribe();
-    }
-
-    @Override
-    public void result(int requestCode, int resultCode) {
-        // If a task was successfully added, show snackbar
-        if (UModConfigActivity.REQUEST_ADD_TASK == requestCode
-                && Activity.RESULT_OK == resultCode) {
-            mUModsView.showSuccessfullySavedMessage();
-        }
     }
 
 
@@ -275,10 +264,10 @@ todo inmediato
     private void processNoUsersFound() {
         switch (mCurrentFiltering) {
             case NOT_ADMINS:
-                mUModsView.showNoActiveTasks();
+                mUModsView.showNoResultsForNoAdminUsers();
                 break;
             case ADMINS:
-                mUModsView.showNoCompletedTasks();
+                mUModsView.showNoResultsForAdminUsers();
                 break;
             default:
                 mUModsView.showNoUModUsers();

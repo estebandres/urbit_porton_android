@@ -29,8 +29,6 @@ public interface UModConfigContract {
 
     interface View extends BaseView<Presenter> {
 
-        void showEmptyUModError();
-
         void showUModsList();
 
         void setUModUUID(String uModUUID);
@@ -39,7 +37,7 @@ public interface UModConfigContract {
 
         boolean isActive();
 
-        void showEditUModUsers(String uModUUID);
+        void showUModUsers(String uModUUID);
 
         String getWiFiAPSSID();
 
@@ -47,15 +45,11 @@ public interface UModConfigContract {
 
         void showUModConfigs(UModConfigViewModel viewModel);
 
-        void showConfigurationSuccessMessage(String config);
-
-        void showConfigurationFailureMessage(String config);
-
         void hideUpdateDialog();
 
-        void showUpdateSucessMessage();
+        void showFirmwareUpdateSucessMsg();
 
-        void showUpdateErrorMessage();
+        void showFirmwareUpdateFailMsg();
 
         void showResetFailMsg();
 
@@ -76,11 +70,17 @@ public interface UModConfigContract {
         void showOngoingNotificationStatusChangeFail(Boolean notificationEnabled);
 
         void refreshOngoingNotification();
+
+        void showAliasConfigFailMsg();
+
+        void showAliasConfigSuccessMsg();
+
+        void showWiFiCredentialsConfigFailMsg();
+
+        void showWiFiCredentialsConfigSuccessMsg();
     }
 
     interface Presenter extends BasePresenter {
-        //TODO save umod config: is it possible to separate umod from umod config??
-        void saveUMod(String title, String description);//saveUModConfig
 
         void populateUModSettings();
 
@@ -89,8 +89,6 @@ public interface UModConfigContract {
         void updateUModAlias(UModConfigViewModel viewModel);
 
         void updateUModWiFiCredentials(UModConfigViewModel viewModel);
-
-        void getUModSystemInfo(String uModUUID);
 
         void updateUModFirmware();
 

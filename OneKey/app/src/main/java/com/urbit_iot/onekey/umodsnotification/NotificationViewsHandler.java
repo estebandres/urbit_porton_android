@@ -82,7 +82,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
                 R.layout.ongoing_notification__no_configured_umods);
 
         Intent updateUModsIntent = new Intent(this.mContext, UModsNotifService.class);
-        updateUModsIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
+        updateUModsIntent.setAction(GlobalConstants.ACTION.REFRESH_UMODS);
         PendingIntent updateUModsPendingIntent = PendingIntent.getService(this.mContext, 0,
                 updateUModsIntent, 0);
 
@@ -188,7 +188,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
                 R.layout.ongoing_notification__no_umods_found);
 
         Intent updateUModsIntent = new Intent(this.mContext, UModsNotifService.class);
-        updateUModsIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
+        updateUModsIntent.setAction(GlobalConstants.ACTION.REFRESH_UMODS);
         PendingIntent updateUModsPendingIntent = PendingIntent.getService(this.mContext, 0,
                 updateUModsIntent, 0);
 
@@ -343,7 +343,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
 
         Intent updateUModsIntent = new Intent(this.mContext, UModsNotifService.class);
-        updateUModsIntent.setAction(GlobalConstants.ACTION.UPDATE_UMODS);
+        updateUModsIntent.setAction(GlobalConstants.ACTION.REFRESH_UMODS);
         PendingIntent updateUModsPendingIntent = PendingIntent.getService(this.mContext, 0,
                 updateUModsIntent, 0);
 

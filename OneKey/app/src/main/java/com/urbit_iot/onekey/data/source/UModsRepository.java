@@ -247,7 +247,7 @@ public class UModsRepository implements UModsDataSource {
         if (!mCacheIsDirty) {
             Log.d("umods_rep", "cached first" + mCachedUMods);
             return Observable.concatDelayError(
-                    cacheOrDBUModObs.defaultIfEmpty(null),
+                    cacheOrDBUModObs.defaultIfEmpty(null),//TODO replace for rxjava2 compliant not null object...
                     //lanUModObs,
                     Observable.empty())
                     .doOnUnsubscribe(new Action0() {

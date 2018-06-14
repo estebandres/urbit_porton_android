@@ -110,11 +110,6 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         mPresenter = checkNotNull(presenter);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        mPresenter.result(requestCode, resultCode);
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -233,6 +228,11 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     }
 
     @Override
+    public void showAlienUModsCleared() {
+        showMessage(getString(R.string.all_alien_umods_removed));
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_clear_umods:
@@ -281,12 +281,12 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
     @Override
     public void showOpenCloseSuccess() {
-        showMessage(getString(R.string.authorize_user_success_message));
+        showMessage(getString(R.string.trigger_success_message));
     }
 
     @Override
     public void showOpenCloseFail() {
-        showMessage(getString(R.string.authorize_user_fail_message));
+        showMessage(getString(R.string.trigger_fail_message));
     }
 
     @Override
@@ -382,11 +382,6 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         );
     }
 
-    @Override
-    public void showSuccessfullySavedMessage() {
-        showMessage(getString(R.string.successfully_saved_umod_message));
-    }
-
     private void showNoTasksViews(String mainText, int iconRes, boolean showAddView) {
         mUModsView.setVisibility(View.GONE);
         mNoUModsView.setVisibility(View.VISIBLE);
@@ -446,13 +441,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     }
 
     @Override
-    public void showAlienUModsCleared() {
-        showMessage(getString(R.string.completed_tasks_cleared));
-    }
-
-    @Override
     public void showLoadingUModsError() {
-        showMessage(getString(R.string.loading_tasks_error));
+        showMessage(getString(R.string.loading_umod_error));
     }
 
     private void showMessage(String message) {

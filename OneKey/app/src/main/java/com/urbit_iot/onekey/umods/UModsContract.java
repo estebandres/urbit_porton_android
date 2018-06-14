@@ -34,8 +34,6 @@ public interface UModsContract {
 
         void showUModNotificationDisabled();
 
-        void showAlienUModsCleared();
-
         void showLoadingUModsError();
 
         void showNoUMods();
@@ -49,8 +47,6 @@ public interface UModsContract {
         void showNotificationDisabledUMods();
 
         void showNotificationEnabledUMods();
-
-        void showSuccessfullySavedMessage();
 
         boolean isNotificationDisabled();
 
@@ -73,11 +69,11 @@ public interface UModsContract {
         void shutdownOngoingNotification();
 
         void refreshOngoingNotification();
+
+        void showAlienUModsCleared();
     }
 
     interface Presenter extends BasePresenter {
-
-        void result(int requestCode, int resultCode);
 
         void loadUMods(boolean forceUpdate);
 

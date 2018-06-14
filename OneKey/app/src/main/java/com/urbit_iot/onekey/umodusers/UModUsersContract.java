@@ -37,11 +37,9 @@ public interface UModUsersContract {
 
         void showAllFilterLabel();
 
-        void showNoActiveTasks();
+        void showNoResultsForNoAdminUsers();
 
-        void showNoCompletedTasks();
-
-        void showSuccessfullySavedMessage();
+        void showNoResultsForAdminUsers();
 
         boolean isActive();
 
@@ -67,8 +65,6 @@ public interface UModUsersContract {
     }
 
     interface Presenter extends BasePresenter {
-
-        void result(int requestCode, int resultCode);
 
         void loadUModUsers(boolean forceUpdate);
 

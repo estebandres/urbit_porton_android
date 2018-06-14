@@ -16,33 +16,27 @@
 
 <resources>
     <string name="app_name">OneKey</string>
-    <string name="add_task">New UMod</string>
-    <string name="umod_config_bar_title">Configurar UMod</string>
-    <string name="ongoing_notif_enabled">Notificación permanente activada</string>
-    <string name="ongoing_notif_disbled">Notificación permanente desactivada</string>
-    <string name="loading_tasks_error">Error while loading tasks</string>
-    <string name="completed_tasks_cleared">Completed tasks cleared</string>
-    <string name="menu_filter_umods">Filter</string>
-    <string name="menu_clear_umods">Clear completed</string>
-    <string name="menu_delete_task">Delete task</string>
+    <string name="umod_config_bar_title">Configurar Módulo</string>
+    <string name="ongoing_notif_enabled">NOTIFICACIÓN PERMANENTE ACTIVADA</string>
+    <string name="ongoing_notif_disbled">NOTIFICACIÓN PERMANENTE DESACTIVADA</string>
+    <string name="menu_filter_umods">Filtro</string>
+    <string name="menu_clear_umods">Borrar Completadas</string>
+    <string name="menu_delete_task">Borrar Módulo</string>
     <string name="navigation_view_header_title">OneKey</string>
     <string name="alias_hint">Alias de Apertura</string>
-    <string name="description_hint">Enter your TO-DO here.</string>
-    <string name="empty_task_message">TO DOs cannot be empty</string>
-    <string name="successfully_saved_umod_message">TO-DO saved</string>
 
 
     <string name="authorize_user_success_message">USUARIO AUTORIZADO</string>
     <string name="authorize_user_fail_message">FALLO AL AUTORIZAR.</string>
 
-    <string name="list_title">Modules List</string>
-    <string name="statistics_title">Statistics</string>
-    <string name="statistics_no_tasks">You have no tasks.</string>
-    <string name="statistics_active_tasks">Active tasks:</string>
-    <string name="statistics_completed_tasks">Completed tasks:</string>
-    <string name="statistics_error">Error loading statistics.</string>
-    <string name="no_data">No data</string>
-    <string name="loading">LOADING</string>
+    <string name="list_title">Listado de Módulos</string>
+    <string name="statistics_title">Estadísitcas</string>
+    <string name="statistics_no_tasks">No tienes módulos.</string>
+    <string name="statistics_active_tasks">Módulos Activos:</string>
+    <string name="statistics_completed_tasks">Tareas Completas:</string>
+    <string name="statistics_error">Error al cargar las estadísitcas.</string>
+    <string name="no_data">SIN DATOS</string>
+    <string name="loading">CARGANDO</string>
 
     <string-array name="list_tasks_array">
         <item>@string/nav_all_umods</item>
@@ -50,49 +44,73 @@
         <item>@string/nav_completed_umods</item>
     </string-array>
 
-    <string name="nav_all_umods">All</string>
-    <string name="nav_active_umods">Active</string>
-    <string name="nav_completed_umods">Completed</string>
-    <string name="label_umods_all">All UrBIT modules</string>
-    <string name="label_umods_active">Without Notification</string>
-    <string name="label_umods_completed">Notification Enabled</string>
+    <string name="nav_all_umods">Todos</string>
+    <string name="nav_active_umods">Activos</string>
+    <string name="nav_completed_umods">Completados</string>
+    <string name="label_umods_all">Todos los Módulos</string>
+    <string name="label_umods_active">Fuera de notificación</string>
+    <string name="label_umods_completed">Dentro de Notificación.</string>
     <string name="no_umdos_all">No se encontraron módulos conectados a la red.</string>
-    <string name="no_umods_active">You have no active TO-DOs!</string>
-    <string name="no_umods_completed">You have no completed TO-DOs!</string>
-    <string name="no_tasks_add">Add a TO-DO item +</string>
-    <string name="refresh_umods">Refresh</string>
-    <string name="umod_users_nav_all">All</string>
-    <string name="umod_users_nav_admins">Admins</string>
-    <string name="umod_users_nav_no_admins">No Admins</string>
-    <string name="umod_users_menu_clear_pendants">Clear Pendants</string>
-    <string name="umod_users_menu_refresh">Refresh</string>
-    <string name="umod_users_menu_filter">Filters</string>
-    <string name="umod_users_label_all">All Users</string>
-    <string name="umod_users_label_admins">Administrators</string>
-    <string name="umod_users_label_not_admins">Normal Users</string>
+    <string name="no_umods_active">No tienes Módulos Activos.</string>
+    <string name="no_umods_completed">No tienes módulos con Notificación Activa.</string>
+
+    <string name="refresh_umods">Refrescar Módulos</string>
+    <string name="umod_users_nav_all">Todos</string>
+    <string name="umod_users_nav_admins">Administradores</string>
+    <string name="umod_users_nav_no_admins">Usuarios Regulares</string>
+    <string name="umod_users_menu_clear_pendants">Borrar Pendientes</string>
+    <string name="umod_users_menu_refresh">Refrescar Usuarios</string>
+    <string name="umod_users_menu_filter">Filtros</string>
+    <string name="umod_users_label_all">Todos los Usuarios</string>
+    <string name="umod_users_label_admins">Administradores</string>
+    <string name="umod_users_label_not_admins">Usuarios Regulares</string>
     <string name="app_user_phone_tag">REGISTRO</string>
     <string name="app_user_phone_hint">Número de Celular</string>
     <string name="umod_action_button_when_owned">O/C</string>
     <string name="umod_action_button_when_open_alien">REQ</string>
-    <string name="request_access_failed_message">Solicitud de acceso fallida.</string>
-    <string name="request_access_completed_message">Solicitud de accesso enviada.</string>
-    <string name="configuration_error"> falló al configurarse.</string>
-    <string name="configuration_success"> configurado exitosamente!</string>
-    <string name="firmware_update_title">Actualización de Firmware</string>
-    <string name="firmware_update_started_message">Esta operación actualizará el software del módulo pero todas sus configuraciones seran conservadas.</string>
-    <string name="firmware_update_cancel_text">Cancelar</string>
+    <string name="request_access_failed_message">SOLICITUD DE ACCESO FALLIDA</string>
+    <string name="request_access_completed_message">SOLICITUD DE ACCESO ENVIADA</string>
+    <string name="configuration_error"> FALLÓ AL CONFIGURARSE</string>
+    <string name="configuration_success"> CONFIGURADO EXITOSAMENTE!</string>
+    <string name="firmware_update_dialog__title">ACTUALIZACIÓN DE FIRMWARE</string>
+    <string name="firmware_update_dialog__started_message">Esta operación actualizará el software del módulo pero todas sus configuraciones seran conservadas.</string>
+    <string name="firmware_update_dialog__cancel_button">CANCELAR</string>
     <string name="delete_user_success_message">USUARIO ELIMINADO</string>
     <string name="delete_user_fail_message">EL USUARIO NO PUDO ELIMINARSE</string>
     <string name="upgrade_user_type_fail_message">UPGRADE TO ADMIN FAILED</string>
     <string name="downgrade_user_type_fail_message">REMOCION DE PRIVILEGIOS FALLIDA</string>
     <string name="upgrade_user_type_success_message">USUARIO CON PRIVILEGIOS DE ADMINISTRADOR</string>
     <string name="downgrade_user_type_success_message">REMOCION DE PRIVILEGIOS EXITOSA</string>
-    <string name="notif_loading_progress_subtext">BUSCANDO MÓDULOS...</string>
-    <string name="notif_triggering_progress_subtext">INTENTANDO ACCIONAR...</string>
-    <string name="notif_accessing_progress_subtext">SOLICITANDO PERMISO...</string>
-    <string name="ongoing_notif_enabled_failed">Fallo al habilitar la notificación</string>
-    <string name="ongoing_notif_disbled_failed">Fallo al desabilitar la notificación</string>
+    <string name="notif_loading_progress_subtext">BUSCANDO MÓDULOS…</string>
+    <string name="notif_triggering_progress_subtext">INTENTANDO ACCIONAR…</string>
+    <string name="notif_accessing_progress_subtext">SOLICITANDO PERMISO…</string>
+    <string name="ongoing_notif_enabled_failed">FALLO AL HABILITAR LA NOTIFICACIÓN</string>
+    <string name="ongoing_notif_disbled_failed">FALLO AL DESHABILITAR LA NOTIFICACIÓN</string>
     <string name="umod_users_bar_title">Usuarios</string>
+    <string name="trigger_success_message">ACCIONAMIENTO EXITOSO</string>
+    <string name="trigger_fail_message">ACCIONAMIENTO FALLIDO</string>
+    <string name="no_other_umod_users_found">No se encontratron otros usuarios configurados en el módulo.</string>
+    <string name="loading_umod_error">ERROR AL CARGAR MÓDULOS</string>
+    <string name="loading_umod_users_error">ERROR AL CARGAR USUARIOS</string>
+    <string name="all_pending_users_cleared">TODOS LOS USUARIOS PENDIENTES ELIMINADOS</string>
+    <string name="all_alien_umods_removed">MODULOS AJENOS REMOVIDOS</string>
+    <string name="firmware_update_cancel_message">Actualización Cancelada.</string>
+    <string name="factory_reset_started_message">RESTAURACIÓN INICIADA</string>
+    <string name="factory_reset_fail_message">RESTAURACIÓN FALLIDA</string>
+    <string name="firmware_update_fail_message">ACTUALIZACIÓN FALLIDA</string>
+    <string name="firmware_update_success_message">ACTUALIZACIÓN EXITOSA</string>
+    <string name="alias_config_fail_message">ALIAS NO PUDO CONFIGURARSE</string>
+    <string name="alias_config_success_message">ALIAS CONFIGURADO EXITOSAMENTE</string>
+    <string name="wifi_credentials_config_fail_message">CREDENCIALES WIFI NO ENVIADAS</string>
+    <string name="wifi_credentials_config_success_message">CREDENCIALES WIFI ENVIADAS</string>
+    <string name="factory_reset_dialog__title">Restauración de Fabrica</string>
+    <string name="factory_reset_dialog__message">Esta operacion restablecerá las configuraciones del módulo y eliminará todos los usuarios.</string>
+    <string name="factory_reset_dialog__cancel_button">Cancelar</string>
+    <string name="factory_reset_dialog__reset_button">RESTAURAR</string>
+    <string name="firmware_update_dialog__update_button">ACTUALIZAR</string>
+    <string name="no_results_for_regular_users_message">No se encontraron usarios regulares para este módulo.</string>
+    <string name="no_results_for_all_other_users">No se encontraron otros usuarios registrados en este módulo.</string>
+    <string name="no_results_for_admin_users_message">No se encontraron otros administradores para este módulo.</string>
     <!-- Solves annoying issue with password-eye -->
     <item name="visible" type="id"/>
     <item name="masked" type="id"/>

@@ -62,8 +62,8 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
                 .filter(uMod -> {
                     //TODO Replace actual isOpen logic or remove it completely
                     //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
-                    return uMod.isOpen()
-                            && !uMod.isInAPMode();
+                    return !uMod.isInAPMode() //&& uMod.isOpen()
+                            ;
                 })
                 //Asks to the esp if the admin has authorized me when PENDING.
                 .flatMap(uMod -> {
