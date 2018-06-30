@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
+import rx.subjects.ReplaySubject;
 
 /**
  * Created by andresteve07 on 8/11/17.
@@ -24,7 +25,7 @@ import rx.subjects.PublishSubject;
 public class UModsDNSSDScanner {
     private RxDnssd rxDnssd;
     private Map<String, UMod> mCachedUMods;
-    private PublishSubject<UMod> freshUModDnsScan;
+    private ReplaySubject<UMod> freshUModDnsScan;
     private PublishSubject<Long> uModDnsScanTrigger;
     private AtomicBoolean scanInProgress;//TODO replace with atomicBoolean or a custom Lock that can be
     //lock by one thread and unlocked by other.
@@ -52,7 +53,7 @@ public class UModsDNSSDScanner {
         this.mCachedUMods = new LinkedHashMap<>();
         this.rxDnssd = rxDnssd;
         this.scanInProgress = new AtomicBoolean(false);
-        this.freshUModDnsScan = PublishSubject.create();
+        this.freshUModDnsScan = ReplaySubject.create();
         this.uModDnsScanTrigger = PublishSubject.create();
         //TODO reconsider continuous dnssd discovery. When do I need to update constantly??
         //this.continuousBrowseLANForUMods();
@@ -121,7 +122,7 @@ public class UModsDNSSDScanner {
                         Log.d("dnssd_scan", "NOT AQC");
                         if (freshUModDnsScan.hasCompleted()){
                             Log.d("dnssd_scan", "SUBJECT COMP");
-                            freshUModDnsScan = PublishSubject.create();
+                            freshUModDnsScan = ReplaySubject.create();
                         }
                         return freshUModDnsScan.asObservable()
                                 .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
@@ -153,7 +154,7 @@ public class UModsDNSSDScanner {
                         Log.d("dnssd_scan", "NOT AQC");
                         if (freshUModDnsScan.hasCompleted()){
                             Log.d("dnssd_scan", "SUBJECT COMP");
-                            freshUModDnsScan = PublishSubject.create();
+                            freshUModDnsScan = ReplaySubject.create();
                         }
                         return freshUModDnsScan.asObservable()
                                 .filter(uMod -> uMod.getUUID().contains(uModUUID))//TODO improve filter using regex
@@ -201,6 +202,7 @@ public class UModsDNSSDScanner {
     */
     //@RxLogObservable
     public Observable<UMod> singleScan(){
+        freshUModDnsScan = ReplaySubject.create();
         return rxDnssd.browse("_http._tcp.","local.")
                 .compose(rxDnssd.resolve())
                 .compose(rxDnssd.queryRecords())

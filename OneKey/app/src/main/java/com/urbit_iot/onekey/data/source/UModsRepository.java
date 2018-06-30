@@ -556,8 +556,7 @@ public class UModsRepository implements UModsDataSource {
                 mUModsInternetDataSource.triggerUMod(uMod,request),
                 mUModsLANDataSource.triggerUMod(uMod,request))
                 .first();
-        */
-
+                */
         return mUModsLANDataSource.triggerUMod(uMod,request);
     }
 

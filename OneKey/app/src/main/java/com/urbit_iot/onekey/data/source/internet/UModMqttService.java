@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.rpc.RPC;
 
 import net.eusashead.iot.mqtt.MqttMessage;
@@ -62,6 +63,16 @@ public class UModMqttService {
 
     private void subscribeToResponseTopic(){
         mMqttClient.subscribe(this.userName + "/response",2)
+                .subscribeOn(Schedulers.io())
+                .subscribe(mqttMessage -> {
+                    Log.d("subscribeTopic", "" + mqttMessage.getId() + new String(mqttMessage.getPayload()));
+                    receivedMessagesProcessor.onNext(mqttMessage);
+                });
+    }
+
+    public void subscribeToUModResponseTopic(UMod umod, String userName){
+        mMqttClient.connect()
+                .andThen(mMqttClient.subscribe("urbit_" + umod.getUUID() + "/response/" + userName,2))
                 .subscribeOn(Schedulers.io())
                 .subscribe(mqttMessage -> {
                     Log.d("subscribeTopic", "" + mqttMessage.getId() + new String(mqttMessage.getPayload()));

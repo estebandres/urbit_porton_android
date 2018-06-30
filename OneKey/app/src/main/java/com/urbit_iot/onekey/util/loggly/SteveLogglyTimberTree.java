@@ -169,6 +169,7 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
      */
     private String toJson(SteveLogglyLevel steveLogglyLevel, String message, Throwable t, Object... args) {
         //TODO gson library could be handy.
+        //TODO Write a LogModel for easier update and serialize
         return String.format("{\"level\": \"%1$s\", \"message\": \"%2$s\", \"exception\": \"%3$s\", \"device_timestamp\": \"%4$s\", \"logger_trace\": %5$s}",
                 steveLogglyLevel,
                 String.format(message, args).replace("\"", "\\\""),

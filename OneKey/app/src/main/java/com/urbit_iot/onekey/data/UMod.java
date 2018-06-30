@@ -250,7 +250,7 @@ public final class UMod {
     }
 
     public String getUModRequestTopic(){
-        return "urbit-" + this.uModUUID + "/request";
+        return "urbit_" + this.uModUUID + "/request";
     }
 
     @Nullable

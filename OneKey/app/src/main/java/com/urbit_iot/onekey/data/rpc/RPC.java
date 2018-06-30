@@ -28,6 +28,18 @@ public class RPC {
             this.requestId = requestId;
         }
 
+        public Request(String methodName,
+                       int methodCode,
+                       String requester,
+                       String requestTag,
+                       int requestId) {
+            this.methodName = methodName;
+            this.methodCode = methodCode;
+            this.requester = requester;
+            this.requestTag = requestTag;
+            this.requestId = requestId;
+        }
+
         public String getMethodName() {
             return methodName;
         }
