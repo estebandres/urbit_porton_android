@@ -11,6 +11,9 @@ android {
     //TODO: This is a workaround when there are libraries using rxjava1.x and others rxjava2.x(rx-preferences) but this increses the method count.
     packagingOptions {
         exclude 'META-INF/rxjava.properties'
+        //TODO understand the next two exclusions
+        exclude 'META-INF/io.netty.versions.properties'
+        exclude 'META-INF/INDEX.LIST'
     }
 
     defaultConfig {
@@ -135,6 +138,8 @@ dependencies {
     }
 
     api 'com.google.guava:guava:25.1-android'
+
+    implementation 'io.reactivex:rxnetty-http:0.5.2'
 
     // Dependencies for local unit tests
     testImplementation "junit:junit:$rootProject.ext.junitVersion"

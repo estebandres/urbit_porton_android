@@ -18,7 +18,6 @@ import com.google.gson.GsonBuilder;
 
 import com.polidea.rxandroidble.RxBleClient;
 
-import com.urbit_iot.onekey.data.FakeUModsLANDataSource;
 import com.urbit_iot.onekey.data.source.internet.FirmwareFileDownloader;
 import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.data.source.internet.UModsInternetDataSource;
@@ -26,6 +25,7 @@ import com.urbit_iot.onekey.data.source.lan.UModsBLEScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsDNSSDScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsLANDataSource;
 import com.urbit_iot.onekey.data.source.lan.UModsService;
+import com.urbit_iot.onekey.data.source.lan.UModsTCPScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsWiFiScanner;
 import com.urbit_iot.onekey.data.source.local.UModsLocalDBDataSource;
 
@@ -96,6 +96,12 @@ public class UModsRepositoryModule {
 
     @Singleton
     @Provides
+    UModsTCPScanner provideUModsTCPScanner(Context context){
+        return new UModsTCPScanner(context);
+    }
+
+    @Singleton
+    @Provides
     @Local
     UModsDataSource provideUModsLocalDBDataSource(Context context, BaseSchedulerProvider schedulerProvider) {
         return new UModsLocalDBDataSource(context, schedulerProvider);
@@ -109,8 +115,9 @@ public class UModsRepositoryModule {
                                                  UModsWiFiScanner uModsWiFiScanner,
                                                  UrlHostSelectionInterceptor urlHostSelectionInterceptor,
                                                  @Named("default") UModsService defaultUModsService,
-                                                 @Named("app_user") UModsService appUserUModsService) {
-        return new UModsLANDataSource(uModsDNSSDScanner, uModsBLEScanner, uModsWiFiScanner, urlHostSelectionInterceptor,defaultUModsService, appUserUModsService);
+                                                 @Named("app_user") UModsService appUserUModsService,
+                                                 UModsTCPScanner mUModsTCPScanner) {
+        return new UModsLANDataSource(uModsDNSSDScanner, uModsBLEScanner, uModsWiFiScanner, urlHostSelectionInterceptor,defaultUModsService, appUserUModsService, mUModsTCPScanner);
         //return new FakeUModsLANDataSource();
     }
 
@@ -118,7 +125,7 @@ public class UModsRepositoryModule {
     @Provides
     @Internet
     UModsDataSource provideUModsInternetDataSource(Context context, UModMqttService uModMqttService){
-        return new UModsInternetDataSource(new FirmwareFileDownloader(context), uModMqttService);
+        return new UModsInternetDataSource(new FirmwareFileDownloader(context), uModMqttService, this.appUserName);
     }
     //TODO separate those into ints own network module
 

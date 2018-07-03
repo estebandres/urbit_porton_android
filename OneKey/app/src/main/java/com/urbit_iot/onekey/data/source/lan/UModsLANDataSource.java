@@ -19,7 +19,6 @@ package com.urbit_iot.onekey.data.source.lan;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -27,7 +26,6 @@ import com.stealthcopter.networktools.SubnetDevices;
 import com.stealthcopter.networktools.subnet.Device;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.rpc.APIUserType;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
@@ -48,7 +46,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -79,6 +76,9 @@ public class UModsLANDataSource implements UModsDataSource {
 
     @NonNull
     private UModsWiFiScanner mUModsWiFiScanner;
+
+    @NonNull
+    private UModsTCPScanner mUModsTCPScanner;
 
     @NonNull
     private UModsService defaultUModsService;
@@ -117,13 +117,15 @@ public class UModsLANDataSource implements UModsDataSource {
                               @NonNull UModsWiFiScanner uModsWiFiScanner,
                               @NonNull UrlHostSelectionInterceptor urlHostSelectionInterceptor,
                               @NonNull @Named("default") UModsService defaultUModsService,
-                              @NonNull @Named("app_user") UModsService AppUserUModsService){ //@NonNull @DigestAuth Credentials digestAuthCredentials) {
+                              @NonNull @Named("app_user") UModsService AppUserUModsService,
+                              @NonNull UModsTCPScanner mUModsTCPScanner){ //@NonNull @DigestAuth Credentials digestAuthCredentials) {
         mUModsDNSSDScanner = checkNotNull(uModsDNSSDScanner,"uModsDNSSDScanner should not be null.");
         mUModsBLEScanner = checkNotNull(uModsBLEScanner, " uModsBLEScanner should not be null.");
         this.mUModsWiFiScanner = checkNotNull(uModsWiFiScanner, " uModsWiFiScanner should not be null.");
         this.defaultUModsService = checkNotNull(defaultUModsService, " defaultUModsService should not be null.");
         this.appUserUModsService = checkNotNull(AppUserUModsService, " AppUserUModsService should not be null.");
         this.urlHostSelectionInterceptor = checkNotNull(urlHostSelectionInterceptor, " urlHostSelectionInterceptor should not be null.");
+        this.mUModsTCPScanner = mUModsTCPScanner;
         //this.digestAuthCredentials = checkNotNull(digestAuthCredentials, " digestAuthCredentials should not be null.");
         this.uModLANBrander = new Observable.Transformer<UMod, UMod>() {
             @Override
@@ -178,7 +180,8 @@ public class UModsLANDataSource implements UModsDataSource {
                 mUModsDNSSDScanner.browseLANForUMods()
                         .switchIfEmpty(getUModsByLanPingingAndApiCalling()),
                         */
-                mUModsDNSSDScanner.browseLANForUMods(),
+                mUModsDNSSDScanner.browseLANForUMods()
+                        .switchIfEmpty(mUModsTCPScanner.scanForUMods()),
                 /*
                 Observable.mergeDelayError(
                         //mUModsDNSSDScanner.browseLANForUMods(),

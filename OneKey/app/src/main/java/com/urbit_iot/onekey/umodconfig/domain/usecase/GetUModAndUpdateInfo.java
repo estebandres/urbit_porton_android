@@ -45,7 +45,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Retrieves a {@link UMod} from the {@link UModsRepository}.
  */
 public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.RequestValues, GetUModAndUpdateInfo.ResponseValues> {
-
+    private static boolean REFRESH_IN_ORDER = false;
     @NonNull
     private final UModsRepository mUModsRepository;
     @NonNull
@@ -64,22 +64,23 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
         //TODO why not to take cached values and refresh on retry only.
-        mUModsRepository.refreshUMods();
+        if(REFRESH_IN_ORDER){
+            mUModsRepository.refreshUMods();
+            REFRESH_IN_ORDER = false;
+        }
         //GOLDEN RULE when an object is passed in the rxjava chain and its modifications are
-        //evident there is no need of make a clone but if said object is passed as some external method parameter
-        // then it has to be cloned so said method don't modified the object instance leading to miss behaviour.
+        //evident then there is no need to make a clone but if said object is passed to some external method as a parameter
+        //then it has to be cloned  since we are not sure what that method does to our object avoiding miss behaviours.
         return mUModsRepository.getUMod(values.getUModUUID())
                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
                     public Observable<UMod> call(final UMod uMod) {
-                        /*
                         if (uMod.getState() == UMod.State.AP_MODE
                                 && !values.getmConnectedWiFiAP().contains(uMod.getUUID())){
                             Log.d("getumod+info_uc","Not connected to an AP_MODE UMod!\n" + uMod.toString());
                             //return Observable.just(uMod);
                             return Observable.error(new UnconnectedFromAPModeUModException(uMod.getUUID()));
                         }
-                        */
                         //TODO review behaviour
                         return mAppUserRepository.getAppUser()
                                 .flatMap(new Func1<AppUser, Observable<UMod>>() {
@@ -188,6 +189,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                             }
                                                         }
                                                         //when the error is from other source like a timeout it is forwarded to the presenter.
+                                                        REFRESH_IN_ORDER = true;
                                                         return Observable.error(throwable);
                                                     }
                                                 });

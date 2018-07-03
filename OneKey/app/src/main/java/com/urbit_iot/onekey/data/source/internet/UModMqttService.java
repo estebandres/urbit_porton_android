@@ -10,13 +10,17 @@ import com.urbit_iot.onekey.data.rpc.RPC;
 import net.eusashead.iot.mqtt.MqttMessage;
 import net.eusashead.iot.mqtt.ObservableMqttClient;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import hu.akarnokd.rxjava.interop.RxJavaInterop;
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.processors.PublishProcessor;
 import io.reactivex.schedulers.Schedulers;
 import rx.Observable;
@@ -37,6 +41,8 @@ public class UModMqttService {
 
     private PublishProcessor<MqttMessage> receivedMessagesProcessor;
 
+    private Map<String, Disposable> subscriptionsMap;
+
     //private boolean subscribedToUModResponseTopic;
 
     @Inject
@@ -47,6 +53,7 @@ public class UModMqttService {
         this.gsonInstance = gsonInstance;
         this.userName = userName;
         this.receivedMessagesProcessor = PublishProcessor.create();
+        this.subscriptionsMap = new LinkedHashMap<>();
 
         mMqttClient.connect()
                 .doOnComplete(this::subscribeToResponseTopic)
@@ -70,14 +77,31 @@ public class UModMqttService {
                 });
     }
 
-    public void subscribeToUModResponseTopic(UMod umod, String userName){
-        mMqttClient.connect()
-                .andThen(mMqttClient.subscribe("urbit_" + umod.getUUID() + "/response/" + userName,2))
+    public void subscribeToUModResponseTopic(UMod umod){
+        //Rxjava1
+        Flowable<MqttMessage> topicMessagesFlowable = mMqttClient.subscribe(umod.getMqttResponseTopic(),2);
+        Disposable topicSubDisposable = Flowable.just(mMqttClient.isConnected())
+                .flatMap(aBoolean -> {
+                    if (aBoolean){
+                        return topicMessagesFlowable;
+                    } else {
+                        return mMqttClient.connect()
+                                .andThen(topicMessagesFlowable);
+                    }
+                })
                 .subscribeOn(Schedulers.io())
                 .subscribe(mqttMessage -> {
                     Log.d("subscribeTopic", "" + mqttMessage.getId() + new String(mqttMessage.getPayload()));
                     receivedMessagesProcessor.onNext(mqttMessage);
+                },
+                throwable -> {
+                    Log.e("mqtt_sub", throwable.getMessage());
+                },
+                () -> {
+                    Log.d("mqtt_sub", "Response Topic Sub Completed.");
                 });
+
+        this.subscriptionsMap.put(umod.getUUID(), topicSubDisposable);
     }
 
 
@@ -113,6 +137,7 @@ public class UModMqttService {
         return RxJavaInterop.toV1Single(maybeConditionalConnection).toObservable();
     }
 }
+
 /*
 
 public Maybe<RPC.Response> mqttRPCExecution(UMod uMod, RPC.Request request){

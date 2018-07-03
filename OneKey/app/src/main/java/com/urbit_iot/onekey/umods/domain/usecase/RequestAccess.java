@@ -52,6 +52,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
 
     private final UModsRepository mUModsRepository;
     private final AppUserRepository mAppUserRepository;
+    private final UModMqttService mUModMqttService;
 
     @NonNull
     private final PublishSubject<Void> retrySubject = PublishSubject.create();
@@ -59,10 +60,12 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
     @Inject
     public RequestAccess(@NonNull UModsRepository uModsRepository,
                          @NonNull AppUserRepository appUserRepository,
-                         @NonNull BaseSchedulerProvider schedulerProvider) {
+                         @NonNull BaseSchedulerProvider schedulerProvider,
+                         @NonNull UModMqttService mUModMqttService) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(uModsRepository, "uModsRepository cannot be null!");
         this.mAppUserRepository = checkNotNull(appUserRepository, "appUserRepository cannot be null!");
+        this.mUModMqttService = mUModMqttService;
     }
 
     @Override
@@ -99,6 +102,8 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                         //TODO ask if this is possible. Currently the API doc doesn't
                                                         // specify what data is returned as part of the result.
                                                         //subscribirme al topico
+                                                        uMod.setMqttResponseTopic(appUser.getUserName());
+                                                        mUModMqttService.subscribeToUModResponseTopic(uMod);
                                                         Timber.d("CreateUser Success: " + createUserResult.toString());
                                                         uMod.setAppUserLevel(createUserResult.getUserLevel());
                                                         mUModsRepository.saveUMod(uMod);

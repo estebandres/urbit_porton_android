@@ -15,12 +15,15 @@ public class TriggerRPC extends RPC {
     public static class Request extends RPC.Request{
         @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private TriggerRPC.Arguments methodArguments;
-        public Request(Arguments args, String tagPrefix, int id) {
+        public Request(String requester, boolean isAdmin, Arguments args, String tagPrefix, int id) {
             super(
                     GlobalConstants.RPC_METHOD_NAME__ADMIN_TRIGGER,
                     GlobalConstants.RPC_METHOD_CODE__ADMIN_TRIGGER,
-                    tagPrefix,id);
+                    requester,
+                    tagPrefix,
+                    id);
             this.methodArguments = args;
+            this.changeMethod(isAdmin);
         }
 
         public void changeMethod(boolean isAdmin){

@@ -63,7 +63,8 @@ public final class UMod {
         BLE_SCAN(2),
         DNS_SD_BROWSE(3),
         LAN_SCAN(4),
-        WEB(3);
+        WEB(3),
+        MQTT_SCAN(5);
         private final Integer sourceID;
         UModSource(Integer sourceID) {
             this.sourceID = sourceID;
@@ -94,6 +95,9 @@ public final class UMod {
 
     @Nullable
     private String alias;
+
+    @Nullable
+    private String mqttResponseTopic;
 
     @Nullable
     private  String macAddress;
@@ -247,6 +251,15 @@ public final class UMod {
         this.hwVersion = hwVersion;
         this.swVersion = swVersion;
         this.lastUpdateDate = lastUpdateDate;
+    }
+
+    @Nullable
+    public String getMqttResponseTopic() {
+        return mqttResponseTopic;
+    }
+
+    public void setMqttResponseTopic(@Nullable String username) {
+        this.mqttResponseTopic = "urbit_" + this.uModUUID + "/response/" + username;
     }
 
     public String getUModRequestTopic(){

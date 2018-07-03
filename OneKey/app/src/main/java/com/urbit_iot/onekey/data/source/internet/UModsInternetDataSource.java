@@ -31,7 +31,6 @@ import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
-import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.io.File;
 import java.util.List;
@@ -52,14 +51,17 @@ public class UModsInternetDataSource implements UModsDataSource {
     private FirmwareFileDownloader mFirmwareFileDownloader;
     @NonNull
     private UModMqttService mUModMqttService;
+    @NonNull
+    private String username;
 
     private Random randomGenerator;
 
     @Inject
     public UModsInternetDataSource(@NonNull FirmwareFileDownloader firmwareDownloader,
-                                   @NonNull UModMqttService mUModMqttService) {
+                                   @NonNull UModMqttService mUModMqttService, @NonNull String username) {
         this.mFirmwareFileDownloader = firmwareDownloader;
         this.mUModMqttService = mUModMqttService;
+        this.username = username;
         randomGenerator = new Random();
     }
 
@@ -126,11 +128,11 @@ public class UModsInternetDataSource implements UModsDataSource {
     @Override
     public Observable<TriggerRPC.Result> triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Arguments requestArguments) {
         TriggerRPC.Request triggerRequest = new TriggerRPC.Request(
+                this.username,
+                uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR,
                 requestArguments,
                 uMod.getUUID(),
                 this.randomGenerator.nextInt());
-
-        triggerRequest.changeMethod(uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR);
 
         return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),
                 triggerRequest,
@@ -160,7 +162,9 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public Observable<SysGetInfoRPC.Result> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Arguments request) {
-        return null;
+        //SysGetInfoRPC.Request rpcRequest = new SysGetInfoRPC.Request(request,)
+
+        return Observable.error(new Exception("Steve was here!"));
     }
 
     @Override

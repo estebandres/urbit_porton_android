@@ -21,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import com.google.common.base.Strings;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
@@ -38,6 +39,7 @@ import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.LanOnly;
 
 import java.io.File;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -54,6 +56,7 @@ import rx.Observable;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -159,58 +162,65 @@ public class UModsRepository implements UModsDataSource {
         }
     }
 
-    //@RxLogObservable
-    private Observable<UMod> getUModsOneByOneFromCacheOrDisk(){
-        Observable<UMod> cachedUModsObs = Observable.empty();
-        if (mCachedUMods!=null && !mCachedUMods.isEmpty()){
-            Log.d("umods_rep","Map cache");
-                cachedUModsObs = Observable.from(mCachedUMods.values())
-                        .compose(this.uModCacheBrander);
-        }
-        Log.d("umods_rep","DB");
-        return Observable.concatDelayError(
-                cachedUModsObs,
-                mUModsLocalDataSource.getUModsOneByOne()
-                .doOnNext(new Action1<UMod>() {
-                    @Override
-                    public void call(UMod uMod) {
-                        mCachedUMods.put(uMod.getUUID(), uMod);
-                    }
-                }));
+    private void loadCacheWithDBEntries(){
+
     }
 
+    //@RxLogObservable
+    private Observable<UMod> getUModsOneByOneFromCacheOrDisk(){
+        if (mCachedUMods!=null && !mCachedUMods.isEmpty()){//CACHE MULTIPLE HIT
+            Log.d("umods_rep","Map cache");
+            return Observable.from(mCachedUMods.values())
+                        .compose(this.uModCacheBrander);
+        }
+        //CACHE MISS
+        Log.d("umods_rep","DB");
+        return mUModsLocalDataSource.getUModsOneByOne()
+                .doOnNext(uMod -> mCachedUMods.put(uMod.getUUID(), uMod));
+    }
+
+    private  Observable<UMod> getUModsOneByOneFromCacheOrDiskAndRefreshOnline(){//refresh umod data by
+        return this.getUModsOneByOneFromCacheOrDisk()
+                .flatMap(value -> Observable.just(value)
+                        .subscribeOn(Schedulers.io())//TODO use scheduler provider by dagger)
+                        .flatMap(uMod -> mUModsInternetDataSource.getSystemInfo(uMod,new SysGetInfoRPC.Arguments()).flatMap(result -> {
+                            if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){
+                                uMod.setLastUpdateDate(new Date());
+                                uMod.setConnectionAddress(result.getWifi().getStaIp());
+                                uMod.setState(UMod.State.STATION_MODE);
+                                uMod.setuModSource(UMod.UModSource.MQTT_SCAN);
+                            }
+                            return Observable.just(uMod);
+                        })))
+                .doOnError(throwable -> Log.e("get1x1_online", "" + throwable.getClass().getSimpleName() + "  " + throwable.getMessage()))
+                .onErrorResumeNext(throwable -> Observable.empty())
+                .doOnNext(uMod -> mCachedUMods.put(uMod.getUUID(),uMod));
+    }
 
     private Observable<UMod> getUModsOneByOneFromLanAndUpdateDBAndCache(){
         return mUModsLANDataSource
                 .getUModsOneByOne()
+                .filter(uMod -> uMod!=null)
                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
                     public Observable<UMod> call(final UMod lanUMod) {
-                        return mUModsLocalDataSource.getUMod(lanUMod.getUUID())
-                                .flatMap(new Func1<UMod, Observable<UMod>>() {
-                                    @Override
-                                    public Observable<UMod> call(UMod dbUMod) {
-                                        if(dbUMod == null){
-                                            return Observable.just(lanUMod);
-                                        } else {//Updates the entry
-                                            //TODO check if all necessary fields are being updated.
-                                            //AppUserLevel should remain as in DB
-                                            dbUMod.setConnectionAddress(lanUMod.getConnectionAddress());
-                                            dbUMod.setState(lanUMod.getState());
-                                            dbUMod.setuModSource(UMod.UModSource.LAN_SCAN);
-                                            dbUMod.setOpen(lanUMod.isOpen());
-                                            dbUMod.setLastUpdateDate(lanUMod.getLastUpdateDate());
-                                            return Observable.just(dbUMod);
-                                        }
-                                    }
-                                });
+                        UMod cachedUMod = mCachedUMods.get(lanUMod.getUUID());
+                        long diffInSeconds = secondsBetweenDates(lanUMod.getLastUpdateDate(), cachedUMod.getLastUpdateDate());
+                        //CACHE HIT
+                        if (cachedUMod != null
+                                && cachedUMod.getuModSource()== UMod.UModSource.MQTT_SCAN
+                                && diffInSeconds <= 20L){
+                            return Observable.empty();
+                        } else {//CACHE MISS
+                            return Observable.just(lanUMod);
+                        }
                     }
                 })
                 .doOnNext(new Action1<UMod>() {
                     @Override
                     public void call(UMod uMod) {
-                        if(uMod.belongsToAppUser()){
-                            //TODO should make only an update of connectionAddress and updateDate only (partial update).
+                        if(uMod.belongsToAppUser()){//CACHE UPDATE
+                            //TODO should make only an update of connectionAddress and updateDate only?? (partial update)
                             Log.d("umods_rep", "db update");
                             mUModsLocalDataSource.saveUMod(uMod);
                             //TODO move to cacheDataSource ASAP
@@ -231,6 +241,10 @@ public class UModsRepository implements UModsDataSource {
                         mCacheIsDirty = false;
                     }
                 });
+    }
+
+    private long secondsBetweenDates(Date newer, Date older){
+        return (newer.getTime() - older.getTime()) /1000L;
     }
 
     //TODO make a revision of this method!
@@ -270,8 +284,9 @@ public class UModsRepository implements UModsDataSource {
 
         Log.d("umods_rep", "lanbrowse first");
 
-        return Observable.concatDelayError(
+        return Observable.mergeDelayError(
                 //cacheOrDBUModObs.defaultIfEmpty(null),
+                getUModsOneByOneFromCacheOrDiskAndRefreshOnline(),
                 lanUModObs,
                 Observable.empty())
                 .doOnUnsubscribe(new Action0() {

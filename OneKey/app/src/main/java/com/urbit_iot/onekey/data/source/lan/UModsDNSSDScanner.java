@@ -1,8 +1,10 @@
 package com.urbit_iot.onekey.data.source.lan;
 
+import android.os.Build;
 import android.util.Log;
 
 import com.fernandocejas.frodo.annotation.RxLogObservable;
+import com.github.druk.rxdnssd.BonjourService;
 import com.github.druk.rxdnssd.RxDnssd;
 import com.urbit_iot.onekey.data.UMod;
 
@@ -14,6 +16,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import rx.Observable;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import rx.subjects.ReplaySubject;
@@ -28,6 +32,7 @@ public class UModsDNSSDScanner {
     private ReplaySubject<UMod> freshUModDnsScan;
     private PublishSubject<Long> uModDnsScanTrigger;
     private AtomicBoolean scanInProgress;//TODO replace with atomicBoolean or a custom Lock that can be
+    private Subscription serviceProbeRegistration;
     //lock by one thread and unlocked by other.
     /*
     public class MyLock implements Lock {
@@ -66,7 +71,26 @@ public class UModsDNSSDScanner {
                 .subscribe();
         */
         //TODO unsubscribe when application is destroyed
+        this.serviceProbeRegistration = this.registerProbeService();
 
+    }
+
+    private Subscription registerProbeService(){
+        BonjourService bonjourService = new BonjourService
+                .Builder(0, 0, Build.DEVICE, "_urbitclientprobe._tcp", null)
+                .port(59328)
+                .build();
+        return this.rxDnssd.register(bonjourService)
+                .observeOn(Schedulers.io())
+                .subscribe(service -> { }, throwable -> {
+                    Log.e("DNSSD", "Error: ", throwable);
+                });
+    }
+
+    private void unsubscribeProbeService(){
+        if (!this.serviceProbeRegistration.isUnsubscribed()){
+            this.serviceProbeRegistration.unsubscribe();
+        }
     }
 
     private void continuousBrowseLANForUMods(){
