@@ -7,12 +7,18 @@ import android.util.Log;
 
 import com.urbit_iot.onekey.data.UMod;
 
+import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -36,16 +42,7 @@ public class UModsTCPScanner {
     @Inject
     public UModsTCPScanner(Context mContext) {
         this.mContext = mContext;
-        WifiManager wifi = (WifiManager)
-                mContext.getApplicationContext()
-                .getSystemService(Context.WIFI_SERVICE);
-        DhcpInfo dhcpInfo = null;
-        if (wifi != null) {
-            dhcpInfo = wifi.getDhcpInfo();
-            Long phoneIPAddress = convertReverseInt2ByteArray(dhcpInfo.ipAddress);
-            Long subnetMaskAddress = convertReverseInt2ByteArray(dhcpInfo.netmask);
-            this.addressesCalculator = new PhoneIPAddressRadius(phoneIPAddress, subnetMaskAddress);
-        }
+        this.setupCalculator();
         Observable.just(true)
                 .delay(3000L,TimeUnit.MILLISECONDS)
                 .doOnNext(aBoolean -> {
@@ -53,6 +50,39 @@ public class UModsTCPScanner {
                 })
                 //.flatMap(aBoolean -> TCPScanClient.tcpEchoRequest("172.18.191.68", 7777))
                 .subscribeOn(Schedulers.io()).subscribe();
+    }
+    public void setupCalculator(){
+        WifiManager wifi = (WifiManager)
+                mContext.getApplicationContext()
+                        .getSystemService(Context.WIFI_SERVICE);
+        DhcpInfo dhcpInfo = null;
+        if (wifi != null && wifi.isWifiEnabled()) {
+            dhcpInfo = wifi.getDhcpInfo();
+            Long phoneIPAddress = convertReverseInt2ByteArray(dhcpInfo.ipAddress);
+            Long subnetMaskAddress = convertReverseInt2ByteArray(dhcpInfo.netmask);
+            if (subnetMaskAddress == 0) {
+                try {
+                    InetAddress inetAddress = InetAddress.getByName(longToStringIP(phoneIPAddress));
+                    NetworkInterface networkInterface = NetworkInterface.getByInetAddress(inetAddress);
+                    for (InterfaceAddress address : networkInterface.getInterfaceAddresses()) {
+                        subnetMaskAddress = netmaskPrefixToLongAddress(address.getNetworkPrefixLength());
+                    }
+                } catch (IOException e) {
+                    Log.e("TCP_SCAN", e.getMessage());
+                }
+            }
+            this.addressesCalculator = new PhoneIPAddressRadius(phoneIPAddress, subnetMaskAddress);
+        } else {
+            this.addressesCalculator = ArrayList::new;
+        }
+    }
+    private long netmaskPrefixToLongAddress(short netPrefix){
+        long netmaskAddress = 0;
+        for (int i=0; i<netPrefix;i++){
+            System.out.println((1L<<31-i));
+            netmaskAddress = netmaskAddress | (1L<<31-i);
+        }
+        return netmaskAddress;
     }
 
     private long convertReverseInt2ByteArray(int ipReversedCode) {
@@ -70,16 +100,14 @@ public class UModsTCPScanner {
 
     public Observable<UMod> scanForUMods(){
         List<Long> allAddresses = this.addressesCalculator.calculateAddresses();
-        List<List<Long>> addressesChunks = chopList(allAddresses,50);
-        Log.d("TCP_SCAN", "Chunks of 50" + addressesChunks.size());
+        //List<List<Long>> addressesChunks = chopList(allAddresses,50);
+        //Log.d("TCP_SCAN", "Chunks of 50" + addressesChunks.size());
 
-        return Observable.from(addressesChunks.get(0))
-                //.flatMap(Observable::from)
-                //.doOnNext(aLong -> Log.d("TCP_SCAN", "" + aLong))
+        return Observable.from(allAddresses)
                 .flatMap(ipAddressAsLong ->
                         Observable.just(longToStringIP(ipAddressAsLong))
                         .subscribeOn(Schedulers.io())
-                        .flatMap(this::performTCPEcho))
+                        .flatMap(this::performTCPEcho), 15)
                 .onErrorResumeNext(throwable -> {
                     if (throwable != null){
                         Log.e("TCP_SCAN", ""
@@ -88,6 +116,27 @@ public class UModsTCPScanner {
                     }
                     return Observable.just(null);
                 })//TODO Bad practice using null to ignore errors!!
+                .doOnNext(uMod -> Log.d("tcp_scan", uMod.getUUID()))
+                .filter(uMod -> uMod != null);
+    }
+
+    public Observable<UMod> scanForUModsC(){
+        List<Long> allAddresses = this.addressesCalculator.calculateAddresses();
+        List<List<Long>> addressesChunks = chopList(allAddresses,50);
+        Log.d("TCP_SCAN", "Chunks of 50" + addressesChunks.size());
+
+        return Observable.from(addressesChunks)
+                .flatMap(Observable::from)
+                .map(UModsTCPScanner::longToStringIP)
+                .flatMap(this::performTCPEcho)
+                .onErrorResumeNext(throwable -> {
+                    if (throwable != null){
+                        Log.e("TCP_SCAN", ""
+                                + throwable.getClass().getSimpleName()
+                                + "   " + throwable.getMessage());
+                    }
+                    return Observable.just(null);
+                })
                 .doOnNext(uMod -> Log.d("tcp_scan", uMod.getUUID()))
                 .filter(uMod -> uMod != null);
     }

@@ -41,7 +41,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
     public GetUModsOneByOne(@NonNull UModsRepository tasksRepository,
                             @NonNull AppUserRepository appUserRepository,
                             @NonNull BaseSchedulerProvider schedulerProvider) {
-        super(Schedulers.io(), schedulerProvider.ui());
+        super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
         mAppUserRepository = checkNotNull(appUserRepository, "appUserRepository cannot be null!");
     }

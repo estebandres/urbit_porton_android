@@ -23,6 +23,9 @@ public class PhoneIPAddressRadius implements LanAddressesCalculation {
 
     @Override
     public List<Long> calculateAddresses() {
+        if (this.networkAddress == 0L || this.phoneIPAddress == 0){
+            return new ArrayList<>();
+        }
         ArrayList<Long> lowerAddresses = new ArrayList<>();
         ArrayList<Long> upperAddresses = new ArrayList<>();
         long maxIPAddress = networkAddress + ((~this.subnetMaskAddress) & 0xFFFFFFFFL) - 1L;

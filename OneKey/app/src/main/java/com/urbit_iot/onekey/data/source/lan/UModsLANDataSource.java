@@ -174,14 +174,15 @@ public class UModsLANDataSource implements UModsDataSource {
 
     //@RxLogObservable
     public Observable<UMod> getUModsOneByOne(){
+        mUModsTCPScanner.setupCalculator();
         return Observable.mergeDelayError(
                 //TODO review!!!
-                /*
-                mUModsDNSSDScanner.browseLANForUMods()
-                        .switchIfEmpty(getUModsByLanPingingAndApiCalling()),
-                        */
+                ///*
                 mUModsDNSSDScanner.browseLANForUMods()
                         .switchIfEmpty(mUModsTCPScanner.scanForUMods()),
+                //*/
+                //mUModsTCPScanner.scanForUMods(),
+                //mUModsDNSSDScanner.browseLANForUMods(),
                 /*
                 Observable.mergeDelayError(
                         //mUModsDNSSDScanner.browseLANForUMods(),
