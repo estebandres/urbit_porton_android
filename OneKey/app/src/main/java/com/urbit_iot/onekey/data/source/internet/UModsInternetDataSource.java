@@ -82,7 +82,7 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public void saveUMod(@NonNull UMod uMod) {
-
+        mUModMqttService.subscribeToUModResponseTopic(uMod);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public void deleteAllUMods() {
-
+        mUModMqttService.unsubscribeAll();
     }
 
     @Override

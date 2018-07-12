@@ -259,11 +259,11 @@ public final class UMod {
     }
 
     public void setMqttResponseTopic(@Nullable String username) {
-        this.mqttResponseTopic = "urbit_" + this.uModUUID + "/response/" + username;
+        this.mqttResponseTopic = GlobalConstants.URBIT_PREFIX + this.uModUUID + "/response/" + username;
     }
 
     public String getUModRequestTopic(){
-        return "urbit_" + this.uModUUID + "/request";
+        return GlobalConstants.URBIT_PREFIX + this.uModUUID + "/request";
     }
 
     @Nullable

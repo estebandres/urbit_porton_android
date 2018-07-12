@@ -11,6 +11,7 @@ import com.polidea.rxandroidble.scan.ScanFilter;
 import com.polidea.rxandroidble.scan.ScanResult;
 import com.polidea.rxandroidble.scan.ScanSettings;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.util.concurrent.TimeUnit;
 
@@ -82,7 +83,7 @@ public class UModsBLEScanner {
                         .filter(new Func1<ScanResult, Boolean>() {
                             @Override
                             public Boolean call(ScanResult scanResult) {
-                                return scanResult.getBleDevice().getName() != null && scanResult.getBleDevice().getName().contains("urbit");
+                                return scanResult.getBleDevice().getName() != null && scanResult.getBleDevice().getName().matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX);
                             }
                         })
                         .map(new Func1<ScanResult, UMod>() {

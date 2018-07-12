@@ -32,20 +32,23 @@ public class WifiConnectivityReceiver extends BroadcastReceiver {
     public boolean isWiFiConnected(Context context){
         //WifiManager wifiManager = (WifiManager) this.mContext.getSystemService(Context.WIFI_SERVICE);
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
-            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-            if (activeNetworkInfo != null && activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI){
-                return activeNetworkInfo.isConnected();
+        if (connectivityManager!=null){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+                if (activeNetworkInfo != null && activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI){
+                    return activeNetworkInfo.isConnected();
+                } else {
+                    return false;
+                }
             } else {
-                return false;
-            }
-        } else {
-            NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-            if (networkInfo != null){
-                return networkInfo.isConnected();
-            } else {
-                return false;
+                NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+                if (networkInfo != null){
+                    return networkInfo.isConnected();
+                } else {
+                    return false;
+                }
             }
         }
+        return false;
     }
 }

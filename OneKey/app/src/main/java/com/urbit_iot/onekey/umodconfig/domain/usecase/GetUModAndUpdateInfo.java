@@ -94,6 +94,8 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                         //User Creation Succeeded
                                                         Log.d("getumod+info_uc","User Creation Succeeded!");
                                                         uMod.setAppUserLevel(result.getUserLevel());
+                                                        //TODO when CACHE state doesnt display wifi cred settings. Change mapping on presenter!!
+                                                        uMod.setuModSource(UMod.UModSource.LAN_SCAN);
                                                         mUModsRepository.saveUMod(uMod);
                                                         return Observable.just(uMod);
                                                     }
@@ -145,6 +147,8 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                                 public Observable<UMod> call(GetUserLevelRPC.Result result) {
                                                                                     Log.d("getumod+info_uc","Get User Level Succeeded!: "+result.toString());
                                                                                     uMod.setAppUserLevel(result.getUserLevel());
+                                                                                    //TODO when CACHE state doesnt display wifi cred settings. Change mapping on presenter!!
+                                                                                    uMod.setuModSource(UMod.UModSource.LAN_SCAN);
                                                                                     mUModsRepository.saveUMod(uMod);
                                                                                     return Observable.just(uMod);
                                                                                 }

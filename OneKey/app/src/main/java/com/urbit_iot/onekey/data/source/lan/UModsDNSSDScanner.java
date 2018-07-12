@@ -3,10 +3,10 @@ package com.urbit_iot.onekey.data.source.lan;
 import android.os.Build;
 import android.util.Log;
 
-import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.github.druk.rxdnssd.BonjourService;
 import com.github.druk.rxdnssd.RxDnssd;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 
 import rx.Observable;
 import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import rx.subjects.ReplaySubject;
@@ -60,16 +59,6 @@ public class UModsDNSSDScanner {
         this.scanInProgress = new AtomicBoolean(false);
         this.freshUModDnsScan = ReplaySubject.create();
         this.uModDnsScanTrigger = PublishSubject.create();
-        //TODO reconsider continuous dnssd discovery. When do I need to update constantly??
-        //this.continuousBrowseLANForUMods();
-        /*
-        Observable.interval(10, TimeUnit.SECONDS)
-                .startWith(1L)
-                .subscribeOn(Schedulers.io())
-                .doOnNext(n -> singleScan())
-                .onErrorResumeNext(Observable.just(1234L))
-                .subscribe();
-        */
         //TODO unsubscribe when application is destroyed
         this.serviceProbeRegistration = this.registerProbeService();
 
@@ -87,44 +76,12 @@ public class UModsDNSSDScanner {
                 });
     }
 
-    private void unsubscribeProbeService(){
-        if (!this.serviceProbeRegistration.isUnsubscribed()){
-            this.serviceProbeRegistration.unsubscribe();
-        }
-    }
 
-    private void continuousBrowseLANForUMods(){
-        rxDnssd.browse("_http._tcp.","local.")
-                .compose(rxDnssd.resolve())
-                .compose(rxDnssd.queryRecords())
-                .filter(bonjourService -> {
-                    //TODO improve filter using regex
-                    return bonjourService != null
-                            && bonjourService.getHostname() != null
-                            && bonjourService.getHostname().contains("urbit")
-                            && bonjourService.getInet4Address() != null;
-                })
-                .doOnNext(bonjourService -> {
-                    String uModUUID = getUUIDFromDiscoveryHostName(bonjourService.getHostname());
-                    if (bonjourService.isLost()){
-                        //Log.d("dnssd_cont","LOST " + uModUUID);
-                        mCachedUMods.remove(uModUUID);
-                    } else {
-                        //Log.d("dnssd_cont","FOUND " + uModUUID);
-                        mCachedUMods.put(uModUUID, new UMod(uModUUID,
-                                bonjourService.getInet4Address().getHostAddress(),
-                                true));
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .subscribe();
-    }
-
-    private String getUUIDFromDiscoveryHostName(String hostName){
+    private String getUUIDFromDiscoveryServiceName(String serviceName){
         String uModUUID = "DEFAULTUUID";
 
-        Pattern pattern = Pattern.compile("urbit-(.*?)\\.local\\.");
-        Matcher matcher = pattern.matcher(hostName);
+        Pattern pattern = Pattern.compile(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX);
+        Matcher matcher = pattern.matcher(serviceName);
 
         if (matcher.find()){
             uModUUID = matcher.group(1);
@@ -191,40 +148,8 @@ public class UModsDNSSDScanner {
                 });
     }
 
-
-    //Keeps browsing the LAN for 5 seconds maximum.
     //@RxLogObservable
-    /*
-    public void singleScan(){
-        this.mCachedUMods.clear();
-        rxDnssd.browse("_http._tcp.","local.")
-            .compose(rxDnssd.resolve())
-            .compose(rxDnssd.queryRecords())
-            .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
-            .distinct()
-            .filter(bonjourService -> {
-                //TODO improve filter using regex
-                return bonjourService != null
-                        && bonjourService.getHostname() != null
-                        && bonjourService.getHostname().contains("urbit")
-                        && bonjourService.getInet4Address() != null;
-            })
-            .doOnNext(bonjourService -> {
-                String uModUUID = getUUIDFromDiscoveryHostName(bonjourService.getHostname());
-                if (bonjourService.isLost()){
-                    //Log.d("dnssd_cont","LOST " + uModUUID);
-                    mCachedUMods.remove(uModUUID);
-                } else {
-                    //Log.d("dnssd_cont","FOUND " + uModUUID);
-                    mCachedUMods.put(uModUUID, new UMod(uModUUID,
-                            bonjourService.getInet4Address().getHostAddress(),
-                            true));
-                }
-            })
-            .subscribe();
-    }
-    */
-    //@RxLogObservable
+    //TODO as proof of concept we should try send a regular DNS query(A/AAAA) to 224.0.0.251:5353 (DNS server)
     public Observable<UMod> singleScan(){
         freshUModDnsScan = ReplaySubject.create();
         return rxDnssd.browse("_http._tcp.","local.")
@@ -235,11 +160,11 @@ public class UModsDNSSDScanner {
                 .filter(bonjourService ->
                         bonjourService != null
                         && !bonjourService.isLost()
-                        && bonjourService.getHostname() != null
-                        && bonjourService.getHostname().contains("urbit")//TODO improve filter using regex
+                        //&& bonjourService.getServiceName() != null
+                        && bonjourService.getServiceName().matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX)
                         && bonjourService.getInet4Address() != null)
                 .map(bonjourService -> {
-                    String uModUUID = getUUIDFromDiscoveryHostName(bonjourService.getHostname());
+                    String uModUUID = getUUIDFromDiscoveryServiceName(bonjourService.getServiceName());
                     return new UMod(uModUUID,
                             bonjourService.getInet4Address().getHostAddress(),
                             true);
@@ -250,101 +175,4 @@ public class UModsDNSSDScanner {
                 .doOnTerminate(() -> scanInProgress.compareAndSet(true, false))
                 .doOnCompleted(() -> scanInProgress.compareAndSet(true, false));
     }
-
-    /*
-    //Keeps browsing the LAN for 4 seconds maximum.
-    //@RxLogObservable
-    public Observable<UMod> browseLANForUMods(){
-        return Observable.defer(new Func0<Observable<UMod>>() {
-            @Override
-            public Observable<UMod> call() {
-                return rxDnssd.browse("_http._tcp.","local.")
-                        .compose(rxDnssd.resolve())
-                        .compose(rxDnssd.queryRecords())
-                        //.take(10)
-                        .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
-                        .distinct()
-                        .filter(new Func1<BonjourService, Boolean>() {
-                            @Override
-                            public Boolean call(BonjourService bonjourService) {
-                                //TODO improve filter using regex
-                                return bonjourService.getHostname() != null && bonjourService.getHostname().contains("urbit");
-                            }
-                        })
-                        .map(new Func1<BonjourService,UMod>(){
-                            public UMod call(BonjourService discovery){
-                                Pattern pattern = Pattern.compile("urbit-(.*?)\\.local\\.");
-                                Matcher matcher = pattern.matcher(discovery.getHostname());
-                                String uModUUID = "DEFAULTUUID";
-                                if (matcher.find()){
-                                    uModUUID = matcher.group(1);
-                                }
-                                return new UMod(uModUUID,
-                                        discovery.getInet4Address().getHostAddress(),
-                                        true);
-                            }
-                        });
-            }
-        });
-    }
-    */
-
-
-    /*
-    //TODO as proof of concept we should try send a regular DNS query(A/AAAA) to 224.0.0.251:5353 (DNS server)
-    //there are several java android libraries that could work well. But it seems that mongoose os only implements the advertise method.
-    public Observable<UMod> browseLANForUMod(final String uModUUID){
-        return Observable.defer(new Func0<Observable<UMod>>() {
-            @Override
-            public Observable<UMod> call() {
-                return rxDnssd.browse("_http._tcp.","local.")
-                        .compose(rxDnssd.resolve())
-                        .compose(rxDnssd.queryRecords())
-                        .distinct()
-                        .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
-                        .filter(new Func1<BonjourService, Boolean>() {
-                            @Override
-                            public Boolean call(BonjourService bonjourService) {
-                                return bonjourService != null
-                                        && bonjourService.getHostname() != null
-                                        && bonjourService.getHostname().contains(uModUUID)
-                                        && bonjourService.getInet4Address() != null;
-                            }
-                        })
-                        .take(1)
-                        .doOnError(new Action1<Throwable>() {
-                            @Override
-                            public void call(Throwable throwable) {
-                                Log.e("dns-sd_scan", throwable.getMessage());
-                            }
-                        })
-                        .doOnNext(new Action1<BonjourService>() {
-                            @Override
-                            public void call(BonjourService bonjourService) {
-                                Log.d("dns-sd_scan",bonjourService.getHostname() + " - " + bonjourService.getInet4Address().getHostAddress());
-                            }
-                        })
-                        .map(new Func1<BonjourService,UMod>(){
-                            public UMod call(BonjourService discovery){
-                                Pattern pattern = Pattern.compile("urbit-(.*?)\\.local\\.");
-                                Matcher matcher = pattern.matcher(discovery.getHostname());
-                                String uModUUID = " DEFAULTUUID";
-                                if (matcher.find()){
-                                    uModUUID = matcher.group(1);
-                                }
-                                return new UMod(uModUUID,
-                                        discovery.getInet4Address().getHostAddress(),
-                                        true);
-                            }
-                        })
-                        .doOnCompleted(new Action0() {
-                            @Override
-                            public void call() {
-                                Log.d("dns-sd", "single browse finished.");
-                            }
-                        });
-            }
-        });
-    }
-    */
 }

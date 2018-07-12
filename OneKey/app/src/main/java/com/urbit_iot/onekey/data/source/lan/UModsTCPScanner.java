@@ -1,11 +1,15 @@
 package com.urbit_iot.onekey.data.source.lan;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.util.Log;
 
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -56,7 +60,26 @@ public class UModsTCPScanner {
                 mContext.getApplicationContext()
                         .getSystemService(Context.WIFI_SERVICE);
         DhcpInfo dhcpInfo = null;
-        if (wifi != null && wifi.isWifiEnabled()) {
+        boolean wifiConnectionIsActive = false;
+        ConnectivityManager connectivityManager = (ConnectivityManager) this.mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager!=null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+                if (activeNetworkInfo != null && activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+                    wifiConnectionIsActive = activeNetworkInfo.isConnected();
+                } else {
+                    wifiConnectionIsActive = false;
+                }
+            } else {
+                NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+                if (networkInfo != null) {
+                    wifiConnectionIsActive = networkInfo.isConnected();
+                } else {
+                    wifiConnectionIsActive = false;
+                }
+            }
+        }
+        if (wifi != null && wifi.isWifiEnabled() && wifiConnectionIsActive) {
             dhcpInfo = wifi.getDhcpInfo();
             Long phoneIPAddress = convertReverseInt2ByteArray(dhcpInfo.ipAddress);
             Long subnetMaskAddress = convertReverseInt2ByteArray(dhcpInfo.netmask);
@@ -183,7 +206,7 @@ public class UModsTCPScanner {
                 .take(1)
                 .map(byteBuf -> byteBuf.toString(Charset.defaultCharset()))
                 .doOnNext(stringResponse -> Log.d("tcp_scan", "ECHO_RESP:  " + stringResponse))
-                .filter(possibleUModResp -> possibleUModResp.contains("urbit"))
+                .filter(possibleUModResp -> possibleUModResp.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX))
                 .map(uModResp -> {
                     String uModUUID = getUUIDFromUModAdvertisedID(uModResp);
                     return new UMod(uModUUID,
@@ -196,7 +219,7 @@ public class UModsTCPScanner {
     private Observable<UMod> performTCPEcho(String ipAddressName){
 
         return TCPScanClient.tcpEchoRequest(ipAddressName,7777)
-                .filter(possibleUModResp -> possibleUModResp.contains("urbit"))
+                .filter(possibleUModResp -> possibleUModResp.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX))
                 .map(uModResp -> {
                     String uModUUID = getUUIDFromUModAdvertisedID(uModResp);
                     return new UMod(uModUUID,
@@ -210,7 +233,7 @@ public class UModsTCPScanner {
     private String getUUIDFromUModAdvertisedID(String hostName){
         String uModUUID = "DEFAULTUUID";
 
-        Pattern pattern = Pattern.compile("urbit-(.*?)\\.local\\.");
+        Pattern pattern = Pattern.compile(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX);
         Matcher matcher = pattern.matcher(hostName);
 
         if (matcher.find()){

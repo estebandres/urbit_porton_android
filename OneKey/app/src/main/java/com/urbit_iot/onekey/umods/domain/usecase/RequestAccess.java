@@ -102,8 +102,8 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                         //TODO ask if this is possible. Currently the API doc doesn't
                                                         // specify what data is returned as part of the result.
                                                         //subscribirme al topico
-                                                        uMod.setMqttResponseTopic(appUser.getUserName());
-                                                        mUModMqttService.subscribeToUModResponseTopic(uMod);
+                                                        //uMod.setMqttResponseTopic(appUser.getUserName());
+                                                        //mUModMqttService.subscribeToUModResponseTopic(uMod);
                                                         Timber.d("CreateUser Success: " + createUserResult.toString());
                                                         uMod.setAppUserLevel(createUserResult.getUserLevel());
                                                         mUModsRepository.saveUMod(uMod);

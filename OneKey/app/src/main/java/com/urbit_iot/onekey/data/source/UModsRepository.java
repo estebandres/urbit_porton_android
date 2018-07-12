@@ -168,14 +168,17 @@ public class UModsRepository implements UModsDataSource {
 
     //@RxLogObservable
     private Observable<UMod> getUModsOneByOneFromCacheOrDisk(){
+        //mUModsInternetDataSource.deleteAllUMods();
         if (mCachedUMods!=null && !mCachedUMods.isEmpty()){//CACHE MULTIPLE HIT
             Log.d("umods_rep","Map cache");
             return Observable.from(mCachedUMods.values())
+                    //.doOnNext(mUModsInternetDataSource::saveUMod)
                         .compose(this.uModCacheBrander);
         }
         //CACHE MISS
         Log.d("umods_rep","DB");
         return mUModsLocalDataSource.getUModsOneByOne()
+                //.doOnNext(mUModsInternetDataSource::saveUMod)
                 .doOnNext(uMod -> mCachedUMods.put(uMod.getUUID(), uMod));
     }
 
@@ -201,16 +204,26 @@ public class UModsRepository implements UModsDataSource {
         return mUModsLANDataSource
                 .getUModsOneByOne()
                 .filter(uMod -> uMod!=null)
-                .flatMap(new Func1<UMod, Observable<UMod>>() {
+                .flatMap(new Func1<UMod, Observable<UMod>>() {//Revisar lógica
                     @Override
                     public Observable<UMod> call(final UMod lanUMod) {
                         UMod cachedUMod = mCachedUMods.get(lanUMod.getUUID());
-                        long diffInSeconds = secondsBetweenDates(lanUMod.getLastUpdateDate(), cachedUMod.getLastUpdateDate());
                         //CACHE HIT
-                        if (cachedUMod != null
-                                && cachedUMod.getuModSource()== UMod.UModSource.MQTT_SCAN
-                                && diffInSeconds <= 20L){
-                            return Observable.empty();
+                        if (cachedUMod != null){
+                            long diffInSeconds = secondsBetweenDates(lanUMod.getLastUpdateDate(), cachedUMod.getLastUpdateDate());
+                            if (diffInSeconds <= 5L
+                                    && cachedUMod.getuModSource()== UMod.UModSource.MQTT_SCAN){//In case we've got an MQTT ping
+                                return Observable.empty();
+                            } else {
+                                //TODO check if all necessary fields are being updated.
+                                //AppUserLevel should remain as in DB
+                                cachedUMod.setConnectionAddress(lanUMod.getConnectionAddress());
+                                cachedUMod.setState(lanUMod.getState());
+                                cachedUMod.setuModSource(UMod.UModSource.LAN_SCAN);
+                                cachedUMod.setOpen(lanUMod.isOpen());
+                                cachedUMod.setLastUpdateDate(lanUMod.getLastUpdateDate());
+                                return Observable.just(cachedUMod);
+                            }
                         } else {//CACHE MISS
                             return Observable.just(lanUMod);
                         }
@@ -348,7 +361,7 @@ public class UModsRepository implements UModsDataSource {
         checkNotNull(uMod);
         mUModsLANDataSource.saveUMod(uMod);
         mUModsLocalDataSource.saveUMod(uMod);
-        mUModsInternetDataSource.saveUMod(uMod);
+        //mUModsInternetDataSource.saveUMod(uMod);
 
         // Do in memory cache update to keep the app UI up to date
         if (mCachedUMods == null) {

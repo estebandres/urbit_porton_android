@@ -18,8 +18,11 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import hu.akarnokd.rxjava.interop.RxJavaInterop;
+import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
+import io.reactivex.Single;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.processors.PublishProcessor;
 import io.reactivex.schedulers.Schedulers;
@@ -43,6 +46,8 @@ public class UModMqttService {
 
     private Map<String, Disposable> subscriptionsMap;
 
+    private CompositeDisposable allSubscriptions;
+
     //private boolean subscribedToUModResponseTopic;
 
     @Inject
@@ -54,6 +59,7 @@ public class UModMqttService {
         this.userName = userName;
         this.receivedMessagesProcessor = PublishProcessor.create();
         this.subscriptionsMap = new LinkedHashMap<>();
+        this.allSubscriptions = new CompositeDisposable();
 
         mMqttClient.connect()
                 .doOnComplete(this::subscribeToResponseTopic)
@@ -81,8 +87,8 @@ public class UModMqttService {
         //Rxjava1
         Flowable<MqttMessage> topicMessagesFlowable = mMqttClient.subscribe(umod.getMqttResponseTopic(),2);
         Disposable topicSubDisposable = Flowable.just(mMqttClient.isConnected())
-                .flatMap(aBoolean -> {
-                    if (aBoolean){
+                .flatMap(isClientConnected -> {
+                    if (isClientConnected){
                         return topicMessagesFlowable;
                     } else {
                         return mMqttClient.connect()
@@ -100,8 +106,8 @@ public class UModMqttService {
                 () -> {
                     Log.d("mqtt_sub", "Response Topic Sub Completed.");
                 });
-
-        this.subscriptionsMap.put(umod.getUUID(), topicSubDisposable);
+        //this.subscriptionsMap.put(umod.getUUID(), topicSubDisposable);
+        this.allSubscriptions.add(topicSubDisposable);
     }
 
 
@@ -135,6 +141,23 @@ public class UModMqttService {
                     }
                 });
         return RxJavaInterop.toV1Single(maybeConditionalConnection).toObservable();
+    }
+
+    public void unsubscribeAll() {
+        //this.allSubscriptions.dispose();
+        this.allSubscriptions.clear();
+    }
+
+    public void reconnectToBroker(){
+        Completable reconnectionCompletable;
+        if (this.mMqttClient.isConnected()){
+            reconnectionCompletable = this.mMqttClient.disconnect().andThen(this.mMqttClient.connect());
+        } else {
+            reconnectionCompletable = this.mMqttClient.connect();
+        }
+        reconnectionCompletable.subscribe(() ->
+                        Log.d("MQTT_SERVICE", "Reconnection Success"),
+                throwable -> Log.e("MQTT_SERVICE", "Reconnection Failure",throwable));
     }
 }
 

@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.github.pwittchen.reactivewifi.ReactiveWifi;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,16 +39,6 @@ public class UModsWiFiScanner {
         this.mCachedAPModeUMods = new LinkedHashMap<>();
         this.scanInProgress = new AtomicBoolean(false);
         this.freshUModDnsScan = PublishSubject.create();
-        //this.continuousWiFiScann();
-        /*
-        Observable.interval(10, TimeUnit.SECONDS)
-                .startWith(1L)
-                .subscribeOn(Schedulers.io())
-                .doOnNext(n -> continuousWiFiScann())
-                .onErrorResumeNext(Observable.just(1234L))
-                .subscribe();
-        */
-        //TODO unsubscribe when application is destroyed
     }
 
     synchronized public Observable<UMod> browseWiFiForUMods() {
@@ -111,80 +102,6 @@ public class UModsWiFiScanner {
 
     }
 
-
-    //@RxLogObservable
-    private Observable<UMod> scanWiFi(final String filterUModUUID) {
-        if (ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return Observable.error(new Exception("Unsatisfied WiFi permissions"));
-        }
-        return ReactiveWifi.observeWifiAccessPoints(this.appContext)
-                .flatMap(new Func1<List<ScanResult>, Observable<ScanResult>>() {
-                    @Override
-                    public Observable<ScanResult> call(List<ScanResult> scanResults) {
-                        return Observable.from(scanResults);
-                    }
-                })
-                .distinct(new Func1<ScanResult, Object>() {
-                    @Override
-                    public Object call(ScanResult scanResult) {
-                        return scanResult.SSID;
-                    }
-                })
-                .filter(new Func1<ScanResult, Boolean>() {
-                    @Override
-                    public Boolean call(ScanResult scanResult) {
-                        return scanResult.level > -75;
-                    }
-                })
-                .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
-                .filter(new Func1<ScanResult, Boolean>() {
-                    @Override
-                    public Boolean call(ScanResult scanResult) {
-                        //TODO improve filter using regex
-                        return scanResult.SSID.contains("urbit");
-                    }
-                })
-                .map(new Func1<ScanResult, UMod>() {
-                    @Override
-                    public UMod call(ScanResult scanResult) {
-                        Pattern pattern = Pattern.compile("urbit_(.*?)$");
-                        Matcher matcher = pattern.matcher(scanResult.SSID);
-                        String uModUUID = "DEFAULTUUID";
-                        if (matcher.find()){
-                            uModUUID = matcher.group(1);
-                        }
-                        UMod mappedUMod = new UMod(uModUUID);
-                        mappedUMod.setAlias(scanResult.SSID);
-                        mappedUMod.setState(UMod.State.AP_MODE);
-                        return mappedUMod;
-                    }
-                })
-                .filter(new Func1<UMod, Boolean>() {
-                    @Override
-                    public Boolean call(UMod uMod) {
-                        Log.d("wifi_scan", "Filter:" + filterUModUUID + "UMOD: " + uMod.getUUID() + "  " + uMod.getAlias());
-                        if (filterUModUUID != null){
-                            return filterUModUUID.contentEquals(uMod.getUUID());
-                        }
-                        return true;
-                    }
-                });
-    }
-
-    private void continuousWiFiScann(){
-        mCachedAPModeUMods.clear();
-        observableWiFiScanResults()
-                .doOnNext(uMod -> mCachedAPModeUMods.put(uMod.getUUID(),uMod))
-                .subscribe();
-    }
-
     private Observable<UMod> observableWiFiScanResults(){
         if (ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -202,11 +119,11 @@ public class UModsWiFiScanner {
                 .filter(scanResult -> scanResult.level > -75)
                 .filter(scanResult -> {
                     //TODO improve filter using regex
-                    return scanResult.SSID.contains("urbit");
+                    return scanResult.SSID.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX);
                 })
                 .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
                 .map(scanResult -> {
-                    Pattern pattern = Pattern.compile("urbit_(.*?)$");
+                    Pattern pattern = Pattern.compile(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX);
                     Matcher matcher = pattern.matcher(scanResult.SSID);
                     String uModUUID = "DEFAULTUUID";
                     if (matcher.find()){

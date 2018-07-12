@@ -739,6 +739,9 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 mItemListener.vibrateOnActionButtonClick();
                 //actionSlider.setLocked(true);
                 actionSlider.setEnabled(false);
+                Log.d("umods_frag","INDEX:" + i
+                        + "VM_HashCode: " + viewModel.hashCode()
+                        + "\nVM: " + viewModel.toString());
             });
 
             if(viewModel.isItemOnClickListenerEnabled()){
