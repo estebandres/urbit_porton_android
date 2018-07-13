@@ -394,7 +394,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
             mAdminSettingsLayout.setVisibility(View.VISIBLE);
         } else {
-            mAdminSettingsLayout.setVisibility(View.INVISIBLE);
+            mAdminSettingsLayout.setVisibility(View.GONE);
         }
         mAllSettingsLinearLayout.setVisibility(View.VISIBLE);
     }

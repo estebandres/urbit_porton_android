@@ -300,7 +300,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     }
 
     @Override
-    public void makeUModViewModelActionButtonVisible(String uModUUID) {
+    public void enableActionSlider(String uModUUID) {
         mListAdapter.makeButtonVisible(uModUUID);
     }
 

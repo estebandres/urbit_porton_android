@@ -361,7 +361,7 @@ public class UModsRepository implements UModsDataSource {
         checkNotNull(uMod);
         mUModsLANDataSource.saveUMod(uMod);
         mUModsLocalDataSource.saveUMod(uMod);
-        //mUModsInternetDataSource.saveUMod(uMod);
+        mUModsInternetDataSource.saveUMod(uMod);
 
         // Do in memory cache update to keep the app UI up to date
         if (mCachedUMods == null) {
@@ -579,13 +579,13 @@ public class UModsRepository implements UModsDataSource {
     @Override
     public Observable<TriggerRPC.Result>
     triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Arguments request) {
-        /*
+
         return Observable.concatDelayError(
                 mUModsInternetDataSource.triggerUMod(uMod,request),
                 mUModsLANDataSource.triggerUMod(uMod,request))
                 .first();
-                */
-        return mUModsLANDataSource.triggerUMod(uMod,request);
+
+        //return mUModsLANDataSource.triggerUMod(uMod,request);
     }
 
     @Override

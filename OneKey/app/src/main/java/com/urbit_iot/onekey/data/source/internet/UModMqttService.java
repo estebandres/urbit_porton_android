@@ -85,6 +85,13 @@ public class UModMqttService {
 
     public void subscribeToUModResponseTopic(UMod umod){
         //Rxjava1
+        Disposable oldSubscription = this.subscriptionsMap.get(umod.getUUID());
+        if (oldSubscription != null){
+            if (!oldSubscription.isDisposed()){
+                oldSubscription.dispose();
+            }
+            this.subscriptionsMap.remove(umod.getUUID());
+        }
         Flowable<MqttMessage> topicMessagesFlowable = mMqttClient.subscribe(umod.getMqttResponseTopic(),2);
         Disposable topicSubDisposable = Flowable.just(mMqttClient.isConnected())
                 .flatMap(isClientConnected -> {
@@ -106,7 +113,7 @@ public class UModMqttService {
                 () -> {
                     Log.d("mqtt_sub", "Response Topic Sub Completed.");
                 });
-        //this.subscriptionsMap.put(umod.getUUID(), topicSubDisposable);
+        this.subscriptionsMap.put(umod.getUUID(), topicSubDisposable);
         this.allSubscriptions.add(topicSubDisposable);
     }
 
@@ -146,6 +153,7 @@ public class UModMqttService {
     public void unsubscribeAll() {
         //this.allSubscriptions.dispose();
         this.allSubscriptions.clear();
+        this.subscriptionsMap.clear();
     }
 
     public void reconnectToBroker(){
@@ -155,8 +163,10 @@ public class UModMqttService {
         } else {
             reconnectionCompletable = this.mMqttClient.connect();
         }
-        reconnectionCompletable.subscribe(() ->
-                        Log.d("MQTT_SERVICE", "Reconnection Success"),
+        reconnectionCompletable
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                () -> Log.d("MQTT_SERVICE", "Reconnection Success"),
                 throwable -> Log.e("MQTT_SERVICE", "Reconnection Failure",throwable));
     }
 }

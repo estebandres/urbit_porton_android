@@ -60,7 +60,7 @@ public interface UModsContract {
 
         void showRequestAccessCompletedMessage();
 
-        void makeUModViewModelActionButtonVisible(String uModUUID);
+        void enableActionSlider(String uModUUID);
 
         void clearAllItems();
 

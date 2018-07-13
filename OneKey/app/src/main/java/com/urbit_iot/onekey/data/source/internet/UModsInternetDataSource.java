@@ -82,7 +82,9 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public void saveUMod(@NonNull UMod uMod) {
-        mUModMqttService.subscribeToUModResponseTopic(uMod);
+        if (uMod.belongsToAppUser()){
+            mUModMqttService.subscribeToUModResponseTopic(uMod);
+        }
     }
 
     @Override

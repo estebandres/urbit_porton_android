@@ -1,14 +1,11 @@
 package com.urbit_iot.onekey.umods;
 
-import android.app.Activity;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.bugfender.sdk.Bugfender;
 import com.f2prateek.rx.preferences2.Preference;
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.urbit_iot.onekey.RxUseCase;
-import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
@@ -478,7 +475,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         mTriggerUMod.execute(requestValue, new Subscriber<TriggerUMod.ResponseValues>() {
             @Override
             public void onCompleted() {
-                mUModsView.makeUModViewModelActionButtonVisible(uModUUID);
+                mUModsView.enableActionSlider(uModUUID);
 
             }
 
@@ -495,6 +492,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                 //Bugfender.e("trigger","Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage());
                 Timber.e("Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage());
                 mUModsView.showOpenCloseFail();
+                mUModsView.enableActionSlider(uModUUID);
                 loadUMods(true);
             }
 
@@ -510,7 +508,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                     Log.d("umods_pr", "Error Code: " + responseError.getErrorCode()
                             + "\nError Message: " + responseError.getErrorMessage());
                     mUModsView.showOpenCloseFail();
-                    mUModsView.makeUModViewModelActionButtonVisible(uModUUID);
+                    mUModsView.enableActionSlider(uModUUID);
                 } else {
                     Log.d("ModsPresenter", "RPC is " + response.toString());
                     mUModsView.showOpenCloseSuccess();
