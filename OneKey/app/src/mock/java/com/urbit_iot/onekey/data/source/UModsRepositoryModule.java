@@ -262,7 +262,12 @@ public class UModsRepositoryModule {
         mqttConnectOptions.setCleanSession(false);
 
         try {
-            asyncClient = new MqttAsyncClient("tcp://35.196.19.239:1883",this.appUserName,persistence);
+            asyncClient = new MqttAsyncClient(
+                    "tcp://"
+                            + GlobalConstants.MQTT_BROKER__IP_ADDRESS
+                            +":"
+                            + GlobalConstants.MQTT_BROKER__PORT,
+                    this.appUserName,persistence);
         } catch (Exception mqttExc){
             mqttExc.printStackTrace();
             Log.e("provideMqtt", mqttExc.getMessage());

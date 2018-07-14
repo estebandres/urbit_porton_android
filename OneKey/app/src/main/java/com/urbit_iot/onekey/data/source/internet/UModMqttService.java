@@ -6,10 +6,13 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.rpc.RPC;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import net.eusashead.iot.mqtt.MqttMessage;
 import net.eusashead.iot.mqtt.ObservableMqttClient;
 
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
@@ -21,11 +24,14 @@ import hu.akarnokd.rxjava.interop.RxJavaInterop;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
-import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.processors.PublishProcessor;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.MediaType;
+import okhttp3.ResponseBody;
+import retrofit2.Response;
+import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 
 
@@ -61,10 +67,14 @@ public class UModMqttService {
         this.subscriptionsMap = new LinkedHashMap<>();
         this.allSubscriptions = new CompositeDisposable();
 
-        mMqttClient.connect()
-                .doOnComplete(this::subscribeToResponseTopic)
-                .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
-                        throwable -> Log.e("umodsMqttService","FAILED TO CONNECT" + throwable.getMessage()));
+        if (!mMqttClient.isConnected()){
+            this.testConnectionToBroker()
+                    .andThen(mMqttClient.connect())
+                    //.doOnComplete(this::subscribeToResponseTopic)
+                    .subscribeOn(Schedulers.io())//TODO use injected scheduler
+                    .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
+                            throwable -> Log.e("umodsMqttService","FAILED TO CONNECT  " + throwable.getClass().getSimpleName() + " MSG: " + throwable.getMessage()));
+        }
 
     }
 
@@ -84,7 +94,6 @@ public class UModMqttService {
     }
 
     public void subscribeToUModResponseTopic(UMod umod){
-        //Rxjava1
         Disposable oldSubscription = this.subscriptionsMap.get(umod.getUUID());
         if (oldSubscription != null){
             if (!oldSubscription.isDisposed()){
@@ -98,7 +107,8 @@ public class UModMqttService {
                     if (isClientConnected){
                         return topicMessagesFlowable;
                     } else {
-                        return mMqttClient.connect()
+                        return testConnectionToBroker()
+                                .andThen(mMqttClient.connect())
                                 .andThen(topicMessagesFlowable);
                     }
                 })
@@ -127,13 +137,28 @@ public class UModMqttService {
         //TODO Note: this implementation assumes that a SINGLE response will arrive within 2 seconds after the request was published.
         //It should contemplate the arrival of foreign and duplicated messages...Queuing is deemed necessary...???
         Maybe<S> maybeResponse = receivedMessagesProcessor
-                //.doOnNext(mqttMessage -> Log.d("publishRPC", "" + mqttMessage.getId() + new String(mqttMessage.getPayload())))
+                .doOnNext(mqttMessage -> Log.d("publishRPC", "" + mqttMessage.getId() + new String(mqttMessage.getPayload())))
                 .map(mqttMessage -> gsonInstance.fromJson(new String(mqttMessage.getPayload()),responseType))
-                //.doOnNext(s -> Log.d("publishRPC", s.toString()))
+                .doOnNext(s -> Log.d("publishRPC", s.toString()))
                 .filter(response -> ((RPC.Response)response).getResponseId() == ((RPC.Request)request).getRequestId()
-                        && ((RPC.Response)response).getRequestTag().equalsIgnoreCase(((RPC.Request)request).getRequestTag()))
-                .timeout(2000L, TimeUnit.MILLISECONDS)
-                .firstElement();
+                           && ((RPC.Response)response).getRequestTag().equalsIgnoreCase(((RPC.Request)request).getRequestTag()))
+                .timeout(3500L, TimeUnit.MILLISECONDS)
+                .firstElement()
+                .flatMap(response -> {
+                    RPC.ResponseError responseError = ((RPC.Response)response).getResponseError();
+                    if (responseError!=null){
+                        HttpException httpException = new HttpException(
+                                Response.error(
+                                        responseError.getErrorCode(),
+                                        ResponseBody.create(
+                                                MediaType.parse("text/plain"),
+                                                responseError.getErrorMessage())
+                                )
+                        );
+                        return Maybe.error(httpException);
+                    }
+                    return Maybe.just(response);
+                });
         Maybe<S> maybeRequestAndResponse = mMqttClient.publish(requestTopic, requestMqttMessage)
                 .flatMapMaybe(publishToken -> maybeResponse);
 
@@ -142,8 +167,9 @@ public class UModMqttService {
                     if (connectionWithBrokerIsAlive){
                         return maybeRequestAndResponse;
                     } else {
-                        return mMqttClient.connect()
-                                .doOnComplete(this::subscribeToResponseTopic)//TODO Q: is resubscribing necessary??
+                        return testConnectionToBroker()
+                                .andThen(mMqttClient.connect())
+                                //.doOnComplete(this::subscribeToResponseTopic)//TODO Q: is resubscribing necessary??
                                 .andThen(maybeRequestAndResponse);
                     }
                 });
@@ -168,6 +194,22 @@ public class UModMqttService {
                 .subscribe(
                 () -> Log.d("MQTT_SERVICE", "Reconnection Success"),
                 throwable -> Log.e("MQTT_SERVICE", "Reconnection Failure",throwable));
+    }
+
+    public Completable testConnectionToBroker(){
+        return Completable.fromAction(() -> {
+            Socket clientSocket;
+            clientSocket = new Socket();
+            try{
+                clientSocket.connect(
+                        new InetSocketAddress(
+                                GlobalConstants.MQTT_BROKER__IP_ADDRESS,
+                                GlobalConstants.MQTT_BROKER__PORT),
+                        1500);
+            } finally {
+                clientSocket.close();
+            }
+        });
     }
 }
 

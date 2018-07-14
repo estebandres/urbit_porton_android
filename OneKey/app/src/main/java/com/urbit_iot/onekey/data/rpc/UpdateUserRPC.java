@@ -54,10 +54,13 @@ public class UpdateUserRPC extends RPC {
         @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private UpdateUserRPC.Arguments methodArguments;
 
-        public Request(Arguments args, String uModTag, int id) {
-            super(GlobalConstants.RPC_METHOD_NAME___UPDATE_USER,
+        public Request(Arguments args, String requester, String uModTag, int id) {
+            super(
+                    GlobalConstants.RPC_METHOD_NAME___UPDATE_USER,
                     GlobalConstants.RPC_METHOD_CODE__UPDATE_USER,
-                    uModTag,id);
+                    requester,
+                    uModTag,
+                    id);
             this.methodArguments = args;
         }
 

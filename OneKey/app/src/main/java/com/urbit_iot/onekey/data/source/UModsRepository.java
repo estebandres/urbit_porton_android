@@ -40,17 +40,16 @@ import com.urbit_iot.onekey.util.dagger.LanOnly;
 
 import java.io.File;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import okhttp3.ResponseBody;
+import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.Response;
 import rx.Observable;
 import rx.functions.Action0;
@@ -573,7 +572,14 @@ public class UModsRepository implements UModsDataSource {
     @Override
     public Observable<GetUserLevelRPC.Result>
     getUserLevel(@NonNull UMod uMod, @NonNull GetUserLevelRPC.Arguments request) {
-        return mUModsLANDataSource.getUserLevel(uMod, request);
+        //return mUModsLANDataSource.getUserLevel(uMod, request);
+        return mUModsInternetDataSource.getUserLevel(uMod,request)
+                .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof HttpException){
+                        return Observable.error(throwable);
+                    }
+                    return mUModsLANDataSource.getUserLevel(uMod,request);
+                });
     }
 
     @Override
@@ -590,30 +596,75 @@ public class UModsRepository implements UModsDataSource {
 
     @Override
     public Observable<CreateUserRPC.Result> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Arguments request) {
-        return mUModsLANDataSource.createUModUser(uMod, request);
+        //return mUModsLANDataSource.createUModUser(uMod, request);
+        /*
+        return Observable.concatDelayError(
+                mUModsInternetDataSource.createUModUser(uMod,request),
+                mUModsLANDataSource.createUModUser(uMod,request))
+                .first();
+                */
+        return mUModsInternetDataSource.createUModUser(uMod,request)
+                .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof HttpException){
+                        return Observable.error(throwable);
+                    }
+                    return mUModsLANDataSource.createUModUser(uMod,request);
+                    //return Observable.empty();
+                });
     }
 
     @Override
     public Observable<UpdateUserRPC.Result>
     updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Arguments request) {
-        return mUModsLANDataSource.updateUModUser(uMod,request);
+        //return mUModsLANDataSource.updateUModUser(uMod,request);
+        return mUModsInternetDataSource.updateUModUser(uMod,request)
+                .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof HttpException){
+                        return Observable.error(throwable);
+                    }
+                    return mUModsLANDataSource.updateUModUser(uMod,request);
+                    //return Observable.empty();
+                });
     }
 
     @Override
     public Observable<DeleteUserRPC.Result>
     deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Arguments request) {
-        return mUModsLANDataSource.deleteUModUser(uMod, request);
+        //return mUModsLANDataSource.deleteUModUser(uMod, request);
+        return mUModsInternetDataSource.deleteUModUser(uMod,request)
+                .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof HttpException){
+                        return Observable.error(throwable);
+                    }
+                    return mUModsLANDataSource.deleteUModUser(uMod,request);
+                });
     }
 
     @Override
     public Observable<GetUsersRPC.Result> getUModUsers(@NonNull UMod uMod, @NonNull GetUsersRPC.Arguments requestArgs) {
-        return mUModsLANDataSource.getUModUsers(uMod, requestArgs);
+        //return mUModsLANDataSource.getUModUsers(uMod, requestArgs);
+        return mUModsInternetDataSource.getUModUsers(uMod,requestArgs)
+                .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof HttpException){
+                        return Observable.error(throwable);
+                    }
+                    return mUModsLANDataSource.getUModUsers(uMod,requestArgs);
+                    //return Observable.empty();
+                });
     }
 
     @Override
     public Observable<SysGetInfoRPC.Result>
     getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Arguments request) {
-        return mUModsLANDataSource.getSystemInfo(uMod, request);
+        //return mUModsLANDataSource.getSystemInfo(uMod, request);
+        return mUModsInternetDataSource.getSystemInfo(uMod,request)
+                .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof HttpException){
+                        return Observable.error(throwable);
+                    }
+                    return mUModsLANDataSource.getSystemInfo(uMod,request);
+                    //return Observable.empty();
+                });
     }
 
     @Override
@@ -640,7 +691,14 @@ public class UModsRepository implements UModsDataSource {
 
     @Override
     public Observable<FactoryResetRPC.Result> factoryResetUMod(UMod uMod, FactoryResetRPC.Arguments request) {
-        return this.mUModsLANDataSource.factoryResetUMod(uMod, request);
+        //return this.mUModsLANDataSource.factoryResetUMod(uMod, request);
+        return mUModsInternetDataSource.factoryResetUMod(uMod,request)
+                .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof HttpException){
+                        return Observable.error(throwable);
+                    }
+                    return mUModsLANDataSource.factoryResetUMod(uMod,request);
+                });
     }
 
     @Nullable

@@ -66,7 +66,7 @@ public class UModsDNSSDScanner {
 
     private Subscription registerProbeService(){
         BonjourService bonjourService = new BonjourService
-                .Builder(0, 0, Build.DEVICE, "_urbitclientprobe._tcp", null)
+                .Builder(0, 0, Build.DEVICE, "_http._tcp", "portonprobe")
                 .port(59328)
                 .build();
         return this.rxDnssd.register(bonjourService)

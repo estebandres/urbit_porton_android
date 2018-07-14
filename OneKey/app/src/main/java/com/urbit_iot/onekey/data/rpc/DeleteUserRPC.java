@@ -43,10 +43,13 @@ public class DeleteUserRPC extends RPC {
         @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private DeleteUserRPC.Arguments methodArguments;
 
-        public Request(Arguments args, String callTag, int id) {
-            super(GlobalConstants.RPC_METHOD_NAME__DELETE_USER,
+        public Request(Arguments args, String requester, String callTag, int id) {
+            super(
+                    GlobalConstants.RPC_METHOD_NAME__DELETE_USER,
                     GlobalConstants.RPC_METHOD_CODE__DELETE_USER,
-                    callTag,id);
+                    requester,
+                    callTag,
+                    id);
             this.methodArguments = args;
         }
 

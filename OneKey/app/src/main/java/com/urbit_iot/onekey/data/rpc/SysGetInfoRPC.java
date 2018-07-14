@@ -17,10 +17,13 @@ public class SysGetInfoRPC extends RPC {
         @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private SysGetInfoRPC.Arguments methodArguments;
 
-        public Request(Arguments methodArguments, String callTag, int callID) {
-            super(GlobalConstants.RPC_METHOD_NAME__GET_INFO,
+        public Request(Arguments methodArguments, String requester, String callTag, int callID) {
+            super(
+                    GlobalConstants.RPC_METHOD_NAME__GET_INFO,
                     GlobalConstants.RPC_METHOD_CODE__GET_INFO,
-                    callTag,callID);
+                    requester,
+                    callTag,
+                    callID);
             this.methodArguments = methodArguments;
         }
 

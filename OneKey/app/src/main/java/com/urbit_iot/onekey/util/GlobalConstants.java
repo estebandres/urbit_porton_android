@@ -19,6 +19,9 @@ public final class GlobalConstants {
 
     public static final String AP_DEFAULT_IP_ADDRESS = "192.168.4.1";
 
+    public static final String MQTT_BROKER__IP_ADDRESS = "35.196.19.239";
+    public static final Integer MQTT_BROKER__PORT = 1883;
+
     //------------COMMON RPC_FIELD_NAMES-----------------
     public static final String RPC_FIELD_NAME__METHOD   = "method";
     public static final String RPC_FIELD_NAME__METHOD_CODE   = "method_code";

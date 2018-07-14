@@ -15,10 +15,14 @@ public class FactoryResetRPC extends RPC {
     public static class Request extends RPC.Request{
         @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
         private FactoryResetRPC.Arguments methodArguments;
-        public Request(Arguments args, String callTag, int id) {
-            super(GlobalConstants.RPC_METHOD_NAME__FACTORY_RESET,
+        public Request(Arguments args, String requester, String callTag, int id) {
+            super(
+                    GlobalConstants.RPC_METHOD_NAME__FACTORY_RESET,
                     GlobalConstants.RPC_METHOD_CODE__FACTORY_RESET,
-                    callTag,id);
+                    requester,
+                    callTag,
+                    id);
+
             this.methodArguments = args;
         }
 

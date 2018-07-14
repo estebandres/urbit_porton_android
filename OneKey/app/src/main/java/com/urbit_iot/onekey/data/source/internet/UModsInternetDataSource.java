@@ -82,7 +82,7 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public void saveUMod(@NonNull UMod uMod) {
-        if (uMod.belongsToAppUser()){
+        if (uMod.belongsToAppUser() && !uMod.isInAPMode()){
             mUModMqttService.subscribeToUModResponseTopic(uMod);
         }
     }
@@ -124,7 +124,10 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public Observable<GetUserLevelRPC.Result> getUserLevel(@NonNull UMod uMod, @NonNull GetUserLevelRPC.Arguments requestArguments) {
-        return null;
+        GetUserLevelRPC.Request userLevelRequest = new GetUserLevelRPC.Request(requestArguments,this.username,uMod.getUUID(),this.randomGenerator.nextInt());
+
+        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),userLevelRequest,GetUserLevelRPC.Response.class)
+                .map(GetUserLevelRPC.Response::getResponseResult);
     }
 
     @Override
@@ -144,29 +147,52 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public Observable<CreateUserRPC.Result> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Arguments requestArguments) {
-        return null;
+        CreateUserRPC.Request createUserRequest = new CreateUserRPC.Request(
+                requestArguments,
+                this.username,
+                uMod.getUUID(),
+                this.randomGenerator.nextInt());
+        return mUModMqttService.publishRPC(
+                uMod.getUModRequestTopic(),
+                createUserRequest,
+                CreateUserRPC.Response.class)
+                .map(CreateUserRPC.Response::getResponseResult);
     }
 
     @Override
     public Observable<UpdateUserRPC.Result> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Arguments requestArguments) {
-        return null;
+        UpdateUserRPC.Request updateUserRequest = new UpdateUserRPC.Request(requestArguments, this.username, uMod.getUUID(), this.randomGenerator.nextInt());
+
+        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),updateUserRequest,UpdateUserRPC.Response.class)
+                .map(UpdateUserRPC.Response::getResponseResult);
     }
 
     @Override
     public Observable<DeleteUserRPC.Result> deleteUModUser(@NonNull UMod uMod, @NonNull DeleteUserRPC.Arguments requestArguments) {
-        return null;
+        DeleteUserRPC.Request deleteRequest = new DeleteUserRPC.Request(
+                requestArguments,
+                this.username,
+                uMod.getUUID(),
+                this.randomGenerator.nextInt());
+        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),deleteRequest,DeleteUserRPC.Response.class)
+                .map(DeleteUserRPC.Response::getResponseResult);
     }
 
     @Override
     public Observable<GetUsersRPC.Result> getUModUsers(@NonNull UMod uMod, @NonNull GetUsersRPC.Arguments requestArgs) {
-        return null;
+        GetUsersRPC.Request getUsersRequest = new GetUsersRPC.Request(requestArgs,this.username,uMod.getUUID(),this.randomGenerator.nextInt());
+
+        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),getUsersRequest,GetUsersRPC.Response.class)
+                .map(GetUsersRPC.Response::getResponseResult);
     }
 
     @Override
     public Observable<SysGetInfoRPC.Result> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Arguments request) {
-        //SysGetInfoRPC.Request rpcRequest = new SysGetInfoRPC.Request(request,)
+        SysGetInfoRPC.Request rpcRequest = new SysGetInfoRPC.Request(request,this.username,uMod.getUUID(),this.randomGenerator.nextInt());
+        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),rpcRequest, SysGetInfoRPC.Response.class)
+                .map(SysGetInfoRPC.Response::getResponseResult);
 
-        return Observable.error(new Exception("Steve was here!"));
+        //return Observable.error(new Exception("Steve was here!"));
     }
 
     @Override
@@ -181,7 +207,9 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public Observable<FactoryResetRPC.Result> factoryResetUMod(UMod uMod, FactoryResetRPC.Arguments request) {
-        return null;
+        FactoryResetRPC.Request factoryResetRequest = new FactoryResetRPC.Request(request, this.username, uMod.getUUID(), this.randomGenerator.nextInt());
+        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),factoryResetRequest,FactoryResetRPC.Response.class)
+                .map(FactoryResetRPC.Response::getResponseResult);
     }
 
     @Override

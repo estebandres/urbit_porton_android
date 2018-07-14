@@ -40,7 +40,6 @@ public class TCPScanClient {
                 String response = in.readLine();
                 Log.d("TCP_ECHO_CLIENT", "ECHO read finished ON " + Thread.currentThread().getName());
                 stringEmitter.onNext(response);
-
             } catch (UnknownHostException e) {
                 //e.printStackTrace();
                 //stringEmitter.onError(e);
