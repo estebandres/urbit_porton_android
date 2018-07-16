@@ -16,15 +16,10 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 
-
-import com.github.pwittchen.reactivewifi.AccessRequester;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.OneKeyApplication;
-import com.urbit_iot.onekey.statistics.StatisticsActivity;
-import com.urbit_iot.onekey.umodsnotification.UModsNotifService;
 import com.urbit_iot.onekey.util.ActivityUtils;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
-import com.urbit_iot.onekey.util.GlobalConstants;
 
 import javax.inject.Inject;
 
@@ -176,6 +171,6 @@ public class UModsActivity extends AppCompatActivity {
     protected void onResume(){
         super.onResume();
         mUModsPresenter.unsubscribe();
-        mUModsPresenter.subscribe();
+        //mUModsPresenter.subscribe();
     }
 }

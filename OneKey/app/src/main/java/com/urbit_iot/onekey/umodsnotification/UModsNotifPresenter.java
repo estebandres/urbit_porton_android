@@ -74,7 +74,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     @Override
     public void subscribe() {
         Log.d("notif_presenter", "subscribed." + Thread.currentThread().getName());
-        this.loadUMods(true);
+        this.loadUMods(false);
     }
 
     @Override

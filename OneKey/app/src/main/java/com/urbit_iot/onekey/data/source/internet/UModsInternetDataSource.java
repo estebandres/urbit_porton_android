@@ -192,6 +192,7 @@ public class UModsInternetDataSource implements UModsDataSource {
         return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),rpcRequest, SysGetInfoRPC.Response.class)
                 .map(SysGetInfoRPC.Response::getResponseResult);
 
+
         //return Observable.error(new Exception("Steve was here!"));
     }
 

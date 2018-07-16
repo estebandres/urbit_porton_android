@@ -16,7 +16,10 @@ import java.net.Socket;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.inject.Inject;
 
@@ -24,6 +27,7 @@ import hu.akarnokd.rxjava.interop.RxJavaInterop;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
+import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.processors.PublishProcessor;
@@ -54,6 +58,11 @@ public class UModMqttService {
 
     private CompositeDisposable allSubscriptions;
 
+    private Lock clientStateCheckLock;
+
+    private Semaphore clientMutex;
+
+
     //private boolean subscribedToUModResponseTopic;
 
     @Inject
@@ -66,7 +75,34 @@ public class UModMqttService {
         this.receivedMessagesProcessor = PublishProcessor.create();
         this.subscriptionsMap = new LinkedHashMap<>();
         this.allSubscriptions = new CompositeDisposable();
+        this.clientStateCheckLock = new ReentrantLock();
+        this.clientMutex = new Semaphore(1);
 
+        connectMqttClient()
+                //.observeOn(Schedulers.io())//TODO use injected scheduler
+                .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
+                        throwable -> Log.e("umodsMqttService","FAILED TO CONNECT  " + throwable.getClass().getSimpleName() + " MSG: " + throwable.getMessage()));
+
+        /*
+        Flowable.just(true)
+                .flatMapCompletable(aBoolean -> {
+                    clientStateCheckLock.lock();
+                    if (!mMqttClient.isConnected()){
+                        return testConnectionToBroker().andThen(mMqttClient.connect());
+                    } else {
+                        return Completable.complete();
+                    }
+                })
+                .doOnTerminate(() -> clientStateCheckLock.unlock())
+                .subscribeOn(Schedulers.io())//TODO use injected scheduler
+                .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
+                        throwable -> Log.e("umodsMqttService","FAILED TO CONNECT  " + throwable.getClass().getSimpleName() + " MSG: " + throwable.getMessage()));
+         */
+
+
+
+        //Completable.complete().doOnComplete(() -> clientStateCheckLock.lock()).andThen(testConnectionToBroker()).andThen(mMqttClient.connect()).
+        /*
         if (!mMqttClient.isConnected()){
             this.testConnectionToBroker()
                     .andThen(mMqttClient.connect())
@@ -75,6 +111,7 @@ public class UModMqttService {
                     .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
                             throwable -> Log.e("umodsMqttService","FAILED TO CONNECT  " + throwable.getClass().getSimpleName() + " MSG: " + throwable.getMessage()));
         }
+        */
 
     }
 
@@ -93,7 +130,41 @@ public class UModMqttService {
                 });
     }
 
-    public void subscribeToUModResponseTopic(UMod umod){
+    private Completable connectMqttClient(){
+        return Completable.defer(() ->
+                Single.just(1)
+                        .observeOn(Schedulers.io())
+                    .flatMapCompletable(integer -> {
+                        //clientStateCheckLock.lock();
+                        clientMutex.acquireUninterruptibly();
+                        Log.d("MQTT_SERVICE", "LOCKED!!  " + Thread.currentThread().getName());
+                        if (mMqttClient.isConnected()){
+                            return Completable.complete();
+                        } else {
+                            return testConnectionToBroker().andThen(mMqttClient.connect());
+                        }
+                    })
+                    .doOnComplete(() -> {
+                        Log.d("MQTT_SERVICE", "CONNECTION COMPLETE + UNLOCKING!!  " + Thread.currentThread().getName());
+                        //clientStateCheckLock.unlock();
+                        clientMutex.release();
+                    })
+                    .doOnError((throwable) -> {
+                        Log.d("MQTT_SERVICE", "CONNECTION ERROR + UNLOCKING!!  " + throwable.getClass().getSimpleName() +"  "+ Thread.currentThread().getName());
+                        //clientStateCheckLock.unlock();
+                        clientMutex.release();
+                    })
+                        /*
+                    .doFinally(() -> {
+                        Log.d("MQTT_SERVICE", "UNLOCKING!!  " + Thread.currentThread().getName());
+                        clientStateCheckLock.unlock();
+                    })
+                    */
+        );
+
+    }
+
+    synchronized public void subscribeToUModResponseTopic(UMod umod){
         Disposable oldSubscription = this.subscriptionsMap.get(umod.getUUID());
         if (oldSubscription != null){
             if (!oldSubscription.isDisposed()){
@@ -102,17 +173,9 @@ public class UModMqttService {
             this.subscriptionsMap.remove(umod.getUUID());
         }
         Flowable<MqttMessage> topicMessagesFlowable = mMqttClient.subscribe(umod.getMqttResponseTopic(),2);
-        Disposable topicSubDisposable = Flowable.just(mMqttClient.isConnected())
-                .flatMap(isClientConnected -> {
-                    if (isClientConnected){
-                        return topicMessagesFlowable;
-                    } else {
-                        return testConnectionToBroker()
-                                .andThen(mMqttClient.connect())
-                                .andThen(topicMessagesFlowable);
-                    }
-                })
-                .subscribeOn(Schedulers.io())
+        Disposable topicSubDisposable = connectMqttClient()
+                .andThen(topicMessagesFlowable)
+                //.observeOn(Schedulers.io())
                 .subscribe(mqttMessage -> {
                     Log.d("subscribeTopic", "" + mqttMessage.getId() + new String(mqttMessage.getPayload()));
                     receivedMessagesProcessor.onNext(mqttMessage);
@@ -162,17 +225,8 @@ public class UModMqttService {
         Maybe<S> maybeRequestAndResponse = mMqttClient.publish(requestTopic, requestMqttMessage)
                 .flatMapMaybe(publishToken -> maybeResponse);
 
-        Maybe<S> maybeConditionalConnection = Maybe.just(this.mMqttClient.isConnected())
-                .flatMap(connectionWithBrokerIsAlive -> {
-                    if (connectionWithBrokerIsAlive){
-                        return maybeRequestAndResponse;
-                    } else {
-                        return testConnectionToBroker()
-                                .andThen(mMqttClient.connect())
-                                //.doOnComplete(this::subscribeToResponseTopic)//TODO Q: is resubscribing necessary??
-                                .andThen(maybeRequestAndResponse);
-                    }
-                });
+        Maybe<S> maybeConditionalConnection = connectMqttClient().andThen(maybeRequestAndResponse);;
+
         return RxJavaInterop.toV1Single(maybeConditionalConnection).toObservable();
     }
 

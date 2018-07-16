@@ -185,14 +185,16 @@ public class UModsRepository implements UModsDataSource {
         return this.getUModsOneByOneFromCacheOrDisk()
                 .flatMap(value -> Observable.just(value)
                         .subscribeOn(Schedulers.io())//TODO use scheduler provider by dagger)
-                        .flatMap(uMod -> mUModsInternetDataSource.getSystemInfo(uMod,new SysGetInfoRPC.Arguments()).flatMap(result -> {
-                            if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){
-                                uMod.setLastUpdateDate(new Date());
-                                uMod.setConnectionAddress(result.getWifi().getStaIp());
-                                uMod.setState(UMod.State.STATION_MODE);
-                                uMod.setuModSource(UMod.UModSource.MQTT_SCAN);
-                            }
-                            return Observable.just(uMod);
+                        .flatMap(uMod -> mUModsInternetDataSource.getSystemInfo(uMod,new SysGetInfoRPC.Arguments())
+                                .onErrorResumeNext(throwable -> Observable.empty())
+                                .flatMap(result -> {
+                                    if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){
+                                        uMod.setLastUpdateDate(new Date());
+                                        uMod.setConnectionAddress(result.getWifi().getStaIp());
+                                        uMod.setState(UMod.State.STATION_MODE);
+                                        uMod.setuModSource(UMod.UModSource.MQTT_SCAN);
+                                    }
+                                    return Observable.just(uMod);
                         })))
                 .doOnError(throwable -> Log.e("get1x1_online", "" + throwable.getClass().getSimpleName() + "  " + throwable.getMessage()))
                 .onErrorResumeNext(throwable -> Observable.empty())
@@ -263,23 +265,49 @@ public class UModsRepository implements UModsDataSource {
     @Override
     //@RxLogObservable
     public Observable<UMod> getUModsOneByOne() {
-        //Observable<UMod> cacheOrDBUModObs = Observable.empty();
-        Observable<UMod> cacheOrDBUModObs = this.getUModsOneByOneFromCacheOrDisk();
-        //If cache is dirty (forced update) then lookup for UMods on LAN (dnssd,ble)
-        Observable<UMod> lanUModObs = this.getUModsOneByOneFromLanAndUpdateDBAndCache();
-        // Respond immediately with cache if available and not dirty
-        //TODO if both cases are equal the why do the cases exist??
-        Log.d("umods_rep", "get1by1");
-        if (!mCacheIsDirty) {
-            Log.d("umods_rep", "cached first" + mCachedUMods);
-            return Observable.concatDelayError(
-                    cacheOrDBUModObs.defaultIfEmpty(null),//TODO replace for rxjava2 compliant not null object...
-                    //lanUModObs,
+        return Observable.defer(() -> {
+            //Observable<UMod> cacheOrDBUModObs = Observable.empty();
+            Observable<UMod> cacheOrDBUModObs = this.getUModsOneByOneFromCacheOrDisk();
+            //If cache is dirty (forced update) then lookup for UMods on LAN (dnssd,ble)
+            Observable<UMod> lanUModObs = this.getUModsOneByOneFromLanAndUpdateDBAndCache();
+            // Respond immediately with cache if available and not dirty
+            //TODO if both cases are equal the why do the cases exist??
+            Log.d("umods_rep", "get1by1");
+            if (!mCacheIsDirty) {
+                Log.d("umods_rep", "cached first" + mCachedUMods);
+                return Observable.concatDelayError(
+                        cacheOrDBUModObs.defaultIfEmpty(null),//TODO replace for rxjava2 compliant not null object...
+                        //lanUModObs,
+                        Observable.empty())
+                        .doOnUnsubscribe(new Action0() {
+                            @Override
+                            public void call() {
+                                mCacheIsDirty = false;
+                            }
+                        })
+                        .filter(new Func1<UMod, Boolean>() {
+                            @Override
+                            public Boolean call(UMod uMod) {
+                                return uMod != null;
+                            }
+                        });
+            }
+
+            if (mCachedUMods == null){
+                mCachedUMods = new LinkedHashMap<>();
+            }
+
+            Log.d("umods_rep", "lanbrowse first");
+
+            return Observable.mergeDelayError(
+                    //cacheOrDBUModObs.defaultIfEmpty(null),
+                    getUModsOneByOneFromCacheOrDiskAndRefreshOnline(),
+                    lanUModObs,
                     Observable.empty())
                     .doOnUnsubscribe(new Action0() {
                         @Override
                         public void call() {
-                            mCacheIsDirty = false;
+                            mCacheIsDirty = false;//prevents the getUMod to refresh
                         }
                     })
                     .filter(new Func1<UMod, Boolean>() {
@@ -288,31 +316,8 @@ public class UModsRepository implements UModsDataSource {
                             return uMod != null;
                         }
                     });
-        }
+        });
 
-        if (mCachedUMods == null){
-            mCachedUMods = new LinkedHashMap<>();
-        }
-
-        Log.d("umods_rep", "lanbrowse first");
-
-        return Observable.mergeDelayError(
-                //cacheOrDBUModObs.defaultIfEmpty(null),
-                getUModsOneByOneFromCacheOrDiskAndRefreshOnline(),
-                lanUModObs,
-                Observable.empty())
-                .doOnUnsubscribe(new Action0() {
-                    @Override
-                    public void call() {
-                        mCacheIsDirty = false;//prevents the getUMod to refresh
-                    }
-                })
-                .filter(new Func1<UMod, Boolean>() {
-                    @Override
-                    public Boolean call(UMod uMod) {
-                        return uMod != null;
-                    }
-                });
     }
 
     private Observable<List<UMod>> getAndCacheLocalUMods() {
@@ -585,13 +590,13 @@ public class UModsRepository implements UModsDataSource {
     @Override
     public Observable<TriggerRPC.Result>
     triggerUMod(@NonNull UMod uMod, @NonNull TriggerRPC.Arguments request) {
-
-        return Observable.concatDelayError(
-                mUModsInternetDataSource.triggerUMod(uMod,request),
-                mUModsLANDataSource.triggerUMod(uMod,request))
-                .first();
-
-        //return mUModsLANDataSource.triggerUMod(uMod,request);
+        return mUModsInternetDataSource.triggerUMod(uMod,request)
+                .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof HttpException){
+                        return Observable.error(throwable);
+                    }
+                    return mUModsLANDataSource.triggerUMod(uMod,request);
+                });
     }
 
     @Override
