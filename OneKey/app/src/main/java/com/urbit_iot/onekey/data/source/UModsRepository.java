@@ -186,7 +186,6 @@ public class UModsRepository implements UModsDataSource {
                 .flatMap(value -> Observable.just(value)
                         .subscribeOn(Schedulers.io())//TODO use scheduler provider by dagger)
                         .flatMap(uMod -> mUModsInternetDataSource.getSystemInfo(uMod,new SysGetInfoRPC.Arguments())
-                                .onErrorResumeNext(throwable -> Observable.empty())
                                 .flatMap(result -> {
                                     if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){
                                         uMod.setLastUpdateDate(new Date());
@@ -195,7 +194,10 @@ public class UModsRepository implements UModsDataSource {
                                         uMod.setuModSource(UMod.UModSource.MQTT_SCAN);
                                     }
                                     return Observable.just(uMod);
-                        })))
+                                })
+                                .onErrorResumeNext(throwable -> Observable.just(uMod))
+                        )
+                )
                 .doOnError(throwable -> Log.e("get1x1_online", "" + throwable.getClass().getSimpleName() + "  " + throwable.getMessage()))
                 .onErrorResumeNext(throwable -> Observable.empty())
                 .doOnNext(uMod -> mCachedUMods.put(uMod.getUUID(),uMod));
@@ -299,7 +301,7 @@ public class UModsRepository implements UModsDataSource {
 
             Log.d("umods_rep", "lanbrowse first");
 
-            return Observable.mergeDelayError(
+            return Observable.concatDelayError(
                     //cacheOrDBUModObs.defaultIfEmpty(null),
                     getUModsOneByOneFromCacheOrDiskAndRefreshOnline(),
                     lanUModObs,

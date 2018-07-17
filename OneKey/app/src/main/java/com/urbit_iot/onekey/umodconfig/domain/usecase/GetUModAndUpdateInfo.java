@@ -135,13 +135,6 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                     GetUserLevelRPC.Arguments getUserLevelArgs =
                                                                             new GetUserLevelRPC.Arguments(appUser.getUserName());
                                                                     return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)//Careful icarus!!! uMod may change
-                                                                            // This
-                                                                            .doOnError(new Action1<Throwable>() {
-                                                                                @Override
-                                                                                public void call(Throwable throwable) {
-                                                                                    Log.e("getumod+info_uc","Get User Level Failed: " + throwable.getMessage());
-                                                                                }
-                                                                            })
                                                                             .flatMap(new Func1<GetUserLevelRPC.Result, Observable<UMod>>() {
                                                                                 @Override
                                                                                 public Observable<UMod> call(GetUserLevelRPC.Result result) {

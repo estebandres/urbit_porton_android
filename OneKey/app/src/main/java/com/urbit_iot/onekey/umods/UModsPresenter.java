@@ -247,7 +247,8 @@ public class UModsPresenter implements UModsContract.Presenter {
         sliderBackgroundColor = null;
         sliderTextColor = null;
 
-        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){//LAN_SCAN means online but can be dnssd/ap/ble discovery
+        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
+                || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN){//LAN_SCAN means online but can be dnssd/ap/ble discovery
             //shows action button only when online and is in station mode.
             //TODO add button text alternatives as String resource or GlobalConstants??.
             if (uMod.getState() == UMod.State.STATION_MODE) {
@@ -290,7 +291,8 @@ public class UModsPresenter implements UModsContract.Presenter {
 
         checkboxChecked = uMod.isOngoingNotificationEnabled();
 
-        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){
+        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
+                || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN){
             itemLowerText = GlobalConstants.ONLINE_LOWER_TEXT;
             lowerTextColor = UModsFragment.UModViewModelColors.ONLINE_GREEN;
         } else {
@@ -466,6 +468,7 @@ public class UModsPresenter implements UModsContract.Presenter {
 
     @Override
     public void triggerUMod(final String uModUUID) {
+        //this.stopUModSearch();
 
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.
@@ -524,8 +527,14 @@ public class UModsPresenter implements UModsContract.Presenter {
         });
     }
 
+    private void stopUModSearch(){
+        mUModsView.setLoadingIndicator(false);
+        mGetUModsOneByOne.unsubscribe();
+    }
+
     @Override
     public void requestAccess(String uModUUID) {
+        //this.stopUModSearch();
 
         // The network request might be handled in a different thread so make sure Espresso knows
         // that the app is busy until the response is handled.

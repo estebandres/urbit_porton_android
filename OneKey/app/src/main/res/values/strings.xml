@@ -73,7 +73,7 @@
     <string name="configuration_error"> FALLÓ AL CONFIGURARSE</string>
     <string name="configuration_success"> CONFIGURADO EXITOSAMENTE!</string>
     <string name="firmware_update_dialog__title">ACTUALIZACIÓN DE FIRMWARE</string>
-    <string name="firmware_update_dialog__started_message">Esta operación actualizará el software del módulo pero todas sus configuraciones seran conservadas.</string>
+    <string name="firmware_update_dialog__started_message">Esta operación actualizará el software del módulo pero todas sus configuraciones serán conservadas.</string>
     <string name="firmware_update_dialog__cancel_button">CANCELAR</string>
     <string name="delete_user_success_message">USUARIO ELIMINADO</string>
     <string name="delete_user_fail_message">EL USUARIO NO PUDO ELIMINARSE</string>
@@ -104,7 +104,7 @@
     <string name="wifi_credentials_config_fail_message">CREDENCIALES WIFI NO ENVIADAS</string>
     <string name="wifi_credentials_config_success_message">CREDENCIALES WIFI ENVIADAS</string>
     <string name="factory_reset_dialog__title">Restauración de Fabrica</string>
-    <string name="factory_reset_dialog__message">Esta operacion restablecerá las configuraciones del módulo y eliminará todos los usuarios.</string>
+    <string name="factory_reset_dialog__message">Esta operación restablecerá las configuraciones del módulo y eliminará todos los usuarios.</string>
     <string name="factory_reset_dialog__cancel_button">Cancelar</string>
     <string name="factory_reset_dialog__reset_button">RESTAURAR</string>
     <string name="firmware_update_dialog__update_button">ACTUALIZAR</string>

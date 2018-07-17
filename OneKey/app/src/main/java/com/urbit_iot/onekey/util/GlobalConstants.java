@@ -60,7 +60,7 @@ public final class GlobalConstants {
     public static final int RPC_METHOD_CODE__USER_STATUS    = 201;
     public static final int RPC_METHOD_CODE__GET_INFO       = 203;
 
-    public static final int RPC_METHOD_CODE__USER_TRIGGER   = 305;
+    public static final int RPC_METHOD_CODE__USER_TRIGGER   = 300;
 
     //----------------------------------------------------
 

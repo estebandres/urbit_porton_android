@@ -91,4 +91,23 @@ public class UModConfigActivity extends AppCompatActivity {
     public IdlingResource getCountingIdlingResource() {
         return EspressoIdlingResource.getIdlingResource();
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mAddEditTasksPresenter.unsubscribe();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mAddEditTasksPresenter.unsubscribe();
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        mAddEditTasksPresenter.unsubscribe();
+        //mUModsPresenter.subscribe();
+    }
 }
