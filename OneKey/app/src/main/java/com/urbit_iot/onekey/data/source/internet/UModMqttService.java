@@ -3,6 +3,7 @@ package com.urbit_iot.onekey.data.source.internet;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.rpc.RPC;
@@ -147,32 +148,40 @@ public class UModMqttService {
                     .doOnComplete(() -> {
                         Log.d("MQTT_SERVICE", "CONNECTION COMPLETE + UNLOCKING!!  " + Thread.currentThread().getName());
                         //clientStateCheckLock.unlock();
-                        clientMutex.release();
+                        //clientMutex.release();
                     })
                     .doOnError((throwable) -> {
                         Log.d("MQTT_SERVICE", "CONNECTION ERROR + UNLOCKING!!  " + throwable.getClass().getSimpleName() +"  "+ Thread.currentThread().getName());
                         //clientStateCheckLock.unlock();
+                        //clientMutex.release();
+
+                    })
+                    .doFinally(() -> {
+                        Log.d("MQTT_SERVICE", "CONNECTION FINALLY + UNLOCKING!!  " + Thread.currentThread().getName());
                         clientMutex.release();
                     })
-                        /*
-                    .doFinally(() -> {
-                        Log.d("MQTT_SERVICE", "UNLOCKING!!  " + Thread.currentThread().getName());
-                        clientStateCheckLock.unlock();
-                    })
-                    */
         );
 
     }
 
     synchronized public void subscribeToUModResponseTopic(UMod umod){
+        //clientMutex.acquireUninterruptibly();
+        /*
+        if (Strings.isNullOrEmpty(umod.getMqttResponseTopic())){
+            return;
+        }
+        */
+        String responseTopicForUMod = GlobalConstants.URBIT_PREFIX + umod.getUUID() + "/response/" + this.userName;
         Disposable oldSubscription = this.subscriptionsMap.get(umod.getUUID());
         if (oldSubscription != null){
             if (!oldSubscription.isDisposed()){
-                oldSubscription.dispose();
+                //oldSubscription.dispose();
+                return;
             }
-            this.subscriptionsMap.remove(umod.getUUID());
+            //this.subscriptionsMap.remove(umod.getUUID());
         }
-        Flowable<MqttMessage> topicMessagesFlowable = mMqttClient.subscribe(umod.getMqttResponseTopic(),2);
+        //clientMutex.release();
+        Flowable<MqttMessage> topicMessagesFlowable = mMqttClient.subscribe(responseTopicForUMod,2);
         Disposable topicSubDisposable = connectMqttClient()
                 .andThen(topicMessagesFlowable)
                 //.observeOn(Schedulers.io())
@@ -225,7 +234,7 @@ public class UModMqttService {
         Maybe<S> maybeRequestAndResponse = mMqttClient.publish(requestTopic, requestMqttMessage)
                 .flatMapMaybe(publishToken -> maybeResponse);
 
-        Maybe<S> maybeConditionalConnection = connectMqttClient().andThen(maybeRequestAndResponse);;
+        Maybe<S> maybeConditionalConnection = connectMqttClient().andThen(maybeRequestAndResponse);
 
         return RxJavaInterop.toV1Single(maybeConditionalConnection).toObservable();
     }

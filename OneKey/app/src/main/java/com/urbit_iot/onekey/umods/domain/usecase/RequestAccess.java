@@ -52,7 +52,6 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
 
     private final UModsRepository mUModsRepository;
     private final AppUserRepository mAppUserRepository;
-    private final UModMqttService mUModMqttService;
 
     @NonNull
     private final PublishSubject<Void> retrySubject = PublishSubject.create();
@@ -60,12 +59,10 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
     @Inject
     public RequestAccess(@NonNull UModsRepository uModsRepository,
                          @NonNull AppUserRepository appUserRepository,
-                         @NonNull BaseSchedulerProvider schedulerProvider,
-                         @NonNull UModMqttService mUModMqttService) {
+                         @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(uModsRepository, "uModsRepository cannot be null!");
         this.mAppUserRepository = checkNotNull(appUserRepository, "appUserRepository cannot be null!");
-        this.mUModMqttService = mUModMqttService;
     }
 
     @Override
@@ -102,12 +99,19 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                         //TODO ask if this is possible. Currently the API doc doesn't
                                                         // specify what data is returned as part of the result.
                                                         //subscribirme al topico
-                                                        //uMod.setMqttResponseTopic(appUser.getUserName());
+                                                        uMod.setMqttResponseTopic(appUser.getUserName());
                                                         //mUModMqttService.subscribeToUModResponseTopic(uMod);
                                                         Timber.d("CreateUser Success: " + createUserResult.toString());
                                                         uMod.setAppUserLevel(createUserResult.getUserLevel());
                                                         mUModsRepository.saveUMod(uMod);
-                                                        return Observable.just(createUserResult);
+
+                                                        return mUModsRepository.getCurrentLocation().flatMap(location -> {
+                                                            uMod.setuModLocation(location);
+                                                            mUModsRepository.saveUMod(uMod);
+                                                            return Observable.just(createUserResult);
+                                                        }).switchIfEmpty(Observable.just(createUserResult));
+
+                                                        //return Observable.just(createUserResult);
                                                     }
                                                 })
                                                 .onErrorResumeNext(new Func1<Throwable, Observable<CreateUserRPC.Result>>() {
@@ -224,6 +228,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                 //The RPC is executed in the saved umod connectionAddress
                 //only when that address is outdated and produces an error a retry is performed that
                 // forces a network lookup for the connected UMod.
+                /*
                 .retry(new Func2<Integer, Throwable, Boolean>() {
                     @Override
                     public Boolean call(Integer retryCount, Throwable throwable) {
@@ -237,7 +242,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                             return false;
                         }
                     }
-                })
+                })*/
                 .map(new Func1<CreateUserRPC.Result, ResponseValues>() {
                     @Override
                     public ResponseValues call(CreateUserRPC.Result result) {

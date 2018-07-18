@@ -16,6 +16,7 @@
 
 package com.urbit_iot.onekey.data.source;
 
+import android.location.Location;
 import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.data.UMod;
@@ -112,5 +113,6 @@ public interface UModsDataSource {
 
     Observable<FactoryResetRPC.Result> factoryResetUMod(UMod uMod,
                                                           FactoryResetRPC.Arguments request);
+    default Observable<Location> getCurrentLocation(){ return Observable.empty();}
 
 }

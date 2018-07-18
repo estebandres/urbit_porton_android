@@ -19,6 +19,8 @@ public final class GlobalConstants {
 
     public static final String AP_DEFAULT_IP_ADDRESS = "192.168.4.1";
 
+    public static final String FIRMWARE_SERVER__IP_ADDRESS = "192.168.1.7";
+    public static final String FIRMWARE_SERVER__PORT = "3289";
     public static final String MQTT_BROKER__IP_ADDRESS = "35.196.19.239";
     public static final Integer MQTT_BROKER__PORT = 1883;
 
@@ -72,7 +74,7 @@ public final class GlobalConstants {
     public static final String REQUEST_ACCESS_SLIDER_TEXT = "SOLICITAR ACCESO";
 
     public static final String ONLINE_LOWER_TEXT = "online";
-    public static final String OFFLINE_LOWER_TEXT = "desconectado";
+    public static final String STORED_LOWER_TEXT = "recordado";
     public static final String ONGOING_NOTIFICATION_STATE_KEY = "app_settings__ongoing_notification_state";
 
     public interface ACTION {

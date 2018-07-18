@@ -45,5 +45,7 @@ public final class UModsPersistenceContract {
         //public static final String IS_OPEN_CN = "is_open";
         public static final String LAST_UPDATE_DATE_CN = "last_update_date";
         public static final String MAC_ADDRESS_CN = "mac_address";
+        public static final String LATITUDE_CN = "latitude";
+        public static final String LONGITUDE_CN = "longitude";
     }
 }

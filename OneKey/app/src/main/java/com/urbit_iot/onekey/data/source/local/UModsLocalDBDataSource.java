@@ -20,8 +20,10 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.location.Location;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.squareup.sqlbrite.BriteDatabase;
 import com.squareup.sqlbrite.SqlBrite;
@@ -96,6 +98,11 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 String productUUID = c.getString(c.getColumnIndexOrThrow(UModEntry.PROD_UUID_CN));
                 String hwVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.HW_VERSION_CN));
                 String swVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.SW_VERSION_CN));
+                Double longitude = c.getDouble(c.getColumnIndexOrThrow(UModEntry.LONGITUDE_CN));
+                Double latitude = c.getDouble(c.getColumnIndexOrThrow(UModEntry.LATITUDE_CN));
+                Location uModLocation = new Location("DBDataSource");
+                uModLocation.setLatitude(latitude);
+                uModLocation.setLongitude(longitude);
                 Date lastUpdate;
                 try{
                     lastUpdate = dateFormat.parse(c.getString(c.getColumnIndexOrThrow(UModEntry.LAST_UPDATE_DATE_CN)));
@@ -104,7 +111,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 }
 
                 return new UMod(uuid, alias, wifiSSID, connectionAddress, state, userStatus, notifEnabled,
-                        macAddress, lastReport, productUUID, hwVersion, swVersion, lastUpdate);
+                        macAddress, lastReport, productUUID, hwVersion, swVersion, uModLocation, lastUpdate);
             }
         };
         this.uModLocalDBBrander = new Observable.Transformer<UMod, UMod>() {
@@ -161,11 +168,14 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 UModEntry.PROD_UUID_CN,
                 UModEntry.HW_VERSION_CN,
                 UModEntry.SW_VERSION_CN,
+                UModEntry.LATITUDE_CN,
+                UModEntry.LONGITUDE_CN,
                 UModEntry.LAST_UPDATE_DATE_CN,
         };
         String sql = String.format("SELECT %s FROM %s", TextUtils.join(",", projection), UModEntry.UMODS_TABLE_NAME);
         return mDatabaseHelper.createQuery(UModEntry.UMODS_TABLE_NAME, sql)
                 .mapToList(mUModMapperFunction)
+                .doOnNext(uMods -> Log.d("1x1_DB", "TOTAL: " + uMods.size()))
                 .flatMap(new Func1<List<UMod>, Observable<UMod>>() {
                     @Override
                     public Observable<UMod> call(List<UMod> uMods) {
@@ -193,6 +203,8 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 UModEntry.PROD_UUID_CN,
                 UModEntry.HW_VERSION_CN,
                 UModEntry.SW_VERSION_CN,
+                UModEntry.LATITUDE_CN,
+                UModEntry.LONGITUDE_CN,
                 UModEntry.LAST_UPDATE_DATE_CN,
         };
         String sql = String.format("SELECT %s FROM %s WHERE %s LIKE ?",
@@ -215,11 +227,22 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         values.put(UModEntry.CONNECTION_ADDRESS_CN, uMod.getConnectionAddress());
         values.put(UModEntry.NOTIF_ENABLED_CN, uMod.isOngoingNotificationEnabled());
         values.put(UModEntry.APP_USER_STATUS_CN,uMod.getAppUserLevel().getStatusID());
-        values.put(UModEntry.UMOD_STATE_CN,uMod.getState().getStateID());
+        if (uMod.getState()!= null){
+            values.put(UModEntry.UMOD_STATE_CN,uMod.getState().getStateID());
+        } else {
+            values.put(UModEntry.UMOD_STATE_CN,UMod.State.UNKNOWN.getStateID());
+        }
         values.put(UModEntry.LAST_REPORT_CN, uMod.getuModLastReport());
         values.put(UModEntry.PROD_UUID_CN, uMod.getProductUUID());
         values.put(UModEntry.HW_VERSION_CN, uMod.getHWVersion());
         values.put(UModEntry.SW_VERSION_CN, uMod.getSWVersion());
+        if (uMod.getuModLocation() != null){
+            values.put(UModEntry.LATITUDE_CN, uMod.getuModLocation().getLatitude());
+            values.put(UModEntry.LONGITUDE_CN, uMod.getuModLocation().getLongitude());
+        } else {
+            values.put(UModEntry.LATITUDE_CN, 0.0);
+            values.put(UModEntry.LONGITUDE_CN, 0.0);
+        }
         values.put(UModEntry.LAST_UPDATE_DATE_CN, dateFormat.format(uMod.getLastUpdateDate()));
         mDatabaseHelper.insert(UModEntry.UMODS_TABLE_NAME, values, SQLiteDatabase.CONFLICT_REPLACE);
     }

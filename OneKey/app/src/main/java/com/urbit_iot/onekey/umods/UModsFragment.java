@@ -11,7 +11,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.PopupMenu;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,8 +28,6 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.f2prateek.rx.preferences2.Preference;
-import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.ncorti.slidetoact.SlideToActView;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umodconfig.UModConfigActivity;
@@ -43,8 +40,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
 
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -634,6 +629,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             TextView lowerText = (TextView) rowView.findViewById(R.id.card_lower_text);
 
             lowerText.setText(viewModel.getItemLowerText());
+            lowerText.setTextColor(ContextCompat.getColor(this.activityContext,viewModel.getLowerTextColor().asActualResource()));
 
             final ImageView ongoingNotifIndicator = (ImageView) rowView.findViewById(R.id.card_item_notif_indicator);
 
@@ -788,10 +784,10 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 return R.color.trigger_slider_text;
             }
         },
-        OFFLINE_RED{
+        STORED_BLUE {
             @Override
             public int asActualResource() {
-                return R.color.offline_red;
+                return R.color.stored_blue;
             }
         },
         ONLINE_GREEN{

@@ -3,6 +3,7 @@ package com.urbit_iot.onekey.umods;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 import android.support.design.widget.NavigationView;
@@ -42,7 +43,6 @@ public class UModsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.umods_act);
-
         // Set up the toolbar.
         Toolbar toolbar = (Toolbar) findViewById(R.id.umods_toolbar);
         setSupportActionBar(toolbar);

@@ -16,6 +16,7 @@
 
 package com.urbit_iot.onekey.data.source;
 
+import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
@@ -34,6 +35,7 @@ import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
+import com.urbit_iot.onekey.data.source.gps.LocationService;
 import com.urbit_iot.onekey.util.dagger.Internet;
 import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.LanOnly;
@@ -44,6 +46,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -81,6 +84,9 @@ public class UModsRepository implements UModsDataSource {
     @NonNull
     private Observable.Transformer<UMod,UMod> uModCacheBrander;
 
+    @NonNull
+    private LocationService locationService;
+
     /**
      * This variable has package local visibility so it can be accessed from tests.
      */
@@ -111,10 +117,12 @@ public class UModsRepository implements UModsDataSource {
     @Inject
     public UModsRepository(@LanOnly UModsDataSource uModsRemoteDataSource,
                            @Local UModsDataSource uModsLocalDataSource,
-                           @Internet UModsDataSource uModsInternetDataSource) {
+                           @Internet UModsDataSource uModsInternetDataSource,
+                           @NonNull LocationService locationService) {
         mUModsLANDataSource = checkNotNull(uModsRemoteDataSource);
         mUModsLocalDataSource = checkNotNull(uModsLocalDataSource);
         this.mUModsInternetDataSource = checkNotNull(uModsInternetDataSource);
+        this.locationService = locationService;
         this.mCachedUMods = new LinkedHashMap<>();
         this.uModCacheBrander = new Observable.Transformer<UMod, UMod>() {
             @Override
@@ -195,12 +203,17 @@ public class UModsRepository implements UModsDataSource {
                                     }
                                     return Observable.just(uMod);
                                 })
-                                .onErrorResumeNext(throwable -> Observable.just(uMod))
+                                .onErrorResumeNext(throwable -> Observable.empty())
                         )
                 )
-                .doOnError(throwable -> Log.e("get1x1_online", "" + throwable.getClass().getSimpleName() + "  " + throwable.getMessage()))
-                .onErrorResumeNext(throwable -> Observable.empty())
-                .doOnNext(uMod -> mCachedUMods.put(uMod.getUUID(),uMod));
+                .takeUntil(Observable.timer(12L, TimeUnit.SECONDS))
+                //.doOnError(throwable -> Log.e("get1x1_online", "" + throwable.getClass().getSimpleName() + "  " + throwable.getMessage()))
+                //.onErrorResumeNext(throwable -> Observable.empty())
+                .doOnCompleted(() -> Log.d("MQTT_SCAN", "COMPLETED!"))
+                .doOnNext(uMod -> {
+                    Log.d("MQTT_SCAN", "FOUND: " + uMod);
+                    mCachedUMods.put(uMod.getUUID(),uMod);
+                });
     }
 
     private Observable<UMod> getUModsOneByOneFromLanAndUpdateDBAndCache(){
@@ -269,9 +282,9 @@ public class UModsRepository implements UModsDataSource {
     public Observable<UMod> getUModsOneByOne() {
         return Observable.defer(() -> {
             //Observable<UMod> cacheOrDBUModObs = Observable.empty();
-            Observable<UMod> cacheOrDBUModObs = this.getUModsOneByOneFromCacheOrDisk();
+            Observable<UMod> cacheOrDBUModObs = Observable.defer(this::getUModsOneByOneFromCacheOrDisk).doOnNext(uMod -> Log.d("CACHED_UMODS","FOUND: "+ uMod.toString()));
             //If cache is dirty (forced update) then lookup for UMods on LAN (dnssd,ble)
-            Observable<UMod> lanUModObs = this.getUModsOneByOneFromLanAndUpdateDBAndCache();
+            Observable<UMod> lanUModObs = Observable.defer(this::getUModsOneByOneFromLanAndUpdateDBAndCache);
             // Respond immediately with cache if available and not dirty
             //TODO if both cases are equal the why do the cases exist??
             Log.d("umods_rep", "get1by1");
@@ -303,8 +316,12 @@ public class UModsRepository implements UModsDataSource {
 
             return Observable.concatDelayError(
                     //cacheOrDBUModObs.defaultIfEmpty(null),
-                    getUModsOneByOneFromCacheOrDiskAndRefreshOnline(),
-                    lanUModObs,
+                    cacheOrDBUModObs,
+                    Observable.mergeDelayError(
+                            getUModsOneByOneFromCacheOrDiskAndRefreshOnline(),
+                            lanUModObs,
+                            Observable.empty()
+                    ),
                     Observable.empty())
                     .doOnUnsubscribe(new Action0() {
                         @Override
@@ -365,7 +382,6 @@ public class UModsRepository implements UModsDataSource {
     @Override
     public void saveUMod(@NonNull UMod uMod) {
         checkNotNull(uMod);
-        mUModsLANDataSource.saveUMod(uMod);
         mUModsLocalDataSource.saveUMod(uMod);
         mUModsInternetDataSource.saveUMod(uMod);
 
@@ -729,5 +745,10 @@ public class UModsRepository implements UModsDataSource {
                     }
                 })
                 .first();
+    }
+
+    @Override
+    public Observable<Location> getCurrentLocation() {
+        return this.locationService.getCurrentLocation();
     }
 }

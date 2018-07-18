@@ -35,17 +35,21 @@ public class WifiConnectivityReceiver extends BroadcastReceiver {
         if (connectivityManager!=null){
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
                 NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-                if (activeNetworkInfo != null && activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI){
+                if (activeNetworkInfo != null &&
+                        (activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI
+                                ||activeNetworkInfo.getType() == ConnectivityManager.TYPE_MOBILE)){
                     return activeNetworkInfo.isConnected();
                 } else {
                     return false;
                 }
             } else {
-                NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+                NetworkInfo networkInfo;
+                networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
                 if (networkInfo != null){
                     return networkInfo.isConnected();
                 } else {
-                    return false;
+                    networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+                    return networkInfo != null && networkInfo.isConnected();
                 }
             }
         }

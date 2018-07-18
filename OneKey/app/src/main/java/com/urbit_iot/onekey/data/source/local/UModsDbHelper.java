@@ -33,6 +33,8 @@ public class UModsDbHelper extends SQLiteOpenHelper {
 
     private static final String DATE_TYPE = " TEXT";
 
+    private static final String REAL_TYPE = " REAL";
+
     private static final String COMMA_SEP = ",";
 //UUID should be the primary key_urbit_green isn't it?
     //UModsPersistenceContract.UModEntry._ID + TEXT_TYPE + " PRIMARY KEY," +
@@ -50,6 +52,8 @@ public class UModsDbHelper extends SQLiteOpenHelper {
                     UModsPersistenceContract.UModEntry.HW_VERSION_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.SW_VERSION_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.PROD_UUID_CN + TEXT_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.LATITUDE_CN + REAL_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.LONGITUDE_CN + REAL_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.LAST_UPDATE_DATE_CN + DATE_TYPE +
             " )";
 

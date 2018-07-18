@@ -93,10 +93,18 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                     public Observable<UMod> call(CreateUserRPC.Result result) {
                                                         //User Creation Succeeded
                                                         Log.d("getumod+info_uc","User Creation Succeeded!");
+                                                        uMod.setMqttResponseTopic(appUser.getUserName());
                                                         uMod.setAppUserLevel(result.getUserLevel());
                                                         //TODO when CACHE state doesnt display wifi cred settings. Change mapping on presenter!!
                                                         uMod.setuModSource(UMod.UModSource.LAN_SCAN);
                                                         mUModsRepository.saveUMod(uMod);
+                                                        if (uMod.isInAPMode()){
+                                                            return mUModsRepository.getCurrentLocation().flatMap(location -> {
+                                                                uMod.setuModLocation(location);
+                                                                mUModsRepository.saveUMod(uMod);
+                                                                return Observable.just(uMod);
+                                                            }).switchIfEmpty(Observable.just(uMod));
+                                                        }
                                                         return Observable.just(uMod);
                                                     }
                                                 })
@@ -129,7 +137,8 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                     return Observable.just(uMod);
                                                                 }
                                                                 if (httpErrorCode == 409
-                                                                        || errorMessage.contains("already")){
+                                                                        || errorMessage.contains("409")
+                                                                        || errorMessage.contains("412")){
                                                                     //TODO evaluate the benefit of getting the user_type in the error body.
                                                                     //That may save us the next request (Deserialization using JSONObject)
                                                                     GetUserLevelRPC.Arguments getUserLevelArgs =
@@ -140,6 +149,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                                 public Observable<UMod> call(GetUserLevelRPC.Result result) {
                                                                                     Log.d("getumod+info_uc","Get User Level Succeeded!: "+result.toString());
                                                                                     uMod.setAppUserLevel(result.getUserLevel());
+                                                                                    //uMod.setMqttResponseTopic(appUser.getUserName());
                                                                                     //TODO when CACHE state doesnt display wifi cred settings. Change mapping on presenter!!
                                                                                     uMod.setuModSource(UMod.UModSource.LAN_SCAN);
                                                                                     mUModsRepository.saveUMod(uMod);

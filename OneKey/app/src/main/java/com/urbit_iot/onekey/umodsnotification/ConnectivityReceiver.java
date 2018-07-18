@@ -37,7 +37,8 @@ public class ConnectivityReceiver extends BroadcastReceiver {
         }
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null
-                && activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI
+                && (activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI
+                    || activeNetworkInfo.getType() == ConnectivityManager.TYPE_MOBILE)
                 && activeNetworkInfo.isConnected();
     }
 }

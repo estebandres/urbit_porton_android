@@ -6,11 +6,11 @@ import android.util.Log;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
-import com.urbit_iot.onekey.appuser.domain.AppUser;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
+import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -23,8 +23,6 @@ import javax.inject.Inject;
 
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
-import rx.functions.Func1;
-import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -36,14 +34,17 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
 
     private final UModsRepository mUModsRepository;
     private final AppUserRepository mAppUserRepository;
+    private final UModMqttService mUModMqttService;
 
     @Inject
     public GetUModsOneByOne(@NonNull UModsRepository tasksRepository,
                             @NonNull AppUserRepository appUserRepository,
-                            @NonNull BaseSchedulerProvider schedulerProvider) {
+                            @NonNull BaseSchedulerProvider schedulerProvider,
+                            @NonNull UModMqttService mUModMqttService) {
         super(Schedulers.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
         mAppUserRepository = checkNotNull(appUserRepository, "appUserRepository cannot be null!");
+        this.mUModMqttService = mUModMqttService;
     }
 
     @Override
@@ -65,12 +66,13 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                         .filter(uMod -> {
                             long diffInMillies = Math.abs(new Date().getTime() -  uMod.getLastUpdateDate().getTime());
                             long diffInHours = TimeUnit.HOURS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-                            return diffInHours < 9L;
+                            return diffInHours < 12L;
                         })
                         .flatMap(uMod -> {
                             //updates topic on each umod
-                            uMod.setMqttResponseTopic(appUser.getUserName());
-                            mUModsRepository.saveUMod(uMod);
+                            //uMod.setMqttResponseTopic(appUser.getUserName());
+                            //mUModsRepository.saveUMod(uMod);
+                            mUModMqttService.subscribeToUModResponseTopic(uMod);
                             if(uMod.getAppUserLevel() == UModUser.Level.PENDING && !uMod.isInAPMode()){
                                 Log.d("GetUM1x1", "PENDING detected");
                                 GetUserLevelRPC.Arguments getMyLevelArgs = new GetUserLevelRPC.Arguments(appUser.getUserName());
@@ -109,7 +111,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                                 }
                                             }
                                             return Observable.error(throwable);
-                                        })
+                                        })/*
                                         .retry((retryCount, throwable) -> {
                                             Log.e("getumods1x1_uc", "Retry GetUserLevel. Count: " + retryCount + "\n Excep msge: " + throwable.getMessage());
                                             if (retryCount <= 2){
@@ -118,7 +120,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                             } else {
                                                 return false;
                                             }
-                                        })
+                                        })*/
                                         .onErrorResumeNext(throwable -> {
                                             //If it is an unhandled error then return the umod untouched (pending) so the flow isn't interrupted.
                                             uMod.setAppUserLevel(UModUser.Level.PENDING);

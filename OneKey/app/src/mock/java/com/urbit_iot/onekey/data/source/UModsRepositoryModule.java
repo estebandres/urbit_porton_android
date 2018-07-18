@@ -18,6 +18,7 @@ import com.google.gson.GsonBuilder;
 
 import com.polidea.rxandroidble.RxBleClient;
 
+import com.urbit_iot.onekey.data.source.gps.LocationService;
 import com.urbit_iot.onekey.data.source.internet.FirmwareFileDownloader;
 import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.data.source.internet.UModsInternetDataSource;
@@ -98,6 +99,12 @@ public class UModsRepositoryModule {
     @Provides
     UModsTCPScanner provideUModsTCPScanner(Context context){
         return new UModsTCPScanner(context);
+    }
+
+    @Singleton
+    @Provides
+    LocationService provideLocationService(Context context){
+        return new LocationService(context);
     }
 
     @Singleton

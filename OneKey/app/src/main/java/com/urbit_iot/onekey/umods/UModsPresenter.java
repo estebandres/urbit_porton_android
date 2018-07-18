@@ -102,9 +102,10 @@ public class UModsPresenter implements UModsContract.Presenter {
     @Override
     public void unsubscribe() {
         mGetUMods.unsubscribe();
-        mSetOngoingNotificationStatus.unsubscribe();
         mClearAlienUMods.unsubscribe();
+        mTriggerUMod.unsubscribe();
         mGetUModsOneByOne.unsubscribe();
+        mSetOngoingNotificationStatus.unsubscribe();
         mRequestAccess.unsubscribe();
     }
 
@@ -247,45 +248,46 @@ public class UModsPresenter implements UModsContract.Presenter {
         sliderBackgroundColor = null;
         sliderTextColor = null;
 
+        /*
         if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
-                || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN){//LAN_SCAN means online but can be dnssd/ap/ble discovery
+                || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN) {//LAN_SCAN means online but can be dnssd/ap/ble discovery
             //shows action button only when online and is in station mode.
-            //TODO add button text alternatives as String resource or GlobalConstants??.
-            if (uMod.getState() == UMod.State.STATION_MODE) {
-                sliderEnabled = true;
-                switch (uMod.getAppUserLevel()) {
-                    case PENDING:
-                        sliderText = GlobalConstants.PENDING_SLIDER_TEXT;
-                        sliderTextColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_TEXT;
-                        sliderBackgroundColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_BACKGROUND;
-                        sliderVisible = true;
-                        sliderEnabled = false;
-                        break;
-                    case AUTHORIZED:
-                        sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
-                        sliderBackgroundColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_BACKGROUND;
-                        sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
-                        sliderVisible = true;
-                        break;
-                    case ADMINISTRATOR:
-                        sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
-                        sliderBackgroundColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_BACKGROUND;
-                        sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
-                        sliderVisible = true;
-                        break;
-                    case UNAUTHORIZED:
-                        sliderText = GlobalConstants.REQUEST_ACCESS_SLIDER_TEXT;
-                        sliderBackgroundColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_BACKGROUND;
-                        sliderTextColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_TEXT;
-                        sliderVisible = true;
-                        break;
-                    default:
-                        sliderText = "DEFAULT_NON";
-                        sliderBackgroundColor = UModsFragment.UModViewModelColors.OFFLINE_RED;
-                        sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
-                        sliderVisible = false;
-                        break;
-                }
+        }
+        */
+        if (uMod.getState() == UMod.State.STATION_MODE) {
+            sliderEnabled = true;
+            switch (uMod.getAppUserLevel()) {
+                case PENDING:
+                    sliderText = GlobalConstants.PENDING_SLIDER_TEXT;
+                    sliderTextColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_TEXT;
+                    sliderBackgroundColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_BACKGROUND;
+                    sliderVisible = true;
+                    sliderEnabled = false;
+                    break;
+                case AUTHORIZED:
+                    sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
+                    sliderBackgroundColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_BACKGROUND;
+                    sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
+                    sliderVisible = true;
+                    break;
+                case ADMINISTRATOR:
+                    sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
+                    sliderBackgroundColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_BACKGROUND;
+                    sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
+                    sliderVisible = true;
+                    break;
+                case UNAUTHORIZED:
+                    sliderText = GlobalConstants.REQUEST_ACCESS_SLIDER_TEXT;
+                    sliderBackgroundColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_BACKGROUND;
+                    sliderTextColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_TEXT;
+                    sliderVisible = true;
+                    break;
+                default:
+                    sliderText = "DEFAULT_NON";
+                    sliderBackgroundColor = UModsFragment.UModViewModelColors.STORED_BLUE;
+                    sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
+                    sliderVisible = false;
+                    break;
             }
         }
 
@@ -296,8 +298,8 @@ public class UModsPresenter implements UModsContract.Presenter {
             itemLowerText = GlobalConstants.ONLINE_LOWER_TEXT;
             lowerTextColor = UModsFragment.UModViewModelColors.ONLINE_GREEN;
         } else {
-            itemLowerText = GlobalConstants.OFFLINE_LOWER_TEXT;
-            lowerTextColor = UModsFragment.UModViewModelColors.OFFLINE_RED;
+            itemLowerText = GlobalConstants.STORED_LOWER_TEXT;
+            lowerTextColor = UModsFragment.UModViewModelColors.STORED_BLUE;
         }
 
         //TODO Default until all states are defined i.e. what about BLE_MODE and OTA_UPDATE??
@@ -543,7 +545,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         mRequestAccess.execute(requestValues, new Subscriber<RequestAccess.ResponseValues>() {
             @Override
             public void onCompleted() {
-
+                //mUModsView.enableActionSlider(uModUUID);
             }
 
             @Override
@@ -553,6 +555,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                 //Bugfender.e("umods_pr", "Request Access Failed: " + e.getMessage());
                 Timber.e("Request Access Failed: " + e.getMessage());
                 mUModsView.showRequestAccessFailedMessage();
+                mUModsView.enableActionSlider(uModUUID);
             }
 
             @Override

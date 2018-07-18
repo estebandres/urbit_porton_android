@@ -3,6 +3,8 @@ package com.urbit_iot.onekey.data.source.internet;
 import android.content.Context;
 import android.util.Log;
 
+import com.urbit_iot.onekey.util.GlobalConstants;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -25,7 +27,11 @@ public class FirmwareFileDownloader {
     }
 
     public Observable<File> downloadFirmwareFile(){
-        String downloadUrl = "http://172.18.191.213:3000/firmware_update";
+        String downloadUrl = "http://"
+                + GlobalConstants.FIRMWARE_SERVER__IP_ADDRESS
+                + ":"
+                + GlobalConstants.FIRMWARE_SERVER__PORT
+                + "/firmware_update";
 
         File firmwareFile = new File(this.appContext.getFilesDir(), "firmware_update.zip");
         try{

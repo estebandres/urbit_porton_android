@@ -289,13 +289,19 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         String wifiSSIDText = uMod.getWifiSSID();
         boolean adminLayoutVisible = uMod.getuModSource() == UMod.UModSource.LAN_SCAN
                 && uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR;
-        String uModSysInfoText =
-                uMod.getUUID() + "\n" +
-                uMod.getConnectionAddress() + "\n" +
-                uMod.getSWVersion();
         String wifiPasswordText = null;
         boolean wifiSettingsVisible = uMod.getState() == UMod.State.AP_MODE;
         boolean ongoingNotifSwitchChecked = uMod.isOngoingNotificationEnabled();
+        String locationLatLong;
+        if (uMod.getuModLocation()!=null){
+            locationLatLong = uMod.getuModLocation().getLatitude() + "," + uMod.getuModLocation().getLatitude();
+        } else {
+            locationLatLong = "DESCONOCIDA";
+        }
+        String uModSysInfoText = uMod.getUUID()
+                + "\n" + uMod.getConnectionAddress()
+                + "\n" + locationLatLong
+                + "\n" + uMod.getSWVersion();
 
         UModConfigViewModel viewModel =
                 new UModConfigViewModel(uModUUID,
@@ -306,7 +312,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         uModSysInfoText,
                         wifiPasswordText,
                         wifiSettingsVisible,
-                        ongoingNotifSwitchChecked);
+                        ongoingNotifSwitchChecked,
+                        locationLatLong);
 
         return viewModel;
     }

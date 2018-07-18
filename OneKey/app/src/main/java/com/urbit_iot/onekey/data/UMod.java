@@ -16,6 +16,7 @@
 
 package com.urbit_iot.onekey.data;
 
+import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
@@ -31,13 +32,23 @@ import java.util.Date;
  */
 public final class UMod {
 
+    @Nullable
+    public Location getuModLocation() {
+        return uModLocation;
+    }
+
+    public void setuModLocation(@Nullable Location uModLocation) {
+        this.uModLocation = uModLocation;
+    }
+
     public enum State {
         AP_MODE(0),
         STATION_MODE(1),
         OTA_UPDATE(2),
         FACTORY_RESET(3),
         REBOOTING(4),
-        BLE_MODE(5);
+        BLE_MODE(5),
+        UNKNOWN(6);
         private final Integer stateID;
         private static SparseArray<State> map = new SparseArray<>();
 
@@ -123,10 +134,12 @@ public final class UMod {
     @Nullable
     private String swVersion;
 
-    @Nullable
     private boolean isOpen;//It could be determined by the umodule state. Can an umodule respond to a request while updating??
 
     //private boolean admitsRinging;
+    @Nullable
+    private Location uModLocation;
+
 
     /**
      * Use this constructor to create a new umod when the data is retrieve from dns-sd and TXT contains isOpen.
@@ -135,7 +148,7 @@ public final class UMod {
      */
     public UMod(@NonNull String uModUUID,
                 @Nullable String connectionAddress,
-                @NonNull boolean isOpen) {
+                boolean isOpen) {
         this.uModUUID = uModUUID;
         this.alias = uModUUID;
         this.ongoingNotificationEnabled =  false;
@@ -196,7 +209,7 @@ public final class UMod {
                 @Nullable String productUUID,
                 @Nullable String hwVersion,
                 @Nullable String swVersion,
-                @NonNull boolean isOpen) {
+                boolean isOpen) {
         this.uModUUID = uModUUID;
         this.ongoingNotificationEnabled =  false;
         this.alias = alias;
@@ -236,7 +249,8 @@ public final class UMod {
                 @Nullable String productUUID,
                 @Nullable String hwVersion,
                 @Nullable String swVersion,
-                @Nullable Date lastUpdateDate){
+                @Nullable Location uModLocation,
+                @NonNull Date lastUpdateDate){
         this.uModUUID = uuid;
         this.ongoingNotificationEnabled =  ongoingNotifEnabled;
         this.alias = alias;
@@ -250,6 +264,7 @@ public final class UMod {
         this.productUUID = productUUID;
         this.hwVersion = hwVersion;
         this.swVersion = swVersion;
+        this.uModLocation = uModLocation;
         this.lastUpdateDate = lastUpdateDate;
     }
 

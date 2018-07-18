@@ -32,7 +32,7 @@
 
     <color name="trigger_slider_background">#165044</color>
     <color name="online_green">#00aa00</color>
-    <color name="offline_red">#d40000</color>
+    <color name="stored_blue">#00acc1</color>
     <color name="card_background_offline_grey">#dbe3e2</color>
     <color name="request_access_slider_background">#f9c700</color>
     <color name="request_access_slider_text">#554400</color>

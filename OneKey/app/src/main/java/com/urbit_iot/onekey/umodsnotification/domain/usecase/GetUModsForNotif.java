@@ -1,5 +1,6 @@
 package com.urbit_iot.onekey.umodsnotification.domain.usecase;
 
+import android.location.Location;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -55,15 +56,33 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
 
         //TODO Replace actual isOpen logic or remove it completely
 //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
-        return mUModsRepository.getUModsOneByOne()
+        return mUModsRepository.getCurrentLocation()
+                .onErrorResumeNext(Observable.just(new Location("GET_UMODS_NOTIF")))
+                .switchIfEmpty(Observable.just(new Location("GET_UMODS_NOTIF")))
+                .flatMap(location -> mUModsRepository.getUModsOneByOne()
                 .switchIfEmpty(Observable.error(new EmptyUModDataBaseException()))
                 .filter(UMod::isOngoingNotificationEnabled)
                 .switchIfEmpty(Observable.error(new NoUModsAreNotifEnabledException()))
                 .filter(uMod -> {
+                    if (location.getProvider().equals("GET_UMODS_NOTIF")){
+                        return true;
+                    }
+                    float distanceToUMod = 0.0f;
+                    if (uMod.getuModSource() == UMod.UModSource.MQTT_SCAN
+                            && uMod.getuModLocation() != null
+                            && uMod.getuModLocation().getLatitude() != 0.0
+                            && uMod.getuModLocation().getLongitude() != 0.0){
+                        distanceToUMod = location.distanceTo(uMod.getuModLocation());
+                        Log.d("GET_UMODS_NOIF", "DISTANCE TO "+uMod.getAlias()+" :  " + distanceToUMod);
+                        return distanceToUMod < 320.0f;
+                    }
+                    return true;
+                })
+                .switchIfEmpty(Observable.error(new AllUModsTooFarAwayException()))
+                .filter(uMod -> {
                     //TODO Replace actual isOpen logic or remove it completely
                     //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
-                    return !uMod.isInAPMode() //&& uMod.isOpen()
-                            ;
+                    return !uMod.isInAPMode();
                 })
                 //Asks to the esp if the admin has authorized me when PENDING.
                 .flatMap(uMod -> {
@@ -107,15 +126,6 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
                                                 }
                                                 return Observable.error(throwable);
                                             })
-                                            .retry((retryCount, throwable) -> {
-                                                Log.e("getumods1x1_uc", "Retry GetUserLevel. Count: " + retryCount + "\n Excep msge: " + throwable.getMessage());
-                                                if (retryCount <= 2){
-                                                    mUModsRepository.refreshUMods();
-                                                    return true;
-                                                } else {
-                                                    return false;
-                                                }
-                                            })
                                             .onErrorResumeNext(throwable -> {
                                                 //If it is an unhandled error then return the umod untouched (pending) so the flow isn't interrupted.
                                                 uMod.setAppUserLevel(UModUser.Level.PENDING);
@@ -126,7 +136,8 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
                     } else {
                         return Observable.just(uMod);
                     }
-                })
+                }))
+
                 .map(ResponseValues::new);
     }
 
@@ -165,6 +176,12 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
     public static class EmptyUModDataBaseException extends Exception{
         public EmptyUModDataBaseException() {
             super("There isn't any umod configured yet.");
+        }
+    }
+
+    public static class AllUModsTooFarAwayException extends Exception{
+        public AllUModsTooFarAwayException(){
+            super("All the modules are at least 300 mts from the phone.");
         }
     }
 }
