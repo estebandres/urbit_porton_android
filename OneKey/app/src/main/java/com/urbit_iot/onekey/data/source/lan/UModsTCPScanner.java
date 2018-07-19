@@ -139,8 +139,8 @@ public class UModsTCPScanner {
                     }
                     return Observable.just(null);
                 })//TODO Bad practice using null to ignore errors!!
-                .doOnNext(uMod -> Log.d("tcp_scan", uMod.getUUID()))
-                .filter(uMod -> uMod != null);
+                .filter(uMod -> uMod != null)
+                .doOnNext(uMod -> Log.d("tcp_scan", uMod.getUUID()));
     }
 
     public Observable<UMod> scanForUModsC(){
@@ -219,7 +219,7 @@ public class UModsTCPScanner {
     private Observable<UMod> performTCPEcho(String ipAddressName){
 
         return TCPScanClient.tcpEchoRequest(ipAddressName,7777)
-                .filter(possibleUModResp -> possibleUModResp.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX))
+                .filter(possibleUModResp -> possibleUModResp.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX + ".*"))
                 .map(uModResp -> {
                     String uModUUID = getUUIDFromUModAdvertisedID(uModResp);
                     return new UMod(uModUUID,
@@ -233,7 +233,7 @@ public class UModsTCPScanner {
     private String getUUIDFromUModAdvertisedID(String hostName){
         String uModUUID = "DEFAULTUUID";
 
-        Pattern pattern = Pattern.compile(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX);
+        Pattern pattern = Pattern.compile(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX + ".*");
         Matcher matcher = pattern.matcher(hostName);
 
         if (matcher.find()){

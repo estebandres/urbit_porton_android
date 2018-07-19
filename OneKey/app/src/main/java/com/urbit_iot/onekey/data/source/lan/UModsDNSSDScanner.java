@@ -95,6 +95,7 @@ public class UModsDNSSDScanner {
         //return Observable.from(this.mCachedUMods.values());
         return Observable.just(true)
                 .map(aBoolean -> scanInProgress.compareAndSet(false,true))
+                //TODO review synchronization scheme (petri net validation)
                 .flatMap(mutexWasAcquired -> {
                     if (mutexWasAcquired){
                         Log.d("dnssd_scan", "AQC");
@@ -107,10 +108,9 @@ public class UModsDNSSDScanner {
                         }
                         return freshUModDnsScan.asObservable()
                                 .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
-                                .doOnError(throwable -> scanInProgress.compareAndSet(true, false))
-                                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false))
-                                .doOnTerminate(() -> scanInProgress.compareAndSet(true, false))
-                                .doOnCompleted(() -> scanInProgress.compareAndSet(true, false));
+                                .doAfterTerminate(() -> scanInProgress.compareAndSet(true, false))
+                                //Deals when the scanning is ended abruptly
+                                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false));
                     }
                 });
     }
@@ -140,10 +140,9 @@ public class UModsDNSSDScanner {
                         return freshUModDnsScan.asObservable()
                                 .filter(uMod -> uMod.getUUID().contains(uModUUID))//TODO improve filter using regex
                                 .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
-                                .doOnError(throwable -> scanInProgress.compareAndSet(true, false))
-                                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false))
-                                .doOnTerminate(() -> scanInProgress.compareAndSet(true, false))
-                                .doOnCompleted(() -> scanInProgress.compareAndSet(true, false));
+                                .doAfterTerminate(() -> scanInProgress.compareAndSet(true, false))
+                                //Deals when the scanning is ended abruptly
+                                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false));
                     }
                 });
     }
@@ -170,9 +169,8 @@ public class UModsDNSSDScanner {
                             true);
                 })
                 .doOnNext(uMod -> freshUModDnsScan.onNext(uMod))
-                .doOnError(throwable -> scanInProgress.compareAndSet(true, false))
-                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false))
-                .doOnTerminate(() -> scanInProgress.compareAndSet(true, false))
-                .doOnCompleted(() -> scanInProgress.compareAndSet(true, false));
+                .doAfterTerminate(() -> scanInProgress.compareAndSet(true, false))
+                //Deals when the scanning is ended abruptly
+                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false));
     }
 }

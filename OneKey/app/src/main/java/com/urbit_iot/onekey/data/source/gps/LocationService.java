@@ -10,6 +10,7 @@ import android.util.Log;
 import com.google.android.gms.location.LocationRequest;
 
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -45,14 +46,15 @@ public class LocationService {
         });
         */
         getCurrentLocation().subscribe(location -> {
-            Log.d("GPS_SCAN", "Result: " + location.toString());
-        },throwable -> {
+            Log.d("GPS_SCAN", "Result: " + location.toString() + " TIME: " + new Date(location.getTime()).toString());
+        }, throwable -> {
             Log.e("GPS_SCAN", "Failure: " + throwable.getMessage(), throwable);
-        },()->{
-            Log.d("GPS_SCAN", "Scan Fnished");});
+        }, () -> {
+            Log.d("GPS_SCAN", "Scan Fnished");
+        });
     }
 
-    public Observable<Location> getCurrentLocation() {
+    public Observable<Location> getCurrentLocationA() {
         LocationRequest request = LocationRequest.create() //standard GMS LocationRequest
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setNumUpdates(1)
@@ -61,7 +63,7 @@ public class LocationService {
         if (ActivityCompat.checkSelfPermission(
                 this.mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(
-                        this.mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                this.mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -73,6 +75,26 @@ public class LocationService {
         }
         //return RxJavaInterop.toV1Observable(s -> locationProvider.getUpdatedLocation(request).takeUntil(io.reactivex.Observable.timer(3L,TimeUnit.SECONDS)).firstElement());
         return RxJavaInterop.toV1Observable(locationProvider.getUpdatedLocation(request), BackpressureStrategy.BUFFER)
+                .takeUntil(Observable.timer(2000L, TimeUnit.MILLISECONDS));
+    }
+
+    public Observable<Location> getCurrentLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                this.mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(
+                this.mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return Observable.empty();
+        }
+        return RxJavaInterop.toV1Observable(locationProvider.getLastKnownLocation(), BackpressureStrategy.BUFFER)
+                .doOnNext(location -> Log.d("LOCATION_SERVICE","" + location.toString() + " TIME: " + new Date(location.getTime()).toString() ))
                 .takeUntil(Observable.timer(2000L, TimeUnit.MILLISECONDS));
     }
 }

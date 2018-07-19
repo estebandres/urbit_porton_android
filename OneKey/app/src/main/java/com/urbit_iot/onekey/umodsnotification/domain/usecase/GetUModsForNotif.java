@@ -17,6 +17,8 @@ import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -48,35 +50,45 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
+        /*
         if (values.isForceUpdate()) {
             mUModsRepository.refreshUMods();
         } else {
             mUModsRepository.cachedFirst();
         }
-
+         */
+        mUModsRepository.cachedFirst();
         //TODO Replace actual isOpen logic or remove it completely
 //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
+        //TODO first should gather all umods in database whose locations are closer than ... then
         return mUModsRepository.getCurrentLocation()
-                .onErrorResumeNext(Observable.just(new Location("GET_UMODS_NOTIF")))
-                .switchIfEmpty(Observable.just(new Location("GET_UMODS_NOTIF")))
+                .onErrorResumeNext(Observable.error(new PhoneCurrentLocationUnknownException()))
+                .switchIfEmpty(Observable.error(new PhoneCurrentLocationUnknownException()))
+                .flatMap(location -> {
+                    if (location == null){
+                        return Observable.error(new PhoneCurrentLocationUnknownException());
+                    }
+                    long diffInMillies = Math.abs(new Date().getTime() - location.getTime());
+                    long diffInMinutes = TimeUnit.MINUTES.convert(diffInMillies, TimeUnit.MILLISECONDS);
+                    if (diffInMinutes > 5L){
+                        return Observable.error(new PhoneCurrentLocationUnknownException());
+                    }
+                    return Observable.just(location);
+                })
                 .flatMap(location -> mUModsRepository.getUModsOneByOne()
                 .switchIfEmpty(Observable.error(new EmptyUModDataBaseException()))
                 .filter(UMod::isOngoingNotificationEnabled)
                 .switchIfEmpty(Observable.error(new NoUModsAreNotifEnabledException()))
                 .filter(uMod -> {
-                    if (location.getProvider().equals("GET_UMODS_NOTIF")){
-                        return true;
-                    }
-                    float distanceToUMod = 0.0f;
-                    if (uMod.getuModSource() == UMod.UModSource.MQTT_SCAN
-                            && uMod.getuModLocation() != null
+                    float distanceToUMod;
+                    if (uMod.getuModLocation() != null
                             && uMod.getuModLocation().getLatitude() != 0.0
                             && uMod.getuModLocation().getLongitude() != 0.0){
                         distanceToUMod = location.distanceTo(uMod.getuModLocation());
                         Log.d("GET_UMODS_NOIF", "DISTANCE TO "+uMod.getAlias()+" :  " + distanceToUMod);
                         return distanceToUMod < 320.0f;
                     }
-                    return true;
+                    return false;
                 })
                 .switchIfEmpty(Observable.error(new AllUModsTooFarAwayException()))
                 .filter(uMod -> {
@@ -182,6 +194,12 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
     public static class AllUModsTooFarAwayException extends Exception{
         public AllUModsTooFarAwayException(){
             super("All the modules are at least 300 mts from the phone.");
+        }
+    }
+
+    public static class PhoneCurrentLocationUnknownException extends Exception{
+        public PhoneCurrentLocationUnknownException(){
+            super("The phone location is unknown.");
         }
     }
 }

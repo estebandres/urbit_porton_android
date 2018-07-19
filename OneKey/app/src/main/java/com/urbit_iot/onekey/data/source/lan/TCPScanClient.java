@@ -30,7 +30,7 @@ public class TCPScanClient {
                 //clientSocket = new Socket(ipAddressString, port);
                 clientSocket = new Socket();
                 clientSocket.setSoTimeout(1500);
-                clientSocket.connect(new InetSocketAddress(ipAddressString,port),1000);
+                clientSocket.connect(new InetSocketAddress(ipAddressString,port),800);
 
                 Log.d("TCP_ECHO_CLIENT", "SOCKET connected ON " + Thread.currentThread().getName());
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -38,26 +38,16 @@ public class TCPScanClient {
                 out.println("HELLO");
                 Log.d("TCP_ECHO_CLIENT", "HELLO sent ON " + Thread.currentThread().getName());
                 String response = in.readLine();
-                Log.d("TCP_ECHO_CLIENT", "ECHO read finished ON " + Thread.currentThread().getName());
+                Log.d("TCP_ECHO_CLIENT", "ECHO read: **" +response+ "** finished ON " + Thread.currentThread().getName());
                 stringEmitter.onNext(response);
             } catch (UnknownHostException e) {
-                //e.printStackTrace();
-                //stringEmitter.onError(e);
-                Log.e("TCP_ECHO_CLIENT", ""
-                        + e.getClass().getSimpleName()
-                        + "   " + e.getMessage());
+                //errorLogging(e,ipAddressString);
                 stringEmitter.onCompleted();
             } catch (SocketTimeoutException e) {
-                Log.e("TCP_ECHO_CLIENT", ""
-                        + e.getClass().getSimpleName()
-                        + "   " + e.getMessage());
+                //errorLogging(e,ipAddressString);
                 stringEmitter.onCompleted();
             } catch (IOException e) {
-                //stringEmitter.onError(e);
-                //e.printStackTrace();
-                Log.e("TCP_ECHO_CLIENT", ""
-                        + e.getClass().getSimpleName()
-                        + "   " + e.getMessage());
+                //errorLogging(e,ipAddressString);
                 stringEmitter.onCompleted();
             }
             finally {
@@ -82,6 +72,13 @@ public class TCPScanClient {
             }
         }, Emitter.BackpressureMode.BUFFER);
         return requestObservable;
+    }
+
+    static public void errorLogging(Throwable throwable, String ipAddress){
+        Log.e("TCP_ECHO_CLIENT", "FAILED FOR: "
+                + ipAddress + " CAUSE: "
+                + throwable.getClass().getSimpleName()
+                + " -> " + throwable.getMessage() + "  THREAD: " + Thread.currentThread().getName());
     }
 
     static public void tcpEchoRequestA(String ipAddressString, int port){
