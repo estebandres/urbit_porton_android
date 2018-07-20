@@ -265,7 +265,7 @@ public class UModsRepositoryModule {
         MemoryPersistence persistence = new MemoryPersistence();
 
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
-        mqttConnectOptions.setAutomaticReconnect(true);
+        //mqttConnectOptions.setAutomaticReconnect(true);//TODO is it better this or connection reattempt when communicating??
         mqttConnectOptions.setCleanSession(false);
 
         try {

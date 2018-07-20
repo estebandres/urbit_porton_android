@@ -123,7 +123,7 @@ public class UModMqttService {
     }
 
     private void subscribeToResponseTopic(){
-        mMqttClient.subscribe(this.userName + "/response",2)
+        mMqttClient.subscribe(this.userName + "/response",0)
                 .subscribeOn(Schedulers.io())
                 .subscribe(mqttMessage -> {
                     Log.d("subscribeTopic", "" + mqttMessage.getId() + new String(mqttMessage.getPayload()));

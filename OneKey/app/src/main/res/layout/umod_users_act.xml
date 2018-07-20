@@ -45,7 +45,8 @@
                 android:src="@drawable/ic_add"
                 app:fabSize="normal"
                 app:layout_anchor="@id/appuser_content_frame"
-                app:layout_anchorGravity="bottom|right|end" />
+                app:layout_anchorGravity="bottom|right|end"
+                android:visibility="gone"/>
         </android.support.design.widget.CoordinatorLayout>
 
     </LinearLayout>

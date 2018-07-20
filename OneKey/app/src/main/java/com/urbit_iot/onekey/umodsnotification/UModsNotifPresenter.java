@@ -154,6 +154,12 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
                 if (e instanceof GetUModsForNotif.PhoneCurrentLocationUnknownException){
                     mUModsNotifView.showNoUModsFound();
                 }
+                if (e instanceof GetUModsForNotif.TooOldPhoneLocationException){
+                    mUModsNotifView.showNoUModsFound();
+                }
+                if (e instanceof GetUModsForNotif.PhoneCurrentLocationIsInaccurateException){
+                    mUModsNotifView.showNoUModsFound();
+                }
                 mUModsNotifView.hideProgressView();
             }
 

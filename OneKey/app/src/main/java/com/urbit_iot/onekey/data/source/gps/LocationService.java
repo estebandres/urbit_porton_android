@@ -54,7 +54,7 @@ public class LocationService {
         });
     }
 
-    public Observable<Location> getCurrentLocationA() {
+    public Observable<Location> getCurrentLocation() {
         LocationRequest request = LocationRequest.create() //standard GMS LocationRequest
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setNumUpdates(1)
@@ -75,10 +75,12 @@ public class LocationService {
         }
         //return RxJavaInterop.toV1Observable(s -> locationProvider.getUpdatedLocation(request).takeUntil(io.reactivex.Observable.timer(3L,TimeUnit.SECONDS)).firstElement());
         return RxJavaInterop.toV1Observable(locationProvider.getUpdatedLocation(request), BackpressureStrategy.BUFFER)
+                .doOnNext(location -> Log.d("LOCATION_SERVICE","" + location.toString() + " TIME: " + new Date(location.getTime()).toString() ))
                 .takeUntil(Observable.timer(2000L, TimeUnit.MILLISECONDS));
     }
 
-    public Observable<Location> getCurrentLocation() {
+
+    public Observable<Location> getCurrentLocationA() {
         if (ActivityCompat.checkSelfPermission(
                 this.mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(

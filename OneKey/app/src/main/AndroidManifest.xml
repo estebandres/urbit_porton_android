@@ -28,6 +28,8 @@
     <!-- Vibration on action button clicked -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <uses-feature android:name="android.hardware.location.gps" />
+
     <application
         android:name=".OneKeyApplication"
         android:allowBackup="false"

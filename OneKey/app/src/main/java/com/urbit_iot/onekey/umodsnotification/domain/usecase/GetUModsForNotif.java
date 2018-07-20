@@ -68,10 +68,14 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
                     if (location == null){
                         return Observable.error(new PhoneCurrentLocationUnknownException());
                     }
+                    if (location.getAccuracy() > 60.0f){
+                        return Observable.error(new PhoneCurrentLocationIsInaccurateException());
+                    }
                     long diffInMillies = Math.abs(new Date().getTime() - location.getTime());
                     long diffInMinutes = TimeUnit.MINUTES.convert(diffInMillies, TimeUnit.MILLISECONDS);
+                    Log.d("GET_UMODS_NOIF", "LOCATION AGE: " + diffInMinutes);
                     if (diffInMinutes > 5L){
-                        return Observable.error(new PhoneCurrentLocationUnknownException());
+                        return Observable.error(new TooOldPhoneLocationException(diffInMinutes));
                     }
                     return Observable.just(location);
                 })
@@ -180,26 +184,43 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
     }
 
     public static class NoUModsAreNotifEnabledException extends Exception{
-        public NoUModsAreNotifEnabledException() {
+        NoUModsAreNotifEnabledException() {
             super("All UMods are notification disabled.");
         }
     }
 
     public static class EmptyUModDataBaseException extends Exception{
-        public EmptyUModDataBaseException() {
+        EmptyUModDataBaseException() {
             super("There isn't any umod configured yet.");
         }
     }
 
     public static class AllUModsTooFarAwayException extends Exception{
-        public AllUModsTooFarAwayException(){
+        AllUModsTooFarAwayException(){
             super("All the modules are at least 300 mts from the phone.");
         }
     }
 
     public static class PhoneCurrentLocationUnknownException extends Exception{
-        public PhoneCurrentLocationUnknownException(){
+        PhoneCurrentLocationUnknownException(){
             super("The phone location is unknown.");
+        }
+    }
+
+    public static class PhoneCurrentLocationIsInaccurateException extends Exception{
+        PhoneCurrentLocationIsInaccurateException(){
+            super("The phone location is much too inaccurate.");
+        }
+    }
+
+    public static class TooOldPhoneLocationException extends Exception{
+        private long minutes;
+        TooOldPhoneLocationException(long minutes){
+            super("Phone location is from: " + minutes + " minutes ago.");
+            this.minutes = minutes;
+        }
+        public long getMinutes(){
+            return this.minutes;
         }
     }
 }
