@@ -182,6 +182,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                         return Observable.from(uMods);
                     }
                 })
+                .doOnNext(uMod -> Log.d("1x1_DB", "UMOD: " + uMod.getUUID()))
                 //TODO make the stream complete on a better way.
                 .take(1200L, TimeUnit.MILLISECONDS)
                 .compose(this.uModLocalDBBrander);

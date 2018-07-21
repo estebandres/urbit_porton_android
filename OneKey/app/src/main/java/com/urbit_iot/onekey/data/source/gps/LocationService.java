@@ -76,9 +76,9 @@ public class LocationService {
         //return RxJavaInterop.toV1Observable(s -> locationProvider.getUpdatedLocation(request).takeUntil(io.reactivex.Observable.timer(3L,TimeUnit.SECONDS)).firstElement());
         return RxJavaInterop.toV1Observable(locationProvider.getUpdatedLocation(request), BackpressureStrategy.BUFFER)
                 .doOnNext(location -> Log.d("LOCATION_SERVICE","" + location.toString() + " TIME: " + new Date(location.getTime()).toString() ))
+                .doOnError(throwable -> Log.e("LOCATION_SERVICE", throwable.getMessage(),throwable))
                 .takeUntil(Observable.timer(2000L, TimeUnit.MILLISECONDS));
     }
-
 
     public Observable<Location> getCurrentLocationA() {
         if (ActivityCompat.checkSelfPermission(

@@ -50,11 +50,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
-        if (values.isForceUpdate()) {
-            mUModsRepository.refreshUMods();
-        }
-
-        return mAppUserRepository.getAppUser()
+        Observable<ResponseValues> getUModsUseCaseObservable = mAppUserRepository.getAppUser()
                 .flatMap(appUser -> mUModsRepository.getUModsOneByOne()
                         .filter(uMod -> {
                             Log.d("GetUM1x1", uMod.toString());
@@ -72,7 +68,11 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                             //updates topic on each umod
                             //uMod.setMqttResponseTopic(appUser.getUserName());
                             //mUModsRepository.saveUMod(uMod);
-                            mUModMqttService.subscribeToUModResponseTopic(uMod);
+                            /*
+                            if (uMod.getuModSource() == UMod.UModSource.CACHE){
+                                mUModMqttService.subscribeToUModResponseTopic(uMod);
+                            }
+                            */
                             if(uMod.getAppUserLevel() == UModUser.Level.PENDING && !uMod.isInAPMode()){
                                 Log.d("GetUM1x1", "PENDING detected");
                                 GetUserLevelRPC.Arguments getMyLevelArgs = new GetUserLevelRPC.Arguments(appUser.getUserName());
@@ -143,6 +143,19 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                     }
                 })
                 .map(ResponseValues::new);
+
+    mUModsRepository.cachedFirst();
+    return mUModsRepository.getUModsOneByOne()
+            .doOnNext(mUModMqttService::subscribeToUModResponseTopic)
+            .toCompletable()
+            .doOnCompleted(() -> {
+                if (values.isForceUpdate()) {
+                    mUModsRepository.refreshUMods();
+                } else {
+                    mUModsRepository.cachedFirst();
+                }
+            })
+            .andThen(getUModsUseCaseObservable);
     }
 
     public static final class RequestValues implements RxUseCase.RequestValues {

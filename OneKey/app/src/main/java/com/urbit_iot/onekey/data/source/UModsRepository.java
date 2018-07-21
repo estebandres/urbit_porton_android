@@ -294,12 +294,14 @@ public class UModsRepository implements UModsDataSource {
                         cacheOrDBUModObs.defaultIfEmpty(null),//TODO replace for rxjava2 compliant not null object...
                         //lanUModObs,
                         Observable.empty())
+                        /*
                         .doOnUnsubscribe(new Action0() {
                             @Override
                             public void call() {
                                 mCacheIsDirty = false;
                             }
                         })
+                        */
                         .filter(new Func1<UMod, Boolean>() {
                             @Override
                             public Boolean call(UMod uMod) {

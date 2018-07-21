@@ -45,7 +45,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Retrieves a {@link UMod} from the {@link UModsRepository}.
  */
 public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.RequestValues, GetUModAndUpdateInfo.ResponseValues> {
-    private static boolean REFRESH_IN_ORDER = false;
     @NonNull
     private final UModsRepository mUModsRepository;
     @NonNull
@@ -63,11 +62,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
-        //TODO why not to take cached values and refresh on retry only.
-        if(REFRESH_IN_ORDER){
-            mUModsRepository.refreshUMods();
-            REFRESH_IN_ORDER = false;
-        }
+        mUModsRepository.cachedFirst();
         //GOLDEN RULE when an object is passed in the rxjava chain and its modifications are
         //evident then there is no need to make a clone but if said object is passed to some external method as a parameter
         //then it has to be cloned  since we are not sure what that method does to our object avoiding miss behaviours.
@@ -196,7 +191,6 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                             }
                                                         }
                                                         //when the error is from other source like a timeout it is forwarded to the presenter.
-                                                        REFRESH_IN_ORDER = true;
                                                         return Observable.error(throwable);
                                                     }
                                                 });

@@ -114,7 +114,7 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public void deleteAllUMods() {
-        mUModMqttService.unsubscribeAll();
+        mUModMqttService.clearAllSubscriptions();
     }
 
     @Override
