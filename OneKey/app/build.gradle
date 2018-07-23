@@ -8,7 +8,7 @@ android {
     compileOptions.incremental = false
     flavorDimensions "versionCode"
 
-    //TODO: This is a workaround when there are libraries using rxjava1.x and others rxjava2.x(rx-preferences) but this increses the method count.
+    //TODO: This is a workaround when there are libraries using rxjava1.x and others rxjava2.x(rx-preferences) but this increases the method count.
     packagingOptions {
         exclude 'META-INF/rxjava.properties'
         //TODO understand the next two exclusions
@@ -68,7 +68,7 @@ android {
             events 'passed', 'skipped', 'failed', 'standardOut', 'standardError'
         }
     }
-    buildToolsVersion '26.0.2'
+
     compileOptions {
         targetCompatibility 1.8
         sourceCompatibility 1.8

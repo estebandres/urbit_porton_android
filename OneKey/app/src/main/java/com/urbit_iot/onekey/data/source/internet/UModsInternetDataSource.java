@@ -35,11 +35,13 @@ import com.urbit_iot.onekey.data.source.UModsDataSource;
 import java.io.File;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
 import okhttp3.ResponseBody;
 import retrofit2.Response;
+import rx.Completable;
 import rx.Observable;
 
 /**
@@ -144,6 +146,15 @@ public class UModsInternetDataSource implements UModsDataSource {
                 TriggerRPC.Response.class)
                 .map(TriggerRPC.Response::getResponseResult);
     }
+    public Completable responseSubscriptionChecker(String uModUUID){
+        //Observable.fromCallable(() -> mUModMqttService.getListOfSubscribedUModsUUIDs().contains())
+        return Completable.fromCallable(() -> {
+            if (mUModMqttService.getListOfSubscribedUModsUUIDs().contains(uModUUID)){
+                return true;
+            }
+            throw new Exception("RESPONSE SUBS MISSING");
+        });
+    }
 
     @Override
     public Observable<CreateUserRPC.Result> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Arguments requestArguments) {
@@ -152,11 +163,13 @@ public class UModsInternetDataSource implements UModsDataSource {
                 this.username,
                 uMod.getUUID(),
                 this.randomGenerator.nextInt());
-        return mUModMqttService.publishRPC(
-                uMod.getUModRequestTopic(),
-                createUserRequest,
-                CreateUserRPC.Response.class)
-                .map(CreateUserRPC.Response::getResponseResult);
+
+        return this.responseSubscriptionChecker(uMod.getUUID())
+                .andThen(mUModMqttService.publishRPC(
+                        uMod.getUModRequestTopic(),
+                        createUserRequest,
+                        CreateUserRPC.Response.class)
+                        .map(CreateUserRPC.Response::getResponseResult));
     }
 
     @Override

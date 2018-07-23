@@ -78,6 +78,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
     private ProgressBar umodsScanProgressBar;
 
+    private ListView mListView;
+
     public UModsFragment() {
         // Requires empty public constructor
     }
@@ -112,8 +114,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         View root = inflater.inflate(R.layout.umods_frag, container, false);
 
         // Set up tasks view
-        ListView listView = (ListView) root.findViewById(R.id.umods_list);
-        listView.setAdapter(mListAdapter);
+        this.mListView = (ListView) root.findViewById(R.id.umods_list);
+        this.mListView.setAdapter(mListAdapter);
         //mFilteringLabelView = (TextView) root.findViewById(R.id.umods_filtering_label);
         mUModsView = (LinearLayout) root.findViewById(R.id.umods_linear_layout);
 
@@ -549,9 +551,9 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
             if( ! mViewModelsList.contains(viewModel)){
                 mViewModelsList.add(viewModel);
-                notifyDataSetChanged();
             } else {
-                Iterator<UModViewModel> iterator = mViewModelsList.iterator();
+                //Iterator<UModViewModel> iterator = mViewModelsList.iterator();
+                /*
                 //for-each wont work since the removal causes the list size to change
                 while (iterator.hasNext()){
                     if (iterator.next().equals(viewModel)){
@@ -559,6 +561,10 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                     }
                 }
                 mViewModelsList.add(viewModel);
+
+
+                        */
+                mViewModelsList.set(mViewModelsList.indexOf(viewModel),viewModel);
                 /*
                 Collections.sort(mViewModelsList, new Comparator<UModViewModel>() {
                     @Override
@@ -567,8 +573,8 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                     }
                 });
                 */
-                notifyDataSetChanged();
             }
+            notifyDataSetChanged();
         }
 
         public void makeButtonVisible(String uModUUID){
