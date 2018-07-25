@@ -91,7 +91,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                         uMod.setMqttResponseTopic(appUser.getUserName());
                                                         uMod.setAppUserLevel(result.getUserLevel());
                                                         //TODO when CACHE state doesnt display wifi cred settings. Change mapping on presenter!!
-                                                        uMod.setuModSource(UMod.UModSource.LAN_SCAN);
+                                                        //uMod.setuModSource(UMod.UModSource.LAN_SCAN);
                                                         mUModsRepository.saveUMod(uMod);
                                                         if (uMod.isInAPMode()){
                                                             return mUModsRepository.getCurrentLocation().flatMap(location -> {
@@ -146,7 +146,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                                                     uMod.setAppUserLevel(result.getUserLevel());
                                                                                     //uMod.setMqttResponseTopic(appUser.getUserName());
                                                                                     //TODO when CACHE state doesnt display wifi cred settings. Change mapping on presenter!!
-                                                                                    uMod.setuModSource(UMod.UModSource.LAN_SCAN);
+                                                                                   // uMod.setuModSource(UMod.UModSource.LAN_SCAN);
                                                                                     mUModsRepository.saveUMod(uMod);
                                                                                     return Observable.just(uMod);
                                                                                 }

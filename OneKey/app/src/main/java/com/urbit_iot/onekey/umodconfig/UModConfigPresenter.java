@@ -287,8 +287,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                 "CONECTADO" : "DESCONECTADO";
         String aliasText = uMod.getAlias();
         String wifiSSIDText = uMod.getWifiSSID();
-        boolean adminLayoutVisible = uMod.getuModSource() == UMod.UModSource.LAN_SCAN
-                && uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR;
+        boolean adminLayoutVisible = uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR;
         String wifiPasswordText = null;
         boolean wifiSettingsVisible = uMod.getState() == UMod.State.AP_MODE;
         boolean ongoingNotifSwitchChecked = uMod.isOngoingNotificationEnabled();

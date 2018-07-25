@@ -54,10 +54,16 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                 .flatMap(appUser -> mUModsRepository.getUModsOneByOne()
                         .filter(uMod -> {
                             Log.d("GetUM1x1", uMod.toString());
-                            //TODO Replace actual isOpen logic or remove it completely
+                            //TODO Replace current isOpen logic or remove it completely
                             //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
                             //return (uMod.isOpen() || uMod.isInAPMode()) && (uMod.getuModSource() == UMod.UModSource.LAN_SCAN) ;
-                            return (uMod.isOpen() || uMod.isInAPMode()) || uMod.belongsToAppUser() ;
+                            UMod.UModSource source = uMod.getuModSource();
+                            if (source == UMod.UModSource.CACHE || source == UMod.UModSource.LOCAL_DB){
+                                return uMod.getState() != UMod.State.AP_MODE;
+                            }
+                            else {// LAN_SCAN and MQTT_SCAN results.
+                                return true;
+                            }
                         })
                         .filter(uMod -> {
                             long diffInMillies = Math.abs(new Date().getTime() -  uMod.getLastUpdateDate().getTime());

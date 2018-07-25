@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.util.Log;
@@ -61,6 +62,7 @@ public class UModsTCPScanner {
                         .getSystemService(Context.WIFI_SERVICE);
         DhcpInfo dhcpInfo = null;
         boolean wifiConnectionIsActive = false;
+        //TODO Code duplication!
         ConnectivityManager connectivityManager = (ConnectivityManager) this.mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivityManager!=null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -99,6 +101,21 @@ public class UModsTCPScanner {
             this.addressesCalculator = ArrayList::new;
         }
     }
+
+    private boolean phoneConnectedToAPModeUMod(){
+        WifiManager wifiManager = (WifiManager) this.mContext.getSystemService (Context.WIFI_SERVICE);
+        WifiInfo info = null;
+        String ssid = null;
+        if (wifiManager != null) {
+            info = wifiManager.getConnectionInfo();
+            ssid  = info.getSSID();
+            if (ssid.startsWith("\"") && ssid.endsWith("\"")){
+                ssid = ssid.substring(1, ssid.length()-1);
+            }
+            return ssid.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX);
+        }
+        return true;//This will cancel the TCP scan for the cases when WiFi SSID couldn't be gotten.
+    }
     private long netmaskPrefixToLongAddress(short netPrefix){
         long netmaskAddress = 0;
         for (int i=0; i<netPrefix;i++){
@@ -117,14 +134,17 @@ public class UModsTCPScanner {
         return ipDirectCode;
     }
 
-    public Observable<UMod> scanForUModsA(){
+    /*
+    public Observable<UMod> scanForUMods(){
         return Observable.empty();
     }
+    */
 
     public Observable<UMod> scanForUMods(){
+        if (phoneConnectedToAPModeUMod()){
+            return Observable.empty();
+        }
         List<Long> allAddresses = this.addressesCalculator.calculateAddresses();
-        //List<List<Long>> addressesChunks = chopList(allAddresses,50);
-        //Log.d("TCP_SCAN", "Chunks of 50" + addressesChunks.size());
 
         return Observable.from(allAddresses)
                 .flatMap(ipAddressAsLong ->
@@ -141,27 +161,6 @@ public class UModsTCPScanner {
                 })//TODO Bad practice using null to ignore errors!!
                 .filter(uMod -> uMod != null)
                 .doOnNext(uMod -> Log.d("tcp_scan", uMod.getUUID()));
-    }
-
-    public Observable<UMod> scanForUModsC(){
-        List<Long> allAddresses = this.addressesCalculator.calculateAddresses();
-        List<List<Long>> addressesChunks = chopList(allAddresses,50);
-        Log.d("TCP_SCAN", "Chunks of 50" + addressesChunks.size());
-
-        return Observable.from(addressesChunks)
-                .flatMap(Observable::from)
-                .map(UModsTCPScanner::longToStringIP)
-                .flatMap(this::performTCPEcho)
-                .onErrorResumeNext(throwable -> {
-                    if (throwable != null){
-                        Log.e("TCP_SCAN", ""
-                                + throwable.getClass().getSimpleName()
-                                + "   " + throwable.getMessage());
-                    }
-                    return Observable.just(null);
-                })
-                .doOnNext(uMod -> Log.d("tcp_scan", uMod.getUUID()))
-                .filter(uMod -> uMod != null);
     }
 
     static <T> List<List<T>> chopList(List<T> list, final int L) {
@@ -182,58 +181,27 @@ public class UModsTCPScanner {
                 ( ip        & 0xFF);
     }
 
-    /*
     private Observable<UMod> performTCPEcho(String ipAddressName){
 
-        SocketAddress serverAddress = null;
-        try {
-            serverAddress = new InetSocketAddress(InetAddress.getByName(ipAddressName),7777);
-        } catch (UnknownHostException e) {
-            Log.e("TCP_ECHO", e.getMessage());
-            return Observable.error(e);
-        }
-
-        return TcpClient.newClient(serverAddress)
-                .readTimeOut(2300, TimeUnit.MILLISECONDS)
-                .createConnectionRequest()
-                .flatMap(connection ->{
-                    Log.d("ECHO_REQ", "CONNECTED TO " + ipAddressName);
-                    return connection.writeString(Observable.just("HELLO"))
-                            .cast(ByteBuf.class)//since the writing don't emmit any object but competes in order to concat it should maintain the emissions type
-                            .concatWith(connection.getInput());
-                        }
-                )
-                .take(1)
-                .map(byteBuf -> byteBuf.toString(Charset.defaultCharset()))
-                .doOnNext(stringResponse -> Log.d("tcp_scan", "ECHO_RESP:  " + stringResponse))
-                .filter(possibleUModResp -> possibleUModResp.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX))
-                .map(uModResp -> {
-                    String uModUUID = getUUIDFromUModAdvertisedID(uModResp);
-                    return new UMod(uModUUID,
-                            ipAddressName,
-                            true);
-                })
-                .doOnCompleted(() -> Log.d("TCP_SCAN", "COMPLETED"));
-    }
-     */
-    private Observable<UMod> performTCPEcho(String ipAddressName){
-
-        return TCPScanClient.tcpEchoRequest(ipAddressName,7777)
-                .filter(possibleUModResp -> possibleUModResp.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX + ".*"))
+        return TCPScanClient.tcpEchoRequest(ipAddressName,GlobalConstants.UMOD__TCP_ECHO_PORT)
+                .filter(possibleUModResp -> possibleUModResp.matches(
+                        GlobalConstants.URBIT_PREFIX
+                                + GlobalConstants.DEVICE_UUID_REGEX))
                 .map(uModResp -> {
                     String uModUUID = getUUIDFromUModAdvertisedID(uModResp);
                     return new UMod(uModUUID,
                             ipAddressName,
                             true);
                 });
-        //return Observable.empty();
 
     }
 
     private String getUUIDFromUModAdvertisedID(String hostName){
         String uModUUID = "DEFAULTUUID";
 
-        Pattern pattern = Pattern.compile(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX + ".*");
+        Pattern pattern = Pattern.compile(
+                GlobalConstants.URBIT_PREFIX
+                + GlobalConstants.DEVICE_UUID_REGEX);
         Matcher matcher = pattern.matcher(hostName);
 
         if (matcher.find()){

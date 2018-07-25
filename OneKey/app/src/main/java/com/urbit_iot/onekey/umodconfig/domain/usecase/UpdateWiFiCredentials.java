@@ -106,11 +106,9 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
                                 .flatMap(new Func1<SetWiFiRPC.Result, Observable<SetWiFiRPC.Result>>() {
                                     @Override
                                     public Observable<SetWiFiRPC.Result> call(SetWiFiRPC.Result result) {
-                                            //UMod tempUMod = uMod;
-                                            //tempUMod.setWifiSSID(values.getmWiFiSSID());
-                                            //Log.d("update_wifi", tempUMod.getWifiSSID());
                                             Log.d("update_wifi", result.toString());
-                                            //uModsRepository.saveUMod(tempUMod);
+                                            uMod.setWifiSSID(values.getmWiFiSSID());
+                                            uModsRepository.saveUMod(uMod);
                                         return Observable.just(result);
                                     }
                                 });

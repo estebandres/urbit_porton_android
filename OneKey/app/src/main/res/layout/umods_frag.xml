@@ -75,7 +75,9 @@
                 android:layout_height="match_parent"
                 android:divider="@android:color/transparent"
                 android:dividerHeight="10dp"
-                android:layout_marginTop="10dp" />
+                android:layout_marginTop="10dp"
+                android:paddingBottom="80dp"
+                android:clipToPadding="false"/>
         </LinearLayout>
 
     <LinearLayout

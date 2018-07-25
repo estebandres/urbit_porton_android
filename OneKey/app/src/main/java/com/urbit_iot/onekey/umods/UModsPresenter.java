@@ -546,6 +546,7 @@ public class UModsPresenter implements UModsContract.Presenter {
             @Override
             public void onCompleted() {
                 //mUModsView.enableActionSlider(uModUUID);
+                loadUMods(false);
             }
 
             @Override
@@ -564,7 +565,6 @@ public class UModsPresenter implements UModsContract.Presenter {
                 //Bugfender.d("umods_pr", "Successful Access Request: " + responseValues.getResult().toString());
                 Timber.d( "Successful Access Request: " + responseValues.getResult().toString());
                 mUModsView.showRequestAccessCompletedMessage();
-                loadUModsOneByOne(true,true);
             }
         });
     }

@@ -116,6 +116,12 @@ public class UModsRepositoryModule {
 
     @Singleton
     @Provides
+    PhoneConnectivityInfo providePhoneConnectivityInfo(Context context){
+        return new PhoneConnectivityInfo(context);
+    }
+
+    @Singleton
+    @Provides
     @LanOnly
     UModsDataSource provideUModsRemoteDataSource(UModsDNSSDScanner uModsDNSSDScanner,
                                                  UModsBLEScanner uModsBLEScanner,

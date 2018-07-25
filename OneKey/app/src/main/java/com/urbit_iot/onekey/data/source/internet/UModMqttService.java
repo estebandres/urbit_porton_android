@@ -87,51 +87,6 @@ public class UModMqttService {
                 .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
                         throwable -> Log.e("umodsMqttService","FAILED TO CONNECT  " + throwable.getClass().getSimpleName() + " MSG: " + throwable.getMessage()));
 
-        /*
-        Flowable.just(true)
-                .flatMapCompletable(aBoolean -> {
-                    clientStateCheckLock.lock();
-                    if (!mMqttClient.isConnected()){
-                        return testConnectionToBroker().andThen(mMqttClient.connect());
-                    } else {
-                        return Completable.complete();
-                    }
-                })
-                .doOnTerminate(() -> clientStateCheckLock.unlock())
-                .subscribeOn(Schedulers.io())//TODO use injected scheduler
-                .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
-                        throwable -> Log.e("umodsMqttService","FAILED TO CONNECT  " + throwable.getClass().getSimpleName() + " MSG: " + throwable.getMessage()));
-         */
-
-
-
-        //Completable.complete().doOnComplete(() -> clientStateCheckLock.lock()).andThen(testConnectionToBroker()).andThen(mMqttClient.connect()).
-        /*
-        if (!mMqttClient.isConnected()){
-            this.testConnectionToBroker()
-                    .andThen(mMqttClient.connect())
-                    //.doOnComplete(this::subscribeToResponseTopic)
-                    .subscribeOn(Schedulers.io())//TODO use injected scheduler
-                    .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
-                            throwable -> Log.e("umodsMqttService","FAILED TO CONNECT  " + throwable.getClass().getSimpleName() + " MSG: " + throwable.getMessage()));
-        }
-        */
-
-    }
-
-    public void subscribeToUModRequestsTopic(String uModTopic){
-        mMqttClient.subscribe(uModTopic,2)
-                .subscribeOn(Schedulers.io())
-                .subscribe(mqttMessage -> receivedMessagesProcessor.onNext(mqttMessage));
-    }
-
-    private void subscribeToResponseTopic(){
-        mMqttClient.subscribe(this.userName + "/response",0)
-                .subscribeOn(Schedulers.io())
-                .subscribe(mqttMessage -> {
-                    Log.d("subscribeTopic", "" + mqttMessage.getId() + new String(mqttMessage.getPayload()));
-                    receivedMessagesProcessor.onNext(mqttMessage);
-                });
     }
 
     private Completable connectMqttClient(){
@@ -143,7 +98,8 @@ public class UModMqttService {
                         clientMutex.acquireUninterruptibly();
                         Log.d("MQTT_SERVICE", "LOCKED!!  " + Thread.currentThread().getName());
                         if (mMqttClient.isConnected()){
-                            return Completable.complete();
+                            //return Completable.complete();
+                            return testConnectionToBroker();
                         } else {
                             return testConnectionToBroker()
                                     .andThen(mMqttClient.connect().doOnComplete(this::resubscribeToAllUMods));
@@ -189,7 +145,7 @@ public class UModMqttService {
             this.subscriptionsMap.remove(uModUUID);
         }
         //clientMutex.release();
-        Flowable<MqttMessage> topicMessagesFlowable = mMqttClient.subscribe(responseTopicForUMod,0);
+        Flowable<MqttMessage> topicMessagesFlowable = mMqttClient.subscribe(responseTopicForUMod,1);
         Disposable topicSubDisposable = connectMqttClient()
                 .andThen(topicMessagesFlowable)
                 //.observeOn(Schedulers.io())

@@ -8,6 +8,9 @@ import com.github.druk.rxdnssd.RxDnssd;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -15,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import rx.Completable;
 import rx.Observable;
 import rx.Subscription;
 import rx.schedulers.Schedulers;
@@ -168,9 +172,48 @@ public class UModsDNSSDScanner {
                             bonjourService.getInet4Address().getHostAddress(),
                             true);
                 })
+                .doOnNext(uMod -> testConnectionToModule(uMod.getConnectionAddress()))
                 .doOnNext(uMod -> freshUModDnsScan.onNext(uMod))
                 .doAfterTerminate(() -> scanInProgress.compareAndSet(true, false))
                 //Deals when the scanning is ended abruptly
                 .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false));
+    }
+
+    public void testConnectionToModuleA(String ipAddress){
+        Socket clientSocket;
+        clientSocket = new Socket();
+        try{
+            clientSocket.connect(
+                    new InetSocketAddress(
+                            ipAddress,
+                            7777),
+                    1500);
+            clientSocket.close();
+        } catch (IOException exc) {
+            Log.d("DNSSD_SCAN","CONN TEST FAILURE: "+ ipAddress +"  " + exc.getMessage());
+        }
+    }
+
+    //Tries to connect to the module so the ARP table is updated and the future http request is faster.
+    public void testConnectionToModule(String ipAddress){
+        Completable.fromCallable(() -> {
+            Socket clientSocket;
+            clientSocket = new Socket();
+            try{
+                clientSocket.connect(
+                        new InetSocketAddress(
+                                ipAddress,
+                                GlobalConstants.UMOD__TCP_ECHO_PORT),
+                        1500);
+            } finally {
+                clientSocket.close();
+            }
+            return true;
+        }).subscribeOn(Schedulers.io())
+                .subscribe(() -> {},
+                        throwable -> Log.d("DNSSD_SCAN","CONN TEST FAILURE: "
+                                + ipAddress
+                                +"  "
+                                + throwable.getMessage()));
     }
 }
