@@ -92,6 +92,7 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                                         //User Creation Succeeded
                                                         Log.d("getumod+info_uc","User Creation Succeeded!");
                                                         uMod.setMqttResponseTopic(appUser.getUserName());
+                                                        //jfughfgh
                                                         uMod.setAppUserLevel(result.getUserLevel());
                                                         //TODO when CACHE state doesnt display wifi cred settings. Change mapping on presenter!!
                                                         //uMod.setuModSource(UMod.UModSource.LAN_SCAN);

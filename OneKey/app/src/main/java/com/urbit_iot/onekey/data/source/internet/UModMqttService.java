@@ -11,6 +11,7 @@ import com.urbit_iot.onekey.util.GlobalConstants;
 import net.eusashead.iot.mqtt.MqttMessage;
 import net.eusashead.iot.mqtt.ObservableMqttClient;
 
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -205,12 +206,17 @@ public class UModMqttService {
                 .flatMap(response -> {
                     RPC.ResponseError responseError = ((RPC.Response)response).getResponseError();
                     if (responseError!=null){
+                        Integer errorCode = responseError.getErrorCode();
+                        if (errorCode!= HttpURLConnection.HTTP_UNAUTHORIZED
+                                && errorCode!=HttpURLConnection.HTTP_FORBIDDEN){
+                            errorCode = HttpURLConnection.HTTP_INTERNAL_ERROR;
+                        }
                         HttpException httpException = new HttpException(
                                 Response.error(
-                                        responseError.getErrorCode(),
+                                        errorCode,
                                         ResponseBody.create(
                                                 MediaType.parse("text/plain"),
-                                                responseError.getErrorMessage())
+                                                gsonInstance.toJson(responseError))
                                 )
                         );
                         return Maybe.error(httpException);

@@ -166,7 +166,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
             @Override
             public void onError(Throwable e) {
-                Log.e("conf_pr",e.getMessage());
+                Log.e("conf_pr", "Error while populating: ", e);
                 //TODO BUG-RISK Improve this with exception subclass polymorphism
                 if (e instanceof GetUModAndUpdateInfo.UnconnectedFromAPModeUModException){
                     //TODO should the presenter call finishActivity or the fragment do it as part of launchWiFiSettings??
