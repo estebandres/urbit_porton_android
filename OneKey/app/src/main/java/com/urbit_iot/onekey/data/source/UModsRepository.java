@@ -205,6 +205,7 @@ public class UModsRepository implements UModsDataSource {
                                     if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){
                                         uMod.setLastUpdateDate(new Date());
                                         uMod.setConnectionAddress(result.getWifi().getStaIp());
+                                        uMod.setWifiSSID(result.getWifi().getSsid());
                                         uMod.setState(UMod.State.STATION_MODE);
                                         uMod.setuModSource(UMod.UModSource.MQTT_SCAN);
                                     }
@@ -610,14 +611,13 @@ public class UModsRepository implements UModsDataSource {
             switch (connectivityInfo.getConnectionType()){
                 case WIFI:
                     String wifiAPSSID = connectivityInfo.getWifiAPSSID();
-                    if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN//Not sufficient because
-                            || (uMod.getWifiSSID() != null
+                    if (uMod.getWifiSSID() != null
                             && wifiAPSSID != null
-                            && uMod.getWifiSSID().equals(wifiAPSSID))
+                            && uMod.getWifiSSID().equals(wifiAPSSID)
                             ){
                         return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
                     } else {
-                        return Observable.just(new Pair<>(mUModsInternetDataSource, mUModsLANDataSource));
+                        return Observable.just(new Pair<>(mUModsInternetDataSource,null));
                     }
                 case MOBILE:
                     return Observable.just(new Pair<>(mUModsInternetDataSource,null));

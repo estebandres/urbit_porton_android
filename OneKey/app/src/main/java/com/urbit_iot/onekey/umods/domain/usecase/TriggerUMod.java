@@ -27,6 +27,7 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
+import com.urbit_iot.onekey.data.source.PhoneConnectivityInfo;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -49,13 +50,19 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
 
     private final UModsRepository mUModsRepository;
     private final AppUserRepository mAppUserRepository;
+    //TODO Ugly dependencies are ugly. Brakes dependency rule!
+    private final PhoneConnectivityInfo connectivityInfo;
+    private String uModAPSSID;
 
     @Inject
     public TriggerUMod(@NonNull UModsRepository uModsRepository,
-                       @NonNull BaseSchedulerProvider schedulerProvider, AppUserRepository mAppUserRepository) {
+                       @NonNull BaseSchedulerProvider schedulerProvider,
+                       @NonNull AppUserRepository mAppUserRepository,
+                       @NonNull PhoneConnectivityInfo connectivityInfo) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(uModsRepository, "uModsRepository cannot be null!");
         this.mAppUserRepository = checkNotNull(mAppUserRepository,"mAppUserRepository cannot be null!");
+        this.connectivityInfo = connectivityInfo;
     }
 
     @Override
@@ -78,6 +85,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                 .flatMap(new Func1<UMod, Observable<TriggerRPC.Result>>() {
                     @Override
                     public Observable<TriggerRPC.Result> call(final UMod uMod) {
+                        uModAPSSID = "";
                         return mUModsRepository.triggerUMod(uMod, requestArguments)
                                 .onErrorResumeNext(new Func1<Throwable, Observable<? extends TriggerRPC.Result>>() {
                                     @Override
@@ -108,7 +116,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                 mUModsRepository.saveUMod(uMod);
                                                 //TODO what difference would it make if Observable.error(throwable)??
                                                 //return Observable.error(new Exception("Forces umods UI Refresh"));
-                                                //return Observable.error(throwable);
+                                                return Observable.error(throwable);
                                             }
                                             //If the user was Admin but now is User and vice versa...
                                             if (httpErrorCode == 500){//body: "unauthorized"
@@ -168,22 +176,27 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                         });
                                             }
                                         }
+                                        /*
+                                        if (throwable instanceof IOException){
+                                            mUModsRepository.refreshUMods();
+                                        }
+                                        */
                                         //TODO is this a desirable behaviour? What about the other error codes?
                                         return Observable.error(throwable);
                                     }
                                 });
                     }
                 })
-                //TODO find the scenarios where retry would be useful. When do we want a retry??
-                //TODO how can we force the list refresh (load) when retry finish unsuccessful??
                 //A retry should be performed when a timeout is produce because a umod changed its address or is suddenly disconnected.
                 .retry(new Func2<Integer, Throwable, Boolean>() {
                     @Override
                     public Boolean call(Integer retryCount, Throwable throwable) {
                         Log.e("trigger_uc", "Retry count: " + retryCount +
                                 " -- Excep msge: " + throwable.getMessage() + "Excep Type: " + throwable.getClass().getSimpleName());
-                        if (retryCount == 1 &&
-                                (throwable instanceof IOException)){
+                        if (retryCount == 1
+                                && connectivityInfo.getConnectionType() == PhoneConnectivityInfo.ConnectionType.WIFI
+                                && uModAPSSID.equals(connectivityInfo.getWifiAPSSID())
+                                && (throwable instanceof IOException)){
                             mUModsRepository.refreshUMods();
                             return true;
                         } else {

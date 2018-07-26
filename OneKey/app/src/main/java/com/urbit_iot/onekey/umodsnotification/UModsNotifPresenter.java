@@ -3,7 +3,6 @@ package com.urbit_iot.onekey.umodsnotification;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.bugfender.sdk.Bugfender;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.umods.domain.usecase.RequestAccess;
@@ -145,7 +144,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
                 if (e instanceof GetUModsForNotif.NoUModsAreNotifEnabledException){
                     mUModsNotifView.showAllUModsAreNotifDisabled();
                 }
-                if (e instanceof GetUModsForNotif.EmptyUModDataBaseException){
+                if (e instanceof GetUModsForNotif.NoTriggerableUModsFoundException){
                     mUModsNotifView.showNoConfiguredUMods();
                 }
                 if (e instanceof GetUModsForNotif.AllUModsTooFarAwayException){

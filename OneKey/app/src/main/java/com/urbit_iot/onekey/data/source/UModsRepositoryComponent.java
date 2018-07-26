@@ -31,6 +31,8 @@ public interface UModsRepositoryComponent {
 
     RxSharedPreferences getRxSharedPreferences();
 
-    UModMqttService getUModMqttService();
+    UModMqttService getUModMqttService();//TODO breaks dependecy rule!
+
+    PhoneConnectivityInfo getPhoneConnectivityInfo();//TODO breaks dependecy rule!
 
 }

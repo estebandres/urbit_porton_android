@@ -158,7 +158,7 @@ public class UModsDNSSDScanner {
         return rxDnssd.browse("_http._tcp.","local.")
                 .compose(rxDnssd.resolve())
                 .compose(rxDnssd.queryRecords())
-                .takeUntil(Observable.timer(6000L, TimeUnit.MILLISECONDS))
+                .takeUntil(Observable.timer(10000L, TimeUnit.MILLISECONDS))
                 .distinct()
                 .filter(bonjourService ->
                         bonjourService != null

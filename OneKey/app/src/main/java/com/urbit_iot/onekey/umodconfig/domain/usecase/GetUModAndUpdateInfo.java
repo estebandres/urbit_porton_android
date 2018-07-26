@@ -28,9 +28,12 @@ import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
+import com.urbit_iot.onekey.umods.domain.usecase.RequestAccess;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.source.UModsRepository;
+
+import java.io.IOException;
 
 import javax.inject.Inject;
 
@@ -38,6 +41,7 @@ import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
+import rx.functions.Func2;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -62,7 +66,6 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
-        mUModsRepository.cachedFirst();
         //GOLDEN RULE when an object is passed in the rxjava chain and its modifications are
         //evident then there is no need to make a clone but if said object is passed to some external method as a parameter
         //then it has to be cloned  since we are not sure what that method does to our object avoiding miss behaviours.
@@ -222,6 +225,19 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                                         return Observable.just(uMod);
                                     }
                                 });
+                    }
+                })
+                .retry(new Func2<Integer, Throwable, Boolean>() {
+                    @Override
+                    public Boolean call(Integer retryCount, Throwable throwable) {
+                        Log.e("config_gathering", "Retry count: " + retryCount + "\n Excep msge: " + throwable.getMessage());
+                        if (retryCount == 1 //Two attempts maximum
+                                && (throwable instanceof IOException)){
+                            mUModsRepository.refreshUMods();
+                            return true;
+                        } else {
+                            return false;
+                        }
                     }
                 })
                 .map(new Func1<UMod, ResponseValues>() {

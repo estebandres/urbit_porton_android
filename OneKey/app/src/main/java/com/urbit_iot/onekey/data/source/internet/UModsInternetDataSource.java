@@ -85,7 +85,7 @@ public class UModsInternetDataSource implements UModsDataSource {
     @Override
     public void saveUMod(@NonNull UMod uMod) {
         if (uMod.belongsToAppUser() && !uMod.isInAPMode()){
-            mUModMqttService.subscribeToUModResponseTopic(uMod);
+            mUModMqttService.subscribeToUModResponseTopic(uMod);//Warning hazard of network on main
         }
     }
 

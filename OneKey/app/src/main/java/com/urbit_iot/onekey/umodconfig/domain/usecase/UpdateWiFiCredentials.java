@@ -23,6 +23,7 @@ import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
+import com.urbit_iot.onekey.data.source.PhoneConnectivityInfo;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -114,15 +115,16 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
                                 });
                     }
                 })
-                //TODO find the scenarios where retry would be useful. When do we want a retry??
+                //The retry logic cannot go in the repository because it needs to retry the getUMod not only the RPC call.
                 //A retry should be performed when a timeout is produce because a umod changed its address or is suddenly disconnected.
+                //This makes sense because this operations is done in LAN MODE only.
                 .retry(new Func2<Integer, Throwable, Boolean>() {
                     @Override
                     public Boolean call(Integer retryCount, Throwable throwable) {
                         Log.e("setwifi_uc", "Retry count: " + retryCount +
                                 "\n Excep msge: " + throwable.getMessage());
-                        if (retryCount <= 2 &&
-                                (throwable instanceof IOException)){
+                        if (retryCount == 1//Just the one retry
+                                && (throwable instanceof IOException)){
                             uModsRepository.refreshUMods();
                             return true;
                         } else {

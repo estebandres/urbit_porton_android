@@ -80,18 +80,6 @@ public class DeleteUModUser extends SimpleUseCase<DeleteUModUser.RequestValues, 
                         return Observable.error(throwable);
                     }
                 })
-                .retry(new Func2<Integer, Throwable, Boolean>() {
-                    @Override
-                    public Boolean call(Integer retryCount, Throwable throwable) {
-                        Log.e("delete-user_uc", "Retry count: " + retryCount + "\n Excep msge: " + throwable.getMessage());
-                        if (retryCount < 2 && (throwable instanceof IOException)){
-                            mUModsRepository.refreshUMods();
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                })
                 .map(new Func1<DeleteUserRPC.Result, DeleteUModUser.ResponseValues>() {
                     @Override
                     public DeleteUModUser.ResponseValues call(DeleteUserRPC.Result result) {

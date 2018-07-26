@@ -33,18 +33,6 @@ public class UpdateUserType extends SimpleUseCase<UpdateUserType.RequestValues, 
 
     @Override
     public Observable<UpdateUserType.ResponseValues> buildUseCase(final UpdateUserType.RequestValues values) {
-        /*
-        if (values.isForceUpdate()) {
-            mUModsRepository.refreshUMods();
-        }
-        */
-
-        /*
-        final UpdateUserRPC.Request request = new UpdateUserRPC.Request(
-                new UpdateUserRPC.Arguments(values.getUModUser().getPhoneNumber(), UModUser.Level.AUTHORIZED),
-                values.uModUserPhone.getuModUUID(),
-                666);
-         */
 
         //TODO how many times should I try to execute the RPC.
         return mUModsRepository.getUMod(values.getuModUUID())

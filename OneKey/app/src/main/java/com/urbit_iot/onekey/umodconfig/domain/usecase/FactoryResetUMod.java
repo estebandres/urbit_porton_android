@@ -115,8 +115,8 @@ public class FactoryResetUMod extends SimpleUseCase<FactoryResetUMod.RequestValu
                     public Boolean call(Integer retryCount, Throwable throwable) {
                         Log.e("factory-reset_uc", "Retry count: " + retryCount +
                                 "\n Excep msge: " + throwable.getMessage());
-                        if (retryCount <= 2 &&
-                                (throwable instanceof IOException)){
+                        if (retryCount == 1 //Just the one attempt
+                                && (throwable instanceof IOException)){
                             uModsRepository.refreshUMods();
                             return true;
                         } else {

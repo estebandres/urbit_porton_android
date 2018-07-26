@@ -228,12 +228,11 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                 //The RPC is executed in the saved umod connectionAddress
                 //only when that address is outdated and produces an error a retry is performed that
                 // forces a network lookup for the connected UMod.
-                /*
                 .retry(new Func2<Integer, Throwable, Boolean>() {
                     @Override
                     public Boolean call(Integer retryCount, Throwable throwable) {
                         Log.e("req_access_uc", "Retry count: " + retryCount + "\n Excep msge: " + throwable.getMessage());
-                        if (retryCount <= 3
+                        if (retryCount <= 3 //Two attempts maximum
                                 && (throwable instanceof IOException
                                 || throwable instanceof FailedToWriteUserFilesException)){
                             mUModsRepository.refreshUMods();
@@ -242,7 +241,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                             return false;
                         }
                     }
-                })*/
+                })
                 .map(new Func1<CreateUserRPC.Result, ResponseValues>() {
                     @Override
                     public ResponseValues call(CreateUserRPC.Result result) {

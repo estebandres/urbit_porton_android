@@ -134,6 +134,9 @@ public class TriggerUModByNotif extends SimpleUseCase<TriggerUModByNotif.Request
                                                 });
                                     }
                                 }
+                                if (throwable instanceof IOException){
+                                    mUModsRepository.refreshUMods();
+                                }
                                 //TODO is this a desirable behaviour? What about the other error codes?
                                 return Observable.error(throwable);
                             });

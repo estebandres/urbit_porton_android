@@ -83,7 +83,8 @@ public class UModMqttService {
         this.clientMutex = new Semaphore(1);
 
         connectMqttClient()
-                .observeOn(Schedulers.io())//TODO use injected scheduler
+                //.observeOn(Schedulers.io())
+                .subscribeOn(Schedulers.io())//TODO use injected scheduler
                 .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
                         throwable -> Log.e("umodsMqttService","FAILED TO CONNECT  " + throwable.getClass().getSimpleName() + " MSG: " + throwable.getMessage()));
 
@@ -92,24 +93,27 @@ public class UModMqttService {
     private Completable connectMqttClient(){
         return Completable.defer(() ->
                 Single.just(1)
-                        .observeOn(Schedulers.io())
+                        //.observeOn(Schedulers.single())
                     .flatMapCompletable(integer -> {
-                        //clientStateCheckLock.lock();
                         clientMutex.acquireUninterruptibly();
                         Log.d("MQTT_SERVICE", "LOCKED!!  " + Thread.currentThread().getName());
                         if (mMqttClient.isConnected()){
                             //return Completable.complete();
-                            return testConnectionToBroker();
+                            return testConnectionToBroker();//In the case the client isn't aware of disconnection yet.
                         } else {
                             return testConnectionToBroker()
-                                    .andThen(mMqttClient.connect().doOnComplete(this::resubscribeToAllUMods));
+                                    .andThen(mMqttClient.connect())
+                                    .andThen(Completable.fromAction(() -> {
+                                        Log.d("MQTT_SERVICE", "ACTUAL CONNECTION COMPLETED " + Thread.currentThread().getName());
+                                        resubscribeToAllUMods();
+                                    }));
                         }
                     })
                     .doOnComplete(() -> {
-                        Log.d("MQTT_SERVICE", "CONNECTION COMPLETE " + Thread.currentThread().getName());
+                        Log.d("MQTT_SERVICE", "CONNECTION COMPLETE ON: " + Thread.currentThread().getName());
                     })
                     .doOnError((throwable) -> {
-                        Log.d("MQTT_SERVICE", "CONNECTION ERROR" + throwable.getClass().getSimpleName() +"  "+ Thread.currentThread().getName());
+                        Log.d("MQTT_SERVICE", "CONNECTION ERROR: " + throwable.getClass().getSimpleName() +" ON: "+ Thread.currentThread().getName());
                     })
                     .doFinally(() -> {
                         Log.d("MQTT_SERVICE", "CONNECTION FINALLY + UNLOCKING!!  " + Thread.currentThread().getName());
@@ -124,7 +128,10 @@ public class UModMqttService {
             return;
         }
         Set<String> umodsSubscribedTo = new HashSet<>(subscriptionsMap.keySet());
-        Log.d("MQTT_SERVICE", "RESUBSCIRPTION: " + umodsSubscribedTo.size() + " UMODS.");
+        Log.d("MQTT_SERVICE", "RESUBSCIRPTION: "
+                + umodsSubscribedTo.size()
+                + " UMODS. ON: "
+                + Thread.currentThread().getName());
         this.clearAllSubscriptions();
         for (String uModUUID : umodsSubscribedTo){
             this.subscribeToUModResponseTopic(uModUUID);
@@ -145,22 +152,28 @@ public class UModMqttService {
             this.subscriptionsMap.remove(uModUUID);
         }
         //clientMutex.release();
-        Flowable<MqttMessage> topicMessagesFlowable = mMqttClient.subscribe(responseTopicForUMod,1);
+        Flowable<MqttMessage> topicMessagesFlowable = Flowable.defer(() -> mMqttClient.subscribe(responseTopicForUMod,1));
         Disposable topicSubDisposable = connectMqttClient()
-                .andThen(topicMessagesFlowable)
                 //.observeOn(Schedulers.io())
+                .andThen(topicMessagesFlowable)
+                .subscribeOn(Schedulers.io())
                 .subscribe(mqttMessage -> {
-                            Log.d("subscribeTopic", "" + mqttMessage.getId() + new String(mqttMessage.getPayload()));
+                            Log.d("MQTT_SUBSCRIBER", "MSG_ID: "
+                                    + mqttMessage.getId()
+                                    +" ON: "
+                                    +Thread.currentThread().getName()
+                                    + " PAYLOAD: "
+                                    + new String(mqttMessage.getPayload()));
                             receivedMessagesProcessor.onNext(mqttMessage);
                         },
                         throwable -> {
-                            Log.e("mqtt_sub", throwable.getMessage());
+                            Log.e("MQTT_SUBSCRIBER", throwable.getMessage() + " ON: " + Thread.currentThread().getName());
                         },
                         () -> {
-                            Log.d("mqtt_sub", "Response Topic Sub Completed.");
+                            Log.d("MQTT_SUBSCRIBER", "Response Topic Sub Completed.");
                         });
         this.subscriptionsMap.put(uModUUID, topicSubDisposable);
-        Log.d("MQTT_SERVICE", "COMPOSITE DISPOSED: " + allSubscriptions.isDisposed());
+        //Log.d("MQTT_SERVICE", "COMPOSITE DISPOSED: " + allSubscriptions.isDisposed());
         this.allSubscriptions.add(topicSubDisposable);
     }
 
@@ -182,9 +195,9 @@ public class UModMqttService {
         //TODO Note: this implementation assumes that a SINGLE response will arrive within 2 seconds after the request was published.
         //It should contemplate the arrival of foreign and duplicated messages...Queuing is deemed necessary...???
         Maybe<S> maybeResponse = receivedMessagesProcessor
-                .doOnNext(mqttMessage -> Log.d("publishRPC", "" + mqttMessage.getId() + new String(mqttMessage.getPayload())))
+                //.doOnNext(mqttMessage -> Log.d("publishRPC", "" + mqttMessage.getId() + new String(mqttMessage.getPayload())))
                 .map(mqttMessage -> gsonInstance.fromJson(new String(mqttMessage.getPayload()),responseType))
-                .doOnNext(s -> Log.d("publishRPC", s.toString()))
+                //.doOnNext(s -> Log.d("publishRPC", s.toString()))
                 .filter(response -> ((RPC.Response)response).getResponseId() == ((RPC.Request)request).getRequestId()
                            && ((RPC.Response)response).getRequestTag().equalsIgnoreCase(((RPC.Request)request).getRequestTag()))
                 .timeout(6000L, TimeUnit.MILLISECONDS)
