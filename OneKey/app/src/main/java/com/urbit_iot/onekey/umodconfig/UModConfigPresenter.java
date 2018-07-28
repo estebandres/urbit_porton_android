@@ -283,8 +283,11 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
     private UModConfigViewModel createViewModel(UMod uMod){
         String uModUUID = uMod.getUUID();
+        String connectionStatusText ="CONECTADO";
+        /*
         String connectionStatusText =  uMod.getuModSource() == UMod.UModSource.LAN_SCAN ?
                 "CONECTADO" : "DESCONECTADO";
+                */
         String aliasText = uMod.getAlias();
         String wifiSSIDText = uMod.getWifiSSID();
         boolean adminLayoutVisible = uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR;
@@ -292,7 +295,9 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         boolean wifiSettingsVisible = uMod.getState() == UMod.State.AP_MODE;
         boolean ongoingNotifSwitchChecked = uMod.isOngoingNotificationEnabled();
         String locationLatLong;
-        if (uMod.getuModLocation()!=null){
+        if (uMod.getuModLocation()!=null
+                && uMod.getuModLocation().getLatitude() != 0.0
+                && uMod.getuModLocation().getLongitude() != 0.0){
             locationLatLong = uMod.getuModLocation().getLatitude() + "," + uMod.getuModLocation().getLatitude();
         } else {
             locationLatLong = "DESCONOCIDA";
@@ -301,6 +306,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                 + "\n" + uMod.getConnectionAddress()
                 + "\n" + locationLatLong
                 + "\n" + uMod.getSWVersion();
+        boolean updateButtonVisible = uMod.getuModSource() != UMod.UModSource.MQTT_SCAN;
 
         UModConfigViewModel viewModel =
                 new UModConfigViewModel(uModUUID,
@@ -312,7 +318,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         wifiPasswordText,
                         wifiSettingsVisible,
                         ongoingNotifSwitchChecked,
-                        locationLatLong);
+                        locationLatLong, updateButtonVisible);
 
         return viewModel;
     }

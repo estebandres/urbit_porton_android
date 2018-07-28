@@ -497,8 +497,13 @@ public class UModsPresenter implements UModsContract.Presenter {
                 //Bugfender.e("trigger","Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage());
                 Timber.e("Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage());
                 mUModsView.showOpenCloseFail();
+                if (e instanceof TriggerUMod.DeletedUserException){
+                    mUModsView.appendUMod(createViewModel(((TriggerUMod.DeletedUserException) e).getInaccessibleUMod()));
+                    return;
+                }
                 mUModsView.enableActionSlider(uModUUID);
-                loadUMods(true);
+
+                //loadUMods(true);
             }
 
             @Override

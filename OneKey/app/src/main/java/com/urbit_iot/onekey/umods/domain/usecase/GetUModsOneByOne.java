@@ -52,13 +52,14 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
 
         Observable<ResponseValues> getUModsUseCaseObservable = mAppUserRepository.getAppUser()
                 .flatMap(appUser -> mUModsRepository.getUModsOneByOne()
+                        /*
                         .filter(uMod -> {
                             Log.d("GetUM1x1", uMod.toString());
                             //TODO Replace current isOpen logic or remove it completely
                             //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
                             //return (uMod.isOpen() || uMod.isInAPMode()) && (uMod.getuModSource() == UMod.UModSource.LAN_SCAN) ;
                             UMod.UModSource source = uMod.getuModSource();
-                            if (source == UMod.UModSource.CACHE || source == UMod.UModSource.LOCAL_DB){
+                            if (source == UMod.UModSource.LOCAL_DB){
                                 return uMod.getState() != UMod.State.AP_MODE;
                             }
                             else {// LAN_SCAN and MQTT_SCAN results.
@@ -68,17 +69,10 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                         .filter(uMod -> {
                             long diffInMillies = Math.abs(new Date().getTime() -  uMod.getLastUpdateDate().getTime());
                             long diffInHours = TimeUnit.HOURS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-                            return diffInHours < 12L;
+                            return diffInHours < 36L;
                         })
+                        */
                         .flatMap(uMod -> {
-                            //updates topic on each umod
-                            //uMod.setMqttResponseTopic(appUser.getUserName());
-                            //mUModsRepository.saveUMod(uMod);
-                            /*
-                            if (uMod.getuModSource() == UMod.UModSource.CACHE){
-                                mUModMqttService.subscribeToUModResponseTopic(uMod);
-                            }
-                            */
                             if(uMod.getAppUserLevel() == UModUser.Level.PENDING && !uMod.isInAPMode()){
                                 Log.d("GetUM1x1", "PENDING detected");
                                 GetUserLevelRPC.Arguments getMyLevelArgs = new GetUserLevelRPC.Arguments(appUser.getUserName());
@@ -162,7 +156,16 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                 }
             })
             .andThen(getUModsUseCaseObservable);
+    /*
+        if (values.isForceUpdate()) {
+            mUModsRepository.refreshUMods();
+        } else {
+            mUModsRepository.cachedFirst();
+        }
+        return getUModsUseCaseObservable;
+    */
     }
+
 
     public static final class RequestValues implements RxUseCase.RequestValues {
 

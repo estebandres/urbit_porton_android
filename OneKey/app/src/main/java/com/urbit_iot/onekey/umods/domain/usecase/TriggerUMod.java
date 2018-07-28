@@ -116,7 +116,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                 mUModsRepository.saveUMod(uMod);
                                                 //TODO what difference would it make if Observable.error(throwable)??
                                                 //return Observable.error(new Exception("Forces umods UI Refresh"));
-                                                return Observable.error(throwable);
+                                                return Observable.error(new DeletedUserException(uMod));
                                             }
                                             //If the user was Admin but now is User and vice versa...
                                             if (httpErrorCode == 500){//body: "unauthorized"
@@ -153,10 +153,10 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
 
                                                                                     if (httpErrorCode != 0
                                                                                         && httpErrorCode == 500
-                                                                                            && errorMessage.contains("404")) {
+                                                                                            && errorMessage.contains("404")) {//TODO is this case possible?
                                                                                                 uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
                                                                                                 mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
-                                                                                                return Observable.error(throwable);//TODO Replace by custom exception
+                                                                                                return Observable.error(new DeletedUserException(uMod));
                                                                                     }
                                                                                 }
                                                                                 return Observable.error(throwable);
@@ -194,9 +194,10 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                         Log.e("trigger_uc", "Retry count: " + retryCount +
                                 " -- Excep msge: " + throwable.getMessage() + "Excep Type: " + throwable.getClass().getSimpleName());
                         if (retryCount == 1
+                                && (throwable instanceof IOException)
+                                //This sort of data should be given as a request value to the usecase in order to isolate the layer.
                                 && connectivityInfo.getConnectionType() == PhoneConnectivityInfo.ConnectionType.WIFI
-                                && uModAPSSID.equals(connectivityInfo.getWifiAPSSID())
-                                && (throwable instanceof IOException)){
+                                && uModAPSSID.equals(connectivityInfo.getWifiAPSSID())){
                             mUModsRepository.refreshUMods();
                             return true;
                         } else {
@@ -235,6 +236,18 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
 
         public TriggerRPC.Result getResult() {
             return result;
+        }
+    }
+
+    public static class DeletedUserException extends Exception{
+        private UMod inaccessibleUMod;
+        public DeletedUserException(UMod inaccessibleUMod){
+            super("The user was deleted by an Admin.");
+            this.inaccessibleUMod = inaccessibleUMod;
+        }
+
+        public UMod getInaccessibleUMod(){
+            return this.inaccessibleUMod;
         }
     }
 }

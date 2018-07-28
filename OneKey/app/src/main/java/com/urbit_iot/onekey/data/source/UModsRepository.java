@@ -608,6 +608,7 @@ public class UModsRepository implements UModsDataSource {
         if(uMod.isInAPMode()){
             return Observable.just(new Pair<>(mUModsLANDataSource,null));
         } else {//Assumes a module is either in AP_MODE or STATION_MODE
+            mUModsInternetDataSource.saveUMod(uMod);
             switch (connectivityInfo.getConnectionType()){
                 case WIFI:
                     String wifiAPSSID = connectivityInfo.getWifiAPSSID();
@@ -615,6 +616,7 @@ public class UModsRepository implements UModsDataSource {
                             && wifiAPSSID != null
                             && uMod.getWifiSSID().equals(wifiAPSSID)
                             ){
+                        //TODO TCP connect and close for faster ARP lookup...
                         return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
                     } else {
                         return Observable.just(new Pair<>(mUModsInternetDataSource,null));

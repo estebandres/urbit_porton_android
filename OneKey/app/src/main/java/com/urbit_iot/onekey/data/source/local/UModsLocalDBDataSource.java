@@ -179,12 +179,13 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 .flatMap(new Func1<List<UMod>, Observable<UMod>>() {
                     @Override
                     public Observable<UMod> call(List<UMod> uMods) {
+                        if (uMods.isEmpty()){
+                            return Observable.empty();
+                        }
                         return Observable.from(uMods);
                     }
                 })
                 .doOnNext(uMod -> Log.d("1x1_DB", "UMOD: " + uMod.getUUID()))
-                //TODO make the stream complete on a better way.
-                .take(1200L, TimeUnit.MILLISECONDS)
                 .compose(this.uModLocalDBBrander);
     }
 

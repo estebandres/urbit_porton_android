@@ -392,6 +392,11 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                 mWiFiSettings.setVisibility(View.GONE);
             }
 
+            if (viewModel.isUpdateButtonVisible()){
+                mFirmwareUpdateButton.setVisibility(View.VISIBLE);
+            } else {
+                mFirmwareUpdateButton.setVisibility(View.INVISIBLE);
+            }
             mAdminSettingsLayout.setVisibility(View.VISIBLE);
         } else {
             mAdminSettingsLayout.setVisibility(View.GONE);
