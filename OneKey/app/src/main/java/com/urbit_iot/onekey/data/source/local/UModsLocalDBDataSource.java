@@ -148,6 +148,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                         return Observable.from(uMods);
                     }
                 })
+                .takeUntil(Observable.timer(100L, TimeUnit.MILLISECONDS))
                 .compose(this.uModLocalDBBrander)
                 .toList();
     }
@@ -186,6 +187,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                     }
                 })
                 .doOnNext(uMod -> Log.d("1x1_DB", "UMOD: " + uMod.getUUID()))
+                .takeUntil(Observable.timer(100L, TimeUnit.MILLISECONDS))
                 .compose(this.uModLocalDBBrander);
     }
 
@@ -214,6 +216,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         return mDatabaseHelper.createQuery(UModEntry.UMODS_TABLE_NAME, sql, uModUUID)
                 //.mapToOne(mUModMapperFunction)
                 .mapToOneOrDefault(mUModMapperFunction, null)
+                .takeUntil(Observable.timer(100L, TimeUnit.MILLISECONDS))
                 .first()
                 .compose(this.uModLocalDBBrander);
     }

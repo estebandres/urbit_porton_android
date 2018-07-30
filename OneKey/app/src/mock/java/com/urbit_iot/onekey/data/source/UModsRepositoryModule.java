@@ -207,6 +207,7 @@ public class UModsRepositoryModule {
                 .dispatcher(dispatcher)
                 .connectTimeout(4000L, TimeUnit.MILLISECONDS)
                 .readTimeout(8000L, TimeUnit.MILLISECONDS)
+                .writeTimeout(15000L,TimeUnit.MILLISECONDS)
                 .build();
     }
 

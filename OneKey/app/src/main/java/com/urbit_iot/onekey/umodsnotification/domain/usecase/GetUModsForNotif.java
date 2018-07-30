@@ -50,7 +50,8 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
         //TODO Replace actual isOpen logic or remove it completely
 //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
         //TODO first should gather all umods in database whose locations are closer than ... then
-        return mUModsRepository.getCurrentLocation()
+        return Observable.defer(() ->
+                mUModsRepository.getCurrentLocation()
                 .onErrorResumeNext(Observable.error(new PhoneCurrentLocationUnknownException()))
                 .switchIfEmpty(Observable.error(new PhoneCurrentLocationUnknownException()))
                 .flatMap(location -> {
@@ -74,19 +75,19 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
                         .filter(UMod::isOngoingNotificationEnabled)
                         .switchIfEmpty(Observable.error(new NoUModsAreNotifEnabledException()))
                         .filter(uMod -> {
-                        float distanceToUMod;
-                        if (uMod.getuModLocation() != null
-                                && uMod.getuModLocation().getLatitude() != 0.0
-                                && uMod.getuModLocation().getLongitude() != 0.0){
-                            distanceToUMod = location.distanceTo(uMod.getuModLocation());
-                            Log.d("GET_UMODS_NOIF", "DISTANCE TO "+uMod.getAlias()+" :  " + distanceToUMod);
-                            return distanceToUMod < 320.0f;
-                        }
-                        return false;
-                    })
-                    .switchIfEmpty(Observable.error(new AllUModsTooFarAwayException()))
+                            float distanceToUMod;
+                            if (uMod.getuModLocation() != null
+                                    && uMod.getuModLocation().getLatitude() != 0.0
+                                    && uMod.getuModLocation().getLongitude() != 0.0){
+                                distanceToUMod = location.distanceTo(uMod.getuModLocation());
+                                Log.d("GET_UMODS_NOIF", "DISTANCE TO "+uMod.getAlias()+" :  " + distanceToUMod);
+                                return distanceToUMod < 320.0f;
+                            }
+                            return false;
+                        })
+                        .switchIfEmpty(Observable.error(new AllUModsTooFarAwayException()))
                 )
-                .map(ResponseValues::new);
+                .map(ResponseValues::new));
     }
 
     public static final class RequestValues implements RxUseCase.RequestValues {

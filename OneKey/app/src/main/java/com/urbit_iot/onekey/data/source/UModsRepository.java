@@ -241,6 +241,9 @@ public class UModsRepository implements UModsDataSource {
                             } else {
                                 //TODO check if all necessary fields are being updated.
                                 //AppUserLevel should remain as in DB
+                                if (lanUMod.getState() == UMod.State.STATION_MODE){
+                                    cachedUMod.setWifiSSID(connectivityInfo.getWifiAPSSID());
+                                }
                                 cachedUMod.setConnectionAddress(lanUMod.getConnectionAddress());
                                 cachedUMod.setState(lanUMod.getState());
                                 cachedUMod.setuModSource(UMod.UModSource.LAN_SCAN);
@@ -289,33 +292,16 @@ public class UModsRepository implements UModsDataSource {
     //@RxLogObservable
     public Observable<UMod> getUModsOneByOne() {
         return Observable.defer(() -> {
-            //Observable<UMod> cacheOrDBUModObs = Observable.empty();
-            Observable<UMod> cacheOrDBUModObs = Observable.defer(this::getUModsOneByOneFromCacheOrDisk).doOnNext(uMod -> Log.d("CACHED_UMODS","FOUND: "+ uMod.toString()));
+            Observable<UMod> cacheOrDBUModObs = Observable.defer(this::getUModsOneByOneFromCacheOrDisk)
+                    .doOnNext(uMod -> Log.d("CACHED_UMODS","FOUND: "+ uMod.toString()));
             //If cache is dirty (forced update) then lookup for UMods on LAN (dnssd,ble)
             Observable<UMod> lanUModObs = Observable.defer(this::getUModsOneByOneFromLanAndUpdateDBAndCache);
-            // Respond immediately with cache if available and not dirty
-            //TODO if both cases are equal the why do the cases exist??
             Log.d("umods_rep", "get1by1");
+            // Respond immediately with cache if available and not dirty
             if (!mCacheIsDirty) {
                 Log.d("umods_rep", "cached first" + mCachedUMods);
-                return Observable.concatDelayError(
-                        cacheOrDBUModObs.defaultIfEmpty(null),//TODO replace for rxjava2 compliant not null object...
-                        //lanUModObs,
-                        Observable.empty())
-                        /*
-                        .doOnUnsubscribe(new Action0() {
-                            @Override
-                            public void call() {
-                                mCacheIsDirty = false;
-                            }
-                        })
-                        */
-                        .filter(new Func1<UMod, Boolean>() {
-                            @Override
-                            public Boolean call(UMod uMod) {
-                                return uMod != null;
-                            }
-                        });
+                return cacheOrDBUModObs
+                        .doOnNext(mUModsInternetDataSource::saveUMod);
             }
 
             if (mCachedUMods == null){
@@ -324,29 +310,11 @@ public class UModsRepository implements UModsDataSource {
 
             Log.d("umods_rep", "lanbrowse first");
 
-            return Observable.concatDelayError(
-                    //cacheOrDBUModObs.defaultIfEmpty(null),
-                    cacheOrDBUModObs,
-                    Observable.mergeDelayError(
-                            getUModsOneByOneFromCacheOrDiskAndRefreshOnline(),
-                            lanUModObs,
-                            Observable.empty()
-                    ),
-                    Observable.empty())
-                    .doOnUnsubscribe(new Action0() {
-                        @Override
-                        public void call() {
-                            mCacheIsDirty = false;//prevents the getUMod to refresh
-                        }
-                    })
-                    .filter(new Func1<UMod, Boolean>() {
-                        @Override
-                        public Boolean call(UMod uMod) {
-                            return uMod != null;
-                        }
-                    });
+            return Observable.mergeDelayError(
+                    getUModsOneByOneFromCacheOrDiskAndRefreshOnline(),
+                    lanUModObs)
+                    .filter(uMod -> uMod != null);
         });
-
     }
 
     private Observable<List<UMod>> getAndCacheLocalUMods() {
@@ -393,7 +361,7 @@ public class UModsRepository implements UModsDataSource {
     public void saveUMod(@NonNull UMod uMod) {
         checkNotNull(uMod);
         mUModsLocalDataSource.saveUMod(uMod);
-        mUModsInternetDataSource.saveUMod(uMod);
+        //mUModsInternetDataSource.saveUMod(uMod);
 
         // Do in memory cache update to keep the app UI up to date
         if (mCachedUMods == null) {
@@ -465,85 +433,54 @@ public class UModsRepository implements UModsDataSource {
     //@RxLogObservable
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
         checkNotNull(uModUUID);
-
         // Respond immediately with cache if available
         if (!mCacheIsDirty){
             Log.d("rep_umods", "HOLOc");
-            return Observable.concatDelayError(getSingleUModFromCacheOrDisk(uModUUID),
-                    getSingleUModFromLanAndUpdateDBEntry(uModUUID))//If removed then config never finds AP mode module!!
-                    .doOnNext(new Action1<UMod>() {
-                        @Override
-                        public void call(UMod uMod) {
-                            Log.e("umod_repo", uMod.toString());
-                        }
-                    })
-                    .doOnError(new Action1<Throwable>() {
-                        @Override
-                        public void call(Throwable throwable) {
-                            Log.e("umod_repo", throwable.getMessage());
-                        }
-                    })
-                    .first()
-                    .doOnUnsubscribe(new Action0() {
-                        @Override
-                        public void call() {
-                            mCacheIsDirty = false;//prevents the getUMod to refresh
-                        }
-                    });
+            return getSingleUModFromCacheOrDisk(uModUUID);
+                    //.doOnNext(mUModsInternetDataSource::saveUMod);
         } else {
-            return getSingleUModFromLanAndUpdateDBEntry(uModUUID)
-                    .doOnUnsubscribe(new Action0() {
-                        @Override
-                        public void call() {
-                            mCacheIsDirty = false;//prevents the getUMod to refresh
-                        }
-                    });
+            //TODO if possible take the oportunity of update the current state of all umods if possible taking advantage of the forced update search
+            return getSingleUModFromLanAndUpdateDBEntry(uModUUID);
         }
     }
 
     private Observable<UMod> getSingleUModFromLanAndUpdateDBEntry(final String uModUUID){
         // If lanUmodsDataSource produces a result then tries to update the DB entry for the same UUID.
         return mUModsLANDataSource.getUMod(uModUUID)
-                .filter(new Func1<UMod, Boolean>() {
-                    @Override
-                    public Boolean call(UMod uMod) {
-                        return uMod != null;
-                    }
-                })
+                .filter(uMod -> uMod != null)
                 .last()
-                .flatMap(new Func1<UMod, Observable<UMod>>() {
-                    @Override
-                    public Observable<UMod> call(final UMod lanUMod) {
-                        return mUModsLocalDataSource.getUMod(uModUUID)
-                                .flatMap(new Func1<UMod, Observable<UMod>>() {
-                                    @Override
-                                    public Observable<UMod> call(UMod dbUMod) {
-                                        // Given the implementation of the DB DataSource
-                                        // it explicitly returns a result or a default null.
-                                        // Since lanDS produces incomplete UMods objects it should
-                                        // fetch the DB entry and update it.
-                                        if(dbUMod == null){
-                                            return Observable.just(lanUMod);
-                                        } else {//Updates the entry
-                                            dbUMod.setConnectionAddress(lanUMod.getConnectionAddress());
-                                            dbUMod.setState(lanUMod.getState());
-                                            dbUMod.setuModSource(UMod.UModSource.LAN_SCAN);
-                                            dbUMod.setOpen(lanUMod.isOpen());
-                                            dbUMod.setLastUpdateDate(lanUMod.getLastUpdateDate());
-                                            return Observable.just(dbUMod);
-                                        }
-                                    }
-                                })
-                                .onErrorResumeNext(Observable.just(lanUMod));
+                .flatMap(lanUMod -> {
+                    // Since lanDS produces incomplete UMods objects it should
+                    // fetch the DB entry and update it.
+                    UMod cachedUMod = mCachedUMods.get(lanUMod.getUUID());
+                    //CACHE HIT
+                    if (cachedUMod != null) {
+                        long diffInSeconds = secondsBetweenDates(lanUMod.getLastUpdateDate(), cachedUMod.getLastUpdateDate());
+                        if (diffInSeconds <= 5L
+                                && cachedUMod.getuModSource() == UMod.UModSource.MQTT_SCAN) {//In case we've got an MQTT ping
+                            return Observable.empty();
+                        } else {
+                            //TODO check if all necessary fields are being updated.
+                            //AppUserLevel should remain as in DB
+                            if (lanUMod.getState() == UMod.State.STATION_MODE) {
+                                cachedUMod.setWifiSSID(connectivityInfo.getWifiAPSSID());
+                            }
+                            cachedUMod.setConnectionAddress(lanUMod.getConnectionAddress());
+                            cachedUMod.setState(lanUMod.getState());
+                            cachedUMod.setuModSource(UMod.UModSource.LAN_SCAN);
+                            cachedUMod.setOpen(lanUMod.isOpen());
+                            cachedUMod.setLastUpdateDate(lanUMod.getLastUpdateDate());
+                            return Observable.just(cachedUMod);
+                        }
+                    } else {//CACHE MISS
+                        return Observable.just(lanUMod);
                     }
                 })
-                .doOnNext(new Action1<UMod>() {
-                    @Override
-                    public void call(UMod uMod) {//Updates Cache and DB
-                        if (uMod.belongsToAppUser()){
-                            mCachedUMods.put(uMod.getUUID(),uMod);
-                            mUModsLocalDataSource.saveUMod(uMod);
-                        }
+                //.onErrorResumeNext(Observable.just(lanUMod))
+                .doOnNext(uMod -> {//Updates Cache and DB
+                    if (uMod.belongsToAppUser()){
+                        mCachedUMods.put(uMod.getUUID(),uMod);
+                        mUModsLocalDataSource.saveUMod(uMod);
                     }
                 });
     }
@@ -599,34 +536,41 @@ public class UModsRepository implements UModsDataSource {
         mUModsLANDataSource.deleteUMod(checkNotNull(uModUUID));
         mUModsLocalDataSource.deleteUMod(checkNotNull(uModUUID));
 
-        mCachedUMods.remove(uModUUID);
+        if (mCachedUMods != null) {
+            mCachedUMods.remove(uModUUID);
+        }
     }
 
     //--------------------------- RPC EXECUTION --------------------------------------
     //TODO review logic!
     private Observable<Pair<UModsDataSource,UModsDataSource>> getDataSourceChoices(UMod uMod){
-        if(uMod.isInAPMode()){
-            return Observable.just(new Pair<>(mUModsLANDataSource,null));
-        } else {//Assumes a module is either in AP_MODE or STATION_MODE
-            mUModsInternetDataSource.saveUMod(uMod);
-            switch (connectivityInfo.getConnectionType()){
-                case WIFI:
-                    String wifiAPSSID = connectivityInfo.getWifiAPSSID();
-                    if (uMod.getWifiSSID() != null
-                            && wifiAPSSID != null
-                            && uMod.getWifiSSID().equals(wifiAPSSID)
-                            ){
-                        //TODO TCP connect and close for faster ARP lookup...
-                        return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
-                    } else {
+        return Observable.defer(() -> {
+            if(uMod.isInAPMode()){
+                return Observable.just(new Pair<>(mUModsLANDataSource,null));
+            } else {//Assumes a module is either in AP_MODE or STATION_MODE
+                mUModsInternetDataSource.saveUMod(uMod);//Checks for subscription
+                switch (connectivityInfo.getConnectionType()){
+                    case WIFI:
+                        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){//When found by DNSSD then try lan http first
+                            return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
+                        }
+                        String wifiAPSSID = connectivityInfo.getWifiAPSSID();
+                        if (uMod.getWifiSSID() != null
+                                && wifiAPSSID != null
+                                && uMod.getWifiSSID().equals(wifiAPSSID)
+                                ){//When on the same wifi umod is in then go for local http first
+                            //TODO TCP connect and close for faster ARP lookup...
+                            return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
+                        } else {//When on wifi but not in the same umod is in go for mqtt
+                            return Observable.just(new Pair<>(mUModsInternetDataSource,null));
+                        }
+                    case MOBILE:
                         return Observable.just(new Pair<>(mUModsInternetDataSource,null));
-                    }
-                case MOBILE:
-                    return Observable.just(new Pair<>(mUModsInternetDataSource,null));
-                default:
-                    return Observable.error(new Exception("Phone is unconnected!!"));
+                    default:
+                        return Observable.error(new Exception("Phone is unconnected!!"));
+                }
             }
-        }
+        });
     }
 
     @Override
@@ -673,6 +617,7 @@ public class UModsRepository implements UModsDataSource {
         return getDataSourceChoices(uMod)
                 .flatMap(dataSourcePair -> dataSourcePair.first.createUModUser(uMod,request)
                         .onErrorResumeNext(throwable -> {
+                            Log.e("REPO","createUModUser",throwable);
                             if (throwable instanceof HttpException
                                     || dataSourcePair.second == null){
                                 return Observable.error(throwable);

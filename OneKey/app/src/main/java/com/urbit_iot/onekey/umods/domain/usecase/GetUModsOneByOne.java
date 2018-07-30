@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import retrofit2.adapter.rxjava.HttpException;
+import rx.Completable;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
@@ -35,13 +36,15 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
     private final UModsRepository mUModsRepository;
     private final AppUserRepository mAppUserRepository;
     private final UModMqttService mUModMqttService;
+    private final BaseSchedulerProvider schedulerProvider;
 
     @Inject
     public GetUModsOneByOne(@NonNull UModsRepository tasksRepository,
                             @NonNull AppUserRepository appUserRepository,
                             @NonNull BaseSchedulerProvider schedulerProvider,
                             @NonNull UModMqttService mUModMqttService) {
-        super(Schedulers.io(), schedulerProvider.ui());
+        super(schedulerProvider.io(), schedulerProvider.ui());
+        this.schedulerProvider = schedulerProvider;
         mUModsRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
         mAppUserRepository = checkNotNull(appUserRepository, "appUserRepository cannot be null!");
         this.mUModMqttService = mUModMqttService;
@@ -50,31 +53,35 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
+        Observable<UMod> oneByOneFromCache = Completable
+                .fromAction(mUModsRepository::cachedFirst)
+                .andThen(mUModsRepository.getUModsOneByOne());
+        Observable<UMod> oneByOneRefreshed = Completable
+                .fromAction(mUModsRepository::refreshUMods)
+                .andThen(mUModsRepository.getUModsOneByOne());
+
         Observable<ResponseValues> getUModsUseCaseObservable = mAppUserRepository.getAppUser()
-                .flatMap(appUser -> mUModsRepository.getUModsOneByOne()
-                        /*
+                //.observeOn(schedulerProvider.io())
+                .flatMap(appUser -> Observable.just(values.isForceUpdate())
+                        .flatMap(isForceUpdate -> {
+                            if (isForceUpdate){
+                                return Observable.concatDelayError(oneByOneFromCache, oneByOneRefreshed);
+                            } else {
+                                return oneByOneFromCache;
+                            }
+                        })
                         .filter(uMod -> {
-                            Log.d("GetUM1x1", uMod.toString());
                             //TODO Replace current isOpen logic or remove it completely
-                            //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
-                            //return (uMod.isOpen() || uMod.isInAPMode()) && (uMod.getuModSource() == UMod.UModSource.LAN_SCAN) ;
-                            UMod.UModSource source = uMod.getuModSource();
-                            if (source == UMod.UModSource.LOCAL_DB){
+                            if (uMod.getuModSource() == UMod.UModSource.LOCAL_DB
+                                    || uMod.getuModSource() == UMod.UModSource.CACHE){
                                 return uMod.getState() != UMod.State.AP_MODE;
                             }
-                            else {// LAN_SCAN and MQTT_SCAN results.
-                                return true;
-                            }
+                            return true;
                         })
-                        .filter(uMod -> {
-                            long diffInMillies = Math.abs(new Date().getTime() -  uMod.getLastUpdateDate().getTime());
-                            long diffInHours = TimeUnit.HOURS.convert(diffInMillies, TimeUnit.MILLISECONDS);
-                            return diffInHours < 36L;
-                        })
-                        */
+                        .observeOn(schedulerProvider.io())
                         .flatMap(uMod -> {
                             if(uMod.getAppUserLevel() == UModUser.Level.PENDING && !uMod.isInAPMode()){
-                                Log.d("GetUM1x1", "PENDING detected");
+                                Log.d("GetUM1x1", "PENDING detected  ON: " + Thread.currentThread().getName());
                                 GetUserLevelRPC.Arguments getMyLevelArgs = new GetUserLevelRPC.Arguments(appUser.getUserName());
                                 return mUModsRepository.getUserLevel(uMod, getMyLevelArgs)
                                         .flatMap(result -> {
@@ -85,7 +92,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                         })
                                         .onErrorResumeNext(throwable -> {
                                             Log.e("getumods1x1_uc", "Get User Status Fail: " + throwable.getMessage()
-                                                    + "ExcType: " + throwable.getClass().getSimpleName());
+                                                    + "ExcType: " + throwable.getClass().getSimpleName(), throwable);
                                             if (throwable instanceof HttpException) {
                                                 String errorMessage = "";
                                                 //Check for HTTP UNAUTHORIZED error code
@@ -131,6 +138,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                             }
                         })
                 )
+                /*
                 .filter(uMod -> {
                     switch (values.getCurrentFiltering()) {
                         case NOTIF_EN_UMODS:
@@ -142,28 +150,34 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                             return true;
                     }
                 })
+                */
                 .map(ResponseValues::new);
 
-    mUModsRepository.cachedFirst();
-    return mUModsRepository.getUModsOneByOne()
-            .doOnNext(mUModMqttService::subscribeToUModResponseTopic)
-            .toCompletable()
-            .doOnCompleted(() -> {
-                if (values.isForceUpdate()) {
-                    mUModsRepository.refreshUMods();
-                } else {
-                    mUModsRepository.cachedFirst();
-                }
-            })
-            .andThen(getUModsUseCaseObservable);
-    /*
-        if (values.isForceUpdate()) {
-            mUModsRepository.refreshUMods();
-        } else {
-            mUModsRepository.cachedFirst();
-        }
         return getUModsUseCaseObservable;
-    */
+
+        /*
+        mUModsRepository.cachedFirst();
+        return mUModsRepository.getUModsOneByOne()
+                //.switchIfEmpty()
+                .doOnNext(mUModMqttService::subscribeToUModResponseTopic)
+                .toCompletable()
+                .doOnCompleted(() -> {
+                    if (values.isForceUpdate()) {
+                        mUModsRepository.refreshUMods();
+                    } else {
+                        mUModsRepository.cachedFirst();
+                    }
+                })
+                .andThen(getUModsUseCaseObservable);
+                */
+        /*
+            if (values.isForceUpdate()) {
+                mUModsRepository.refreshUMods();
+            } else {
+                mUModsRepository.cachedFirst();
+            }
+            return getUModsUseCaseObservable;
+        */
     }
 
 

@@ -64,7 +64,7 @@ public class UModsDNSSDScanner {
         this.freshUModDnsScan = ReplaySubject.create();
         this.uModDnsScanTrigger = PublishSubject.create();
         //TODO unsubscribe when application is destroyed
-        this.serviceProbeRegistration = this.registerProbeService();
+        //this.serviceProbeRegistration = this.registerProbeService();
 
     }
 
@@ -172,7 +172,7 @@ public class UModsDNSSDScanner {
                             bonjourService.getInet4Address().getHostAddress(),
                             true);
                 })
-                .doOnNext(uMod -> testConnectionToModule(uMod.getConnectionAddress()))
+                //.doOnNext(uMod -> testConnectionToModule(uMod.getConnectionAddress()))
                 .doOnNext(uMod -> freshUModDnsScan.onNext(uMod))
                 .doAfterTerminate(() -> scanInProgress.compareAndSet(true, false))
                 //Deals when the scanning is ended abruptly

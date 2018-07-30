@@ -40,6 +40,7 @@ import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
+import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import timber.log.Timber;
 
@@ -52,6 +53,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
 
     private final UModsRepository mUModsRepository;
     private final AppUserRepository mAppUserRepository;
+    private final BaseSchedulerProvider schedulerProvider;
 
     @NonNull
     private final PublishSubject<Void> retrySubject = PublishSubject.create();
@@ -63,6 +65,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(uModsRepository, "uModsRepository cannot be null!");
         this.mAppUserRepository = checkNotNull(appUserRepository, "appUserRepository cannot be null!");
+        this.schedulerProvider = schedulerProvider;
     }
 
     @Override
@@ -82,11 +85,14 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
          */
 
         //int retryCounter = 0;
+        mUModsRepository.refreshUMods();
+        //return Observable.defer(() -> );
         return mUModsRepository.getUMod(values.getUModUUID())
                 .flatMap(new Func1<UMod, Observable<CreateUserRPC.Result>>() {
                     @Override
                     public Observable<CreateUserRPC.Result> call(final UMod uMod) {
                         return mAppUserRepository.getAppUser()
+                                .observeOn(schedulerProvider.io())
                                 .flatMap(new Func1<AppUser, Observable<CreateUserRPC.Result>>() {
                                     @Override
                                     public Observable<CreateUserRPC.Result> call(final AppUser appUser) {
@@ -139,7 +145,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
 
                                                             if (CreateUserRPC.DOC_ERROR_CODES.contains(httpErrorCode)){
                                                                 if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
-                                                                || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
+                                                                        || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
                                                                     Log.e("req_access_uc", "CreateUser failed to Auth with urbit:urbit CODE: " + httpErrorCode);
                                                                     Timber.e("CreateUser failed to Auth with urbit:urbit CODE: " + httpErrorCode);
                                                                 }
