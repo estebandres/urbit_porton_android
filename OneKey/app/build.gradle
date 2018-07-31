@@ -139,7 +139,7 @@ dependencies {
 
     api 'com.google.guava:guava:25.1-android'
 
-    implementation 'io.reactivex:rxnetty-http:0.5.2'
+    //implementation 'io.reactivex:rxnetty-http:0.5.2'
 
     implementation 'pl.charmas.android:android-reactive-location2:2.1@aar'
     implementation 'com.google.android.gms:play-services-location:15.0.1'
