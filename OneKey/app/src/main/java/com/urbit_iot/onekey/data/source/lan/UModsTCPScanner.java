@@ -93,7 +93,7 @@ public class UModsTCPScanner {
                         subnetMaskAddress = netmaskPrefixToLongAddress(address.getNetworkPrefixLength());
                     }
                 } catch (IOException e) {
-                    Log.e("TCP_SCAN", e.getMessage());
+                    Log.e("TCP_SCAN", "" + e.getMessage(),e);
                 }
             }
             this.addressesCalculator = new PhoneIPAddressRadius(phoneIPAddress, subnetMaskAddress);

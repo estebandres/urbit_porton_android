@@ -114,6 +114,7 @@ public class UModsWiFiScanner {
             return Observable.error(new Exception("Unsatisfied WiFi permissions"));
         }
         return ReactiveWifi.observeWifiAccessPoints(this.appContext)
+                .observeOn(Schedulers.io())
                 .flatMap(Observable::from)
                 .distinct((Func1<ScanResult, Object>) scanResult -> scanResult.SSID)
                 .filter(scanResult -> scanResult.level > -75)

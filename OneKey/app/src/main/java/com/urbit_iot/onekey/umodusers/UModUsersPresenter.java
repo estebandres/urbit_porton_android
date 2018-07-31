@@ -128,7 +128,7 @@ todo inmediato
 
             @Override
             public void onError(Throwable e) {
-                Log.e("umods_pr", e.getMessage());
+                Log.e("umods_pr", "Fail to get Users", e);
                 mUModsView.showLoadingUModUsersError();
             }
 
@@ -409,7 +409,7 @@ todo inmediato
 
             @Override
             public void onError(Throwable e) {
-                Log.e("um_usrs_pr", e.getMessage());
+                Log.e("um_usrs_pr", "" + e.getMessage());
                 mUModsView.showUserLevelUpdateFailMessage(toAdmin);
                 loadUModUsers(true);
             }

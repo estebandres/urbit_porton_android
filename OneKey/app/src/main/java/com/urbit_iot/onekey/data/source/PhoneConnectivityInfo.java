@@ -32,7 +32,7 @@ public class PhoneConnectivityInfo {
         //this.connectivityManager = (ConnectivityManager) this.mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 
-    public ConnectionType getConnectionType() {
+    public ConnectionType getConnectionTypeA() {
         ConnectivityManager connectivityManager = (ConnectivityManager) this.mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivityManager != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -57,6 +57,23 @@ public class PhoneConnectivityInfo {
                     if (networkInfo != null) {
                         return ConnectionType.MOBILE;
                     }
+                }
+            }
+        }
+        return ConnectionType.UNCONNECTED;
+    }
+
+    public ConnectionType getConnectionType() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) this.mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo networkInfo;
+            networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            if (networkInfo != null && networkInfo.isConnected()) {
+                return ConnectionType.WIFI;
+            } else {
+                networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+                if (networkInfo != null && networkInfo.isConnected()) {
+                    return ConnectionType.MOBILE;
                 }
             }
         }

@@ -71,7 +71,7 @@ public class UModsBLEScanner {
                         .doOnError(new Action1<Throwable>() {
                             @Override
                             public void call(Throwable throwable) {
-                                Log.e("ble_scan", throwable.getMessage());
+                                Log.e("ble_scan", "" + throwable.getMessage());
                             }
                         })
                         .doOnNext(new Action1<ScanResult>() {

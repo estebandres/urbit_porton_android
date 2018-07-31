@@ -37,10 +37,10 @@ import java.net.HttpURLConnection;
 import javax.inject.Inject;
 
 import retrofit2.adapter.rxjava.HttpException;
+import rx.Completable;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
-import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import timber.log.Timber;
 
@@ -70,29 +70,20 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
 
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
-        /*
-        if (values.isForceUpdate()) {
-            mUModsRepository.refreshUMods();
-        }
-        */
-        //TODO figure what to do with rpc tag and id
-        /*
-        final CreateUserRPC.Request request =
-                new CreateUserRPC.Request(
-                        new CreateUserRPC.Arguments("AAAAAAAAA:BBBBBBBBBB:CCCCCCCC"),
-                        "MockCreation",
-                        666);
-         */
 
-        //int retryCounter = 0;
+        /*
+        Observable<UMod> refreshedUMod = Completable.fromAction(mUModsRepository::refreshUMods).andThen(mUModsRepository.getUMod(values.getUModUUID()));
         mUModsRepository.refreshUMods();
-        //return Observable.defer(() -> );
+        return mUModsRepository.getUMod(values.getUModUUID()).switchIfEmpty(refreshedUMod);
+        */
+        //TODO why the upper approach didnt work on dooge????
+        mUModsRepository.refreshUMods();
         return mUModsRepository.getUMod(values.getUModUUID())
                 .flatMap(new Func1<UMod, Observable<CreateUserRPC.Result>>() {
                     @Override
                     public Observable<CreateUserRPC.Result> call(final UMod uMod) {
                         return mAppUserRepository.getAppUser()
-                                .observeOn(schedulerProvider.io())
+                                //.observeOn(schedulerProvider.io())
                                 .flatMap(new Func1<AppUser, Observable<CreateUserRPC.Result>>() {
                                     @Override
                                     public Observable<CreateUserRPC.Result> call(final AppUser appUser) {
@@ -110,7 +101,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                         Timber.d("CreateUser Success: " + createUserResult.toString());
                                                         uMod.setAppUserLevel(createUserResult.getUserLevel());
                                                         mUModsRepository.saveUMod(uMod);
-
+                                                        //Get Location could take a wile. Perhaps a good alternative would be to launch a background use case...
                                                         return mUModsRepository.getCurrentLocation().flatMap(location -> {
                                                             uMod.setuModLocation(location);
                                                             mUModsRepository.saveUMod(uMod);
@@ -220,9 +211,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
 
                                                             }
                                                         }
-                                                        uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                        mUModsRepository.saveUMod(uMod);
-                                                        //TODO is this a desirable behaviour? What about the other error codes?
+                                                        //Not an API error but timeout or other sort of error.
                                                         return Observable.error(throwable);
                                                     }
                                                 });

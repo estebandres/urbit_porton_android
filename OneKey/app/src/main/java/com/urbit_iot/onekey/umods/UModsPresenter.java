@@ -142,7 +142,7 @@ public class UModsPresenter implements UModsContract.Presenter {
 
             @Override
             public void onError(Throwable e) {
-                Log.e("STV_umods_pr", e.getMessage());
+                Log.e("STV_umods_pr", "" + e.getMessage());
                 mUModsView.showLoadingUModsError();
             }
 
@@ -176,9 +176,13 @@ public class UModsPresenter implements UModsContract.Presenter {
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
+        /*
         if (forceUpdate){
             this.mUModsView.clearAllItems();
         }
+        */
+
+        this.mUModsView.clearAllItems();
         final IntegerContainer onNextCount = new IntegerContainer(0);
 
         GetUModsOneByOne.RequestValues requestValue = new GetUModsOneByOne.RequestValues(forceUpdate,
@@ -199,7 +203,7 @@ public class UModsPresenter implements UModsContract.Presenter {
 
             @Override
             public void onError(Throwable e) {
-                Log.e("umods_pr", e.getMessage());
+                Log.e("umods_pr", "" + e.getMessage());
                 mUModsView.setLoadingIndicator(false);
                 mUModsView.showLoadingUModsError();
             }

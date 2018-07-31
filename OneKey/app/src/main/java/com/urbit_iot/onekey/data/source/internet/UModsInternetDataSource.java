@@ -84,7 +84,7 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public void saveUMod(@NonNull UMod uMod) {
-        if (uMod.belongsToAppUser() && !uMod.isInAPMode()){
+        if (uMod.belongsToAppUser() && !uMod.isInAPMode()){// TODO in case the user was deleted after creation then requestAccess is possible on MQTT
             mUModMqttService.subscribeToUModResponseTopic(uMod);//Warning hazard of network on main
         }
     }

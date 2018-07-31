@@ -205,9 +205,9 @@ public class UModsRepositoryModule {
                 .authenticator(new CachingAuthenticatorDecorator(digestAuthenticator,authCache))
                 .addInterceptor(new AuthenticationCacheInterceptor(authCache))
                 .dispatcher(dispatcher)
-                .connectTimeout(4000L, TimeUnit.MILLISECONDS)
+                .connectTimeout(2000L, TimeUnit.MILLISECONDS)
                 .readTimeout(8000L, TimeUnit.MILLISECONDS)
-                .writeTimeout(15000L,TimeUnit.MILLISECONDS)
+                //.writeTimeout(15000L,TimeUnit.MILLISECONDS)
                 .build();
     }
 
@@ -241,7 +241,7 @@ public class UModsRepositoryModule {
                 .addInterceptor(urlHostSelectionInterceptor)
                 .authenticator(new CachingAuthenticatorDecorator(digestAuthenticator,authCache))
                 .addInterceptor(new AuthenticationCacheInterceptor(authCache))
-                .connectTimeout(4000L, TimeUnit.MILLISECONDS)
+                .connectTimeout(2000L, TimeUnit.MILLISECONDS)
                 .readTimeout(8000L, TimeUnit.MILLISECONDS)
                 .build();
     }
@@ -285,7 +285,7 @@ public class UModsRepositoryModule {
                     this.appUserName,persistence);
         } catch (Exception mqttExc){
             mqttExc.printStackTrace();
-            Log.e("provideMqtt", mqttExc.getMessage());
+            Log.e("provideMqtt", "" + mqttExc.getMessage());
             if (mqttExc instanceof MqttException) {
                 Log.e("provideMqtt","message"
                         + ((MqttException) mqttExc).getMessage()

@@ -140,7 +140,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
 
             @Override
             public void onError(Throwable e) {
-                Log.e("notif_presenter", e.getMessage());
+                Log.e("notif_presenter", "" + e.getMessage());
                 if (e instanceof GetUModsForNotif.NoUModsAreNotifEnabledException){
                     mUModsNotifView.showAllUModsAreNotifDisabled();
                 }

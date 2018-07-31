@@ -260,7 +260,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                 }
                  */
                 mUModConfigView.showWiFiCredentialsConfigFailMsg();
-                Log.e("config_pr", e.getMessage());
+                Log.e("config_pr", "" + e.getMessage());
             }
 
             @Override
@@ -338,7 +338,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
                     @Override
                     public void onError(Throwable e) {
-                        Log.e("config_pr", e.getMessage(),e);
+                        Log.e("config_pr", "" + e.getMessage(),e);
                         mUModConfigView.hideUpdateDialog();
                         mUModConfigView.showFirmwareUpdateFailMsg();
                     }

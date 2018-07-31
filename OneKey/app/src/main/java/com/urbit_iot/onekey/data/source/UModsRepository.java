@@ -241,9 +241,6 @@ public class UModsRepository implements UModsDataSource {
                             } else {
                                 //TODO check if all necessary fields are being updated.
                                 //AppUserLevel should remain as in DB
-                                if (lanUMod.getState() == UMod.State.STATION_MODE){
-                                    cachedUMod.setWifiSSID(connectivityInfo.getWifiAPSSID());
-                                }
                                 cachedUMod.setConnectionAddress(lanUMod.getConnectionAddress());
                                 cachedUMod.setState(lanUMod.getState());
                                 cachedUMod.setuModSource(UMod.UModSource.LAN_SCAN);
@@ -255,6 +252,13 @@ public class UModsRepository implements UModsDataSource {
                             return Observable.just(lanUMod);
                         }
                     }
+                })
+                .flatMap(uMod -> {
+                    if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
+                            && uMod.getState() == UMod.State.STATION_MODE) {
+                        uMod.setWifiSSID(connectivityInfo.getWifiAPSSID());
+                    }
+                    return Observable.just(uMod);
                 })
                 .doOnNext(new Action1<UMod>() {
                     @Override
@@ -271,7 +275,7 @@ public class UModsRepository implements UModsDataSource {
                 .doOnError(new Action1<Throwable>() {
                     @Override
                     public void call(Throwable throwable) {
-                        Log.e("repo_get_lan", throwable.getMessage());
+                        Log.e("repo_get_lan", "" + throwable.getMessage());
                         mCacheIsDirty = true;//To force the update later.
                     }
                 })
@@ -433,15 +437,17 @@ public class UModsRepository implements UModsDataSource {
     //@RxLogObservable
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
         checkNotNull(uModUUID);
-        // Respond immediately with cache if available
-        if (!mCacheIsDirty){
-            Log.d("rep_umods", "HOLOc");
-            return getSingleUModFromCacheOrDisk(uModUUID);
-                    //.doOnNext(mUModsInternetDataSource::saveUMod);
-        } else {
-            //TODO if possible take the oportunity of update the current state of all umods if possible taking advantage of the forced update search
-            return getSingleUModFromLanAndUpdateDBEntry(uModUUID);
-        }
+        // Respond immediately with cache if
+        return Observable.defer(() -> {
+            if (!mCacheIsDirty){
+                Log.d("rep_umods", "HOLOc");
+                return getSingleUModFromCacheOrDisk(uModUUID);
+                //.doOnNext(mUModsInternetDataSource::saveUMod);
+            } else {
+                //TODO if possible take the oportunity of update the current state of all umods if possible taking advantage of the forced update search
+                return getSingleUModFromLanAndUpdateDBEntry(uModUUID);
+            }
+        });
     }
 
     private Observable<UMod> getSingleUModFromLanAndUpdateDBEntry(final String uModUUID){
@@ -462,9 +468,6 @@ public class UModsRepository implements UModsDataSource {
                         } else {
                             //TODO check if all necessary fields are being updated.
                             //AppUserLevel should remain as in DB
-                            if (lanUMod.getState() == UMod.State.STATION_MODE) {
-                                cachedUMod.setWifiSSID(connectivityInfo.getWifiAPSSID());
-                            }
                             cachedUMod.setConnectionAddress(lanUMod.getConnectionAddress());
                             cachedUMod.setState(lanUMod.getState());
                             cachedUMod.setuModSource(UMod.UModSource.LAN_SCAN);
@@ -475,6 +478,13 @@ public class UModsRepository implements UModsDataSource {
                     } else {//CACHE MISS
                         return Observable.just(lanUMod);
                     }
+                })
+                .flatMap(uMod -> {
+                    if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
+                            && uMod.getState() == UMod.State.STATION_MODE) {
+                        uMod.setWifiSSID(connectivityInfo.getWifiAPSSID());
+                    }
+                    return Observable.just(uMod);
                 })
                 //.onErrorResumeNext(Observable.just(lanUMod))
                 .doOnNext(uMod -> {//Updates Cache and DB

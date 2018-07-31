@@ -74,13 +74,18 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                             //TODO Replace current isOpen logic or remove it completely
                             if (uMod.getuModSource() == UMod.UModSource.LOCAL_DB
                                     || uMod.getuModSource() == UMod.UModSource.CACHE){
-                                return uMod.getState() != UMod.State.AP_MODE;
+                                return uMod.getState() != UMod.State.AP_MODE
+                                        && uMod.getAppUserLevel() != UModUser.Level.UNAUTHORIZED;// Unauthorized in the DB are ignored
                             }
                             return true;
                         })
-                        .observeOn(schedulerProvider.io())
+                        //.observeOn(schedulerProvider.io())
                         .flatMap(uMod -> {
-                            if(uMod.getAppUserLevel() == UModUser.Level.PENDING && !uMod.isInAPMode()){
+                            if(uMod.getAppUserLevel() == UModUser.Level.PENDING
+                                    //TODO Review sources logic. The aim is to lower the sockettimeout in case the umod was disconnected.
+                                    && (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
+                                    || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN)
+                                    && !uMod.isInAPMode()){
                                 Log.d("GetUM1x1", "PENDING detected  ON: " + Thread.currentThread().getName());
                                 GetUserLevelRPC.Arguments getMyLevelArgs = new GetUserLevelRPC.Arguments(appUser.getUserName());
                                 return mUModsRepository.getUserLevel(uMod, getMyLevelArgs)

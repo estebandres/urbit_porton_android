@@ -131,12 +131,9 @@ public class UModsLANDataSource implements UModsDataSource {
             @Override
             public Observable<UMod> call(Observable<UMod> uModObservable) {
                 return uModObservable
-                        .map(new Func1<UMod, UMod>() {
-                            @Override
-                            public UMod call(UMod uMod) {
-                                uMod.setuModSource(UMod.UModSource.LAN_SCAN);
-                                return uMod;
-                            }
+                        .map(uMod -> {
+                            uMod.setuModSource(UMod.UModSource.LAN_SCAN);
+                            return uMod;
                         });
             }
         };
@@ -202,18 +199,8 @@ public class UModsLANDataSource implements UModsDataSource {
     @Override
     //@RxLogObservable
     public Observable<UMod> getUMod(@NonNull final String uModUUID) {
-        UMod mockedUMod = UMODS_SERVICE_DATA.get(uModUUID);
-        Observable<UMod> mockedUModObs;
-        if (mockedUMod != null){
-            //mockedUMod.setState(UMod.State.AP_MODE);
-            mockedUModObs = Observable.just(mockedUMod);
-            Log.d("lan_data-source", mockedUMod.toString());
-        } else {
-            mockedUModObs = Observable.empty();
-        }
-
         return Observable.mergeDelayError(
-                //mUModsWiFiScanner.browseWiFiForUMod(uModUUID),
+                mUModsWiFiScanner.browseWiFiForUMod(uModUUID),
                 mUModsDNSSDScanner.browseLANForUMod(uModUUID), Observable.empty())
                 //getSingleUModByLanPingingAndApiCalling(uModUUID))
                 .doOnNext(new Action1<UMod>() {

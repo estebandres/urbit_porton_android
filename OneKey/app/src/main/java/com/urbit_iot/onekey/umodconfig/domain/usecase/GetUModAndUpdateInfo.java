@@ -38,6 +38,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 import retrofit2.adapter.rxjava.HttpException;
+import rx.Completable;
 import rx.Observable;
 import rx.functions.Action1;
 import rx.functions.Func1;
@@ -69,7 +70,15 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
         //GOLDEN RULE when an object is passed in the rxjava chain and its modifications are
         //evident then there is no need to make a clone but if said object is passed to some external method as a parameter
         //then it has to be cloned  since we are not sure what that method does to our object avoiding miss behaviours.
-        return mUModsRepository.getUMod(values.getUModUUID())
+        //
+        //Observable<UMod> cacheFirst = Completable.fromAction(mUModsRepository::cachedFirst).andThen(mUModsRepository.getUMod(values.getUModUUID()));
+        //mUModsRepository.getUMod(values.getUModUUID()).switchIfEmpty(refreshedUMod)
+        //TODO Why doesn't the first approach worked?? On LGq6
+        Observable<UMod> refreshedUMod = Completable.fromAction(mUModsRepository::refreshUMods).andThen(mUModsRepository.getUMod(values.getUModUUID()));
+        mUModsRepository.cachedFirst();
+
+        return Observable.concatDelayError(mUModsRepository.getUMod(values.getUModUUID()),refreshedUMod)
+                .first()
                 .flatMap(new Func1<UMod, Observable<UMod>>() {
                     @Override
                     public Observable<UMod> call(final UMod uMod) {

@@ -81,6 +81,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
          */
         final TriggerRPC.Arguments requestArguments = new TriggerRPC.Arguments();
         //TODO review operator usage
+        mUModsRepository.cachedFirst();
         return mUModsRepository.getUMod(values.getUModUUID())
                 .flatMap(new Func1<UMod, Observable<TriggerRPC.Result>>() {
                     @Override

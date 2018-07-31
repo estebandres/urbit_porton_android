@@ -97,7 +97,7 @@ public class UModsDNSSDScanner {
     synchronized public Observable<UMod> browseLANForUMods(){
         //Log.d("dnssd_scan", "BROWSE ALL THREAD: " + Thread.currentThread().getName() + "  scanInProgress: " + scanInProgress.get());
         //return Observable.from(this.mCachedUMods.values());
-        return Observable.just(true)
+        return Observable.defer(() -> Observable.just(true)
                 .map(aBoolean -> scanInProgress.compareAndSet(false,true))
                 //TODO review synchronization scheme (petri net validation)
                 .flatMap(mutexWasAcquired -> {
@@ -116,7 +116,7 @@ public class UModsDNSSDScanner {
                                 //Deals when the scanning is ended abruptly
                                 .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false));
                     }
-                });
+                }));
     }
 
     synchronized public Observable<UMod> browseLANForUMod(final String uModUUID){
@@ -128,44 +128,27 @@ public class UModsDNSSDScanner {
             return Observable.just(cachedUMod);
         }
         */
-        return Observable.just(true)
-                .map(aBoolean -> scanInProgress.compareAndSet(false,true))
-                .flatMap(mutexWasAcquired -> {
-                    if (mutexWasAcquired){
-                        Log.d("dnssd_scan", "AQC");
-                        return singleScan()
-                                .filter(uMod -> uMod.getUUID().contains(uModUUID));//TODO improve filter using regex
-                    } else {
-                        Log.d("dnssd_scan", "NOT AQC");
-                        if (freshUModDnsScan.hasCompleted()){
-                            Log.d("dnssd_scan", "SUBJECT COMP");
-                            freshUModDnsScan = ReplaySubject.create();
-                        }
-                        return freshUModDnsScan.asObservable()
-                                .filter(uMod -> uMod.getUUID().contains(uModUUID))//TODO improve filter using regex
-                                .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
-                                .doAfterTerminate(() -> scanInProgress.compareAndSet(true, false))
-                                //Deals when the scanning is ended abruptly
-                                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false));
-                    }
-                });
+        return this.browseLANForUMods().filter(uMod -> uMod.getUUID().equals(uModUUID));
     }
 
     //@RxLogObservable
     //TODO as proof of concept we should try send a regular DNS query(A/AAAA) to 224.0.0.251:5353 (DNS server)
     public Observable<UMod> singleScan(){
         freshUModDnsScan = ReplaySubject.create();
-        return rxDnssd.browse("_http._tcp.","local.")
+        return Observable.defer(() -> rxDnssd.browse("_http._tcp.","local.")
                 .compose(rxDnssd.resolve())
                 .compose(rxDnssd.queryRecords())
-                .takeUntil(Observable.timer(10000L, TimeUnit.MILLISECONDS))
+                // The compositions switch the current thread to the main thread
+                // so a new switch is needed in order to avoid
+                .observeOn(Schedulers.io())
+                .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
                 .distinct()
                 .filter(bonjourService ->
                         bonjourService != null
-                        && !bonjourService.isLost()
-                        //&& bonjourService.getServiceName() != null
-                        && bonjourService.getServiceName().matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX)
-                        && bonjourService.getInet4Address() != null)
+                                && !bonjourService.isLost()
+                                //&& bonjourService.getServiceName() != null
+                                && bonjourService.getServiceName().matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX)
+                                && bonjourService.getInet4Address() != null)
                 .map(bonjourService -> {
                     String uModUUID = getUUIDFromDiscoveryServiceName(bonjourService.getServiceName());
                     return new UMod(uModUUID,
@@ -176,7 +159,7 @@ public class UModsDNSSDScanner {
                 .doOnNext(uMod -> freshUModDnsScan.onNext(uMod))
                 .doAfterTerminate(() -> scanInProgress.compareAndSet(true, false))
                 //Deals when the scanning is ended abruptly
-                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false));
+                .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false)));
     }
 
     public void testConnectionToModuleA(String ipAddress){
