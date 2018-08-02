@@ -130,6 +130,7 @@ todo inmediato
             public void onError(Throwable e) {
                 Log.e("umods_pr", "Fail to get Users", e);
                 mUModsView.showLoadingUModUsersError();
+                mUModsView.setLoadingIndicator(false);
             }
 
             @Override

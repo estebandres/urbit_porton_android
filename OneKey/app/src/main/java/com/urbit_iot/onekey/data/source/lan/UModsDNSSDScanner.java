@@ -150,13 +150,26 @@ public class UModsDNSSDScanner {
                                 && bonjourService.getServiceName().matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX)
                                 && bonjourService.getInet4Address() != null)
                 .map(bonjourService -> {
+                    Log.d("DNSSD_SCAN", "UMOD DISCOVER ON: " + Thread.currentThread().getName());
                     String uModUUID = getUUIDFromDiscoveryServiceName(bonjourService.getServiceName());
                     return new UMod(uModUUID,
                             bonjourService.getInet4Address().getHostAddress(),
                             true);
                 })
+                .flatMap(uMod ->
+                        Observable.just(uMod)
+                                .subscribeOn(Schedulers.io())
+                                .flatMap(uMod1 ->
+                                        testConnectionToModule(uMod1.getConnectionAddress())
+                                                .andThen(Observable.just(uMod1))
+                                                .onErrorResumeNext(Observable.empty())
+                                )
+                )
                 //.doOnNext(uMod -> testConnectionToModule(uMod.getConnectionAddress()))
-                .doOnNext(uMod -> freshUModDnsScan.onNext(uMod))
+                .doOnNext(uMod -> {
+                    Log.d("DNSSD_SCAN", "RESULT ON : " + Thread.currentThread().getName());
+                    freshUModDnsScan.onNext(uMod);
+                })
                 .doAfterTerminate(() -> scanInProgress.compareAndSet(true, false))
                 //Deals when the scanning is ended abruptly
                 .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false)));
@@ -178,11 +191,12 @@ public class UModsDNSSDScanner {
     }
 
     //Tries to connect to the module so the ARP table is updated and the future http request is faster.
-    public void testConnectionToModule(String ipAddress){
-        Completable.fromCallable(() -> {
+    public Completable testConnectionToModule(String ipAddress){
+        return Completable.fromCallable(() -> {
             Socket clientSocket;
             clientSocket = new Socket();
             try{
+                Log.d("DNSSD_SCAN", "TESTING CONN ON: " + Thread.currentThread().getName());
                 clientSocket.connect(
                         new InetSocketAddress(
                                 ipAddress,
@@ -192,11 +206,40 @@ public class UModsDNSSDScanner {
                 clientSocket.close();
             }
             return true;
-        }).subscribeOn(Schedulers.io())
+        });
+                /*
+                .subscribeOn(Schedulers.io())
                 .subscribe(() -> {},
                         throwable -> Log.d("DNSSD_SCAN","CONN TEST FAILURE: "
                                 + ipAddress
                                 +"  "
+                                + throwable.getMessage()));*/
+    }
+
+    /*
+    public void testConnectionToFoundUMod(UMod uMod){
+        Observable.fromCallable(() -> {
+            Socket clientSocket;
+            clientSocket = new Socket();
+            try{
+                clientSocket.connect(
+                        new InetSocketAddress(
+                                uMod.getConnectionAddress(),
+                                GlobalConstants.UMOD__TCP_ECHO_PORT),
+                        1000);
+                return uMod;
+            } finally {
+                clientSocket.close();
+            }
+        });
+        Completable.fromCallable(() -> {
+
+        }).subscribeOn(Schedulers.io())
+                .subscribe(() -> {},
+                        throwable -> Log.d("DNSSD_SCAN","CONN TEST FAILURE: "
+                                + uMod.getConnectionAddress()
+                                +"  "
                                 + throwable.getMessage()));
     }
+    */
 }
