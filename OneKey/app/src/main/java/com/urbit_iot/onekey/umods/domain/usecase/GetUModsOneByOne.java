@@ -70,12 +70,12 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                 return oneByOneFromCache;
                             }
                         })
+                        //return  uMod.getAppUserLevel() != UModUser.Level.UNAUTHORIZED;// Unauthorized in the DB are ignored
                         .filter(uMod -> {
                             //TODO Replace current isOpen logic or remove it completely
                             if (uMod.getuModSource() == UMod.UModSource.LOCAL_DB
                                     || uMod.getuModSource() == UMod.UModSource.CACHE){
-                                return uMod.getState() != UMod.State.AP_MODE
-                                        && uMod.getAppUserLevel() != UModUser.Level.UNAUTHORIZED;// Unauthorized in the DB are ignored
+                                return  uMod.getAppUserLevel() != UModUser.Level.UNAUTHORIZED;// Unauthorized in the DB are ignored
                             }
                             return true;
                         })

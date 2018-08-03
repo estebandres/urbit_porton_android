@@ -562,7 +562,8 @@ public class UModsRepository implements UModsDataSource {
                 switch (connectivityInfo.getConnectionType()){
                     case WIFI:
                         if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){//When found by DNSSD then try lan http first
-                            return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
+                            //return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
+                            return Observable.just(new Pair<>(mUModsInternetDataSource,null));
                         }
                         String wifiAPSSID = connectivityInfo.getWifiAPSSID();
                         if (uMod.getWifiSSID() != null
@@ -570,7 +571,8 @@ public class UModsRepository implements UModsDataSource {
                                 && uMod.getWifiSSID().equals(wifiAPSSID)
                                 ){//When on the same wifi umod is in then go for local http first
                             //TODO TCP connect and close for faster ARP lookup...
-                            return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
+                            //return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
+                            return Observable.just(new Pair<>(mUModsInternetDataSource,null));
                         } else {//When on wifi but not in the same umod is in go for mqtt
                             return Observable.just(new Pair<>(mUModsInternetDataSource,null));
                         }

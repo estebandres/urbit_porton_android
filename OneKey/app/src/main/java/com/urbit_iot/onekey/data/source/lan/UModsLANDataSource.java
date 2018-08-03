@@ -175,8 +175,8 @@ public class UModsLANDataSource implements UModsDataSource {
         return Observable.mergeDelayError(
                 //TODO review!!!
                 ///*
-                mUModsDNSSDScanner.browseLANForUMods()
-                        .switchIfEmpty(mUModsTCPScanner.scanForUMods()),
+                mUModsDNSSDScanner.browseLANForUMods(),
+                        //.switchIfEmpty(mUModsTCPScanner.scanForUMods()),
                 //*/
                 //mUModsTCPScanner.scanForUMods(),
                 //mUModsDNSSDScanner.browseLANForUMods(),
