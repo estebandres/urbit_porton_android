@@ -273,8 +273,8 @@ public class UModsRepositoryModule {
 
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
         //TODO analyse the better options for the use case when we need constant connection. Hint: MqttCallbackExtended
-        //mqttConnectOptions.setAutomaticReconnect(true);//TODO is it better or connection reattempt when communicating??
-        mqttConnectOptions.setCleanSession(true);
+        mqttConnectOptions.setAutomaticReconnect(true);//TODO is it better or connection reattempt when communicating??
+        mqttConnectOptions.setCleanSession(false);
 
         try {
             asyncClient = new MqttAsyncClient(

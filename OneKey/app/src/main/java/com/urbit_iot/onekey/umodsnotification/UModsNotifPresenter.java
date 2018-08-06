@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.umods.domain.usecase.RequestAccess;
 import com.urbit_iot.onekey.umodsnotification.domain.usecase.GetUModsForNotif;
 import com.urbit_iot.onekey.umodsnotification.domain.usecase.TriggerUModByNotif;
@@ -44,6 +45,8 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     private final TriggerUModByNotif mTriggerUModByNotif;
     @NonNull
     private final RequestAccess mRequestAccess;
+    @NonNull
+    private final UModMqttService mUModMqttService;
 
     private final PublishSubject<Boolean> cancelPreventiveLockingSubject;
 
@@ -51,11 +54,13 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     public UModsNotifPresenter(@NonNull UModsNotifContract.View mUModsNotifView,
                                @NonNull GetUModsForNotif mGetUModsForNotif,
                                @NonNull TriggerUModByNotif mTriggerUModByNotif,
-                               @NonNull RequestAccess mRequestAccess) {
+                               @NonNull RequestAccess mRequestAccess,
+                               @NonNull UModMqttService mUModMqttService) {
         this.mUModsNotifView = mUModsNotifView;
         this.mGetUModsForNotif = mGetUModsForNotif;
         this.mTriggerUModByNotif = mTriggerUModByNotif;
         this.mRequestAccess = mRequestAccess;
+        this.mUModMqttService = mUModMqttService;
         this.mCachedUModsMap = new LinkedHashMap<>();
         this.mCachedKeysList = new ArrayList<>();
         this.cancelPreventiveLockingSubject = PublishSubject.create();
@@ -248,6 +253,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
 
     @Override
     public void wifiIsOn() {
+        this.mUModMqttService.reconnectToBroker();
         this.loadUMods(false);
     }
 

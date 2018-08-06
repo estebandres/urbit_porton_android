@@ -28,7 +28,7 @@ public class ConnectivityReceiver extends BroadcastReceiver {
         context.startService(serviceIntent);
     }
 
-    public static boolean isNetworkAvailable(Context context) {
+    public static boolean isNetworkAvailableA(Context context) {
         //WifiManager wifiManager = (WifiManager) this.mContext.getSystemService(Context.WIFI_SERVICE);
         //TODO add ping check against reliable servers/services (e.g. google/amazon/...)
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -40,5 +40,22 @@ public class ConnectivityReceiver extends BroadcastReceiver {
                 && (activeNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI
                     || activeNetworkInfo.getType() == ConnectivityManager.TYPE_MOBILE)
                 && activeNetworkInfo.isConnected();
+    }
+
+    public static boolean isNetworkAvailable(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo networkInfo;
+            networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            if (networkInfo != null && networkInfo.isConnected()) {
+                return true;
+            } else {
+                networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+                if (networkInfo != null && networkInfo.isConnected()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
