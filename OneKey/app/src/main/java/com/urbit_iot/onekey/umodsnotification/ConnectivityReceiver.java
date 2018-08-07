@@ -17,6 +17,7 @@ public class ConnectivityReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Intent serviceIntent = new Intent(context, UModsNotifService.class);
+
         Log.d("WiFiConnBR", "WiFi connection event!");
         if (isNetworkAvailable(context)){
             Log.d("WiFiConnBR", "WiFi is connected!");

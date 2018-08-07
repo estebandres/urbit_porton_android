@@ -31,6 +31,7 @@ import javax.inject.Inject;
 
 import hu.akarnokd.rxjava.interop.RxJavaInterop;
 import io.reactivex.Completable;
+import io.reactivex.CompletableEmitter;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -70,6 +71,12 @@ public class UModMqttService {
 
     private Date lastReconnectionAttempt;
 
+    private PublishProcessor<Boolean> reconnectionAttemptProcessor;
+
+    private CompletableEmitter reconnectionEmmiter;
+
+    private Disposable reconnectDisposable;
+
 
     //private boolean subscribedToUModResponseTopic;
 
@@ -85,6 +92,7 @@ public class UModMqttService {
         this.allSubscriptions = new CompositeDisposable();
         this.lastReconnectMutex = new ReentrantLock();
         this.clientMutex = new Semaphore(1);
+        this.reconnectionAttemptProcessor = PublishProcessor.create();
 
         connectMqttClient()
                 //.observeOn(Schedulers.io())
@@ -240,37 +248,120 @@ public class UModMqttService {
         this.subscriptionsMap.clear();
     }
 
-    synchronized public void reconnectToBroker(){
-        //this.reconnectToBroker();
-        Completable.defer(() ->
-                Single.just(1)
-                        //.observeOn(Schedulers.single())
-                        .flatMapCompletable(integer -> {
-                            clientMutex.acquireUninterruptibly();
-                            Log.d("MQTT_SERVICE", "LOCKED!!  " + Thread.currentThread().getName());
-                            if (mMqttClient.isConnected()){
-                                //return Completable.complete();
-                                return testConnectionToBroker().andThen(Completable.fromAction(this::resubscribeToAllUMods));//In the case the client isn't aware of disconnection yet.
-                            } else {
-                                return testConnectionToBroker()
-                                        .andThen(mMqttClient.connect())
-                                        .andThen(Completable.fromAction(() -> {
-                                            Log.d("MQTT_SERVICE", "ACTUAL CONNECTION COMPLETED " + Thread.currentThread().getName());
-                                            resubscribeToAllUMods();
-                                        }));
-                            }
-                        })
-                        .doOnComplete(() -> {
-                            Log.d("MQTT_SERVICE", "CONNECTION COMPLETE ON: " + Thread.currentThread().getName());
-                        })
-                        .doOnError((throwable) -> {
-                            Log.d("MQTT_SERVICE", "CONNECTION ERROR: " + throwable.getClass().getSimpleName() +" ON: "+ Thread.currentThread().getName());
-                        })
-                        .doFinally(() -> {
-                            Log.d("MQTT_SERVICE", "CONNECTION FINALLY + UNLOCKING!!  " + Thread.currentThread().getName());
-                            clientMutex.release();
-                        })
-        );
+    synchronized public void reconnectionAttempt(){
+        Log.d("MQTT_SERVICE",
+                "RECONNECTION ATTEMPT ON: "
+                        + Thread.currentThread().getName());
+        this.reconnectToBroker();
+        this.reconnectionAttemptProcessor.onNext(true);
+    }
+
+    private void reconnectToBroker(){
+        if (this.reconnectDisposable != null
+                && !this.reconnectDisposable.isDisposed()){
+            return;
+        }
+
+        Completable reconnectionCompletable = Single.just(1).flatMapCompletable(integer -> {
+            Log.d("MQTT_SERVICE",
+                    "RECONNECTION TRYING LOCK!!  "
+                            + Thread.currentThread().getName());
+            clientMutex.acquireUninterruptibly();
+            Log.d("MQTT_SERVICE",
+                    "RECONNECTION LOCKED!!  "
+                            + Thread.currentThread().getName());
+            if (mMqttClient.isConnected()){
+                //In the case the client isn't aware of disconnection yet.
+                return testConnectionToBroker()
+                        .andThen(Completable.fromAction(this::resubscribeToAllUMods));
+            } else {
+                return testConnectionToBroker()
+                        .andThen(mMqttClient.connect())
+                        .andThen(Completable.fromAction(() -> {
+                            Log.d("MQTT_SERVICE",
+                                    "ACTUAL RECONNECTION COMPLETED "
+                                            + Thread.currentThread().getName());
+                            resubscribeToAllUMods();
+                        }));
+            }
+        })
+        .doOnError((throwable) ->
+                Log.d("MQTT_SERVICE", "RECONNECTION ERROR: "
+                + throwable.getClass().getSimpleName()
+                +" ON: "
+                + Thread.currentThread().getName()))
+        .doFinally(() -> {
+            Log.d("MQTT_SERVICE",
+                    "RECONNECTION FINALLY + UNLOCKING!!  "
+                            + Thread.currentThread().getName());
+            clientMutex.release();
+        });
+
+
+        this.reconnectDisposable = this.reconnectionAttemptProcessor
+                //.debounce(1500L,TimeUnit.MILLISECONDS)
+                .throttleFirst(4000L,TimeUnit.MILLISECONDS)
+                .flatMap(aBoolean -> reconnectionCompletable.toFlowable())
+                .subscribeOn(Schedulers.io())
+                .subscribe();
+                //.take(1)
+                //.firstElement()
+                //.flatMapCompletable(aBoolean -> Completable.complete())
+                /*
+                .subscribe(boolean1 -> Log.d("MQTT_SERVICE",
+                "RECONNECTION TRYING LOCK!!  "
+                        + Thread.currentThread().getName()),
+                        throwable -> Log.d("MQTT_SERVICE",
+                                "RECONNECTION ERROR: "
+                                        + throwable.getClass().getSimpleName()
+                                        +" ON: "
+                                        + Thread.currentThread().getName()), () -> Log.d("MQTT_SERVICE",
+                                "RECONNECTION COMPLEEEEETEEEEE!!! ON: "
+                                        + Thread.currentThread().getName()));
+                                        /*
+        /*
+        this.reconnectDisposable = Completable.defer(() -> this.reconnectionAttemptProcessor
+                .debounce(1500L,TimeUnit.MILLISECONDS)
+                .firstElement()
+                .flatMapCompletable(aBoolean -> {
+                    Log.d("MQTT_SERVICE",
+                            "RECONNECTION TRYING LOCK!!  "
+                                    + Thread.currentThread().getName());
+                    clientMutex.acquireUninterruptibly();
+                    Log.d("MQTT_SERVICE",
+                            "RECONNECTION LOCKED!!  "
+                                    + Thread.currentThread().getName());
+                    if (mMqttClient.isConnected()){
+                        //In the case the client isn't aware of disconnection yet.
+                        return testConnectionToBroker()
+                                .andThen(Completable.fromAction(this::resubscribeToAllUMods));
+                    } else {
+                        return testConnectionToBroker()
+                                .andThen(mMqttClient.connect())
+                                .andThen(Completable.fromAction(() -> {
+                                    Log.d("MQTT_SERVICE",
+                                            "ACTUAL RECONNECTION COMPLETED "
+                                                    + Thread.currentThread().getName());
+                                    resubscribeToAllUMods();
+                                }));
+                    }
+                })
+                .doFinally(() -> {
+                    Log.d("MQTT_SERVICE",
+                            "RECONNECTION FINALLY + UNLOCKING!!  "
+                                    + Thread.currentThread().getName());
+                    clientMutex.release();
+                }))
+                .subscribeOn(Schedulers.io())
+                .subscribe(() -> Log.d("MQTT_SERVICE",
+                                "RECONNECTION COMPLETE ON: "
+                                + Thread.currentThread().getName()),
+                        throwable -> Log.d("MQTT_SERVICE",
+                                "RECONNECTION ERROR: "
+                                + throwable.getClass().getSimpleName()
+                                +" ON: "
+                                + Thread.currentThread().getName()));
+    */
     }
 
     private long millisecondsBetweenDates(Date newer, Date older){
