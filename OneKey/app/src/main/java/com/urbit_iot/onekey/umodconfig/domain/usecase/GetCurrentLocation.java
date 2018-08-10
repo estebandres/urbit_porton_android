@@ -37,6 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class GetCurrentLocation extends SimpleUseCase<GetCurrentLocation.RequestValues, GetCurrentLocation.ResponseValues> {
 
+    //TODO move to locations repository
     private final UModsRepository uModsRepository;
 
     @Inject
@@ -48,8 +49,32 @@ public class GetCurrentLocation extends SimpleUseCase<GetCurrentLocation.Request
 
     @Override
     public Observable<ResponseValues> buildUseCase(RequestValues values) {
+
         return uModsRepository.getCurrentLocation()
-                .map(ResponseValues::new);
+                .filter(location -> location!=null)
+                .switchIfEmpty(Observable.error(new Exception("agefgs")))
+                .retry((integer, throwable) -> integer < 3)
+                .flatMap(location ->{
+                    return uModsRepository.getAddressFromLocation(location)
+                            .filter(address -> address!=null)
+                            .switchIfEmpty(Observable.error(new Exception("agefgs")))
+                            .retry((integer, throwable) -> integer < 3)
+                            .flatMap(address ->{
+                                String locationString;
+                                if (address.getThoroughfare().trim()
+                                        .equalsIgnoreCase(address.getFeatureName().trim())){
+                                    locationString = address.getThoroughfare();
+                                } else {
+                                    locationString = address.getThoroughfare()
+                                            + "  "
+                                            + address.getFeatureName();
+                                }
+                                return Observable.just(
+                                        new ResponseValues(location, locationString));
+                                    }
+                            );
+                });
+                //.map(location -> new ResponseValues(location,""));
     }
 
 
@@ -59,13 +84,19 @@ public class GetCurrentLocation extends SimpleUseCase<GetCurrentLocation.Request
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
         private Location currentLocation;
+        private String locationAddress;
 
-        public ResponseValues(@NonNull Location currentLocation) {
+        public ResponseValues(@NonNull Location currentLocation, @NonNull String locationString) {
             this.currentLocation = checkNotNull(currentLocation, "currentLocation cannot be null!");
+            this.locationAddress = locationString;
         }
 
         public Location getCurrentLocation() {
             return this.currentLocation;
+        }
+
+        public String getLocationAddress() {
+            return locationAddress;
         }
     }
 }

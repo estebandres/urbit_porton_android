@@ -47,5 +47,6 @@ public final class UModsPersistenceContract {
         public static final String MAC_ADDRESS_CN = "mac_address";
         public static final String LATITUDE_CN = "latitude";
         public static final String LONGITUDE_CN = "longitude";
+        public static final String ADDRESS_TEXT_CN = "address_text";
     }
 }

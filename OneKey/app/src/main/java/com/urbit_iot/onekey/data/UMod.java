@@ -41,6 +41,15 @@ public final class UMod {
         this.uModLocation = uModLocation;
     }
 
+    @Nullable
+    public String getLocationAddressString() {
+        return locationAddressString;
+    }
+
+    public void setLocationAddressString(@Nullable String locationAddressString) {
+        this.locationAddressString = locationAddressString;
+    }
+
     public enum State {
         AP_MODE(0),
         STATION_MODE(1),
@@ -139,6 +148,9 @@ public final class UMod {
     //private boolean admitsRinging;
     @Nullable
     private Location uModLocation;
+
+    @Nullable
+    private String locationAddressString;
 
 
     /**
@@ -250,6 +262,7 @@ public final class UMod {
                 @Nullable String hwVersion,
                 @Nullable String swVersion,
                 @Nullable Location uModLocation,
+                @Nullable String locationAddressString,
                 @NonNull Date lastUpdateDate){
         this.uModUUID = uuid;
         this.ongoingNotificationEnabled =  ongoingNotifEnabled;
@@ -265,6 +278,7 @@ public final class UMod {
         this.hwVersion = hwVersion;
         this.swVersion = swVersion;
         this.uModLocation = uModLocation;
+        this.locationAddressString = locationAddressString;
         this.lastUpdateDate = lastUpdateDate;
     }
 

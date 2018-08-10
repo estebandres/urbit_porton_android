@@ -22,6 +22,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.Location;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -101,6 +102,14 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private Switch mOngoingNotifSwitch;
 
+    private ProgressBar mLocationProgressBar;
+
+    private ImageButton mLocationUpdateButton;
+
+    private TextView mLocationText;
+
+    private Location mUModLocation;
+
     public static UModConfigFragment newInstance() {
         return new UModConfigFragment();
     }
@@ -127,6 +136,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mUploadButton =
                 (FloatingActionButton) getActivity().findViewById(R.id.fab_upload_settings);
         mUploadButton.hide();
+        mUploadButton.setBackgroundColor(getResources().getColor(R.color.request_access_slider_background));
         mUploadButton.setImageResource(R.drawable.ic_upload);
         mUploadButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -156,12 +166,22 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         }
         String wifiSSID = mWiFiSSIDTextInput.getText().toString();
         String wifiPassword = mWiFiPasswordTextInput.getText().toString();
-        if (!Strings.isNullOrEmpty(wifiSSID) && !wifiSSID.contentEquals(mViewModel.getAliasText())
-                && !Strings.isNullOrEmpty(wifiPassword) && !wifiPassword.contentEquals(mViewModel.getAliasText())){
+        if (!Strings.isNullOrEmpty(wifiSSID)
+                && !wifiSSID.contentEquals(mViewModel.getAliasText())
+                && !Strings.isNullOrEmpty(wifiPassword)
+                && !wifiPassword.contentEquals(mViewModel.getAliasText())){
             mViewModel.setWifiSSIDText(wifiSSID);
             mViewModel.setWifiPasswordText(wifiPassword);
             mPresenter.updateUModWiFiCredentials(mViewModel);
         }
+
+        String addressString = mLocationText.getText().toString();
+        if (!Strings.isNullOrEmpty(addressString)
+                && !addressString.equalsIgnoreCase(mViewModel.getLocationText())){
+            mPresenter.updateUModLocationData();
+        }
+
+        //mPresenter.updateUModLocationData();
     }
 
 
@@ -187,8 +207,15 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mWiFiSettings = (LinearLayout) root.findViewById(R.id.wifi_settings);
         TextView upgradeSubtext = (TextView) root.findViewById(R.id.upgrade_button_subtext);
         upgradeSubtext.setSelected(true);
-
         mOngoingNotifSwitch = (Switch) root.findViewById(R.id.umod_notif_switch);
+        mLocationProgressBar = root.findViewById(R.id.umod_config__location_load_bar);
+        mLocationProgressBar.setVisibility(View.GONE);
+        mLocationUpdateButton = root.findViewById(R.id.umod_config__location_update_button);
+        mLocationUpdateButton.setOnClickListener(view -> {
+            mUploadButton.show();
+            mPresenter.getPhoneLocation();
+        });
+        mLocationText = root.findViewById(R.id.umod_config__location_text);
 
         mTextWatcher = new TextWatcher() {
             @Override
@@ -365,7 +392,8 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
         mOngoingNotifSwitch.setChecked(viewModel.isOngoingNotifSwitchChecked());
 
-        mOngoingNotifSwitch.setOnCheckedChangeListener((compoundButton, isChecked) -> this.mPresenter.setNotificationStatus(viewModel.getuModUUID(),isChecked));
+        mOngoingNotifSwitch.setOnCheckedChangeListener((compoundButton, isChecked) ->
+                this.mPresenter.setNotificationStatus(viewModel.getuModUUID(),isChecked));
 
         if (viewModel.isAdminLayoutVisible()){
             mFirmwareUpdateButton.setOnLongClickListener(new View.OnLongClickListener() {
@@ -401,6 +429,8 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         } else {
             mAdminSettingsLayout.setVisibility(View.GONE);
         }
+        this.updateLocationText(viewModel.getLocationText());
+        //mLocationText.addTextChangedListener(mTextWatcher);
         mAllSettingsLinearLayout.setVisibility(View.VISIBLE);
     }
 
@@ -510,5 +540,30 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                 Log.e("config_fr", "Context is null");
             }
         }
+    }
+
+    @Override
+    public void updateLocationText(String locationAddress) {
+        this.mLocationText.setText(locationAddress);
+    }
+
+    @Override
+    public void showLocationLoadingProgressBar() {
+        this.mLocationProgressBar.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void hideLocationLoadingProgressBar() {
+        this.mLocationProgressBar.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void showLocationUpdateSuccessMsg() {
+        showSnackBarMessage("UBICACIÓN ACTUALIZADA");
+    }
+
+    @Override
+    public void showLocationUpdateFailureMsg() {
+        showSnackBarMessage("ERROR AL ACTUALIZAR LA UBICACIÓN");
     }
 }

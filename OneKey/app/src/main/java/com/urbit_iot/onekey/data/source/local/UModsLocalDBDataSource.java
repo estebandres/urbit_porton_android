@@ -100,6 +100,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 String swVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.SW_VERSION_CN));
                 Double longitude = c.getDouble(c.getColumnIndexOrThrow(UModEntry.LONGITUDE_CN));
                 Double latitude = c.getDouble(c.getColumnIndexOrThrow(UModEntry.LATITUDE_CN));
+                String addressText = c.getString(c.getColumnIndexOrThrow(UModEntry.ADDRESS_TEXT_CN));
                 Location uModLocation = new Location("DBDataSource");
                 uModLocation.setLatitude(latitude);
                 uModLocation.setLongitude(longitude);
@@ -111,7 +112,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 }
 
                 return new UMod(uuid, alias, wifiSSID, connectionAddress, state, userStatus, notifEnabled,
-                        macAddress, lastReport, productUUID, hwVersion, swVersion, uModLocation, lastUpdate);
+                        macAddress, lastReport, productUUID, hwVersion, swVersion, uModLocation, addressText, lastUpdate);
             }
         };
         this.uModLocalDBBrander = new Observable.Transformer<UMod, UMod>() {
@@ -171,6 +172,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 UModEntry.SW_VERSION_CN,
                 UModEntry.LATITUDE_CN,
                 UModEntry.LONGITUDE_CN,
+                UModEntry.ADDRESS_TEXT_CN,
                 UModEntry.LAST_UPDATE_DATE_CN,
         };
         String sql = String.format("SELECT %s FROM %s", TextUtils.join(",", projection), UModEntry.UMODS_TABLE_NAME);
@@ -209,6 +211,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                 UModEntry.SW_VERSION_CN,
                 UModEntry.LATITUDE_CN,
                 UModEntry.LONGITUDE_CN,
+                UModEntry.ADDRESS_TEXT_CN,
                 UModEntry.LAST_UPDATE_DATE_CN,
         };
         String sql = String.format("SELECT %s FROM %s WHERE %s LIKE ?",
@@ -248,6 +251,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
             values.put(UModEntry.LATITUDE_CN, 0.0);
             values.put(UModEntry.LONGITUDE_CN, 0.0);
         }
+        values.put(UModEntry.ADDRESS_TEXT_CN, uMod.getLocationAddressString());
         values.put(UModEntry.LAST_UPDATE_DATE_CN, dateFormat.format(uMod.getLastUpdateDate()));
         mDatabaseHelper.insert(UModEntry.UMODS_TABLE_NAME, values, SQLiteDatabase.CONFLICT_REPLACE);
     }

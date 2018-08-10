@@ -16,6 +16,7 @@
 
 package com.urbit_iot.onekey.data.source;
 
+import android.location.Address;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -760,5 +761,10 @@ public class UModsRepository implements UModsDataSource {
     @Override
     public Observable<Location> getCurrentLocation() {
         return this.locationService.getCurrentLocation();
+    }
+
+    @Override
+    public Observable<Address> getAddressFromLocation(Location location) {
+        return this.locationService.getAddressFromLocation(location);
     }
 }

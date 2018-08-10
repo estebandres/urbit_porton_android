@@ -16,6 +16,7 @@
 
 package com.urbit_iot.onekey.umodconfig;
 
+import android.location.Location;
 import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.BasePresenter;
@@ -78,6 +79,16 @@ public interface UModConfigContract {
         void showWiFiCredentialsConfigFailMsg();
 
         void showWiFiCredentialsConfigSuccessMsg();
+
+        void updateLocationText(String locationAddress);
+
+        void showLocationLoadingProgressBar();
+
+        void hideLocationLoadingProgressBar();
+
+        void showLocationUpdateSuccessMsg();
+
+        void showLocationUpdateFailureMsg();
     }
 
     interface Presenter extends BasePresenter {
@@ -97,5 +108,9 @@ public interface UModConfigContract {
         void cancelFirmwareUpgrade();
 
         void setNotificationStatus(@NonNull String uModUUID, final Boolean notificationEnabled);
+
+        void getPhoneLocation();
+
+        void updateUModLocationData();
     }
 }

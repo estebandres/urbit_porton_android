@@ -54,6 +54,7 @@ public class UModsDbHelper extends SQLiteOpenHelper {
                     UModsPersistenceContract.UModEntry.PROD_UUID_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.LATITUDE_CN + REAL_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.LONGITUDE_CN + REAL_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.ADDRESS_TEXT_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.LAST_UPDATE_DATE_CN + DATE_TYPE +
             " )";
 

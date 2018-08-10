@@ -102,13 +102,7 @@ public class RequestAccess extends SimpleUseCase<RequestAccess.RequestValues, Re
                                                         uMod.setAppUserLevel(createUserResult.getUserLevel());
                                                         mUModsRepository.saveUMod(uMod);
                                                         //Get Location could take a wile. Perhaps a good alternative would be to launch a background use case...
-                                                        return mUModsRepository.getCurrentLocation().flatMap(location -> {
-                                                            uMod.setuModLocation(location);
-                                                            mUModsRepository.saveUMod(uMod);
-                                                            return Observable.just(createUserResult);
-                                                        }).switchIfEmpty(Observable.just(createUserResult));
-
-                                                        //return Observable.just(createUserResult);
+                                                        return Observable.just(createUserResult);
                                                     }
                                                 })
                                                 .onErrorResumeNext(new Func1<Throwable, Observable<CreateUserRPC.Result>>() {

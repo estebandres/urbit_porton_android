@@ -16,6 +16,7 @@
 
 package com.urbit_iot.onekey.umodconfig;
 
+import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -24,11 +25,13 @@ import com.google.common.base.Strings;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.FactoryResetUMod;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.GetCurrentLocation;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModAndUpdateInfo;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModSystemInfo;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.SaveUMod;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.UpdateUModAlias;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.UpdateUModLocationData;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.UpdateWiFiCredentials;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.UpgradeUModFirmware;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.SetOngoingNotificationStatus;
@@ -81,11 +84,22 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     @NonNull
     private final SetOngoingNotificationStatus mSetOngoingNotificationStatus;
 
+    @NonNull
+    private final GetCurrentLocation mGetCurrentLocation;
+
+    @NonNull
+    private final UpdateUModLocationData mUpdateUModLocationData;
+
     @Nullable
     private UMod uModToConfig;
 
     @NonNull
     private String mUModUUID;
+
+    @Nullable
+    private Location mCurrentLocation;
+    @Nullable
+    private String mCurrentLocationAddressString;
 
 
     /**
@@ -102,7 +116,9 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                                @NonNull GetUModSystemInfo mGetUModSystemInfo,
                                @NonNull FactoryResetUMod mFactoryReset,
                                @NonNull UpgradeUModFirmware mUpgradeUModFirmware,
-                               @NonNull SetOngoingNotificationStatus mSetOngoingNotificationStatus) {
+                               @NonNull SetOngoingNotificationStatus mSetOngoingNotificationStatus,
+                               @NonNull GetCurrentLocation mGetCurrentLocation,
+                               @NonNull UpdateUModLocationData mUpdateUModLocationData) {
         this.mUModUUID = umodUUID;
         this.mUModConfigView = addTaskView;
         this.mGetUModAndUpdateInfo = getUModAndUpdateInfo;
@@ -113,6 +129,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         this.mFactoryReset = mFactoryReset;
         this.mUpgradeUModFirmware = mUpgradeUModFirmware;
         this.mSetOngoingNotificationStatus = mSetOngoingNotificationStatus;
+        this.mGetCurrentLocation = mGetCurrentLocation;
+        this.mUpdateUModLocationData = mUpdateUModLocationData;
     }
 
     /**
@@ -141,6 +159,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         mSaveUMod.unsubscribe();
         this.mGetUModSystemInfo.unsubscribe();
         mSetOngoingNotificationStatus.unsubscribe();
+        mGetCurrentLocation.unsubscribe();
+        mUpdateUModLocationData.unsubscribe();
     }
 
     @Override
@@ -294,18 +314,26 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         String wifiPasswordText = null;
         boolean wifiSettingsVisible = uMod.getState() == UMod.State.AP_MODE;
         boolean ongoingNotifSwitchChecked = uMod.isOngoingNotificationEnabled();
-        String locationLatLong;
-        if (uMod.getuModLocation()!=null
-                && uMod.getuModLocation().getLatitude() != 0.0
-                && uMod.getuModLocation().getLongitude() != 0.0){
-            locationLatLong = uMod.getuModLocation().getLatitude() + "," + uMod.getuModLocation().getLatitude();
-        } else {
-            locationLatLong = "DESCONOCIDA";
+        String latLongText = "";
+        String addressText = uMod.getLocationAddressString();
+        if (addressText == null || addressText.equals("")){
+            if (uMod.getuModLocation()!=null
+                    && uMod.getuModLocation().getLatitude() != 0.0
+                    && uMod.getuModLocation().getLongitude() != 0.0){
+                addressText = uMod.getuModLocation().getLatitude() + "," + uMod.getuModLocation().getLatitude();
+            } else {
+                addressText = "DESCONOCIDA";
+            }
+        }
+        if (uMod.getuModLocation()!=null){
+            latLongText = uMod.getuModLocation().getLatitude() + " "
+                    + uMod.getuModLocation().getLongitude();
         }
         String uModSysInfoText = uMod.getUUID()
                 + "\n" + uMod.getConnectionAddress()
-                + "\n" + locationLatLong
-                + "\n" + uMod.getSWVersion();
+                + "\n" + addressText
+                + "\n" + uMod.getSWVersion()
+                + "\n" + latLongText;
         boolean updateButtonVisible = uMod.getuModSource() != UMod.UModSource.MQTT_SCAN;
 
         UModConfigViewModel viewModel =
@@ -318,7 +346,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         wifiPasswordText,
                         wifiSettingsVisible,
                         ongoingNotifSwitchChecked,
-                        locationLatLong, updateButtonVisible);
+                        addressText, updateButtonVisible);
 
         return viewModel;
     }
@@ -420,5 +448,68 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
                     }
                 });
+    }
+
+    @Override
+    public void getPhoneLocation() {
+        //TODO here the update fab button should be enabled..
+        mGetCurrentLocation.unsubscribe();
+        mUModConfigView.showLocationLoadingProgressBar();
+        mGetCurrentLocation.execute(new GetCurrentLocation.RequestValues(),
+                new Subscriber<GetCurrentLocation.ResponseValues>() {
+            @Override
+            public void onCompleted() {
+                mUModConfigView.hideLocationLoadingProgressBar();
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                mUModConfigView.hideLocationLoadingProgressBar();
+            }
+
+            @Override
+            public void onNext(GetCurrentLocation.ResponseValues responseValues) {
+                String locationString = "";
+                mCurrentLocationAddressString = responseValues.getLocationAddress();
+                if (mCurrentLocationAddressString != null && !mCurrentLocationAddressString.equals("")){
+                    locationString = mCurrentLocationAddressString;
+                }
+                mCurrentLocation = responseValues.getCurrentLocation();
+                if (mCurrentLocation != null) {
+                    locationString = locationString
+                            + "\n"
+                            + mCurrentLocation.getLatitude()
+                            + "  "
+                            + mCurrentLocation.getLongitude();
+                }
+                mUModConfigView.updateLocationText(locationString);
+            }
+        });
+    }
+
+    @Override
+    public void updateUModLocationData(){
+        mUpdateUModLocationData.unsubscribe();
+        mUpdateUModLocationData.execute(
+                new UpdateUModLocationData.RequestValues(
+                        mUModUUID,
+                        mCurrentLocation,
+                        mCurrentLocationAddressString),
+                new Subscriber<UpdateUModLocationData.ResponseValues>() {
+            @Override
+            public void onCompleted() {
+                mUModConfigView.showLocationUpdateSuccessMsg();
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                mUModConfigView.showLocationUpdateFailureMsg();
+            }
+
+            @Override
+            public void onNext(UpdateUModLocationData.ResponseValues responseValues) {
+
+            }
+        });
     }
 }
