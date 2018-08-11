@@ -254,7 +254,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     @Override
     public void wifiIsOn() {
         this.mUModMqttService.reconnectionAttempt();
-        this.loadUMods(false);
+        //this.loadUMods(false);
     }
 
     @Override

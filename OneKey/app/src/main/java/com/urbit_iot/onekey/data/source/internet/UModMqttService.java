@@ -115,6 +115,7 @@ public class UModMqttService {
                         } else {
                             return testConnectionToBroker()
                                     .andThen(mMqttClient.connect())
+                                    .ambWith(Completable.timer(2000L,TimeUnit.MILLISECONDS))
                                     .andThen(Completable.fromAction(() -> {
                                         Log.d("MQTT_SERVICE", "ACTUAL CONNECTION COMPLETED " + Thread.currentThread().getName());
                                         resubscribeToAllUMods();
@@ -271,12 +272,13 @@ public class UModMqttService {
                     "RECONNECTION LOCKED!!  "
                             + Thread.currentThread().getName());
             if (mMqttClient.isConnected()){
-                //In the case the client isn't aware of disconnection yet.
+                //In the case the client isn't aware of the disconnection yet.
                 return testConnectionToBroker()
                         .andThen(Completable.fromAction(this::resubscribeToAllUMods));
             } else {
                 return testConnectionToBroker()
                         .andThen(mMqttClient.connect())
+                        .ambWith(Completable.timer(2000L,TimeUnit.MILLISECONDS))
                         .andThen(Completable.fromAction(() -> {
                             Log.d("MQTT_SERVICE",
                                     "ACTUAL RECONNECTION COMPLETED "
@@ -303,7 +305,15 @@ public class UModMqttService {
                 .throttleFirst(4000L,TimeUnit.MILLISECONDS)
                 .flatMap(aBoolean -> reconnectionCompletable.toFlowable())
                 .subscribeOn(Schedulers.io())
-                .subscribe();
+                .subscribe(o -> {},throwable -> {
+                    Log.d("MQTT_SERVICE", "RECONNECTION ERROR ON: "
+                            + Thread.currentThread().getName()
+                            +"\n EXCEPTION: "
+                            + throwable.getClass().getSimpleName(), throwable);
+                },() -> {
+                    Log.d("MQTT_SERVICE", "RECONNECTION COMPLETED ON: "
+                            + Thread.currentThread().getName() );
+                });
                 //.take(1)
                 //.firstElement()
                 //.flatMapCompletable(aBoolean -> Completable.complete())

@@ -43,7 +43,10 @@ public class UModsNotifService extends Service{
                 .uModsNotifPresenterModule(new UModsNotifPresenterModule(this.mNotificationViewsHandler))
                 .build()
                 .inject(this);
-        registerReceiver(this.connectivityReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        //registerReceiver(this.connectivityReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        registerReceiver(this.connectivityReceiver, intentFilter);
     }
 
     @Override

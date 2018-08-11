@@ -175,6 +175,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
             mPresenter.updateUModWiFiCredentials(mViewModel);
         }
 
+        //TODO replace with boolean flag set to true on click!
         String addressString = mLocationText.getText().toString();
         if (!Strings.isNullOrEmpty(addressString)
                 && !addressString.equalsIgnoreCase(mViewModel.getLocationText())){
