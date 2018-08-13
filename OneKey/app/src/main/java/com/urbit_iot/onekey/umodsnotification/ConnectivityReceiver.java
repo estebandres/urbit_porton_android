@@ -9,14 +9,20 @@ import android.util.Log;
 
 import com.urbit_iot.onekey.util.GlobalConstants;
 
+import java.util.Date;
+
 /**
  * Created by andresteve07 on 30/05/18.
  */
 
 public class ConnectivityReceiver extends BroadcastReceiver {
+    private Integer lastEventNetworkType;
+    private Date lastConnectionEventDate;
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Intent serviceIntent = new Intent(context, UModsNotifService.class);
+        /*
         boolean noConnectivity = intent.getBooleanExtra(ConnectivityManager
                 .EXTRA_NO_CONNECTIVITY, false);
         int nettype = intent.getIntExtra(ConnectivityManager.EXTRA_NETWORK_TYPE,666);
@@ -28,17 +34,32 @@ public class ConnectivityReceiver extends BroadcastReceiver {
                 (info2 == null ? "[none]" : info2 + " noConn=" + noConnectivity)
                 + "  REASON: " + reason + "FAILOVER:  " + failOver);
         Log.d("WiFiConnBR", "WiFi connection event!");
-        if (isNetworkAvailable(context)){
-            Log.d("WiFiConnBR", "WiFi is connected!");
+        */
+        Date justNowDate = new Date();
+        Integer currentEventNetworkType = getConnectedNetworkType(context);
+        if (currentEventNetworkType != null){
+            if (lastEventNetworkType != null
+                    && lastConnectionEventDate != null
+                    //TODO would it be better to ask currentEventNetworkType == lastEventNetworkType?
+                    && currentEventNetworkType == 0//current network event is MOBILE
+                    && lastEventNetworkType == 0//last network event was MOBILE
+                    && millisecondsBetweenDates(justNowDate, lastConnectionEventDate) < 4000L){//and occurred less than 4 secs before
+                Log.d("CONNECTION_RCVR", "Connection event is ignored.");
+                lastConnectionEventDate = justNowDate;
+                return;
+            }
+            lastEventNetworkType = currentEventNetworkType;
+            lastConnectionEventDate = justNowDate;
+            Log.d("CONNECTION_RCVR", "Connection is active!");
             serviceIntent.setAction(GlobalConstants.ACTION.WIFI_CONNECTED);
         } else {
-            Log.d("WiFiConnBR", "WiFi is unusable!");
+            Log.d("CONNECTION_RCVR", "There is no connection.");
             serviceIntent.setAction(GlobalConstants.ACTION.WIFI_UNUSABLE);
         }
         context.startService(serviceIntent);
     }
 
-    public static boolean isNetworkAvailableA(Context context) {
+    public boolean isNetworkConnected(Context context) {
         //WifiManager wifiManager = (WifiManager) this.mContext.getSystemService(Context.WIFI_SERVICE);
         //TODO add ping check against reliable servers/services (e.g. google/amazon/...)
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -77,5 +98,26 @@ public class ConnectivityReceiver extends BroadcastReceiver {
             }
         }
         return false;
+    }
+
+    private Integer getConnectedNetworkType(Context context){
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo networkInfo;
+            networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+            if (networkInfo != null && networkInfo.isConnected()) {
+                return 1;//WIFI
+            } else {
+                networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+                if (networkInfo != null && networkInfo.isConnected()) {
+                    return 0;//MOBILE
+                }
+            }
+        }
+        return null;
+    }
+
+    private long millisecondsBetweenDates(Date newer, Date older){
+        return newer.getTime() - older.getTime();
     }
 }
