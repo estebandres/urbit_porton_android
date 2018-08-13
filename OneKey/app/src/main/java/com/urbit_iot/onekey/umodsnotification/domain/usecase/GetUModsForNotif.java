@@ -50,8 +50,7 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
         //TODO Replace actual isOpen logic or remove it completely
 //isOpen == true means that a module is connected to the LAN and advertising through mDNS and is open to access request...
         //TODO first should gather all umods in database whose locations are closer than ... then
-        return Observable.defer(() ->
-                mUModsRepository.getCurrentLocation()
+        return Observable.defer(() -> mUModsRepository.getCurrentLocation()
                 .onErrorResumeNext(Observable.error(new PhoneCurrentLocationUnknownException()))
                 .switchIfEmpty(Observable.error(new PhoneCurrentLocationUnknownException()))
                 .flatMap(location -> {
@@ -69,6 +68,7 @@ public class GetUModsForNotif extends SimpleUseCase<GetUModsForNotif.RequestValu
                     }
                     return Observable.just(location);
                 })
+                .retry((integer, throwable) -> integer < 4)
                 .flatMap(location -> mUModsRepository.getUModsOneByOne()
                         .filter(uMod -> !uMod.isInAPMode() && uMod.canBeTriggeredByAppUser())
                         .switchIfEmpty(Observable.error(new NoTriggerableUModsFoundException()))

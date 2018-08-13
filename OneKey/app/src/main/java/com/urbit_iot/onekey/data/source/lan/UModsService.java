@@ -1,5 +1,6 @@
 package com.urbit_iot.onekey.data.source.lan;
 
+import com.urbit_iot.onekey.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
@@ -61,6 +62,9 @@ public interface UModsService {
 
     @POST("/rpc/Admin.SetWifi")
     Observable<SetWiFiRPC.Result> postWiFiAPCredentials(@Body SetWiFiRPC.Arguments requestArguments);
+
+    @POST("/rpc/Admin.CreateUser")
+    Observable<AdminCreateUserRPC.Result> postAdminCreateUser(@Body AdminCreateUserRPC.Arguments createUserArgs);
 
     /*
     @GET

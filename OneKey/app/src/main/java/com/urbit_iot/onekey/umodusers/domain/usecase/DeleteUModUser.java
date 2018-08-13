@@ -48,7 +48,7 @@ public class DeleteUModUser extends SimpleUseCase<DeleteUModUser.RequestValues, 
         /*
         final DeleteUserRPC.Request request = new DeleteUserRPC.Request(
                 new DeleteUserRPC.Arguments(values.getUModUser().getPhoneNumber()),
-                values.uModUserPhoneNum.getuModUUID(),
+                values.uModUserPhoneNum.getUModUUID(),
                 666);
          */
 

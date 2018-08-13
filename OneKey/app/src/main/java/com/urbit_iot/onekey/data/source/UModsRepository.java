@@ -27,6 +27,7 @@ import android.util.Pair;
 import com.google.common.base.Strings;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
@@ -317,7 +318,8 @@ public class UModsRepository implements UModsDataSource {
 
             return Observable.mergeDelayError(
                     getUModsOneByOneFromCacheOrDiskAndRefreshOnline(),
-                    lanUModObs)
+                    lanUModObs,
+                    mUModsInternetDataSource.getUModsOneByOne())
                     .filter(uMod -> uMod != null);
         });
     }
@@ -766,5 +768,19 @@ public class UModsRepository implements UModsDataSource {
     @Override
     public Observable<Address> getAddressFromLocation(Location location) {
         return this.locationService.getAddressFromLocation(location);
+    }
+
+    @Override
+    public Observable<AdminCreateUserRPC.Result> createUModUserByName(UMod uMod, AdminCreateUserRPC.Arguments createUserArgs) {
+        return getDataSourceChoices(uMod)
+                .flatMap(dataSourcePair -> dataSourcePair.first.createUModUserByName(uMod,createUserArgs)
+                        .onErrorResumeNext(throwable -> {
+                            if (throwable instanceof HttpException
+                                    || dataSourcePair.second == null){
+                                return Observable.error(throwable);
+                            }
+                            return dataSourcePair.second.createUModUserByName(uMod,createUserArgs);
+                        })
+                );
     }
 }

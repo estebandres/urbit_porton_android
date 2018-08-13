@@ -26,6 +26,7 @@ import com.stealthcopter.networktools.SubnetDevices;
 import com.stealthcopter.networktools.subnet.Device;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
@@ -494,5 +495,12 @@ public class UModsLANDataSource implements UModsDataSource {
         final FactoryResetRPC.Result mockedResult = new FactoryResetRPC.Result();
         return Observable.just(mockedResult).delay(600L, TimeUnit.MILLISECONDS);
         */
+    }
+
+    @Override
+    public Observable<AdminCreateUserRPC.Result>
+    createUModUserByName(UMod uMod, AdminCreateUserRPC.Arguments createUserArgs) {
+        this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
+        return this.appUserUModsService.postAdminCreateUser(createUserArgs);
     }
 }

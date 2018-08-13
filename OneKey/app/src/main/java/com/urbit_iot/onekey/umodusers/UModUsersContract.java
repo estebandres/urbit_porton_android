@@ -62,19 +62,15 @@ public interface UModUsersContract {
         void showUserLevelUpdateFailMessage(boolean toAdmin);
 
         void showUserLevelUpdateSuccessMessage(boolean toAdmin);
+
+        void showUserCreationSuccessMsg();
+
+        void showUserCreationFailureMsg();
     }
 
     interface Presenter extends BasePresenter {
 
         void loadUModUsers(boolean forceUpdate);
-
-        void addNewUModUser();
-
-        //void openUModConfig(@NonNull UMod requestedUMod);
-
-        //void enableUModNotification(@NonNull UMod completedUMod);
-
-        //void disableUModNotification(@NonNull UMod activeUMod);
 
         //TODO it could be clearTemporalUsers or clearAllPendingUsers or both
         void clearAllPendingUsers();
@@ -90,5 +86,7 @@ public interface UModUsersContract {
         void setContactsAccessGranted(boolean contactsAccessGranted);
 
         void upDownAdminLevel(String uModUserPhoneNum, boolean toAdmin);
+
+        void addNewUModUser(String number);
     }
 }

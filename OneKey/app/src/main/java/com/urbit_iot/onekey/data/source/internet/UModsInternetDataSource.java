@@ -20,6 +20,7 @@ import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
@@ -74,7 +75,7 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Override
     public Observable<UMod> getUModsOneByOne() {
-        return null;
+        return this.mUModMqttService.scanUModInvitations();
     }
 
     @Override
@@ -235,5 +236,18 @@ public class UModsInternetDataSource implements UModsDataSource {
     @Override
     public Observable<Response<ResponseBody>> postFirmwareUpdateToUMod(UMod uMod, File newFirmwareFile) {
         return null;
+    }
+
+    @Override
+    public Observable<AdminCreateUserRPC.Result>
+    createUModUserByName(UMod uMod, AdminCreateUserRPC.Arguments createUserArgs) {
+        AdminCreateUserRPC.Request adminRequest = new AdminCreateUserRPC.Request(createUserArgs,
+                this.username,
+                uMod.getUUID(),
+                this.randomGenerator.nextInt());
+        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),
+                adminRequest,
+                AdminCreateUserRPC.Response.class)
+                .map(AdminCreateUserRPC.Response::getResponseResult);
     }
 }

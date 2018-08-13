@@ -9,6 +9,7 @@ import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.umods.UModsFragment;
+import com.urbit_iot.onekey.umodusers.domain.usecase.CreateUModUser;
 import com.urbit_iot.onekey.umodusers.domain.usecase.UpdateUserType;
 import com.urbit_iot.onekey.umodusers.domain.usecase.DeleteUModUser;
 import com.urbit_iot.onekey.umodusers.domain.usecase.GetUModUsers;
@@ -37,11 +38,16 @@ todo inmediato
     3 agregar manejo de errores en los casos de uso
 */
 
+    @NonNull
     private final UModUsersContract.View mUModsView;
+    @NonNull
     private final GetUModUsers getUModUsers;
+    @NonNull
     private final UpdateUserType mUpdateUserType;
+    @NonNull
     private final DeleteUModUser mDeleteUModUser;
-    private final UpDownAdminLevel upDownAdminLevel;
+    @NonNull
+    private final CreateUModUser mCreateUModUser;
 
     private UModUsersFilterType mCurrentFiltering = UModUsersFilterType.ALL_UMOD_USERS;
     private String uModUUID;
@@ -55,12 +61,13 @@ todo inmediato
                               @NonNull GetUModUsers getUModUsers,
                               @NonNull UpdateUserType updateUserType,
                               @NonNull DeleteUModUser deleteUModUser,
-                              @NonNull UpDownAdminLevel upDownAdminLevel) {
+                              @NonNull UpDownAdminLevel upDownAdminLevel,
+                              @NonNull CreateUModUser mCreateUModUser) {
         mUModsView = checkNotNull(umodsView, "tasksView cannot be null!");
         this.getUModUsers = checkNotNull(getUModUsers, "getUModUUID cannot be null!");
         mUpdateUserType = checkNotNull(updateUserType, "updateUserType cannot be null!");
         mDeleteUModUser = checkNotNull(deleteUModUser, "deleteUModUser cannot be null!");
-        this.upDownAdminLevel = checkNotNull(upDownAdminLevel, "upDownAdminLevel cannot be null!");
+        this.mCreateUModUser = mCreateUModUser;
     }
 
     @Override
@@ -95,6 +102,7 @@ todo inmediato
         getUModUsers.unsubscribe();
         mUpdateUserType.unsubscribe();
         mDeleteUModUser.unsubscribe();
+        mCreateUModUser.unsubscribe();
     }
 
 
@@ -276,12 +284,6 @@ todo inmediato
         }
     }
 
-    @Override
-    public void addNewUModUser() {
-        //TODO implement user pre-approval
-        //mUModsView.showAddUModUser();
-    }
-
 
     @Override
     public void clearAllPendingUsers() {
@@ -424,4 +426,35 @@ todo inmediato
         });
     }
 
+    @Override
+    public void addNewUModUser(String phoneNumber) {
+        this.mUModsView.showProgressBar();
+        this.mCreateUModUser.unsubscribe();
+        mCreateUModUser.execute(
+                new CreateUModUser.RequestValues(e164phoneNumberToUserName(phoneNumber),
+                        this.uModUUID),
+                new Subscriber<CreateUModUser.ResponseValues>() {
+            @Override
+            public void onCompleted() {
+                mUModsView.hideProgressBar();
+                mUModsView.showUserCreationSuccessMsg();
+                loadUModUsers(true);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                mUModsView.hideProgressBar();
+                mUModsView.showUserCreationFailureMsg();
+            }
+
+            @Override
+            public void onNext(CreateUModUser.ResponseValues responseValues) {
+                Log.d("USERS_PSTR", "RESULT: " + responseValues.getResult());
+            }
+        });
+    }
+
+    private String e164phoneNumberToUserName(String phoneNumber){
+        return phoneNumber.replace("+","");
+    }
 }

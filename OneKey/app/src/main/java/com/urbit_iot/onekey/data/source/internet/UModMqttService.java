@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
@@ -26,6 +27,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
@@ -394,6 +397,42 @@ public class UModMqttService {
                     }
                 })
         );
+    }
+
+    public Observable<UMod> scanUModInvitations(){
+        String invitationsTopic = this.userName + "/invitation/+";
+        Flowable<UMod> invitationsFlowable = mMqttClient.unsubscribe(invitationsTopic)
+                .andThen(mMqttClient.subscribe(invitationsTopic,1))
+                .doOnNext(mqttMessage -> Log.d("MQTT_SERVICE", "INVITATION: " + new String(mqttMessage.getPayload())))
+                .flatMap(mqttMessage -> {
+                    String msgPayload = new String(mqttMessage.getPayload());
+                    String uModUUID = getUUIDFromUModAdvertisedID(msgPayload);
+                    UMod invitedUMod = new UMod(uModUUID);
+                    invitedUMod.setAppUserLevel(UModUser.Level.AUTHORIZED);
+                    invitedUMod.setuModSource(UMod.UModSource.MQTT_SCAN);
+                    invitedUMod.setState(UMod.State.STATION_MODE);
+                    if (uModUUID!=null){
+                        return Flowable.just(invitedUMod);
+                    } else {
+                        return Flowable.empty();
+                    }
+                });
+        return RxJavaInterop.toV1Observable(invitationsFlowable)
+                .takeUntil(Observable.timer(5000L,TimeUnit.MILLISECONDS));
+    }
+
+    private String getUUIDFromUModAdvertisedID(String hostName){
+        String uModUUID = null;
+
+        Pattern pattern = Pattern.compile(
+                GlobalConstants.URBIT_PREFIX
+                        + GlobalConstants.DEVICE_UUID_REGEX);
+        Matcher matcher = pattern.matcher(hostName);
+
+        if (matcher.find()){
+            uModUUID = matcher.group(1);
+        }
+        return uModUUID;
     }
 }
 

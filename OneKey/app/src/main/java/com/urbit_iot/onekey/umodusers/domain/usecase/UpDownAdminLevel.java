@@ -59,7 +59,7 @@ public class UpDownAdminLevel extends SimpleUseCase<UpDownAdminLevel.RequestValu
         /*
         final UpdateUserRPC.Request request = new UpdateUserRPC.Request(
                 new UpdateUserRPC.Arguments(values.getUModUser().getPhoneNumber(), newUserLevel),
-                values.getUModUser().getuModUUID(),
+                values.getUModUser().getUModUUID(),
                 666);
          */
 

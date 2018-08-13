@@ -21,6 +21,7 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
@@ -117,4 +118,8 @@ public interface UModsDataSource {
     default Observable<Location> getCurrentLocation(){ return Observable.empty();}
 
     default Observable<Address> getAddressFromLocation(Location location){return Observable.empty();}
+
+    default Observable<AdminCreateUserRPC.Result>
+    createUModUserByName(UMod uMod, AdminCreateUserRPC.Arguments createUserArgs){
+        return Observable.empty();}
 }

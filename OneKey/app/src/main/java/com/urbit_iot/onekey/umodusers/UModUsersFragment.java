@@ -1,5 +1,8 @@
 package com.urbit_iot.onekey.umodusers;
 
+import android.app.Activity;
+import android.content.ContentProvider;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -39,6 +42,7 @@ import com.urbit_iot.onekey.umods.ScrollChildSwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -47,6 +51,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class UModUsersFragment extends Fragment implements UModUsersContract.View {
 
+    private static final int PICK_CONTACT = 15263;
+    private boolean backFromUserPicking = false;
     private UModUsersContract.Presenter mPresenter;
 
     private UModUsersAdapter mListAdapter;
@@ -85,7 +91,9 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
     @Override
     public void onResume() {
         super.onResume();
-        mPresenter.subscribe();
+        if (!backFromUserPicking){
+            mPresenter.subscribe();
+        }
     }
 
     @Override
@@ -130,7 +138,9 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPresenter.addNewUModUser();
+                //mPresenter.addNewUModUser();
+                Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+                startActivityForResult(intent, PICK_CONTACT);
             }
         });
 
@@ -148,6 +158,7 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                backFromUserPicking = false;
                 mPresenter.loadUModUsers(false);
             }
         });
@@ -526,5 +537,103 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
     @Override
     public void hideProgressBar() {
         this.mProgressBar.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Activity usersActivity = getActivity();
+
+        if (usersActivity != null && data !=null){
+            ContentResolver contentResolver = usersActivity.getContentResolver();
+            Uri contactData = data.getData();
+            switch (requestCode) {
+                case (PICK_CONTACT) :
+                    if (resultCode == Activity.RESULT_OK && contactData!=null) {
+                        Cursor cursor =  contentResolver
+                                .query(contactData,
+                                null,
+                                null,
+                                null,
+                                null);
+                        if (cursor!=null && cursor.moveToFirst()) {
+                            //String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                            String contactId = cursor
+                                    .getString(
+                                            cursor.getColumnIndex(ContactsContract.Contacts._ID)
+                                    );
+                            Cursor phones = contentResolver
+                                    .query(Phone.CONTENT_URI,
+                                            null,
+                                            Phone.CONTACT_ID
+                                            + " = "
+                                            + contactId,
+                                            null,
+                                            null);
+                            if(phones != null){
+                                if (phones.moveToNext()) {
+                                    String number = phones.getString(phones.getColumnIndex(Phone.NUMBER));
+                                    int type = phones.getInt(phones.getColumnIndex(Phone.TYPE));
+                                    switch (type) {
+                                        case Phone.TYPE_MOBILE:
+                                            // do something with the Mobile number here...
+                                            Log.d("USERS_FRAG","PHONE NUMBER (MOBILE): "
+                                                    + this.getPhoneNumberE164Formatted(number));
+                                            //mPresenter.addNewUModUser();
+                                            break;
+                                        case Phone.TYPE_WORK:
+                                            // do something with the Work number here...
+                                            Log.d("USERS_FRAG","PHONE NUMBER (WORK): "
+                                                    + number);
+                                            break;
+                                        case Phone.TYPE_HOME:
+                                            // do something with the Home number here...
+                                            Log.d("USERS_FRAG","PHONE NUMBER (HOME): "
+                                                    + number);
+                                            break;
+                                    }
+                                    if (number!=null){
+                                        mPresenter.addNewUModUser(this.getPhoneNumberE164Formatted(number));
+                                    }
+                                }
+                                phones.close();
+                            } else {
+                                showUserCreationFailureMsg();
+                            }
+                            //ContactsContract.Contacts.
+                            // TODO Whatever you want to do with the selected contact name.
+                            cursor.close();
+                        }
+
+                    } else {
+                        showUserCreationFailureMsg();
+                    }
+                    break;
+            }
+        }
+        backFromUserPicking = true;
+    }
+    //TODO better exception handling
+    private String getPhoneNumberE164Formatted(String phoneNumberStr){
+        Phonenumber.PhoneNumber argentinianNumberProto;
+        try{
+            argentinianNumberProto = phoneUtil.parse(phoneNumberStr, "AR");
+        }
+        catch (NumberParseException e) {
+            Log.d("appusr_frag","NumberParseException was thrown: " + e.toString());
+            return null;
+        }
+        return this.phoneUtil.format(argentinianNumberProto, PhoneNumberUtil.PhoneNumberFormat.E164);
+
+    }
+
+    @Override
+    public void showUserCreationSuccessMsg() {
+        showMessage("USUARIO CREADO CON ÉXITO");
+    }
+
+    @Override
+    public void showUserCreationFailureMsg() {
+        showMessage("CREACIÓN DE USUARIO FALLIDA");
     }
 }

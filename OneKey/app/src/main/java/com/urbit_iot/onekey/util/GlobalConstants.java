@@ -44,6 +44,7 @@ public final class GlobalConstants {
     public static final String RPC_METHOD_NAME___UPDATE_USER    = "Admin.UpdateUser";
     public static final String RPC_METHOD_NAME__DELETE_USER     = "Admin.DeleteUser";
     public static final String RPC_METHOD_NAME__ADMIN_TRIGGER   = "Admin.Trigger";
+    public static String RPC_METHOD_NAME___ADMIN_CREATE_USER    = "Admin.CreateUser";
 
     public static final String RPC_METHOD_NAME__CREATE_USER     = "Guest.CreateUser";
     public static final String RPC_METHOD_NAME__USER_STATUS     = "Guest.UserStatus";
@@ -52,12 +53,13 @@ public final class GlobalConstants {
     public static final String RPC_METHOD_NAME__USER_TRIGGER    = "User.Trigger";
 
     //------------RPC_METHOD_CODES-----------------
-    public static final int RPC_METHOD_CODE__FACTORY_RESET  = 100;
-    public static final int RPC_METHOD_CODE__SET_WIFI       = 101;
-    public static final int RPC_METHOD_CODE__GET_USERS      = 102;
-    public static final int RPC_METHOD_CODE__UPDATE_USER    = 103;
-    public static final int RPC_METHOD_CODE__DELETE_USER    = 104;
-    public static final int RPC_METHOD_CODE__ADMIN_TRIGGER  = 105;
+    public static final int RPC_METHOD_CODE__FACTORY_RESET      = 100;
+    public static final int RPC_METHOD_CODE__SET_WIFI           = 101;
+    public static final int RPC_METHOD_CODE__GET_USERS          = 102;
+    public static final int RPC_METHOD_CODE__UPDATE_USER        = 103;
+    public static final int RPC_METHOD_CODE__DELETE_USER        = 104;
+    public static final int RPC_METHOD_CODE__ADMIN_TRIGGER      = 105;
+    public static final int RPC_METHOD_CODE__ADMIN_CREATE_USER  = 106;
 
     public static final int RPC_METHOD_CODE__CREATE_USER    = 200;
     public static final int RPC_METHOD_CODE__USER_STATUS    = 201;
@@ -77,6 +79,7 @@ public final class GlobalConstants {
     public static final String ONLINE_LOWER_TEXT = "online";
     public static final String STORED_LOWER_TEXT = "recordado";
     public static final String ONGOING_NOTIFICATION_STATE_KEY = "app_settings__ongoing_notification_state";
+
 
     public interface ACTION {
         String MAIN = "com.urbit-iot.onekey.action.main";
