@@ -61,7 +61,8 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Inject
     public UModsInternetDataSource(@NonNull FirmwareFileDownloader firmwareDownloader,
-                                   @NonNull UModMqttService mUModMqttService, @NonNull String username) {
+                                   @NonNull UModMqttService mUModMqttService,
+                                   @NonNull String username) {
         this.mFirmwareFileDownloader = firmwareDownloader;
         this.mUModMqttService = mUModMqttService;
         this.username = username;

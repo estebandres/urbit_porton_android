@@ -83,135 +83,115 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
         //TODO review operator usage
         mUModsRepository.cachedFirst();
         return mUModsRepository.getUMod(values.getUModUUID())
-                .flatMap(new Func1<UMod, Observable<TriggerRPC.Result>>() {
-                    @Override
-                    public Observable<TriggerRPC.Result> call(final UMod uMod) {
-                        uModAPSSID = "";
-                        return mUModsRepository.triggerUMod(uMod, requestArguments)
-                                .onErrorResumeNext(new Func1<Throwable, Observable<? extends TriggerRPC.Result>>() {
-                                    @Override
-                                    public Observable<? extends TriggerRPC.Result> call(Throwable throwable) {
-                                        if (throwable instanceof HttpException){
+                .flatMap(uMod -> {
+                    uModAPSSID = "";
+                    return mUModsRepository.triggerUMod(uMod, requestArguments)
+                            .onErrorResumeNext(throwable -> {
+                                if (throwable instanceof HttpException){
 
-                                            String errorMessage = "";
-                                            try {
-                                                errorMessage = ((HttpException) throwable).response().errorBody().string();
-                                            }catch (IOException exc){
-                                                return Observable.error(exc);
-                                            }
-                                            int httpErrorCode = ((HttpException) throwable).response().code();
-
-                                            Log.e("trigger_uc", "Trigger Failed on error CODE:"
-                                                    +httpErrorCode
-                                                    +" MESSAGE: "
-                                                    + errorMessage);
-
-                                            Timber.e("Trigger Failed on error CODE:"
-                                                    +httpErrorCode
-                                                    +" MESSAGE: "
-                                                    + errorMessage);
-
-                                            //401 occurs when some admin deleted me
-                                            if (httpErrorCode != 0 && (httpErrorCode == 401 || httpErrorCode == 403)){
-                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                mUModsRepository.saveUMod(uMod);
-                                                //TODO what difference would it make if Observable.error(throwable)??
-                                                //return Observable.error(new Exception("Forces umods UI Refresh"));
-                                                return Observable.error(new DeletedUserException(uMod));
-                                            }
-                                            //If the user was Admin but now is User and vice versa...
-                                            if (httpErrorCode == 500){//body: "unauthorized"
-                                                return mAppUserRepository.getAppUser()
-                                                        .flatMap(new Func1<AppUser, Observable<TriggerRPC.Result>>() {
-                                                            @Override
-                                                            public Observable<TriggerRPC.Result> call(AppUser appUser) {
-                                                                Log.d("trigger_uc", "Get AppUser Success: "+appUser.toString());
-                                                                GetUserLevelRPC.Arguments getUserLevelArgs =
-                                                                        new GetUserLevelRPC.Arguments(appUser.getUserName());
-                                                                return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)
-                                                                        .onErrorResumeNext(new Func1<Throwable, Observable<? extends GetUserLevelRPC.Result>>() {
-                                                                            @Override
-                                                                            public Observable<? extends GetUserLevelRPC.Result> call(Throwable throwable) {
-                                                                                if (throwable instanceof HttpException) {
-
-                                                                                    String errorMessage = "";
-                                                                                    try {
-                                                                                        errorMessage = ((HttpException) throwable).response().errorBody().string();
-                                                                                    } catch (IOException exc) {
-                                                                                        return Observable.error(exc);
-                                                                                    }
-                                                                                    int httpErrorCode = ((HttpException) throwable).response().code();
-
-                                                                                    Log.e("trigger_uc", "Get User Status (urbit:urbit) Failed on error CODE:"
-                                                                                            + httpErrorCode
-                                                                                            + " MESSAGE: "
-                                                                                            + errorMessage);
-
-                                                                                    Timber.e("Get User Status (urbit:urbit) Failed on error CODE:"
-                                                                                            + httpErrorCode
-                                                                                            + " MESSAGE: "
-                                                                                            + errorMessage);
-
-                                                                                    if (httpErrorCode != 0
-                                                                                        && httpErrorCode == 500
-                                                                                            && errorMessage.contains("404")) {//TODO is this case possible?
-                                                                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                                                                mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
-                                                                                                return Observable.error(new DeletedUserException(uMod));
-                                                                                    }
-                                                                                }
-                                                                                return Observable.error(throwable);
-                                                                            }
-                                                                        })
-                                                                        .flatMap(new Func1<GetUserLevelRPC.Result, Observable<TriggerRPC.Result>>() {
-                                                                            @Override
-                                                                            public Observable<TriggerRPC.Result> call(GetUserLevelRPC.Result result) {
-                                                                                //TODO what about when someone changed my status to Guest????? (This is not allowed by the app)
-                                                                                Log.d("trigger_uc", "Get User Level Success: "+result.toString());
-                                                                                Timber.d("Get User Level Success: "+result.toString());
-                                                                                uMod.setAppUserLevel(result.getUserLevel());
-                                                                                return mUModsRepository.triggerUMod(uMod, requestArguments);
-                                                                            }
-                                                                        });
-                                                            }
-                                                        });
-                                            }
-                                        }
-                                        /*
-                                        if (throwable instanceof IOException){
-                                            mUModsRepository.refreshUMods();
-                                        }
-                                        */
-                                        //TODO is this a desirable behaviour? What about the other error codes?
-                                        return Observable.error(throwable);
+                                    String errorMessage = "";
+                                    try {
+                                        errorMessage = ((HttpException) throwable).response().errorBody().string();
+                                    }catch (IOException exc){
+                                        return Observable.error(exc);
                                     }
-                                });
-                    }
+                                    int httpErrorCode = ((HttpException) throwable).response().code();
+
+                                    Log.e("trigger_uc", "Trigger Failed on error CODE:"
+                                            +httpErrorCode
+                                            +" MESSAGE: "
+                                            + errorMessage);
+
+                                    Timber.e("Trigger Failed on error CODE:"
+                                            +httpErrorCode
+                                            +" MESSAGE: "
+                                            + errorMessage);
+
+                                    //401 occurs when some admin deleted me
+                                    if (httpErrorCode != 0 && (httpErrorCode == 401 || httpErrorCode == 403)){
+                                        if (uMod.getAppUserLevel()== UModUser.Level.INVITED){
+                                            mUModsRepository.deleteUMod(uMod.getUUID());
+                                            return Observable.error(new DeletedUserException(uMod));
+                                        }
+                                        uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                        mUModsRepository.saveUMod(uMod);
+                                        return Observable.error(new DeletedUserException(uMod));
+                                    }
+                                    //If the user was Admin but now is User and vice versa...
+                                    if (httpErrorCode == 500){//body: "unauthorized"
+                                        return mAppUserRepository.getAppUser()
+                                                .flatMap(appUser -> {
+                                                    Log.d("trigger_uc", "Get AppUser Success: "+appUser.toString());
+                                                    GetUserLevelRPC.Arguments getUserLevelArgs =
+                                                            new GetUserLevelRPC.Arguments(appUser.getUserName());
+                                                    return mUModsRepository.getUserLevel(uMod,getUserLevelArgs)
+                                                            .onErrorResumeNext(throwable1 -> {
+                                                                if (throwable1 instanceof HttpException) {
+
+                                                                    String errorMessage1 = "";
+                                                                    try {
+                                                                        errorMessage1 = ((HttpException) throwable1).response().errorBody().string();
+                                                                    } catch (IOException exc) {
+                                                                        return Observable.error(exc);
+                                                                    }
+                                                                    int httpErrorCode1 = ((HttpException) throwable1).response().code();
+
+                                                                    Log.e("trigger_uc", "Get User Status (urbit:urbit) Failed on error CODE:"
+                                                                            + httpErrorCode1
+                                                                            + " MESSAGE: "
+                                                                            + errorMessage1);
+
+                                                                    Timber.e("Get User Status (urbit:urbit) Failed on error CODE:"
+                                                                            + httpErrorCode1
+                                                                            + " MESSAGE: "
+                                                                            + errorMessage1);
+                                                                    //Could ocurr if
+                                                                    if (httpErrorCode1 != 0
+                                                                        && httpErrorCode1 == 500
+                                                                            && errorMessage1.contains("404")) {//TODO is this case possible?
+                                                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                                                mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
+                                                                                return Observable.error(new DeletedUserException(uMod));
+                                                                    }
+                                                                }
+                                                                return Observable.error(throwable1);
+                                                            })
+                                                            .flatMap(result -> {
+                                                                //TODO what about when someone changed my status to Guest????? (This is not allowed by the app)
+                                                                Log.d("trigger_uc", "Get User Level Success: "+result.toString());
+                                                                Timber.d("Get User Level Success: "+result.toString());
+                                                                uMod.setAppUserLevel(result.getUserLevel());
+                                                                mUModsRepository.saveUMod(uMod);
+                                                                return mUModsRepository.triggerUMod(uMod, requestArguments);
+                                                            });
+                                                });
+                                    }
+                                }
+                                /*
+                                if (throwable instanceof IOException){
+                                    mUModsRepository.refreshUMods();
+                                }
+                                */
+                                //TODO is this a desirable behaviour? What about the other error codes?
+                                return Observable.error(throwable);
+                            });
                 })
                 //A retry should be performed when a timeout is produce because a umod changed its address or is suddenly disconnected.
-                .retry(new Func2<Integer, Throwable, Boolean>() {
-                    @Override
-                    public Boolean call(Integer retryCount, Throwable throwable) {
-                        Log.e("trigger_uc", "Retry count: " + retryCount +
-                                " -- Excep msge: " + throwable.getMessage() + "Excep Type: " + throwable.getClass().getSimpleName());
-                        if (retryCount == 1
-                                && (throwable instanceof IOException)
-                                //This sort of data should be given as a request value to the usecase in order to isolate the layer.
-                                && connectivityInfo.getConnectionType() == PhoneConnectivityInfo.ConnectionType.WIFI
-                                && uModAPSSID.equals(connectivityInfo.getWifiAPSSID())){
-                            mUModsRepository.refreshUMods();
-                            return true;
-                        } else {
-                            return false;
-                        }
+                .retry((retryCount, throwable) -> {
+                    Log.e("trigger_uc", "Retry count: " + retryCount +
+                            " -- Excep msge: " + throwable.getMessage() + "Excep Type: " + throwable.getClass().getSimpleName());
+                    if (retryCount == 1
+                            && (throwable instanceof IOException)
+                            //This sort of data should be given as a request value to the usecase in order to isolate the layer.
+                            && connectivityInfo.getConnectionType() == PhoneConnectivityInfo.ConnectionType.WIFI
+                            && uModAPSSID.equals(connectivityInfo.getWifiAPSSID())){
+                        mUModsRepository.refreshUMods();
+                        return true;
+                    } else {
+                        return false;
                     }
                 })
-                .map(new Func1<TriggerRPC.Result, ResponseValues>() {
-                    @Override
-                    public ResponseValues call(TriggerRPC.Result result) {
-                        return new ResponseValues(result);
-                    }
-                });
+                .map(ResponseValues::new);
     }
 
     public static final class RequestValues implements RxUseCase.RequestValues {

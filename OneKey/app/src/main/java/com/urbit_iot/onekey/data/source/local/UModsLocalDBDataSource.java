@@ -88,6 +88,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
             public UMod call(Cursor c) {
                 String uuid = c.getString(c.getColumnIndexOrThrow(UModEntry.UUID_CN));
                 String alias = c.getString(c.getColumnIndexOrThrow(UModEntry.ALIAS_CN));
+                boolean lanOperationEnabled = c.getInt(c.getColumnIndexOrThrow(UModEntry.LAN_OPERATION_ENABLED_CN))>0;
                 String wifiSSID = c.getString(c.getColumnIndexOrThrow(UModEntry.WIFI_SSID_CN));
                 String macAddress = c.getString(c.getColumnIndexOrThrow(UModEntry.MAC_ADDRESS_CN));
                 boolean notifEnabled = c.getInt(c.getColumnIndexOrThrow(UModEntry.NOTIF_ENABLED_CN))>0;
@@ -111,7 +112,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                     lastUpdate = new Date(0L);
                 }
 
-                return new UMod(uuid, alias, wifiSSID, connectionAddress, state, userStatus, notifEnabled,
+                return new UMod(uuid, alias, lanOperationEnabled, wifiSSID, connectionAddress, state, userStatus, notifEnabled,
                         macAddress, lastReport, productUUID, hwVersion, swVersion, uModLocation, addressText, lastUpdate);
             }
         };
@@ -160,6 +161,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         String[] projection = {
                 UModEntry.UUID_CN,
                 UModEntry.ALIAS_CN,
+                UModEntry.LAN_OPERATION_ENABLED_CN,
                 UModEntry.WIFI_SSID_CN,
                 UModEntry.MAC_ADDRESS_CN,
                 UModEntry.CONNECTION_ADDRESS_CN,
@@ -199,6 +201,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         String[] projection = {
                 UModEntry.UUID_CN,
                 UModEntry.ALIAS_CN,
+                UModEntry.LAN_OPERATION_ENABLED_CN,
                 UModEntry.MAC_ADDRESS_CN,
                 UModEntry.WIFI_SSID_CN,
                 UModEntry.CONNECTION_ADDRESS_CN,
@@ -230,6 +233,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         ContentValues values = new ContentValues();
         values.put(UModEntry.UUID_CN, uMod.getUUID());
         values.put(UModEntry.ALIAS_CN, uMod.getAlias());
+        values.put(UModEntry.LAN_OPERATION_ENABLED_CN, uMod.isLanOperationEnabled());
         values.put(UModEntry.WIFI_SSID_CN, uMod.getWifiSSID());
         values.put(UModEntry.MAC_ADDRESS_CN, uMod.getMacAddress());
         values.put(UModEntry.CONNECTION_ADDRESS_CN, uMod.getConnectionAddress());

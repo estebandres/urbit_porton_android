@@ -401,16 +401,18 @@ public class UModMqttService {
 
     public Observable<UMod> scanUModInvitations(){
         String invitationsTopic = this.userName + "/invitation/+";
-        Flowable<UMod> invitationsFlowable = mMqttClient.unsubscribe(invitationsTopic)
+        Flowable<UMod> invitationsFlowable = this.connectMqttClient()
+                .andThen(mMqttClient.unsubscribe(invitationsTopic))
                 .andThen(mMqttClient.subscribe(invitationsTopic,1))
                 .doOnNext(mqttMessage -> Log.d("MQTT_SERVICE", "INVITATION: " + new String(mqttMessage.getPayload())))
                 .flatMap(mqttMessage -> {
                     String msgPayload = new String(mqttMessage.getPayload());
                     String uModUUID = getUUIDFromUModAdvertisedID(msgPayload);
                     UMod invitedUMod = new UMod(uModUUID);
-                    invitedUMod.setAppUserLevel(UModUser.Level.AUTHORIZED);
+                    invitedUMod.setAppUserLevel(UModUser.Level.INVITED);
                     invitedUMod.setuModSource(UMod.UModSource.MQTT_SCAN);
                     invitedUMod.setState(UMod.State.STATION_MODE);
+                    invitedUMod.setConnectionAddress(null);
                     if (uModUUID!=null){
                         return Flowable.just(invitedUMod);
                     } else {

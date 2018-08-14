@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.urbit_iot.onekey.data;
+package com.urbit_iot.onekey.data.source.lan;
 
 import android.support.annotation.NonNull;
 import android.util.Log;

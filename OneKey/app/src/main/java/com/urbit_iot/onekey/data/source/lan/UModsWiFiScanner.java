@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.github.pwittchen.reactivewifi.ReactiveWifi;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.util.LinkedHashMap;
@@ -132,6 +133,8 @@ public class UModsWiFiScanner {
                     }
                     UMod mappedUMod = new UMod(uModUUID);
                     mappedUMod.setAlias(scanResult.SSID);
+                    mappedUMod.setConnectionAddress(GlobalConstants.AP_DEFAULT_IP_ADDRESS);
+                    mappedUMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
                     mappedUMod.setState(UMod.State.AP_MODE);
                     return mappedUMod;
                 })

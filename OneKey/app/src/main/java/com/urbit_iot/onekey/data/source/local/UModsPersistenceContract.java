@@ -48,5 +48,6 @@ public final class UModsPersistenceContract {
         public static final String LATITUDE_CN = "latitude";
         public static final String LONGITUDE_CN = "longitude";
         public static final String ADDRESS_TEXT_CN = "address_text";
+        public static final String LAN_OPERATION_ENABLED_CN = "lan_operation_enabled";
     }
 }

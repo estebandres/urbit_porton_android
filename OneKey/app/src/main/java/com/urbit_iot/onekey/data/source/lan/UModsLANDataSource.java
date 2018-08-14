@@ -42,6 +42,7 @@ import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -93,6 +94,11 @@ public class UModsLANDataSource implements UModsDataSource {
     @NonNull
     private Observable.Transformer<UMod,UMod> uModLANBrander;
 
+    /*
+    @NonNull
+    private Observable.Transformer<UMod,UMod> lanOperationDisabler;
+    */
+
 
     private static final int SERVICE_LATENCY_IN_MILLIS = 5000;
 
@@ -138,6 +144,17 @@ public class UModsLANDataSource implements UModsDataSource {
                         });
             }
         };
+        /*
+        this.lanOperationDisabler = uModObservable -> uModObservable.onErrorResumeNext(throwable -> {
+            if (throwable instanceof IOException
+                    && throwable.getClass()
+                    .getSimpleName()
+                    .concat(" "+throwable.getMessage())
+                    .contains("timeout")){
+
+            }
+        });
+        */
     }
 
     private static void addUMod(String uModUUID, String onLANIPAddress) {

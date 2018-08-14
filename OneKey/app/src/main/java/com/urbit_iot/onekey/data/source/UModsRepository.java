@@ -45,6 +45,9 @@ import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.LanOnly;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -58,6 +61,7 @@ import javax.inject.Singleton;
 import okhttp3.ResponseBody;
 import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.Response;
+import rx.Completable;
 import rx.Observable;
 import rx.Single;
 import rx.functions.Action0;
@@ -226,35 +230,50 @@ public class UModsRepository implements UModsDataSource {
                 });
     }
 
+    //TODO Rename method because it now admits MQTT invitations
     private Observable<UMod> getUModsOneByOneFromLanAndUpdateDBAndCache(){
-        return mUModsLANDataSource
-                .getUModsOneByOne()
+        return Observable.mergeDelayError(mUModsLANDataSource.getUModsOneByOne(),
+                mUModsInternetDataSource.getUModsOneByOne())
                 .filter(uMod -> uMod!=null)
-                .flatMap(new Func1<UMod, Observable<UMod>>() {//Revisar lógica
-                    @Override
-                    public Observable<UMod> call(final UMod lanUMod) {
-                        UMod cachedUMod = mCachedUMods.get(lanUMod.getUUID());
-                        //CACHE HIT
-                        if (cachedUMod != null){
-                            long diffInSeconds = secondsBetweenDates(lanUMod.getLastUpdateDate(), cachedUMod.getLastUpdateDate());
-                            if (diffInSeconds <= 5L
-                                    && cachedUMod.getuModSource()== UMod.UModSource.MQTT_SCAN){//In case we've got an MQTT ping
-                                return Observable.empty();
-                            } else {
-                                //TODO check if all necessary fields are being updated.
-                                //AppUserLevel should remain as in DB
-                                cachedUMod.setConnectionAddress(lanUMod.getConnectionAddress());
-                                cachedUMod.setState(lanUMod.getState());
-                                cachedUMod.setuModSource(UMod.UModSource.LAN_SCAN);
-                                cachedUMod.setOpen(lanUMod.isOpen());
-                                cachedUMod.setLastUpdateDate(lanUMod.getLastUpdateDate());
-                                return Observable.just(cachedUMod);
-                            }
-                        } else {//CACHE MISS
-                            return Observable.just(lanUMod);
+                .flatMap(lanUMod -> {//Revisar lógica
+                    UMod cachedUMod = mCachedUMods.get(lanUMod.getUUID());
+                    //CACHE HIT
+                    if (cachedUMod != null){
+                        if (lanUMod.getuModSource() == UMod.UModSource.LAN_SCAN
+                                && lanUMod.getState() == UMod.State.STATION_MODE){
+                            cachedUMod.setLanOperationEnabled(true);
+                            cachedUMod.setWifiSSID(connectivityInfo.getWifiAPSSID());
                         }
+                        if (lanUMod.getAppUserLevel() == UModUser.Level.INVITED
+                                && cachedUMod.getAppUserLevel() == UModUser.Level.UNAUTHORIZED){
+                            cachedUMod.setAppUserLevel(UModUser.Level.INVITED);
+                        }
+                        /*
+                        //This was an attempt to filter some results but since invitations were
+                        //implemented it seems deprecated since there is no further need to prioritize MQTT scans??? Review
+                        long diffInSeconds = secondsBetweenDates(lanUMod.getLastUpdateDate(), cachedUMod.getLastUpdateDate());
+                        if (diffInSeconds <= 5L
+                                && cachedUMod.getuModSource()== UMod.UModSource.MQTT_SCAN){//In case we've got an MQTT ping
+                            mUModsLocalDataSource.saveUMod(cachedUMod);//trying to store
+                            return Observable.empty();
+                        } else {
+                        }
+                        */
+                        //TODO check if all necessary fields are being updated.
+                        //** IMPORTANT: AppUserLevel should remain as in DB **
+                        cachedUMod.setuModSource(lanUMod.getuModSource());
+                        if (lanUMod.getConnectionAddress() != null){//could be null for MQTT invitations
+                            cachedUMod.setConnectionAddress(lanUMod.getConnectionAddress());
+                        }
+                        cachedUMod.setState(lanUMod.getState());
+                        cachedUMod.setOpen(lanUMod.isOpen());//Always true. TODO Review isOpen logic!
+                        cachedUMod.setLastUpdateDate(lanUMod.getLastUpdateDate());
+                        return Observable.just(cachedUMod);
+                    } else {//CACHE MISS
+                        return Observable.just(lanUMod);
                     }
                 })
+                /* In case the MQTT scans priority filter is restored...
                 .flatMap(uMod -> {
                     if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
                             && uMod.getState() == UMod.State.STATION_MODE) {
@@ -262,6 +281,7 @@ public class UModsRepository implements UModsDataSource {
                     }
                     return Observable.just(uMod);
                 })
+                */
                 .doOnNext(new Action1<UMod>() {
                     @Override
                     public void call(UMod uMod) {
@@ -318,8 +338,7 @@ public class UModsRepository implements UModsDataSource {
 
             return Observable.mergeDelayError(
                     getUModsOneByOneFromCacheOrDiskAndRefreshOnline(),
-                    lanUModObs,
-                    mUModsInternetDataSource.getUModsOneByOne())
+                    lanUModObs)
                     .filter(uMod -> uMod != null);
         });
     }
@@ -453,6 +472,7 @@ public class UModsRepository implements UModsDataSource {
         });
     }
 
+    //TODO replace method with the OneByOne plus a .filter. We should avoid duplicated code!!!!
     private Observable<UMod> getSingleUModFromLanAndUpdateDBEntry(final String uModUUID){
         // If lanUmodsDataSource produces a result then tries to update the DB entry for the same UUID.
         return mUModsLANDataSource.getUMod(uModUUID)
@@ -474,7 +494,7 @@ public class UModsRepository implements UModsDataSource {
                             cachedUMod.setConnectionAddress(lanUMod.getConnectionAddress());
                             cachedUMod.setState(lanUMod.getState());
                             cachedUMod.setuModSource(UMod.UModSource.LAN_SCAN);
-                            cachedUMod.setOpen(lanUMod.isOpen());
+                            cachedUMod.setOpen(lanUMod.isOpen());//Always true?? Come on!
                             cachedUMod.setLastUpdateDate(lanUMod.getLastUpdateDate());
                             return Observable.just(cachedUMod);
                         }
@@ -562,6 +582,9 @@ public class UModsRepository implements UModsDataSource {
                 return Observable.just(new Pair<>(mUModsLANDataSource,null));
             } else {//Assumes a module is either in AP_MODE or STATION_MODE
                 mUModsInternetDataSource.saveUMod(uMod);//Checks for subscription
+                if (uMod.getAppUserLevel() == UModUser.Level.INVITED){
+                    return Observable.just(new Pair<>(mUModsInternetDataSource,null));
+                }
                 switch (connectivityInfo.getConnectionType()){
                     case WIFI:
                         if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN){//When found by DNSSD then try lan http first
@@ -569,14 +592,27 @@ public class UModsRepository implements UModsDataSource {
                             //return Observable.just(new Pair<>(mUModsInternetDataSource,null));
                         }
                         String wifiAPSSID = connectivityInfo.getWifiAPSSID();
-                        if (uMod.getWifiSSID() != null
+                        if (uMod.isLanOperationEnabled()
+                                && uMod.getWifiSSID() != null
                                 && wifiAPSSID != null
-                                && uMod.getWifiSSID().equals(wifiAPSSID)
-                                ){//When on the same wifi umod is in then go for local http first
-                            //TODO TCP connect and close for faster ARP lookup...
-                            return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
+                                && uMod.getWifiSSID().equals(wifiAPSSID)//case sensitive comparision
+                                ){//When on the same wifi then go for local http first
+                            //TODO TCP connect and close for faster ARP lookup...PLUS checks LAN operability.
+                            //Reduces LAN requests reliability and quickness, rethink approach.
+                            return this.testConnectionToModule(uMod)
+                                    //.doOnCompleted(() -> Log.d("UMODS_REP", "TCP CONN TEST COMPLETE!!"))
+                                    .andThen(Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource)))
+                                    .onErrorResumeNext(throwable -> {
+                                       if (throwable instanceof IOException){
+                                           uMod.setLanOperationEnabled(false);
+                                           saveUMod(uMod);
+                                           return Observable.just(new Pair<>(mUModsInternetDataSource,null));
+                                       }
+                                       return Observable.error(throwable);
+                                    });
+                            //return Observable.just(new Pair<>(mUModsLANDataSource, mUModsInternetDataSource));
                             //return Observable.just(new Pair<>(mUModsInternetDataSource,null));
-                        } else {//When on wifi but not in the same umod is in go for mqtt
+                        } else {//When on wifi but not in the same as umod then go for mqtt
                             return Observable.just(new Pair<>(mUModsInternetDataSource,null));
                         }
                     case MOBILE:
@@ -782,5 +818,23 @@ public class UModsRepository implements UModsDataSource {
                             return dataSourcePair.second.createUModUserByName(uMod,createUserArgs);
                         })
                 );
+    }
+
+    public Completable testConnectionToModule(UMod umod) {
+        return Completable.fromCallable(() -> {
+            Socket clientSocket;
+            clientSocket = new Socket();
+            try {
+                Log.d("DNSSD_SCAN", "TESTING CONN ON: " + Thread.currentThread().getName());
+                clientSocket.connect(
+                        new InetSocketAddress(
+                                umod.getConnectionAddress(),
+                                GlobalConstants.UMOD__TCP_ECHO_PORT),
+                        1500);
+            } finally {
+                clientSocket.close();
+            }
+            return true;
+        });
     }
 }

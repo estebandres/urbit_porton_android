@@ -37,6 +37,7 @@ import com.urbit_iot.onekey.umodsnotification.UModsNotifService;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -350,6 +351,11 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     @Override
     public void appendUMod(UModViewModel uMod) {
         mListAdapter.addItem(uMod);
+    }
+
+    @Override
+    public void removeItem(String uuid) {
+        mListAdapter.removeItem(uuid);
     }
 
     @Override
@@ -759,6 +765,17 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             }
 
             return rowView;
+        }
+
+        void removeItem(String uuid) {
+            int index = 0;
+            for (UModViewModel viewModel : this.mViewModelsList){
+                if (viewModel.getuModUUID().equals(uuid)){
+                    break;
+                }
+                index++;
+            }
+            this.mViewModelsList.remove(index);
         }
     }
 

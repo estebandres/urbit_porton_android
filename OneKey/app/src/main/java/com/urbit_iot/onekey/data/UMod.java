@@ -103,7 +103,9 @@ public final class UMod {
     @NonNull
     private State state;
 
-    //TODO change to boolean
+    @NonNull
+    private boolean lanOperationEnabled;
+
     @NonNull
     private boolean ongoingNotificationEnabled;
 
@@ -163,6 +165,7 @@ public final class UMod {
                 boolean isOpen) {
         this.uModUUID = uModUUID;
         this.alias = uModUUID;
+        this.lanOperationEnabled = true;
         this.ongoingNotificationEnabled =  false;
         this.connectionAddress = connectionAddress;
         this.state = State.STATION_MODE;
@@ -179,6 +182,7 @@ public final class UMod {
     public UMod(@NonNull String uModUUID, @Nullable String bleHwAddress) {
         this.uModUUID = uModUUID;
         this.alias = uModUUID;
+        this.lanOperationEnabled = false;
         this.ongoingNotificationEnabled =  false;
         this.connectionAddress = bleHwAddress;
         this.state = State.AP_MODE;
@@ -194,10 +198,8 @@ public final class UMod {
     public UMod(@NonNull String moduleUUID) {
         this.uModUUID = moduleUUID;
         this.alias = uModUUID;
+        this.lanOperationEnabled = false;
         this.ongoingNotificationEnabled =  false;
-        this.connectionAddress = GlobalConstants.AP_DEFAULT_IP_ADDRESS;
-        this.state = State.AP_MODE;
-        this.appUserLevel = UModUser.Level.UNAUTHORIZED;
         this.isOpen = true;
         this.lastUpdateDate = new Date();
     }
@@ -225,6 +227,7 @@ public final class UMod {
         this.uModUUID = uModUUID;
         this.ongoingNotificationEnabled =  false;
         this.alias = alias;
+        this.lanOperationEnabled = false;
         this.connectionAddress = connectionAddress;
         this.state = State.STATION_MODE;
         this.uModLastReport = uModLastReport;
@@ -251,6 +254,7 @@ public final class UMod {
      */
     public UMod(@NonNull String uuid,
                 @Nullable String alias,
+                @NonNull boolean lanOperationEnabled,
                 @Nullable String wifiSSID,
                 @Nullable String connectionAddress,
                 @NonNull State uModState,
@@ -267,6 +271,7 @@ public final class UMod {
         this.uModUUID = uuid;
         this.ongoingNotificationEnabled =  ongoingNotifEnabled;
         this.alias = alias;
+        this.lanOperationEnabled = lanOperationEnabled;
         this.wifiSSID = wifiSSID;
         this.connectionAddress = connectionAddress;
         this.state = uModState;
@@ -498,6 +503,15 @@ public final class UMod {
         if (o == null || getClass() != o.getClass()) return false;
         UMod uMod = (UMod) o;
         return Objects.equal(uModUUID, uMod.uModUUID);
+    }
+
+    @NonNull
+    public boolean isLanOperationEnabled() {
+        return lanOperationEnabled;
+    }
+
+    public void setLanOperationEnabled(@NonNull boolean lanOperationEnabled) {
+        this.lanOperationEnabled = lanOperationEnabled;
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.f2prateek.rx.preferences2.Preference;
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
 import com.urbit_iot.onekey.umods.domain.usecase.ClearAlienUMods;
@@ -268,6 +269,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                     sliderVisible = true;
                     sliderEnabled = false;
                     break;
+                case INVITED:
                 case AUTHORIZED:
                     sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
                     sliderBackgroundColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_BACKGROUND;
@@ -312,6 +314,7 @@ public class UModsPresenter implements UModsContract.Presenter {
             case ADMINISTRATOR:
                 itemOnClickListenerEnabled = true;
                 break;
+            case INVITED:
             case AUTHORIZED:
                 itemOnClickListenerEnabled = true;
                 break;
@@ -502,12 +505,15 @@ public class UModsPresenter implements UModsContract.Presenter {
                 Timber.e("Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage());
                 mUModsView.showOpenCloseFail();
                 if (e instanceof TriggerUMod.DeletedUserException){
-                    mUModsView.appendUMod(createViewModel(((TriggerUMod.DeletedUserException) e).getInaccessibleUMod()));
+                    UMod saidUMod = ((TriggerUMod.DeletedUserException) e).getInaccessibleUMod();
+                    if (saidUMod.getAppUserLevel() == UModUser.Level.INVITED){
+                        mUModsView.removeItem(saidUMod.getUUID());
+                        return;
+                    }
+                    mUModsView.appendUMod(createViewModel(saidUMod));
                     return;
                 }
                 mUModsView.enableActionSlider(uModUUID);
-
-                //loadUMods(true);
             }
 
             @Override

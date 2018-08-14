@@ -42,6 +42,7 @@ public class UModsDbHelper extends SQLiteOpenHelper {
             "CREATE TABLE " + UModsPersistenceContract.UModEntry.UMODS_TABLE_NAME + " (" +
                     UModsPersistenceContract.UModEntry.UUID_CN + TEXT_TYPE + " PRIMARY KEY," +
                     UModsPersistenceContract.UModEntry.ALIAS_CN + TEXT_TYPE + COMMA_SEP +
+                    UModsPersistenceContract.UModEntry.LAN_OPERATION_ENABLED_CN + BOOLEAN_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.WIFI_SSID_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.MAC_ADDRESS_CN + TEXT_TYPE + COMMA_SEP +
                     UModsPersistenceContract.UModEntry.CONNECTION_ADDRESS_CN + TEXT_TYPE + COMMA_SEP +

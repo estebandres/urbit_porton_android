@@ -25,6 +25,12 @@ public class UModUser {
                 return APIUserType.User;
             }
         },
+        INVITED(8) {
+            @Override
+            public APIUserType asAPIUserType() {
+                return APIUserType.User;
+            }
+        },
         UNAUTHORIZED(0) {
             @Override
             public APIUserType asAPIUserType() {

@@ -71,6 +71,8 @@ public interface UModsContract {
         void refreshOngoingNotification();
 
         void showAlienUModsCleared();
+
+        void removeItem(String uuid);
     }
 
     interface Presenter extends BasePresenter {
