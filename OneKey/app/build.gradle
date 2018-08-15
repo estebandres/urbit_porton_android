@@ -5,10 +5,16 @@ apply plugin: 'io.fabric'
 android {
     signingConfigs {
         releaseKey {
-            keyAlias 'onekey_key_alias'
-            keyPassword 'UrBIT#2028623535'
-            storeFile file('/home/andresteve07/workspace.android/KeyStores/gradle_keystore.jks')
-            storePassword 'UrBIT#614482121'
+            keyAlias 'release_onekey_key_alias'
+            keyPassword 'UrBIT#212920233636'
+            storeFile file('/home/andresteve07/workspace.android/KeyStores/release_onekey_keystore.jks')
+            storePassword 'UrBIT#192718213434'
+        }
+        debugKey {
+            keyAlias 'debug_onekey_key_alias'
+            keyPassword 'UrBIT#614582121'
+            storeFile file('/home/andresteve07/workspace.android/KeyStores/debug_onekey_keystore.jks')
+            storePassword 'UrBIT#614582121'
         }
     }
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -38,6 +44,7 @@ android {
             // Uses new built-in shrinker http://tools.android.com/tech-docs/new-build-system/built-in-shrinker
             useProguard false
             applicationIdSuffix = ".debug"
+            signingConfig signingConfigs.debugKey
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             testProguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguardTest-rules.pro'
         }

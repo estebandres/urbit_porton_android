@@ -269,7 +269,6 @@ public class UModsPresenter implements UModsContract.Presenter {
                     sliderVisible = true;
                     sliderEnabled = false;
                     break;
-                case INVITED:
                 case AUTHORIZED:
                     sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
                     sliderBackgroundColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_BACKGROUND;
@@ -282,6 +281,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                     sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
                     sliderVisible = true;
                     break;
+                case INVITED:
                 case UNAUTHORIZED:
                     sliderText = GlobalConstants.REQUEST_ACCESS_SLIDER_TEXT;
                     sliderBackgroundColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_BACKGROUND;
@@ -314,13 +314,13 @@ public class UModsPresenter implements UModsContract.Presenter {
             case ADMINISTRATOR:
                 itemOnClickListenerEnabled = true;
                 break;
-            case INVITED:
             case AUTHORIZED:
                 itemOnClickListenerEnabled = true;
                 break;
             case PENDING:
                 itemOnClickListenerEnabled = false;
                 break;
+            case INVITED:
             case UNAUTHORIZED:
                 itemOnClickListenerEnabled = false;
                 break;

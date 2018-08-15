@@ -109,10 +109,12 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
 
                                     //401 occurs when some admin deleted me
                                     if (httpErrorCode != 0 && (httpErrorCode == 401 || httpErrorCode == 403)){
+                                        /*
                                         if (uMod.getAppUserLevel()== UModUser.Level.INVITED){
                                             mUModsRepository.deleteUMod(uMod.getUUID());
                                             return Observable.error(new DeletedUserException(uMod));
                                         }
+                                        */
                                         uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
                                         mUModsRepository.saveUMod(uMod);
                                         return Observable.error(new DeletedUserException(uMod));

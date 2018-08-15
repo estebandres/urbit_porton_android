@@ -31,12 +31,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * UI as required.
  */
 public class UModUsersPresenter implements UModUsersContract.Presenter {
-    /*
-todo inmediato
-        1 repasar API vs RPCs:  api revisar args y results
-    2 agregar errores en los rpc.
-    3 agregar manejo de errores en los casos de uso
-*/
 
     @NonNull
     private final UModUsersContract.View mUModsView;

@@ -82,4 +82,28 @@ public class AppUserActivity extends AppCompatActivity {
     public IdlingResource getCountingIdlingResource() {
         return EspressoIdlingResource.getIdlingResource();
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mAppUserPresenter.unsubscribe();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mAppUserPresenter.unsubscribe();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mAppUserPresenter.unsubscribe();
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        mAppUserPresenter.unsubscribe();
+    }
 }

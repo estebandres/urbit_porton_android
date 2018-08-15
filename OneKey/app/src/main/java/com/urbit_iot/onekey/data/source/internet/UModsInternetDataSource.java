@@ -167,12 +167,11 @@ public class UModsInternetDataSource implements UModsDataSource {
                 uMod.getUUID(),
                 this.randomGenerator.nextInt());
 
-        return this.responseSubscriptionChecker(uMod.getUUID())
-                .andThen(mUModMqttService.publishRPC(
+        return mUModMqttService.publishRPC(
                         uMod.getUModRequestTopic(),
                         createUserRequest,
                         CreateUserRPC.Response.class)
-                        .map(CreateUserRPC.Response::getResponseResult));
+                        .map(CreateUserRPC.Response::getResponseResult);
     }
 
     @Override

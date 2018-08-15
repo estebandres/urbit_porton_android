@@ -23,7 +23,7 @@ public class UModConfigActivity extends AppCompatActivity {
     public static final int REQUEST_ADD_TASK = 1;
 
     @Inject
-    UModConfigPresenter mAddEditTasksPresenter;
+    UModConfigPresenter mUModConfigsPresenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +71,7 @@ public class UModConfigActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mAddEditTasksPresenter.unsubscribe();
+        mUModConfigsPresenter.unsubscribe();
         Log.d("STEVE","UModConfig onPause");
     }
 
@@ -95,19 +95,18 @@ public class UModConfigActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        mAddEditTasksPresenter.unsubscribe();
+        mUModConfigsPresenter.unsubscribe();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mAddEditTasksPresenter.unsubscribe();
+        mUModConfigsPresenter.unsubscribe();
     }
 
     @Override
     protected void onResume(){
         super.onResume();
-        mAddEditTasksPresenter.unsubscribe();
-        //mUModsPresenter.subscribe();
+        mUModConfigsPresenter.unsubscribe();
     }
 }

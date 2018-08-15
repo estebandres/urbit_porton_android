@@ -39,6 +39,7 @@ import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.gps.LocationService;
+import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.dagger.Internet;
 import com.urbit_iot.onekey.util.dagger.Local;
@@ -58,12 +59,12 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.Response;
 import rx.Completable;
 import rx.Observable;
-import rx.Single;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
@@ -99,6 +100,9 @@ public class UModsRepository implements UModsDataSource {
     @NonNull
     private PhoneConnectivityInfo connectivityInfo;
 
+    @NonNull
+    private UModMqttService uModMqttService;
+
     /**
      * This variable has package local visibility so it can be accessed from tests.
      */
@@ -130,12 +134,15 @@ public class UModsRepository implements UModsDataSource {
     public UModsRepository(@LanOnly UModsDataSource uModsRemoteDataSource,
                            @Local UModsDataSource uModsLocalDataSource,
                            @Internet UModsDataSource uModsInternetDataSource,
-                           @NonNull LocationService locationService, @NonNull PhoneConnectivityInfo connectivityInfo) {
+                           @NonNull LocationService locationService,
+                           @NonNull PhoneConnectivityInfo connectivityInfo,
+                           @NonNull UModMqttService uModMqttService) {
         mUModsLANDataSource = checkNotNull(uModsRemoteDataSource);
         mUModsLocalDataSource = checkNotNull(uModsLocalDataSource);
         this.mUModsInternetDataSource = checkNotNull(uModsInternetDataSource);
         this.locationService = locationService;
         this.connectivityInfo = connectivityInfo;
+        this.uModMqttService = uModMqttService;
         this.mCachedUMods = new LinkedHashMap<>();
         this.uModCacheBrander = new Observable.Transformer<UMod, UMod>() {
             @Override
@@ -245,9 +252,17 @@ public class UModsRepository implements UModsDataSource {
                             cachedUMod.setWifiSSID(connectivityInfo.getWifiAPSSID());
                         }
                         if (lanUMod.getAppUserLevel() == UModUser.Level.INVITED
+                                && cachedUMod.belongsToAppUser()){
+                            uModMqttService.cancelMyInvitation(lanUMod);
+                            return Observable.empty();
+                        }
+                        /*
+                        if (lanUMod.getAppUserLevel() == UModUser.Level.INVITED
                                 && cachedUMod.getAppUserLevel() == UModUser.Level.UNAUTHORIZED){
                             cachedUMod.setAppUserLevel(UModUser.Level.INVITED);
                         }
+                        */
+
                         /*
                         //This was an attempt to filter some results but since invitations were
                         //implemented it seems deprecated since there is no further need to prioritize MQTT scans??? Review
@@ -475,6 +490,7 @@ public class UModsRepository implements UModsDataSource {
     //TODO replace method with the OneByOne plus a .filter. We should avoid duplicated code!!!!
     private Observable<UMod> getSingleUModFromLanAndUpdateDBEntry(final String uModUUID){
         // If lanUmodsDataSource produces a result then tries to update the DB entry for the same UUID.
+        /*
         return mUModsLANDataSource.getUMod(uModUUID)
                 .filter(uMod -> uMod != null)
                 .last()
@@ -516,6 +532,10 @@ public class UModsRepository implements UModsDataSource {
                         mUModsLocalDataSource.saveUMod(uMod);
                     }
                 });
+              */
+        return getUModsOneByOneFromLanAndUpdateDBAndCache()
+                .filter(uMod -> uMod.getUUID().equals(uModUUID))
+                .first();
     }
 
     private Observable<UMod> getSingleUModFromCacheOrDisk(String uModUUID){
@@ -675,7 +695,36 @@ public class UModsRepository implements UModsDataSource {
                             }
                             return dataSourcePair.second.createUModUser(uMod,request);
                         })
-                );
+                ).doOnNext(result -> {
+                    /*
+                    if (uMod.getAppUserLevel() == UModUser.Level.INVITED){
+                        //DELETE INVITATION!!!!
+                    }
+                    */
+                    this.uModMqttService.cancelMyInvitation(uMod);
+                })
+                .onErrorResumeNext(throwable -> {
+                    if (throwable instanceof HttpException){
+                        /*
+                        The error body is meant to be accessed only once. For that reason
+                        the response exception should be reconstructed.
+                         */
+                        String errorMessage = "";
+                        try {
+                            errorMessage = ((HttpException) throwable).response().errorBody().string();
+                        }catch (IOException exc){
+                            exc.printStackTrace();
+                        }
+                        int httpErrorCode = ((HttpException) throwable).response().code();
+                        if (httpErrorCode == 500 && errorMessage.contains("404")){
+                            this.uModMqttService.cancelMyInvitation(uMod);
+                        }
+                        ResponseBody responseBody = ResponseBody.create(MediaType.parse("application/json"),errorMessage);
+                        Response response = Response.error(500,responseBody);
+                        return Observable.error(new HttpException(response));
+                    }
+                    return Observable.error(throwable);
+                });
     }
 
     @Override

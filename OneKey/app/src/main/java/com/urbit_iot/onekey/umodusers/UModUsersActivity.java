@@ -10,6 +10,7 @@ import android.support.test.espresso.IdlingResource;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 
 
@@ -113,6 +114,34 @@ public class UModUsersActivity extends AppCompatActivity {
     @VisibleForTesting
     public IdlingResource getCountingIdlingResource() {
         return EspressoIdlingResource.getIdlingResource();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d("USERS_ACTIVITY","ON STOP!");
+        uModUsersPresenter.unsubscribe();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("USERS_ACTIVITY","ON PAUSE!");
+        uModUsersPresenter.unsubscribe();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("USERS_ACTIVITY","ON DESTROY!");
+        uModUsersPresenter.unsubscribe();
+    }
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        //Log.d("USERS_ACTIVITY","ON RESUME!");
+        //uModUsersPresenter.unsubscribe(); COMMENTED SO THE RPC EXECUTION DOESNT GET INTERRUPTED!
     }
 }
 

@@ -102,6 +102,12 @@ public class UModMqttService {
                 .subscribeOn(Schedulers.io())//TODO use injected scheduler
                 .subscribe(() -> Log.d("umodsMqttService","CONNECTED!"),
                         throwable -> Log.e("umodsMqttService","FAILED TO CONNECT  " + throwable.getClass().getSimpleName() + " MSG: " + throwable.getMessage()));
+        /*
+        this.cancelUModInvitation("543874623893", "666666")
+                .subscribeOn(rx.schedulers.Schedulers.io())
+                .subscribe(() -> Log.d("UMOD_SERVICE_TEST","CANCELLED"),
+                        throwable -> Log.e("UMOD_SERVICE_TEST","CANCELLED",throwable));
+        */
 
     }
 
@@ -408,12 +414,13 @@ public class UModMqttService {
                 .flatMap(mqttMessage -> {
                     String msgPayload = new String(mqttMessage.getPayload());
                     String uModUUID = getUUIDFromUModAdvertisedID(msgPayload);
-                    UMod invitedUMod = new UMod(uModUUID);
-                    invitedUMod.setAppUserLevel(UModUser.Level.INVITED);
-                    invitedUMod.setuModSource(UMod.UModSource.MQTT_SCAN);
-                    invitedUMod.setState(UMod.State.STATION_MODE);
-                    invitedUMod.setConnectionAddress(null);
                     if (uModUUID!=null){
+                        UMod invitedUMod = new UMod(uModUUID);
+                        invitedUMod.setAppUserLevel(UModUser.Level.INVITED);
+                        invitedUMod.setuModSource(UMod.UModSource.MQTT_SCAN);
+                        invitedUMod.setState(UMod.State.STATION_MODE);
+                        invitedUMod.setConnectionAddress(null);
+                        subscribeToUModResponseTopic(invitedUMod);
                         return Flowable.just(invitedUMod);
                     } else {
                         return Flowable.empty();
@@ -421,6 +428,39 @@ public class UModMqttService {
                 });
         return RxJavaInterop.toV1Observable(invitationsFlowable)
                 .takeUntil(Observable.timer(5000L,TimeUnit.MILLISECONDS));
+    }
+
+    public rx.Completable cancelUModInvitation(String userName, String uModUUID){
+        String invitationsTopic = userName
+                + "/invitation/"
+                + GlobalConstants.URBIT_PREFIX
+                + uModUUID;
+
+        Log.d("MQTT_SERVICE","CANCELING: " + invitationsTopic);
+        short mqttMessageId = (short) new Random().nextInt();
+        MqttMessage mqttMessage =
+                MqttMessage.create(mqttMessageId,new byte[0],1,true);
+        Completable publishCompletable = this.connectMqttClient()
+                .andThen(mMqttClient.publish(invitationsTopic,mqttMessage))
+                //.doOnComplete(() -> Log.d("MQTT_SERVICE","SUCCESS ON CANCELING: " + invitationsTopic))
+                .toCompletable()
+                .doOnComplete(() -> Log.d("MQTT_SERVICE","SUCCESS ON CANCELING: " + invitationsTopic))
+                .doOnError(throwable -> Log.e("MQTT_SERVICE","FAILURE ON CANCELING: " + invitationsTopic,throwable));
+        return RxJavaInterop.toV1Completable(publishCompletable);
+    }
+
+    public void cancelMyInvitation(UMod uMod){
+        this.cancelUModInvitation(this.userName, uMod.getUUID())
+                .subscribeOn(rx.schedulers.Schedulers.io())
+                .subscribe();
+    }
+
+    public rx.Completable cancelSeveralUModInvitations(List<String> listOfNames, UMod uMod){
+        return Observable.from(listOfNames)
+                .flatMapCompletable(userName ->
+                                cancelUModInvitation(userName,uMod.getUUID()),
+                        true,
+                        10).toCompletable();
     }
 
     private String getUUIDFromUModAdvertisedID(String hostName){

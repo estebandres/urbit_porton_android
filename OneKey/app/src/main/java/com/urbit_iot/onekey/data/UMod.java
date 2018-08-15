@@ -481,7 +481,7 @@ public final class UMod {
     }
 
     public boolean belongsToAppUser(){
-        return this.getAppUserLevel() != UModUser.Level.UNAUTHORIZED ;
+        return this.getAppUserLevel() != UModUser.Level.UNAUTHORIZED && this.getAppUserLevel() != UModUser.Level.INVITED;
     }
 
     public boolean canBeTriggeredByAppUser(){

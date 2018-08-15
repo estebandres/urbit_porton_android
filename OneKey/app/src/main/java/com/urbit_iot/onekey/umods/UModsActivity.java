@@ -149,6 +149,7 @@ public class UModsActivity extends AppCompatActivity {
         return EspressoIdlingResource.getIdlingResource();
     }
 
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -171,6 +172,5 @@ public class UModsActivity extends AppCompatActivity {
     protected void onResume(){
         super.onResume();
         mUModsPresenter.unsubscribe();
-        //mUModsPresenter.subscribe();
     }
 }
