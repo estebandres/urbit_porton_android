@@ -440,10 +440,9 @@ public class UModMqttService {
         short mqttMessageId = (short) new Random().nextInt();
         MqttMessage mqttMessage =
                 MqttMessage.create(mqttMessageId,new byte[0],1,true);
-        Completable publishCompletable = this.connectMqttClient()
+        Completable publishCompletable = Completable.defer(() -> this.connectMqttClient()
                 .andThen(mMqttClient.publish(invitationsTopic,mqttMessage))
-                //.doOnComplete(() -> Log.d("MQTT_SERVICE","SUCCESS ON CANCELING: " + invitationsTopic))
-                .toCompletable()
+                .toCompletable())
                 .doOnComplete(() -> Log.d("MQTT_SERVICE","SUCCESS ON CANCELING: " + invitationsTopic))
                 .doOnError(throwable -> Log.e("MQTT_SERVICE","FAILURE ON CANCELING: " + invitationsTopic,throwable));
         return RxJavaInterop.toV1Completable(publishCompletable);
@@ -452,7 +451,8 @@ public class UModMqttService {
     public void cancelMyInvitation(UMod uMod){
         this.cancelUModInvitation(this.userName, uMod.getUUID())
                 .subscribeOn(rx.schedulers.Schedulers.io())
-                .subscribe();
+                .subscribe(() -> Log.d("MQTT_SERVICE","SUCCESS ON CANCELING MINE : " + uMod.getUUID()),
+                        throwable -> Log.d("MQTT_SERVICE","FAILURE ON CANCELING MINE : " + uMod.getUUID()));
     }
 
     public rx.Completable cancelSeveralUModInvitations(List<String> listOfNames, UMod uMod){
