@@ -10,12 +10,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
-import com.google.i18n.phonenumbers.AsYouTypeFormatter;
-import com.google.i18n.phonenumbers.NumberParseException;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.google.i18n.phonenumbers.Phonenumber;
+import com.google.i18n.phonenumbers.*;
+//import com.google.i18n.phonenumbers.NumberParseException;
+//import com.google.i18n.phonenumbers.PhoneNumberUtil;
+//import com.google.i18n.phonenumbers.Phonenumber;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umods.UModsActivity;
 
@@ -29,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AppUserFragment extends Fragment implements AppUserContract.View {
 
     private AppUserContract.Presenter mPresenter;
-    private TextView phoneNumberTextView;
+    private EditText phoneNumberTextView;
     AsYouTypeFormatter phoneNumberFormatter;
     PhoneNumberUtil phoneUtil;
 
@@ -60,45 +61,64 @@ public class AppUserFragment extends Fragment implements AppUserContract.View {
         this.phoneUtil = PhoneNumberUtil.getInstance();
         this.phoneNumberFormatter = phoneUtil.getAsYouTypeFormatter("AR");
 
-        FloatingActionButton fab =
-                (FloatingActionButton) getActivity().findViewById(R.id.fab_edit_app_user_done);
+        FloatingActionButton fab = getActivity().findViewById(R.id.fab_edit_app_user_done);
         fab.setImageResource(R.drawable.ic_done);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(phoneNumberIsValid(phoneNumberTextView.getText().toString())){
-                    AppUserViewModel appUser = new AppUserViewModel(getPhoneNumberE164Formatted(phoneNumberTextView.getText().toString()));
-                    mPresenter.saveAppUser(appUser);
-                } else {
-                    phoneNumberTextView.setError("Formato incorrecto. Ingrese el numero con caracteristica y sin 15.");
-                }
+        fab.setOnClickListener(v -> {
+            String phoneNumberTypedByUser = phoneNumberTextView.getText().toString();
+            String numberE164Formatted = getPhoneNumberE164Formatted(phoneNumberTypedByUser);
+            if(numberE164Formatted != null){
+                AppUserViewModel appUser = new AppUserViewModel(numberE164Formatted);
+                mPresenter.saveAppUser(appUser);
+            } else {
+                phoneNumberTextView.setError(getString(R.string.phone_format_error_message));
             }
         });
     }
 
-    //TODO better exception handling
     private String getPhoneNumberE164Formatted(String phoneNumberStr){
         Phonenumber.PhoneNumber argentinianNumberProto;
         try{
             argentinianNumberProto = phoneUtil.parse(phoneNumberStr, "AR");
+            if (phoneUtil.isValidNumber(argentinianNumberProto)){
+                String nationalNumberWithNine = null;
+                if(phoneUtil.getNumberType(argentinianNumberProto)
+                        == PhoneNumberUtil.PhoneNumberType.MOBILE){
+                    Log.d("APPUSR_FRAG", "MOBILE!");
+                    nationalNumberWithNine = "9" + this.phoneUtil.format(argentinianNumberProto,
+                            PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+                    Log.d("APPUSR_FRAG", "MOBILE NATIONAL FORMAT + 9: " + nationalNumberWithNine);
+                    argentinianNumberProto = phoneUtil.parse(nationalNumberWithNine,"AR");
+                } else {
+                    phoneNumberStr = "9" + phoneNumberStr.replaceFirst("^0","");
+                    argentinianNumberProto = phoneUtil.parse(phoneNumberStr, "AR");
+                    nationalNumberWithNine = "9" + this.phoneUtil.format(argentinianNumberProto,
+                            PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+                    Log.d("APPUSR_FRAG", "MOBILIZED NATIONAL FORMAT + 9: " + nationalNumberWithNine);
+                    argentinianNumberProto = phoneUtil.parse(nationalNumberWithNine,"AR");
+                }
+            } else {
+                return null;
+            }
         }
         catch (NumberParseException e) {
-            Log.d("appusr_frag","NumberParseException was thrown: " + e.toString());
+            Log.e("APPUSR_FRAG","ERROR while parsing number: "
+                    + e.getClass().getSimpleName()
+                    + " was thrown: " + e.getMessage());
             return null;
         }
         return this.phoneUtil.format(argentinianNumberProto, PhoneNumberUtil.PhoneNumberFormat.E164);
-
     }
 
     //TODO better exception handling
     private boolean phoneNumberIsValid(String phoneNumberStr){
-        boolean isInvalid = false;
         Phonenumber.PhoneNumber argentinianNumberProto;
         try {
             argentinianNumberProto = phoneUtil.parse(phoneNumberStr, "AR");
         } catch (NumberParseException e) {
-            Log.d("appusr_frag","NumberParseException was thrown: " + e.toString());
-            return isInvalid;
+            Log.e("appusr_frag","ERROR while parsing number: "
+                    + e.getClass().getSimpleName()
+                    + " was thrown: " + e.getMessage());
+            return false;
         }
         return phoneUtil.isValidNumber(argentinianNumberProto);
     }
@@ -107,7 +127,8 @@ public class AppUserFragment extends Fragment implements AppUserContract.View {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.appuser_frag, container, false);
-        phoneNumberTextView = (TextView) root.findViewById(R.id.app_user_phone_number);
+        phoneNumberTextView = root.findViewById(R.id.app_user_phone_number);
+        phoneNumberTextView.setSelection(phoneNumberTextView.getText().length());
 
         setHasOptionsMenu(true);
         setRetainInstance(true);

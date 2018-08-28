@@ -73,8 +73,9 @@ public final class ApplicationModule {
 
     @Provides
     @Singleton
-    SteveLogglyTimberTree provideSteveLogglyTimberTree(){
-        return new SteveLogglyTimberTree(GlobalConstants.LOGGLY_TOKEN);
+    SteveLogglyTimberTree provideSteveLogglyTimberTree(RxSharedPreferences rxSharedPreferences,
+                                                       @Named("app_user")Gson gsonInstance){
+        return new SteveLogglyTimberTree(GlobalConstants.LOGGLY_TOKEN, rxSharedPreferences, gsonInstance);
     }
 
     @Singleton
@@ -96,7 +97,7 @@ public final class ApplicationModule {
     @Singleton
     @Named(GlobalConstants.DAGGER_APP_UUID_NAME)
     String provideAppUUID(RxSharedPreferences rxSharedPreferences){
-        Preference<String> appUUIDPref = rxSharedPreferences.getString(GlobalConstants.SP_APP_UUID_KEY);
+        Preference<String> appUUIDPref = rxSharedPreferences.getString(GlobalConstants.SP_KEY__APP_UUID);
         if(appUUIDPref.isSet()){
             return appUUIDPref.get();
         } else {

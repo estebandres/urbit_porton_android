@@ -10,9 +10,10 @@ public final class GlobalConstants {
 
     public static final String LOGGLY_TOKEN = "cc7be772-d317-4820-9a71-02fd2a60eeb8";
 
-    public static final String SP_SERIALIZED_APPUSER_KEY = "serialized_app_user";
-    public static final String SP_APP_UUID_KEY = "app_uuid";
-    public static final String SP_APP_UUID_HASH_KEY = "app_uuid_hash";
+    public static final String SP_KEY__APPUSER = "serialized_app_user";
+    public static final String SP_KEY__APP_UUID = "app_uuid";
+    public static final String SP_KEY__UUID_HASH_KEY = "app_uuid_hash";
+    public static final String SP_KEY__UNSENT_LOGS = "serialized_unsent_logs";
 
 
     public static final String LAN_DEFAULT_URL = "http://default.lan.url/rpc/";

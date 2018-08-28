@@ -613,18 +613,40 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
         }
         backFromUserPicking = true;
     }
-    //TODO better exception handling
+
+
     private String getPhoneNumberE164Formatted(String phoneNumberStr){
         Phonenumber.PhoneNumber argentinianNumberProto;
         try{
             argentinianNumberProto = phoneUtil.parse(phoneNumberStr, "AR");
+            if (phoneUtil.isValidNumber(argentinianNumberProto)){
+                String nationalNumberWithNine = null;
+                if(phoneUtil.getNumberType(argentinianNumberProto)
+                        == PhoneNumberUtil.PhoneNumberType.MOBILE){
+                    Log.d("APPUSR_FRAG", "MOBILE!");
+                    nationalNumberWithNine = "9" + this.phoneUtil.format(argentinianNumberProto,
+                            PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+                    Log.d("APPUSR_FRAG", "MOBILE NATIONAL FORMAT + 9: " + nationalNumberWithNine);
+                    argentinianNumberProto = phoneUtil.parse(nationalNumberWithNine,"AR");
+                } else {
+                    phoneNumberStr = "9" + phoneNumberStr.replaceFirst("^0","");
+                    argentinianNumberProto = phoneUtil.parse(phoneNumberStr, "AR");
+                    nationalNumberWithNine = "9" + this.phoneUtil.format(argentinianNumberProto,
+                            PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+                    Log.d("APPUSR_FRAG", "MOBILIZED NATIONAL FORMAT + 9: " + nationalNumberWithNine);
+                    argentinianNumberProto = phoneUtil.parse(nationalNumberWithNine,"AR");
+                }
+            } else {
+                return null;
+            }
         }
         catch (NumberParseException e) {
-            Log.d("appusr_frag","NumberParseException was thrown: " + e.toString());
+            Log.e("APPUSR_FRAG","ERROR while parsing number: "
+                    + e.getClass().getSimpleName()
+                    + " was thrown: " + e.getMessage());
             return null;
         }
         return this.phoneUtil.format(argentinianNumberProto, PhoneNumberUtil.PhoneNumberFormat.E164);
-
     }
 
     @Override

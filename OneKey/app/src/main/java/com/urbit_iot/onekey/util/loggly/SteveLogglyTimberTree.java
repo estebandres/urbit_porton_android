@@ -2,14 +2,23 @@ package com.urbit_iot.onekey.util.loggly;
 
 import android.util.Log;
 
+import com.f2prateek.rx.preferences2.Preference;
+import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.github.tony19.loggly.LogglyClient;
+import com.google.gson.Gson;
+import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import javax.inject.Inject;
 
 import rx.Observable;
 import rx.schedulers.Schedulers;
@@ -24,6 +33,10 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
     private static final int MAX_CACHE_SIZE = 200;
     private final LogglyClient logglyClient;
     private ArrayList<String> unsentLogs;
+    private Lock unsentLogsMutex;
+    private RxSharedPreferences rxSharedPreferences;
+    Preference<String> serializedUnsentLogs;
+    private Gson gsonInstance;
 
     /** Log severity level */
     private enum SteveLogglyLevel {
@@ -33,20 +46,45 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
         ERROR
     }
 
-    public SteveLogglyTimberTree(String logglyToken){
-        logglyClient = new LogglyClient(logglyToken);
-        this.unsentLogs = new ArrayList<>();
 
-        Observable.interval(2, TimeUnit.HOURS)
+    public SteveLogglyTimberTree(String logglyToken, RxSharedPreferences rxSharedPreferences, Gson gsonInstance){
+        logglyClient = new LogglyClient(logglyToken);
+        this.unsentLogsMutex = new ReentrantLock();
+        this.rxSharedPreferences = rxSharedPreferences;
+        this.gsonInstance = gsonInstance;
+        this.serializedUnsentLogs =
+                this.rxSharedPreferences.getString(GlobalConstants.SP_KEY__UNSENT_LOGS);
+        String serializedString = serializedUnsentLogs.get();
+        Log.d("STEVE_LOGGLY", "STORED LOGS: " + serializedString);
+        if (serializedUnsentLogs.isSet() && !serializedString.isEmpty()){
+            String[] unsentLogsArray = this.gsonInstance.fromJson(serializedString,String[].class);
+            this.unsentLogs = new ArrayList<>(Arrays.asList(unsentLogsArray));
+        } else {
+            this.unsentLogs = new ArrayList<>();
+        }
+        Observable.interval(30, TimeUnit.MINUTES)
                 .subscribeOn(Schedulers.io())
                 .doOnNext(n -> {
+                    unsentLogsMutex.lock();
                     if (!unsentLogs.isEmpty()){
                         if (logglyClient.logBulk(new ArrayList<>(unsentLogs))){
                             unsentLogs.clear();
+                            updateUnsentLogsPreference(unsentLogs);
                         }
                     }
+                    unsentLogsMutex.unlock();
                 })
                 .subscribe();
+    }
+
+    private void updateUnsentLogsPreference(List<String> unsentLogs){
+        if (!this.serializedUnsentLogs.isSet()){
+            this.serializedUnsentLogs =
+                    this.rxSharedPreferences.getString(GlobalConstants.SP_KEY__UNSENT_LOGS);
+        }
+        String serializedUnsentLogsString = this.gsonInstance.toJson(unsentLogs);
+        Log.d("STEVE_LOGGLY", "STORED LOGS: " + serializedUnsentLogsString);
+        this.serializedUnsentLogs.set(serializedUnsentLogsString);
     }
 
     /**
@@ -133,6 +171,14 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
         log(SteveLogglyLevel.WARN, message, t, args);
     }
 
+    public class LogStructure {
+        private SteveLogglyLevel level;
+        private String message;
+        private String deviceTimestamp;
+        private LoggerTrace loggerTrace;
+
+
+    }
     /**
      * Gets the JSON representation of a log event
      * @param steveLogglyLevel log severity steveLogglyLevel
@@ -177,8 +223,7 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
                 Calendar.getInstance().getTime().toString(),
                 this.getLoggerTraceJson());
     }
-
-    private String getLoggerTraceJson(){
+    private LoggerTrace getLoggerTrace(){
         String className = "";
         LoggerTrace loggerTrace = null;
         //StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
@@ -195,12 +240,20 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
                 break;
             }
         }
-        return String.format("{\"class_name\": \"%1$s\", \"method_name\": \"%2$s\", \"file_name\": \"%3$s\", \"line_number\": %4$d}",
-                loggerTrace.getClassName(),
-                loggerTrace.getMethodName(),
-                loggerTrace.getFileName(),
-                loggerTrace.getLineNumber());
-        //return loggerTrace;
+        return loggerTrace;
+    }
+
+    private String getLoggerTraceJson(){
+        LoggerTrace loggerTrace = getLoggerTrace();
+        if (loggerTrace != null){
+            return String.format("{\"class_name\": \"%1$s\", \"method_name\": \"%2$s\", \"file_name\": \"%3$s\", \"line_number\": %4$d}",
+                    loggerTrace.getClassName(),
+                    loggerTrace.getMethodName(),
+                    loggerTrace.getFileName(),
+                    loggerTrace.getLineNumber());
+        } else {
+            return "";
+        }
     }
 
     private static class LoggerTrace{
@@ -276,22 +329,28 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
         Observable.just(true)
                 .doOnNext(aBoolean -> {
                     if(logglyClient.log(log)){
+                        unsentLogsMutex.lock();
                         if (!unsentLogs.isEmpty()){
                             if(logglyClient.logBulk(new ArrayList<>(unsentLogs))){
                                 unsentLogs.clear();
+                                updateUnsentLogsPreference(unsentLogs);
                             }
                         }
+                        unsentLogsMutex.unlock();
                     } else {
+                        unsentLogsMutex.lock();
                         if(unsentLogs.size() < MAX_CACHE_SIZE){
                             unsentLogs.add(log);
                         } else {
                             unsentLogs.remove(0);
                             unsentLogs.add(log);
                         }
+                        updateUnsentLogsPreference(unsentLogs);
+                        unsentLogsMutex.unlock();
                         //TODO serialize unsents list to file or shared preferences!!
                     }
                 })
-                .subscribeOn(Schedulers.io())//TODO replace for dagger scheduler instance.
+                .subscribeOn(Schedulers.io())//TODO replace with dagger scheduler instance.
                 .subscribe();
     }
 

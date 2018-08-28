@@ -65,7 +65,7 @@
     <string name="umod_users_label_admins">Administradores</string>
     <string name="umod_users_label_not_admins">Usuarios Regulares</string>
     <string name="app_user_phone_tag">REGISTRO</string>
-    <string name="app_user_phone_hint">Número de Celular</string>
+    <string name="app_user_phone_hint">Número de Celular (ejemplo: 3514123456)</string>
     <string name="umod_action_button_when_owned">O/C</string>
     <string name="umod_action_button_when_open_alien">REQ</string>
     <string name="request_access_failed_message">SOLICITUD DE ACCESO FALLIDA</string>
@@ -111,6 +111,7 @@
     <string name="no_results_for_regular_users_message">No se encontraron usarios regulares para este módulo.</string>
     <string name="no_results_for_all_other_users">No se encontraron otros usuarios registrados en este módulo.</string>
     <string name="no_results_for_admin_users_message">No se encontraron otros administradores para este módulo.</string>
+    <string name="phone_format_error_message">Formato incorrecto. Ingrese el numero con característica y sin 15.</string>
     <!-- Solves annoying issue with password-eye -->
     <item name="visible" type="id"/>
     <item name="masked" type="id"/>

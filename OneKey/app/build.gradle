@@ -4,17 +4,19 @@ apply plugin: 'io.fabric'
 
 android {
     signingConfigs {
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file('local.properties').newDataInputStream())
         releaseKey {
-            keyAlias 'release_onekey_key_alias'
-            keyPassword 'UrBIT#212920233636'
-            storeFile file('/home/andresteve07/workspace.android/KeyStores/release_onekey_keystore.jks')
-            storePassword 'UrBIT#192718213434'
+            keyAlias properties.getProperty('releaseKeyAlias')
+            keyPassword properties.getProperty('releaseKeyPassword')
+            storeFile file(properties.getProperty('releaseStoreFile'))
+            storePassword properties.getProperty('releaseStorePassword')
         }
         debugKey {
-            keyAlias 'debug_onekey_key_alias'
-            keyPassword 'UrBIT#614582121'
-            storeFile file('/home/andresteve07/workspace.android/KeyStores/debug_onekey_keystore.jks')
-            storePassword 'UrBIT#614582121'
+            keyAlias properties.getProperty('debugKeyAlias')
+            keyPassword properties.getProperty('debugKeyPassword')
+            storeFile file(properties.getProperty('debugStoreFile'))
+            storePassword properties.getProperty('debugStorePassword')
         }
     }
     compileSdkVersion rootProject.ext.compileSdkVersion

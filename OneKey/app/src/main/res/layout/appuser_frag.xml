@@ -70,7 +70,6 @@
                         android:layout_height="wrap_content"
                         android:inputType="phone"
                         android:digits="0123456789+"
-                        android:text="0351 499-9999"
                         android:hint="@string/app_user_phone_hint"
                         android:singleLine="true"
                         android:textAppearance="@style/TextAppearance.AppCompat.Small" />

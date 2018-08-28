@@ -41,9 +41,9 @@ public class AppUserLocalFileDataSource implements AppUserDataSource {
                                       @NonNull Gson gson){
         this.rxSharedPreferences = rxSharedPreferences;
         this.gson = gson;
-        this.serializedAppUserPref = this.rxSharedPreferences.getString(GlobalConstants.SP_SERIALIZED_APPUSER_KEY);
-        this.appUUIDPref = this.rxSharedPreferences.getString(GlobalConstants.SP_APP_UUID_KEY);
-        this.appUserCredentialsHashPref = this.rxSharedPreferences.getString(GlobalConstants.SP_APP_UUID_KEY);
+        this.serializedAppUserPref = this.rxSharedPreferences.getString(GlobalConstants.SP_KEY__APPUSER);
+        this.appUUIDPref = this.rxSharedPreferences.getString(GlobalConstants.SP_KEY__APP_UUID);
+        this.appUserCredentialsHashPref = this.rxSharedPreferences.getString(GlobalConstants.SP_KEY__APP_UUID);
     }
 
     @Override

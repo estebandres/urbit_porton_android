@@ -122,7 +122,7 @@ public class UModsNotifService extends Service{
                 this.mPresenter.wifiIsOn();
                 break;
             case GlobalConstants.ACTION.WIFI_UNUSABLE:
-                Log.d("UMOD_SERVICE", "LAUNCH WIFI SETTINGS");
+                Log.d("UMOD_SERVICE", "NO CONNECTION");
                 this.mPresenter.wifiIsOff();
                 break;
             case GlobalConstants.ACTION.LAUNCH_WIFI_SETTINGS:

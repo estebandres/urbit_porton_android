@@ -10,8 +10,6 @@ import com.bugfender.sdk.Bugfender;
 import com.crashlytics.android.Crashlytics;
 import com.f2prateek.rx.preferences2.Preference;
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
-import com.github.tony19.loggly.LogglyClient;
-import com.github.tony19.timber.loggly.LogglyTree;
 import com.google.gson.Gson;
 import com.urbit_iot.onekey.appuser.AppUserActivity;
 import com.urbit_iot.onekey.appuser.domain.AppUser;
@@ -52,7 +50,7 @@ public class InvisibleChooserActivity extends AppCompatActivity {
 
         //Preference<Boolean> userRegistered = rxSharedPreferences.getBoolean(GlobalConstants.SP_APPUSER_REGISTERED_KEY,false);
 
-        Preference<String> serializedAppUser = rxSharedPreferences.getString(GlobalConstants.SP_SERIALIZED_APPUSER_KEY);
+        Preference<String> serializedAppUser = rxSharedPreferences.getString(GlobalConstants.SP_KEY__APPUSER);
 
         Intent firstActivityIntent;
 
