@@ -65,6 +65,7 @@ public class TriggerUModByNotif extends SimpleUseCase<TriggerUModByNotif.Request
 
         final TriggerRPC.Arguments requestArguments = new TriggerRPC.Arguments();
         //TODO review operator usage
+        mUModsRepository.cachedFirst();
         return mUModsRepository.getUMod(values.getUModUUID())
                 .flatMap(uMod -> {
                     Log.d("trigger_notif",uMod.toString());

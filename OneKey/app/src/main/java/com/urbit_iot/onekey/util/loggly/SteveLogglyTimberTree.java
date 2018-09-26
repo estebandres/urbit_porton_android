@@ -35,7 +35,7 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
     private ArrayList<String> unsentLogs;
     private Lock unsentLogsMutex;
     private RxSharedPreferences rxSharedPreferences;
-    Preference<String> serializedUnsentLogs;
+    private Preference<String> serializedUnsentLogs;
     private Gson gsonInstance;
 
     /** Log severity level */

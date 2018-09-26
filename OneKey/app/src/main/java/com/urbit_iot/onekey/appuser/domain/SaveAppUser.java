@@ -50,12 +50,7 @@ public class SaveAppUser extends SimpleUseCase<SaveAppUser.RequestValues, SaveAp
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
         return appUserRepository.createAppUser(values.getAppUserViewModel().getPhoneNumber())
-                .map(new Func1<AppUser, ResponseValues>() {
-                    @Override
-                    public ResponseValues call(AppUser appUser) {
-                        return new ResponseValues(appUser);
-                    }
-                });
+                .map(ResponseValues::new);
     }
 
     public static final class RequestValues implements RxUseCase.RequestValues {
