@@ -119,10 +119,7 @@ public class UModsWiFiScanner {
                 .flatMap(Observable::from)
                 .distinct((Func1<ScanResult, Object>) scanResult -> scanResult.SSID)
                 .filter(scanResult -> scanResult.level > -75)
-                .filter(scanResult -> {
-                    //TODO improve filter using regex
-                    return scanResult.SSID.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX);
-                })
+                .filter(scanResult -> scanResult.SSID.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX))
                 .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
                 .map(scanResult -> {
                     Pattern pattern = Pattern.compile(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX);

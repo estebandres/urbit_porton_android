@@ -181,14 +181,11 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         return mDatabaseHelper.createQuery(UModEntry.UMODS_TABLE_NAME, sql)
                 .mapToList(mUModMapperFunction)
                 .doOnNext(uMods -> Log.d("1x1_DB", "TOTAL: " + uMods.size()))
-                .flatMap(new Func1<List<UMod>, Observable<UMod>>() {
-                    @Override
-                    public Observable<UMod> call(List<UMod> uMods) {
-                        if (uMods.isEmpty()){
-                            return Observable.empty();
-                        }
-                        return Observable.from(uMods);
+                .flatMap(uMods -> {
+                    if (uMods.isEmpty()){
+                        return Observable.empty();
                     }
+                    return Observable.from(uMods);
                 })
                 .doOnNext(uMod -> Log.d("1x1_DB", "UMOD: " + uMod.getUUID()))
                 .takeUntil(Observable.timer(100L, TimeUnit.MILLISECONDS))

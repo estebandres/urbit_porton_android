@@ -191,21 +191,9 @@ public class UModsLANDataSource implements UModsDataSource {
     public Observable<UMod> getUModsOneByOne(){
         mUModsTCPScanner.setupCalculator();
         return Observable.mergeDelayError(
-                //TODO review!!!
-                ///*
-                mUModsDNSSDScanner.browseLANForUMods(),
-                        //.switchIfEmpty(mUModsTCPScanner.scanForUMods()),
-                //*/
-                //mUModsTCPScanner.scanForUMods(),
-                //mUModsDNSSDScanner.browseLANForUMods(),
-                /*
-                Observable.mergeDelayError(
-                        //mUModsDNSSDScanner.browseLANForUMods(),
-                        Observable.<UMod>empty(),
-                        getUModsByLanPingingAndApiCalling()).distinct(),
-                */
+                mUModsDNSSDScanner.browseLANForUMods(),//Doesn't return null umods
                 //mUModsBLEScanner.bleScanForUMods(),
-                mUModsWiFiScanner.browseWiFiForUMods())
+                mUModsWiFiScanner.browseWiFiForUMods())//Doesn't return null umods
                 .compose(this.uModLANBrander);
     }
 

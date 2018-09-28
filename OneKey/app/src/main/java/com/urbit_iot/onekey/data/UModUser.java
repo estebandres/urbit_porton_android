@@ -6,6 +6,9 @@ import android.util.SparseArray;
 
 import com.urbit_iot.onekey.data.rpc.APIUserType;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by andresteve07 on 8/21/17.
  */
@@ -68,7 +71,7 @@ public class UModUser {
             }
         };
         private final Integer statusID;
-        private static SparseArray<Level> map = new SparseArray<>();
+        private static Map<Integer, Level> map = new HashMap<>();
 
         static {
             for (Level stateEnum : Level.values()) {

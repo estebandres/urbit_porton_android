@@ -26,6 +26,8 @@ import com.google.common.base.Strings;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Immutable model class for an UMod.
@@ -59,7 +61,7 @@ public final class UMod {
         BLE_MODE(5),
         UNKNOWN(6);
         private final Integer stateID;
-        private static SparseArray<State> map = new SparseArray<>();
+        private static Map<Integer, State> map = new HashMap<>();
 
         static {
             for (State stateEnum : State.values()) {
@@ -84,7 +86,8 @@ public final class UMod {
         DNS_SD_BROWSE(3),
         LAN_SCAN(4),
         WEB(3),
-        MQTT_SCAN(5);
+        MQTT_SCAN(5),
+        UNKNOWN(6);
         private final Integer sourceID;
         UModSource(Integer sourceID) {
             this.sourceID = sourceID;
@@ -101,7 +104,10 @@ public final class UMod {
     private UModUser.Level appUserLevel;
 
     @NonNull
-    private State state;
+    private State state = State.UNKNOWN;
+
+    @NonNull
+    private UModSource uModSource = UModSource.UNKNOWN;
 
     @NonNull
     private boolean lanOperationEnabled;
@@ -129,9 +135,6 @@ public final class UMod {
 
     @Nullable
     private String wifiSSID;
-
-    @Nullable
-    private UModSource uModSource;
 
     @Nullable
     private String uModLastReport;
@@ -201,6 +204,7 @@ public final class UMod {
         this.lanOperationEnabled = false;
         this.ongoingNotificationEnabled =  false;
         this.isOpen = true;
+        this.appUserLevel = UModUser.Level.UNAUTHORIZED;
         this.lastUpdateDate = new Date();
     }
 
@@ -300,7 +304,7 @@ public final class UMod {
         return GlobalConstants.URBIT_PREFIX + this.uModUUID + "/request";
     }
 
-    @Nullable
+    @NonNull
     public UModSource getuModSource() {
         return uModSource;
     }
@@ -411,7 +415,7 @@ public final class UMod {
         this.appUserLevel = appUserLevel;
     }
 
-    @Nullable
+    @NonNull
     public State getState() {
         return state;
     }
@@ -481,7 +485,9 @@ public final class UMod {
     }
 
     public boolean belongsToAppUser(){
-        return this.getAppUserLevel() != UModUser.Level.UNAUTHORIZED && this.getAppUserLevel() != UModUser.Level.INVITED;
+        return this.getAppUserLevel()!=null
+                && this.getAppUserLevel() != UModUser.Level.UNAUTHORIZED
+                && this.getAppUserLevel() != UModUser.Level.INVITED;
     }
 
     public boolean canBeTriggeredByAppUser(){
