@@ -23,6 +23,7 @@ import com.google.common.base.Strings;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.data.rpc.EnableUpdateRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
@@ -66,78 +67,64 @@ public class UpgradeUModFirmware extends SimpleUseCase<UpgradeUModFirmware.Reque
         uModsRepository.refreshUMods();
 
         return uModsRepository.getUMod(values.getUModUUID())
-                .flatMap(new Func1<UMod, Observable<Response<ResponseBody>>>() {
-                    @Override
-                    public Observable<Response<ResponseBody>> call(final UMod uMod) {
-                        Log.d("OTA_UC","Downloading File...to update " + uMod.toString());
-                        //return uModsRepository.getSystemInfo(uMod,request);
-                        return uModsRepository.getFirmwareImageFile(uMod)
-                                .flatMap(new Func1<File, Observable<Response<ResponseBody>>>() {
-                                    @Override
-                                    public Observable<Response<ResponseBody>> call(final File file) {
-                                        if (Strings.isNullOrEmpty(uMod.getSWVersion())){
-                                            return Observable.error(new UModSwVersionUnavailable(uMod.getUUID()));
-                                        }
-                                        if(file.getName().contains(uMod.getSWVersion())){
-                                            return Observable.error(new UpgradeIsntNeccessary(uMod.getSWVersion()));
-                                        } else {
-                                            Log.d("OTA_UC","Posting file: " + file.getName() + " size: "+file.length());
-                                            return uModsRepository.postFirmwareUpdateToUMod(uMod, file)
-                                                    .flatMap(new Func1<Response<ResponseBody>, Observable<Response<ResponseBody>>>() {
-                                                        @Override
-                                                        public Observable<Response<ResponseBody>> call(Response<ResponseBody> responseBodyResponse) {
-                                                            file.delete();
-                                                            Log.d("OTA_UC","Update Post Response: \n" +
-                                                                    responseBodyResponse.toString());
-                                                            if (!responseBodyResponse.isSuccessful()){
-                                                                Log.d("OTA_UC","Update Post Failed!!");
-                                                                return Observable.error(new Exception("postFirmwareUpdate errored."));
-                                                            } else {
-                                                                return Observable.timer(25L,TimeUnit.SECONDS)
-                                                                        .flatMap(new Func1<Long, Observable<Response<ResponseBody>>>() {
-                                                                            @Override
-                                                                            public Observable<Response<ResponseBody>> call(Long aLong) {
-                                                                                Log.d("OTA_UC","Verifying umod version");
-                                                                                SysGetInfoRPC.Arguments sysGetInfoArgs = new SysGetInfoRPC.Arguments();
-                                                                                return uModsRepository.getSystemInfo(uMod, sysGetInfoArgs)
-                                                                                        .flatMap(new Func1<SysGetInfoRPC.Result, Observable<Response<ResponseBody>>>() {
-                                                                                            @Override
-                                                                                            public Observable<Response<ResponseBody>> call(SysGetInfoRPC.Result result) {
-                                                                                                Log.d("OTA_UC","The current version is: " + result.getFwVersion());
-                                                                                                //TODO implement method for comparing versions as v1.5.4 > v1.3.6. Question: is always the upgrade forward??
-                                                                                                if(!uMod.getSWVersion().contentEquals(result.getFwVersion())){
-                                                                                                    uMod.setSWVersion(result.getFwVersion());
-                                                                                                    Log.d("OTA_UC","Update was Successful. Preparing commit.");
-                                                                                                    OTACommitRPC.Arguments otaCommitArgs = new OTACommitRPC.Arguments();
-                                                                                                    return uModsRepository.otaCommit(uMod, otaCommitArgs);
-                                                                                                } else {
-                                                                                                    Log.d("OTA_UC","Versions missmatch. Upgrade FAILED.");
-                                                                                                    return Observable.error(new Exception("Incorrect firmware version after update."));
-                                                                                                }
-                                                                                            }
-                                                                                        });
-                                                                            }
-                                                                        });
-                                                            }
+                .flatMap(uMod -> {
+                    Log.d("OTA_UC","Downloading File...to update " + uMod.toString());
+                    //return uModsRepository.getSystemInfo(uMod,request);
+                    return uModsRepository.getFirmwareImageFile(uMod)
+                            .flatMap(file -> {
+                                if (Strings.isNullOrEmpty(uMod.getSWVersion())){
+                                    return Observable.error(new UModSwVersionUnavailable(uMod.getUUID()));
+                                }
+                                if(file.getName().contains(uMod.getSWVersion())){
+                                    return Observable.error(new UpgradeIsntNeccessary(uMod.getSWVersion()));
+                                } else {
+                                    Log.d("OTA_UC","Posting file: " + file.getName() + " size: "+file.length());
+                                    return uModsRepository.enableUModUpdate(uMod, new EnableUpdateRPC.Arguments())
+                                            .flatMap(enablingResult -> uModsRepository.postFirmwareUpdateToUMod(uMod, file)
+                                                    .flatMap(responseBodyResponse -> {
+                                                        if (file.delete()){
+                                                            Log.d("OTA_UC","File deleted successfully.");
+                                                        } else {
+                                                            Log.e("OTA_UC","Failed to delete file.");
                                                         }
-                                                    });
-                                        }
-
-                                    }
-                                });
-                    }
+                                                        Log.d("OTA_UC","Update Post Response: \n" +
+                                                                responseBodyResponse.toString());
+                                                        if (!responseBodyResponse.isSuccessful()){
+                                                            Log.d("OTA_UC","Update Post Failed!!");
+                                                            return Observable.error(new Exception("postFirmwareUpdate failed."));
+                                                        } else {
+                                                            return Observable.timer(25L,TimeUnit.SECONDS)
+                                                                    .flatMap(aLong -> {
+                                                                        Log.d("OTA_UC","Verifying umod version");
+                                                                        SysGetInfoRPC.Arguments sysGetInfoArgs = new SysGetInfoRPC.Arguments();
+                                                                        return uModsRepository.getSystemInfo(uMod, sysGetInfoArgs)
+                                                                                .flatMap(result -> {
+                                                                                    Log.d("OTA_UC","The current version is: " + result.getFwVersion());
+                                                                                    //TODO implement method for comparing versions as v1.5.4 > v1.3.6. Question: is always the upgrade forward??
+                                                                                    if(!uMod.getSWVersion().contentEquals(result.getFwVersion())){
+                                                                                        uMod.setSWVersion(result.getFwVersion());
+                                                                                        Log.d("OTA_UC","Update was Successful. Preparing commit.");
+                                                                                        OTACommitRPC.Arguments otaCommitArgs = new OTACommitRPC.Arguments();
+                                                                                        return uModsRepository.otaCommit(uMod, otaCommitArgs);
+                                                                                    } else {
+                                                                                        Log.d("OTA_UC","Versions mismatch. Upgrade FAILED.");
+                                                                                        return Observable.error(new Exception("Incorrect firmware version after update."));
+                                                                                    }
+                                                                                });
+                                                                    });
+                                                        }
+                                                    }));
+                                }
+                            });
                 })
-                .flatMap(new Func1<Response<ResponseBody>, Observable<ResponseValues>>() {
-                    @Override
-                    public Observable<ResponseValues> call(Response<ResponseBody> otaCommitResponse) {
-                        if (otaCommitResponse.isSuccessful()){
-                            Log.d("OTA_UC","Update commit successful "+
-                                    otaCommitResponse.toString());
-                            return Observable.just(new ResponseValues(otaCommitResponse.code()));
-                        } else {
-                            Log.d("OTA_UC","Update commit FAILED " + otaCommitResponse.toString());
-                            return Observable.error(new Exception("Unseccessful OTA commit."));
-                        }
+                .flatMap(otaCommitResponse -> {
+                    if (otaCommitResponse.isSuccessful()){
+                        Log.d("OTA_UC","Update commit successful "+
+                                otaCommitResponse.toString());
+                        return Observable.just(new ResponseValues(otaCommitResponse.code()));
+                    } else {
+                        Log.d("OTA_UC","Update commit FAILED " + otaCommitResponse.toString());
+                        return Observable.error(new Exception("Unsuccessful OTA commit."));
                     }
                 });
     }

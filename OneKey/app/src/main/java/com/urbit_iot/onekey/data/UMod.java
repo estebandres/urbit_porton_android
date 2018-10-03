@@ -78,6 +78,35 @@ public final class UMod {
             return map.get(value);
         }
     }
+    public enum GateStatus {
+        DISCONNECTED_SENSOR(-2),
+        UNKNOWN(-1),
+        CLOSED(0),
+        OPEN(1),
+        CLOSING(2),
+        OPENING(3),
+        PARTIAL_OPENING(4);
+
+        private final Integer statusID;
+        private static SparseArray<GateStatus> map = new SparseArray<>();
+        static {
+            for (GateStatus gateStatus : GateStatus.values()) {
+                map.put(gateStatus.statusID, gateStatus);
+            }
+        }
+
+        GateStatus(Integer statusID) {
+            this.statusID = statusID;
+        }
+
+        public Integer getStatusID() {
+            return statusID;
+        }
+
+        public static GateStatus from(int value){
+            return map.get(value);
+        }
+    }
 
     public enum UModSource{
         CACHE(0),

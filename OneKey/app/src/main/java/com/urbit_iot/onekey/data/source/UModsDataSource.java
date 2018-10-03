@@ -24,10 +24,12 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.DeleteUserRPC;
+import com.urbit_iot.onekey.data.rpc.EnableUpdateRPC;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
+import com.urbit_iot.onekey.data.rpc.SetGateStatusRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
@@ -122,4 +124,14 @@ public interface UModsDataSource {
     default Observable<AdminCreateUserRPC.Result>
     createUModUserByName(UMod uMod, AdminCreateUserRPC.Arguments createUserArgs){
         return Observable.empty();}
+
+    default Observable<EnableUpdateRPC.Result>
+    enableUModUpdate(UMod uMod, EnableUpdateRPC.Arguments arguments){
+        return Observable.empty();
+    }
+
+    default Observable<SetGateStatusRPC.Result>
+    setUModGateStatus(UMod uMod, SetGateStatusRPC.Arguments reqArguments){
+        return Observable.empty();
+    }
 }

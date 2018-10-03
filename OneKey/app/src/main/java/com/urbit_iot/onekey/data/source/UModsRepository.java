@@ -33,7 +33,10 @@ import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
+
 import com.urbit_iot.onekey.data.rpc.RPC;
+import com.urbit_iot.onekey.data.rpc.SetGateStatusRPC;
+
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
@@ -879,5 +882,10 @@ public class UModsRepository implements UModsDataSource {
             }
             return true;
         });
+    }
+
+    public Observable<SetGateStatusRPC.Result>
+    setUModGateStatus(UMod uMod, SetGateStatusRPC.Arguments reqArguments){
+        return mUModsLANDataSource.setUModGateStatus(uMod, reqArguments);
     }
 }

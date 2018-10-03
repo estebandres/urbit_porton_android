@@ -167,6 +167,8 @@ dependencies {
     implementation 'pl.charmas.android:android-reactive-location2:2.1@aar'
     implementation 'com.google.android.gms:play-services-location:16.0.0'
 
+    implementation 'com.yarolegovich:lovely-dialog:1.1.0'
+
     // Dependencies for local unit tests
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
     //testImplementation "org.mockito:mockito-all:$rootProject.ext.mockitoVersion"

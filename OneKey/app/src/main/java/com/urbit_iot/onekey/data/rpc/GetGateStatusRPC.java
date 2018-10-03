@@ -7,25 +7,26 @@ import com.urbit_iot.onekey.util.GlobalConstants;
  * Created by andresteve07 on 8/11/17.
  */
 
-public class TriggerRPC extends RPC {
+public class GetGateStatusRPC extends RPC {
     public static class Arguments{
         public Arguments(){}
     }
 
     public static class Request extends RPC.Request{
         @SerializedName(GlobalConstants.RPC_FIELD_NAME__ARGS)
-        private TriggerRPC.Arguments methodArguments;
+        private GetGateStatusRPC.Arguments methodArguments;
         public Request(String requester, boolean isAdmin, Arguments args, String tagPrefix, int id) {
             super(
-                    GlobalConstants.RPC_METHOD_NAME__ADMIN_TRIGGER,
-                    GlobalConstants.RPC_METHOD_CODE__ADMIN_TRIGGER,
+                    GlobalConstants.RPC_METHOD_NAME__GET_GATE_STATUS,
+                    GlobalConstants.RPC_METHOD_CODE__GET_GATE_STATUS,
                     requester,
                     tagPrefix,
                     id);
             this.methodArguments = args;
-            this.changeMethod(isAdmin);
+            //this.changeMethod(isAdmin);
         }
 
+        /*
         public void changeMethod(boolean isAdmin){
             if (isAdmin){
                 super.setMethodName(GlobalConstants.RPC_METHOD_NAME__ADMIN_TRIGGER);
@@ -35,6 +36,7 @@ public class TriggerRPC extends RPC {
                 super.setMethodCode(GlobalConstants.RPC_METHOD_CODE__USER_TRIGGER);
             }
         }
+        */
 
         public Arguments getMethodArguments() {
             return methodArguments;
@@ -46,29 +48,15 @@ public class TriggerRPC extends RPC {
     }
 
     public static class Result{
-        @SerializedName("message")
-        private String message;
         @SerializedName("status_code")
         private Integer statusCode;
         @SerializedName("opening_percentage")
         private Float openingPorcentage;
 
-        public Result(String message){
-            this.message = message;
-        }
 
-        public Result(String message, Integer statusCode, Float openingPorcentage) {
-            this.message = message;
+        public Result(Integer statusCode, Float openingPorcentage) {
             this.statusCode = statusCode;
             this.openingPorcentage = openingPorcentage;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
         }
 
         public Integer getStatusCode() {
@@ -90,8 +78,7 @@ public class TriggerRPC extends RPC {
         @Override
         public String toString() {
             return "Result{" +
-                    "message='" + message + '\'' +
-                    ", statusCode=" + statusCode +
+                    "statusCode=" + statusCode +
                     ", openingPorcentage=" + openingPorcentage +
                     '}';
         }
@@ -99,7 +86,7 @@ public class TriggerRPC extends RPC {
 
     public static class Response extends RPC.Response {
         @SerializedName(GlobalConstants.RPC_FIELD_NAME__RESULT)
-        private TriggerRPC.Result responseResult;
+        private GetGateStatusRPC.Result responseResult;
 
         public Response(Result result, int responseId, String callTag, ResponseError responseError) {
             super(responseId, callTag, responseError);

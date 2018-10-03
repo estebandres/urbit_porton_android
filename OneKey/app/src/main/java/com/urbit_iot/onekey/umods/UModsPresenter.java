@@ -5,11 +5,14 @@ import android.util.Log;
 
 import com.f2prateek.rx.preferences2.Preference;
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
+import com.google.common.base.Strings;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
+import com.urbit_iot.onekey.data.source.PhoneConnectivityInfo;
 import com.urbit_iot.onekey.data.source.UModsDataSource;
+import com.urbit_iot.onekey.umods.domain.usecase.CalibrateUMod;
 import com.urbit_iot.onekey.umods.domain.usecase.ClearAlienUMods;
 import com.urbit_iot.onekey.umods.domain.usecase.GetUMods;
 import com.urbit_iot.onekey.umods.domain.usecase.GetUModsOneByOne;
@@ -45,6 +48,8 @@ public class UModsPresenter implements UModsContract.Presenter {
     private final SetOngoingNotificationStatus mSetOngoingNotificationStatus;
     private final RequestAccess mRequestAccess;
     private RxSharedPreferences rxSharedPreferences;
+    private final PhoneConnectivityInfo mPhoneConnectivityInfo;
+    private final CalibrateUMod mCalibrateUMod;
     /*
     @NonNull
     private final RetrofitUtils mRetrofitUtils;
@@ -53,6 +58,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     private UModsFilterType mCurrentFiltering = UModsFilterType.ALL_UMODS;
 
     private boolean mFirstLoad = true;
+    private String triggeredUModUUID;
 
     @Inject
     public UModsPresenter(@NonNull UModsContract.View umodsView,
@@ -63,7 +69,9 @@ public class UModsPresenter implements UModsContract.Presenter {
                           @NonNull ClearAlienUMods clearAlienUMods,
                           @NonNull TriggerUMod triggerUMod,
                           @NonNull RequestAccess requestAccess,
-                          @NonNull RxSharedPreferences rxSharedPreferences) {
+                          @NonNull RxSharedPreferences rxSharedPreferences,
+                          @NonNull PhoneConnectivityInfo mPhoneConnectivityInfo,
+                          @NonNull CalibrateUMod mCalibrateUMod) {
         mUModsView = checkNotNull(umodsView, "tasksView cannot be null!");
         mGetUModsOneByOne = checkNotNull(getUModsOneByOne, "getUModsOneByOne cannot be null!");
         mGetUMods = checkNotNull(getUMods, "getUModUUID cannot be null!");
@@ -74,6 +82,8 @@ public class UModsPresenter implements UModsContract.Presenter {
         mRequestAccess = checkNotNull(requestAccess, "requestAccess cannot be null!");
         //this.mRetrofitUtils = mRetrofitUtils;
         this.rxSharedPreferences = rxSharedPreferences;
+        this.mPhoneConnectivityInfo = checkNotNull(mPhoneConnectivityInfo,"mPhoneConnectivityInfo cannot be null!");
+        this.mCalibrateUMod = checkNotNull(mCalibrateUMod, "mCalibrateUMod cannot be null!");
     }
 
     /**
@@ -477,6 +487,7 @@ public class UModsPresenter implements UModsContract.Presenter {
 
     @Override
     public void triggerUMod(final String uModUUID) {
+        this.triggeredUModUUID = uModUUID;
         //this.stopUModSearch();
 
         // The network request might be handled in a different thread so make sure Espresso knows
@@ -502,6 +513,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                 }
                  */
                 //Bugfender.e("trigger","Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage());
+                Log.e("UMODS_PRES","Trigger Failure: " + e.getMessage() + " TYPE: " + e.getClass().getSimpleName(), e);
                 Timber.e("Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage());
                 mUModsView.showOpenCloseFail();
                 if (e instanceof TriggerUMod.DeletedUserException){
@@ -519,27 +531,29 @@ public class UModsPresenter implements UModsContract.Presenter {
             @Override
             public void onNext(TriggerUMod.ResponseValues responseValues) {
 
-                TriggerRPC.Result response = responseValues.getResult();
-                /*
-                RPC.ResponseError responseError = response.getResponseError();
-                if (responseError != null
-                        && responseError.getErrorCode() != null
-                        && responseError.getErrorCode() != 0){
-                    Log.d("umods_pr", "Error Code: " + responseError.getErrorCode()
-                            + "\nError Message: " + responseError.getErrorMessage());
-                    mUModsView.showOpenCloseFail();
-                    mUModsView.enableActionSlider(uModUUID);
-                } else {
-                    Log.d("ModsPresenter", "RPC is " + response.toString());
+                TriggerRPC.Result triggerResult = responseValues.getResult();
+                Log.d("umods_pr", "RPC is " + triggerResult.toString());
+                Timber.d("Successful Trigger UModUUID: "+ uModUUID + " " + triggerResult.toString());
+                //For older APIs (v1/v2) then display trigger success
+                if (!Strings.isNullOrEmpty(triggerResult.getMessage())){
                     mUModsView.showOpenCloseSuccess();
+                    return;
                 }
-                //If 500 then updateAppUserLevelOnUMod
-                //TODO after a successful answer enable action button on view
-                 */
-                Log.d("umods_pr", "RPC is " + response.toString());
-                //Bugfender.d("umods_pr", "Successful Trigger UModUUID: "+ uModUUID + " " + response.toString());
-                Timber.d("Successful Trigger UModUUID: "+ uModUUID + " " + response.toString());
-                mUModsView.showOpenCloseSuccess();
+                //For APIv3 this should never be null but still.
+                if (triggerResult.getStatusCode() == null){
+                    return;
+                }
+                switch (triggerResult.getStatusCode()){
+                    case -2:
+                        mUModsView.showDisconnectedSensorDialog();
+                        break;
+                    case -1:
+                        mUModsView.showCalibrationDialogs();
+                        break;
+                    default:
+                        mUModsView.showOpenCloseSuccess();
+                        break;
+                }
             }
         });
     }
@@ -598,5 +612,48 @@ public class UModsPresenter implements UModsContract.Presenter {
         } else {
             return true;//TODO review this
         }
+    }
+
+    @Override
+    public void processCalibrationDialogChoice(int choice) {
+        switch (choice){
+            case 0:
+                this.setUModGateStatus(UMod.GateStatus.OPEN);
+                break;
+            case 1:
+                this.setUModGateStatus(UMod.GateStatus.CLOSED);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void setUModGateStatus(UMod.GateStatus gateStatus) {
+        this.mCalibrateUMod.execute(
+                new CalibrateUMod.RequestValues(
+                        this.triggeredUModUUID,
+                        gateStatus,
+                        mPhoneConnectivityInfo.getConnectionType() == PhoneConnectivityInfo.ConnectionType.WIFI,
+                        mPhoneConnectivityInfo.getWifiAPSSID()),
+                new Subscriber<CalibrateUMod.ResponseValues>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e("UMODS_PRES","Calibration Failed: " + e.getMessage() + " Type: " + e.getClass().getSimpleName());
+                    }
+
+                    @Override
+                    public void onNext(CalibrateUMod.ResponseValues responseValues) {
+                        if (responseValues.getResult().getGateStatus() == gateStatus){
+                            mUModsView.showCalibrationSuccessMessage();
+                        } else {
+                            mUModsView.showCalibrationFailureMessage();
+                        }
+                    }
+                });
     }
 }

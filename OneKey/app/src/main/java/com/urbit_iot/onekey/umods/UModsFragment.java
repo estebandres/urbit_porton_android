@@ -35,10 +35,10 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.UModConfigFragment;
 import com.urbit_iot.onekey.umodsnotification.UModsNotifService;
 import com.urbit_iot.onekey.util.GlobalConstants;
+import com.yarolegovich.lovelydialog.LovelyChoiceDialog;
+import com.yarolegovich.lovelydialog.LovelyStandardDialog;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -80,6 +80,9 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     private ProgressBar umodsScanProgressBar;
 
     private ListView mListView;
+
+    private LovelyChoiceDialog calibrationDialogGateStatus;
+    private LovelyStandardDialog calibrationDialogInitialConfirmation;
 
     public UModsFragment() {
         // Requires empty public constructor
@@ -126,15 +129,9 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         mNoUModsMainView = (TextView) root.findViewById(R.id.no_umods_main);
         this.umodsScanProgressBar = root.findViewById(R.id.umods_scan_load_bar);
         this.umodsScanProgressBar.setVisibility(View.INVISIBLE);
-        /*
-        mNoUModsAddView = (TextView) root.findViewById(R.id.no_umods_add_some);
-        mNoUModsAddView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAddUMod();
-            }
-        });
-        */
+
+        setupCalibrationDialogGateStatus();
+        setupCalibrationDialogInitialConfirmation();
 
         this.ongoingNotificationSwitch = (Switch) root.findViewById(R.id.umods_frag__ongoing_notif_switch);
         this.ongoingNotificationSwitch.setChecked(this.mPresenter.fetchOngoingNotificationPreference());
@@ -150,40 +147,47 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
         });
         // Set up floating action button
-        FloatingActionButton fab =
-                (FloatingActionButton) getActivity().findViewById(R.id.fab_add_umod);
-
+        FloatingActionButton fab = getActivity().findViewById(R.id.fab_add_umod);
         fab.setImageResource(R.drawable.ic_update);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPresenter.loadUMods(true);
-            }
-        });
-
-        /*
-        // Set up progress indicator
-        final ScrollChildSwipeRefreshLayout swipeRefreshLayout =
-                (ScrollChildSwipeRefreshLayout) root.findViewById(R.id.umods_refresh_layout);
-        swipeRefreshLayout.setColorSchemeColors(
-                ContextCompat.getColor(getActivity(), R.color.colorPrimary),
-                ContextCompat.getColor(getActivity(), R.color.colorAccent),
-                ContextCompat.getColor(getActivity(), R.color.colorPrimaryDark)
-        );
-        // Set the scrolling view in the custom SwipeRefreshLayout.
-        swipeRefreshLayout.setScrollUpChild(listView);
-
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                mPresenter.loadUMods(true);
-            }
-        });
-        */
+        fab.setOnClickListener(v -> mPresenter.loadUMods(true));
 
         setHasOptionsMenu(true);
 
         return root;
+    }
+
+    @Override
+    public void showDisconnectedSensorDialog() {
+
+    }
+
+    @Override
+    public void showCalibrationDialogs() {
+        this.calibrationDialogInitialConfirmation.show();
+    }
+
+    private void setupCalibrationDialogInitialConfirmation() {
+        this.calibrationDialogInitialConfirmation = new LovelyStandardDialog(this.getContext(), LovelyStandardDialog.ButtonLayout.VERTICAL)
+                .setTopColorRes(R.color.colorAccent)
+                .setButtonsColorRes(R.color.colorPrimary)
+                .setIcon(R.drawable.ic_calibration_ic)
+                .setTitle("CALIBRATION")
+                .setMessage("Si desea calibrar su portón espere hasta que se haya  detenido completamente y luego presione \"SIGUIENTE\"")
+                .setPositiveButton("SIGUIENTE", v -> calibrationDialogGateStatus.show())
+                .setNegativeButton("CANCELAR", null);
+    }
+
+    private void setupCalibrationDialogGateStatus() {
+        String[] items = {"Abierto completamente", "Cerrado", "Desconozco"};
+        this.calibrationDialogGateStatus = new LovelyChoiceDialog(this.getContext())
+                .setTopColorRes(R.color.colorAccent)
+                .setTitle("CALIBRACION")
+                .setMessage("Ahora mismo, en qué estado se encuentra su portón?")
+                .setIcon(R.drawable.ic_calibration_ic)
+                //.setItems(items, (positions, items1) -> showRequestAccessCompletedMessage())
+                .setItems(items,(position, item) -> {
+                    mPresenter.processCalibrationDialogChoice(position);
+                });
     }
 
     @Override
@@ -295,6 +299,16 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     @Override
     public void showRequestAccessCompletedMessage() {
         showMessage(getString(R.string.request_access_completed_message));
+    }
+
+    @Override
+    public void showCalibrationSuccessMessage() {
+        showMessage("CALIBRACIÓN EXITOSA");
+    }
+
+    @Override
+    public void showCalibrationFailureMessage() {
+        showMessage("CALIBRACIÓN FALLIDA, REINTENTE LUEGO");
     }
 
     @Override

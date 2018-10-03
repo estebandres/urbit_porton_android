@@ -73,6 +73,14 @@ public interface UModsContract {
         void showAlienUModsCleared();
 
         void removeItem(String uuid);
+
+        void showDisconnectedSensorDialog();
+
+        void showCalibrationDialogs();
+
+        void showCalibrationSuccessMessage();
+
+        void showCalibrationFailureMessage();
     }
 
     interface Presenter extends BasePresenter {
@@ -98,5 +106,7 @@ public interface UModsContract {
         void saveOngoingNotificationPreference(boolean isChecked);
 
         boolean fetchOngoingNotificationPreference();
+
+        void processCalibrationDialogChoice(int choice);
     }
 }

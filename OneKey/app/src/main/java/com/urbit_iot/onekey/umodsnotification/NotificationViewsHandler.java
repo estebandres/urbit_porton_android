@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
@@ -33,7 +34,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     //private RemoteViews expandedViews;
 
     private Notification mNotification;
-    private Notification.Builder mNotificationBuilder;
+    //private Notification.Builder mNotificationBuilder;
     private NotificationManager notificationManager;
     private boolean lockState;
     //private DisplayMetrics metrics;
@@ -423,11 +424,33 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
 
 
+        /*
         mNotification.contentView = this.controlCollapsedViews;
         mNotification.flags = Notification.FLAG_ONGOING_EVENT;
         mNotification.icon = R.drawable.ic_app_logo__white_uncircled_untexted;
         //mNotification.contentIntent = pendingIntent;
         mNotification.visibility = Notification.VISIBILITY_PUBLIC;
+        mNotification.priority = Notification.PRIORITY_MAX;
+        */
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            this.mNotification =  new Notification.Builder(this.mContext)
+                    .setSmallIcon(R.drawable.ic_app_logo__white_uncircled_untexted)
+                    .setAutoCancel(false)
+                    .setOngoing(true)
+                    .setContent(controlCollapsedViews)
+                    .setPriority(Notification.PRIORITY_MAX)
+                    .setVisibility(Notification.VISIBILITY_PUBLIC)
+                    .build();
+        } else {
+            this.mNotification =  new Notification.Builder(this.mContext)
+                    .setSmallIcon(R.drawable.ic_app_logo__white_uncircled_untexted)
+                    .setAutoCancel(false)
+                    .setOngoing(true)
+                    .setContent(controlCollapsedViews)
+                    .setPriority(Notification.PRIORITY_MAX)
+                    .build();
+        }
 
         dispatchNotification();
     }
@@ -440,12 +463,33 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         PendingIntent pendingIntent = PendingIntent.getActivity(this.mContext, 0,
                 notificationIntent, 0);
 
+        /*
         this.mNotification = new Notification.Builder(this.mContext).build();
         mNotification.contentView = views;
         mNotification.flags = Notification.FLAG_ONGOING_EVENT;
         mNotification.icon = R.drawable.ic_app_logo__white_uncircled_untexted;
         mNotification.visibility = Notification.VISIBILITY_PUBLIC;
+        mNotification.priority = Notification.PRIORITY_MAX;
         //mNotification.contentIntent = pendingIntent;
+        */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            this.mNotification =  new Notification.Builder(this.mContext)
+                    .setSmallIcon(R.drawable.ic_app_logo__white_uncircled_untexted)
+                    .setAutoCancel(false)
+                    .setOngoing(true)
+                    .setContent(controlCollapsedViews)
+                    .setPriority(Notification.PRIORITY_MAX)
+                    .setVisibility(Notification.VISIBILITY_PUBLIC)
+                    .build();
+        } else {
+            this.mNotification =  new Notification.Builder(this.mContext)
+                    .setSmallIcon(R.drawable.ic_app_logo__white_uncircled_untexted)
+                    .setAutoCancel(false)
+                    .setOngoing(true)
+                    .setContent(controlCollapsedViews)
+                    .setPriority(Notification.PRIORITY_MAX)
+                    .build();
+        }
         dispatchNotification();
     }
 

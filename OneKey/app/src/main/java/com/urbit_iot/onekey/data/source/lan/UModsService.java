@@ -7,6 +7,7 @@ import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
+import com.urbit_iot.onekey.data.rpc.SetGateStatusRPC;
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
@@ -81,4 +82,7 @@ public interface UModsService {
     //@POST("/rpc/OTA.Commit")
     @POST("/update/commit")
     Observable<Response<ResponseBody>> otaCommit(@Body OTACommitRPC.Arguments arguments);
+
+    @POST("/rpc/Admin.SetGateStatus")
+    Observable<SetGateStatusRPC.Result> postSetUModGateStatus(SetGateStatusRPC.Arguments reqArguments);
 }

@@ -45,11 +45,14 @@ public final class GlobalConstants {
     public static final String RPC_METHOD_NAME___UPDATE_USER    = "Admin.UpdateUser";
     public static final String RPC_METHOD_NAME__DELETE_USER     = "Admin.DeleteUser";
     public static final String RPC_METHOD_NAME__ADMIN_TRIGGER   = "Admin.Trigger";
-    public static String RPC_METHOD_NAME___ADMIN_CREATE_USER    = "Admin.CreateUser";
+    public static final String RPC_METHOD_NAME___SET_GATE_STATUS      = "Admin.SetGateStatus";
+    public static final String RPC_METHOD_NAME___ADMIN_CREATE_USER    = "Admin.CreateUser";
+    public static final String RPC_METHOD_NAME__ENABLE_UPDATE   = "Admin.EnableUpdate";
 
     public static final String RPC_METHOD_NAME__CREATE_USER     = "Guest.CreateUser";
     public static final String RPC_METHOD_NAME__USER_STATUS     = "Guest.UserStatus";
     public static final String RPC_METHOD_NAME__GET_INFO        = "Sys.GetInfo";
+    public static final String RPC_METHOD_NAME__GET_GATE_STATUS = "Guest.GetGateStatus";
 
     public static final String RPC_METHOD_NAME__USER_TRIGGER    = "User.Trigger";
 
@@ -61,12 +64,16 @@ public final class GlobalConstants {
     public static final int RPC_METHOD_CODE__DELETE_USER        = 104;
     public static final int RPC_METHOD_CODE__ADMIN_TRIGGER      = 105;
     public static final int RPC_METHOD_CODE__ADMIN_CREATE_USER  = 106;
+    public static final int RPC_METHOD_CODE__ENABLE_UPDATE      = 107;
 
-    public static final int RPC_METHOD_CODE__CREATE_USER    = 200;
-    public static final int RPC_METHOD_CODE__USER_STATUS    = 201;
-    public static final int RPC_METHOD_CODE__GET_INFO       = 203;
+    public static final int RPC_METHOD_CODE__SET_GATE_STATUS    = 108;
 
-    public static final int RPC_METHOD_CODE__USER_TRIGGER   = 300;
+    public static final int RPC_METHOD_CODE__CREATE_USER        = 200;
+    public static final int RPC_METHOD_CODE__USER_STATUS        = 201;
+    public static final int RPC_METHOD_CODE__GET_INFO           = 203;
+    public static final int RPC_METHOD_CODE__GET_GATE_STATUS    = 204;
+
+    public static final int RPC_METHOD_CODE__USER_TRIGGER       = 300;
 
     //----------------------------------------------------
 
