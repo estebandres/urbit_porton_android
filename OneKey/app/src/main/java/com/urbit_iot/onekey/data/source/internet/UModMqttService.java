@@ -53,7 +53,7 @@ import rx.Observable;
  * Created by andresteve07 on 06/04/18.
  */
 
-public class UModMqttService {
+public class UModMqttService implements UModMqttServiceContract {
 
     @NonNull
     private ObservableMqttClient mMqttClient;
@@ -83,7 +83,7 @@ public class UModMqttService {
 
     //private boolean subscribedToUModResponseTopic;
 
-    @Inject
+    //@Inject
     public UModMqttService(@NonNull ObservableMqttClient mMqttClient,
                            @NonNull Gson gsonInstance,
                            @NonNull String userName) {
@@ -120,9 +120,9 @@ public class UModMqttService {
                         Log.d("MQTT_SERVICE", "LOCKED!!  " + Thread.currentThread().getName());
                         if (mMqttClient.isConnected()){
                             //return Completable.complete();
-                            return testConnectionToBroker();//In the case the client isn't aware of disconnection yet.
+                            return testConnectionToBroker(3);//In the case the client isn't aware of disconnection yet.
                         } else {
-                            return testConnectionToBroker()
+                            return testConnectionToBroker(3)
                                     .andThen(mMqttClient.connect())
                                     .ambWith(Completable.timer(2000L,TimeUnit.MILLISECONDS))
                                     .andThen(Completable.fromAction(() -> {
@@ -160,6 +160,7 @@ public class UModMqttService {
         }
     }
 
+    @Override
     public void subscribeToUModResponseTopic(String uModUUID){
         String responseTopicForUMod = GlobalConstants.URBIT_PREFIX + uModUUID + "/response/" + this.userName;
 
@@ -199,6 +200,7 @@ public class UModMqttService {
         this.allSubscriptions.add(topicSubDisposable);
     }
 
+    @Override
     synchronized public void subscribeToUModResponseTopic(UMod umod){
        this.subscribeToUModResponseTopic(umod.getUUID());
     }
@@ -208,6 +210,7 @@ public class UModMqttService {
     }
 
 
+    @Override
     public <T,S> Observable<S> publishRPC(String requestTopic, T request, Class<S> responseType){
         String serializedRequest = gsonInstance.toJson(request);
         Log.d("publishRPC", "Serialized Request: " + serializedRequest);
@@ -282,10 +285,10 @@ public class UModMqttService {
                             + Thread.currentThread().getName());
             if (mMqttClient.isConnected()){
                 //In the case the client isn't aware of the disconnection yet.
-                return testConnectionToBroker()
+                return testConnectionToBroker(3)
                         .andThen(Completable.fromAction(this::resubscribeToAllUMods));
             } else {
-                return testConnectionToBroker()
+                return testConnectionToBroker(3)
                         .andThen(mMqttClient.connect())
                         .ambWith(Completable.timer(2000L,TimeUnit.MILLISECONDS))
                         .andThen(Completable.fromAction(() -> {
@@ -387,7 +390,11 @@ public class UModMqttService {
         return newer.getTime() - older.getTime();
     }
 
-    public Completable testConnectionToBroker(){
+    public rx.Completable testConnectionToBroker(){
+        return null;
+    }
+
+    public Completable testConnectionToBroker(int i){
         return Completable.defer(() ->
                 Completable.fromAction(() -> {
                     Socket clientSocket;
@@ -405,6 +412,7 @@ public class UModMqttService {
         );
     }
 
+    @Override
     public Observable<UMod> scanUModInvitations(){
         String invitationsTopic = this.userName + "/invitation/+";
         Flowable<UMod> invitationsFlowable = this.connectMqttClient()
@@ -430,6 +438,7 @@ public class UModMqttService {
                 .takeUntil(Observable.timer(5000L,TimeUnit.MILLISECONDS));
     }
 
+    @Override
     public rx.Completable cancelUModInvitation(String userName, String uModUUID){
         String invitationsTopic = userName
                 + "/invitation/"
@@ -448,6 +457,7 @@ public class UModMqttService {
         return RxJavaInterop.toV1Completable(publishCompletable);
     }
 
+    @Override
     public void cancelMyInvitation(UMod uMod){
         this.cancelUModInvitation(this.userName, uMod.getUUID())
                 .subscribeOn(rx.schedulers.Schedulers.io())
@@ -455,6 +465,7 @@ public class UModMqttService {
                         throwable -> Log.d("MQTT_SERVICE","FAILURE ON CANCELING MINE : " + uMod.getUUID()));
     }
 
+    @Override
     public rx.Completable cancelSeveralUModInvitations(List<String> listOfNames, UMod uMod){
         return Observable.from(listOfNames)
                 .flatMapCompletable(userName ->

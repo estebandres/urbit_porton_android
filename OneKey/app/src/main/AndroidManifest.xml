@@ -54,10 +54,15 @@
         <activity android:name=".umodusers.UModUsersActivity"
             android:parentActivityName = ".umodconfig.UModConfigActivity"/>
 
+        <!--
+        <service android:name="org.eclipse.paho.android.service.MqttService" />
+        -->
+
         <service
             android:name=".umodsnotification.UModsNotifService"
             android:enabled="true"
             android:exported="true" />
+
         <!--
         <receiver android:name=".umodsnotification.WifiStateReceiver" android:exported="false">
             <intent-filter>

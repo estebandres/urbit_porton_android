@@ -19,8 +19,12 @@ import com.google.gson.GsonBuilder;
 import com.polidea.rxandroidble.RxBleClient;
 
 import com.urbit_iot.onekey.data.source.gps.LocationService;
+import com.urbit_iot.onekey.data.source.internet.AndroidPahoClientRxWrap;
 import com.urbit_iot.onekey.data.source.internet.FirmwareFileDownloader;
+import com.urbit_iot.onekey.data.source.internet.PahoClientRxWrap;
+import com.urbit_iot.onekey.data.source.internet.SimplifiedUModMqttService;
 import com.urbit_iot.onekey.data.source.internet.UModMqttService;
+import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
 import com.urbit_iot.onekey.data.source.internet.UModsInternetDataSource;
 import com.urbit_iot.onekey.data.source.lan.UModsBLEScanner;
 import com.urbit_iot.onekey.data.source.lan.UModsDNSSDScanner;
@@ -40,7 +44,9 @@ import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import net.eusashead.iot.mqtt.ObservableMqttClient;
 import net.eusashead.iot.mqtt.paho.PahoObservableMqttClient;
 
+import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -137,7 +143,7 @@ public class UModsRepositoryModule {
     @Singleton
     @Provides
     @Internet
-    UModsDataSource provideUModsInternetDataSource(Context context, UModMqttService uModMqttService){
+    UModsDataSource provideUModsInternetDataSource(Context context, UModMqttServiceContract uModMqttService){
         return new UModsInternetDataSource(new FirmwareFileDownloader(context), uModMqttService, this.appUserName);
     }
     //TODO separate those into ints own network module
@@ -265,6 +271,7 @@ public class UModsRepositoryModule {
         return retrofit.create(UModsService.class);
     }
 
+    /*
     @Provides
     @Singleton
     ObservableMqttClient provideObservableMqttClient(){
@@ -303,10 +310,64 @@ public class UModsRepositoryModule {
                     .build();
         }
     }
+    */
 
+    /*
     @Provides
     @Singleton
     UModMqttService provideUModMqttService(ObservableMqttClient observableMqttClient, Gson gson){
         return new UModMqttService(observableMqttClient,gson,this.appUserName);
+    }
+    */
+
+    /*
+    @Provides
+    @Singleton
+    AndroidPahoClientRxWrap provideClientRxWrap(Context context){
+        MqttAndroidClient mqttAndroidClient = new MqttAndroidClient(
+                context,
+                "tcp://"
+                        + GlobalConstants.MQTT_BROKER__IP_ADDRESS
+                        +":"
+                        + GlobalConstants.MQTT_BROKER__PORT,
+                MqttClient.generateClientId());
+        AndroidPahoClientRxWrap mqttClientRxWrapper = new AndroidPahoClientRxWrap(mqttAndroidClient);
+        mqttAndroidClient.setCallback(mqttClientRxWrapper);
+        return mqttClientRxWrapper;
+    }
+    */
+
+    @Provides
+    @Singleton
+    PahoClientRxWrap providePahoClientRxWrap(){
+        MqttAsyncClient asyncClient = null;
+        MemoryPersistence memoryPersistence = new MemoryPersistence();
+        try {
+             asyncClient = new MqttAsyncClient(
+                    "tcp://" + GlobalConstants.MQTT_BROKER__IP_ADDRESS +":" +
+                            GlobalConstants.MQTT_BROKER__PORT,
+                    MqttClient.generateClientId()
+                     ,memoryPersistence);
+        } catch (MqttException mqttExc) {
+            Log.e("providePahoClientRxWrap","message"
+                    + mqttExc.getMessage()
+                    + "\n reason "
+                    + mqttExc.getReasonCode()
+                    + "\n cause " + mqttExc.getCause());
+        }
+        if (asyncClient == null){
+            return null;
+        } else {
+            PahoClientRxWrap pahoClientRxWrap = new PahoClientRxWrap(asyncClient);
+            asyncClient.setCallback(pahoClientRxWrap);
+            return pahoClientRxWrap;
+        }
+    }
+
+
+    @Provides
+    @Singleton
+    UModMqttServiceContract provideUModMqttServiceContract(PahoClientRxWrap clientRxWrap, Gson gson){
+        return new SimplifiedUModMqttService(clientRxWrap,this.appUserName,gson);
     }
 }

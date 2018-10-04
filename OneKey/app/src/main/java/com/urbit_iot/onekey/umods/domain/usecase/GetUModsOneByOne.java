@@ -11,6 +11,7 @@ import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.data.source.internet.UModMqttService;
+import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
 import com.urbit_iot.onekey.umods.UModsFilterType;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -35,14 +36,14 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
 
     private final UModsRepository mUModsRepository;
     private final AppUserRepository mAppUserRepository;
-    private final UModMqttService mUModMqttService;
+    private final UModMqttServiceContract mUModMqttService;
     private final BaseSchedulerProvider schedulerProvider;
 
     @Inject
     public GetUModsOneByOne(@NonNull UModsRepository tasksRepository,
                             @NonNull AppUserRepository appUserRepository,
                             @NonNull BaseSchedulerProvider schedulerProvider,
-                            @NonNull UModMqttService mUModMqttService) {
+                            @NonNull UModMqttServiceContract mUModMqttService) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         this.schedulerProvider = schedulerProvider;
         mUModsRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
@@ -75,7 +76,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                             //TODO Replace current isOpen logic or remove it completely
                             if (uMod.getuModSource() == UMod.UModSource.LOCAL_DB
                                     || uMod.getuModSource() == UMod.UModSource.CACHE){
-                                return  uMod.getAppUserLevel() != UModUser.Level.UNAUTHORIZED;// Unauthorized in the DB are ignored
+                                return  uMod.getAppUserLevel() != UModUser.Level.UNAUTHORIZED && uMod.getState() != UMod.State.AP_MODE;// Unauthorized in the DB are ignored
                             }
                             return true;
                         })

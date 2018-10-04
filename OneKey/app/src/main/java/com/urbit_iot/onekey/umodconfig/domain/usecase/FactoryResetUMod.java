@@ -26,6 +26,7 @@ import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
 import com.urbit_iot.onekey.data.source.internet.UModMqttService;
+import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.IOException;
@@ -47,12 +48,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class FactoryResetUMod extends SimpleUseCase<FactoryResetUMod.RequestValues, FactoryResetUMod.ResponseValues> {
 
     private final UModsRepository uModsRepository;
-    private final UModMqttService uModMqttService;
+    private final UModMqttServiceContract uModMqttService;
 
     @Inject
     public FactoryResetUMod(@NonNull UModsRepository tasksRepository,
                             @NonNull BaseSchedulerProvider schedulerProvider,
-                            @NonNull UModMqttService uModMqttService) {
+                            @NonNull UModMqttServiceContract uModMqttService) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         uModsRepository = tasksRepository;
         this.uModMqttService = uModMqttService;

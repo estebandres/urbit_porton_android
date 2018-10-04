@@ -112,6 +112,8 @@
     <string name="no_results_for_all_other_users">No se encontraron otros usuarios registrados en este módulo.</string>
     <string name="no_results_for_admin_users_message">No se encontraron otros administradores para este módulo.</string>
     <string name="phone_format_error_message">Formato incorrecto. Ingrese el numero con característica y sin 15.</string>
+    <string name="channel_name">Notificaciones porton app</string>
+    <string name="channel_description">Canal de Notificaciones para la App porton</string>
     <!-- Solves annoying issue with password-eye -->
     <item name="visible" type="id"/>
     <item name="masked" type="id"/>

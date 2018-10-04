@@ -1,11 +1,13 @@
 package com.urbit_iot.onekey.umodsnotification;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -15,6 +17,8 @@ import android.widget.RemoteViews;
 import com.urbit_iot.onekey.R;
 import com.urbit_iot.onekey.umods.UModsActivity;
 import com.urbit_iot.onekey.util.GlobalConstants;
+
+import java.util.Random;
 
 
 /**
@@ -31,6 +35,8 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     private RemoteViews noConfiguredUModsCollapsedViews;
     private RemoteViews allUModsAreNotifDisabledCollapsedViews;
 
+    public static final String CHANNEL_ID = String.valueOf(new Random().nextInt());
+    private String currentChannelID;
     //private RemoteViews expandedViews;
 
     private Notification mNotification;
@@ -54,13 +60,32 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         this.setupUnconnectedPhoneCollapsedViews();
         this.setupNoConfiguredUModsRemoteViews();
         this.setupAllUModsAreNotifDisabledRemoteViews();
-        this.setupNotification();
+        this.setNotificationViews(this.controlCollapsedViews);
 
         this.lockState = true;
         /*
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
             this.metrics = mContext.getResources().getDisplayMetrics();
         */
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            this.currentChannelID = this.createChannel();
+        }
+
+    }
+
+    private String createChannel() {
+        CharSequence channelName = Resources.getSystem().getString(R.string.channel_name);
+        String channelDescription = Resources.getSystem().getString(R.string.channel_description);
+        int importance = 0;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            importance = NotificationManager.IMPORTANCE_MAX;
+            NotificationChannel notificationChannel =
+                    new NotificationChannel(CHANNEL_ID, channelName, importance);
+            notificationChannel.setDescription(channelDescription);
+            this.notificationManager.createNotificationChannel(notificationChannel);
+        }
+        return CHANNEL_ID;
     }
 
     private void setupAllUModsAreNotifDisabledRemoteViews() {
@@ -138,12 +163,12 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
 
     @Override
     public void showAllUModsAreNotifDisabled() {
-        this.changeNotificationViews(this.allUModsAreNotifDisabledCollapsedViews);
+        this.setNotificationViews(this.allUModsAreNotifDisabledCollapsedViews);
     }
 
     @Override
     public void showNoConfiguredUMods() {
-        this.changeNotificationViews(this.noConfiguredUModsCollapsedViews);
+        this.setNotificationViews(this.noConfiguredUModsCollapsedViews);
     }
 
     @Override
@@ -288,12 +313,12 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     @Override
     public void showUnconnectedPhone() {
         Log.d("NOTIF", "UNCONNECTED");
-        this.changeNotificationViews(this.unconnectedPhoneCollapsedViews);
+        this.setNotificationViews(this.unconnectedPhoneCollapsedViews);
     }
 
     @Override
     public void showNoUModsFound() {
-        this.changeNotificationViews(this.noUModsFoundCollapsedViews);
+        this.setNotificationViews(this.noUModsFoundCollapsedViews);
     }
 
     @Override
@@ -392,70 +417,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         //controlCollapsedViews.setOnClickPendingIntent(R.id.status_bar_collapse, pcloseIntent);
     }
 
-    private void setupNotification(){
-        Intent notificationIntent = new Intent(this.mContext, UModsActivity.class);
-        notificationIntent.setAction(GlobalConstants.ACTION.MAIN);
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this.mContext, 0,
-                notificationIntent, 0);
-
-        //this.mNotificationBuilder = new Notification.Builder(this.mContext);
-
-        this.mNotification = new Notification.Builder(this.mContext).build();
-
-        /*
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB){
-            mNotification.contentView = this.controlCollapsedViews;
-            //mNotification.bigContentView = expandedViews;
-            mNotification.flags = Notification.FLAG_ONGOING_EVENT;
-            mNotification.icon = R.drawable.logo;
-            mNotification.contentIntent = pendingIntent;
-            mNotification.visibility = Notification.VISIBILITY_PUBLIC;
-        }
-         this.mNotification = this.mNotificationBuilder
-                .setSmallIcon(R.drawable.ic_app_logo__white_untexted)
-                .setAutoCancel(false)
-                .setOngoing(true)
-                .setContent(controlCollapsedViews)
-                .setPriority(Notification.PRIORITY_MAX)
-                .build();
-        */
-
-
-
-        /*
-        mNotification.contentView = this.controlCollapsedViews;
-        mNotification.flags = Notification.FLAG_ONGOING_EVENT;
-        mNotification.icon = R.drawable.ic_app_logo__white_uncircled_untexted;
-        //mNotification.contentIntent = pendingIntent;
-        mNotification.visibility = Notification.VISIBILITY_PUBLIC;
-        mNotification.priority = Notification.PRIORITY_MAX;
-        */
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            this.mNotification =  new Notification.Builder(this.mContext)
-                    .setSmallIcon(R.drawable.ic_app_logo__white_uncircled_untexted)
-                    .setAutoCancel(false)
-                    .setOngoing(true)
-                    .setContent(controlCollapsedViews)
-                    .setPriority(Notification.PRIORITY_MAX)
-                    .setVisibility(Notification.VISIBILITY_PUBLIC)
-                    .build();
-        } else {
-            this.mNotification =  new Notification.Builder(this.mContext)
-                    .setSmallIcon(R.drawable.ic_app_logo__white_uncircled_untexted)
-                    .setAutoCancel(false)
-                    .setOngoing(true)
-                    .setContent(controlCollapsedViews)
-                    .setPriority(Notification.PRIORITY_MAX)
-                    .build();
-        }
-
-        dispatchNotification();
-    }
-
-    private void changeNotificationViews(RemoteViews views){
+    private void setNotificationViews(RemoteViews views){
         Intent notificationIntent = new Intent(this.mContext, UModsActivity.class);
         notificationIntent.setAction(GlobalConstants.ACTION.MAIN);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
@@ -472,21 +434,27 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         mNotification.priority = Notification.PRIORITY_MAX;
         //mNotification.contentIntent = pendingIntent;
         */
+        Notification.Builder notificationBuilder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationBuilder = new Notification.Builder(this.mContext,this.currentChannelID);
+        } else {
+            notificationBuilder = new Notification.Builder(this.mContext);
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            this.mNotification =  new Notification.Builder(this.mContext)
+            this.mNotification =  notificationBuilder
                     .setSmallIcon(R.drawable.ic_app_logo__white_uncircled_untexted)
                     .setAutoCancel(false)
                     .setOngoing(true)
-                    .setContent(controlCollapsedViews)
+                    .setContent(views)
                     .setPriority(Notification.PRIORITY_MAX)
                     .setVisibility(Notification.VISIBILITY_PUBLIC)
                     .build();
         } else {
-            this.mNotification =  new Notification.Builder(this.mContext)
+            this.mNotification =  notificationBuilder
                     .setSmallIcon(R.drawable.ic_app_logo__white_uncircled_untexted)
                     .setAutoCancel(false)
                     .setOngoing(true)
-                    .setContent(controlCollapsedViews)
+                    .setContent(views)
                     .setPriority(Notification.PRIORITY_MAX)
                     .build();
         }

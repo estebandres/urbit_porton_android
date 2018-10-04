@@ -33,16 +33,15 @@ import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.rpc.OTACommitRPC;
-
 import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.data.rpc.SetGateStatusRPC;
-
 import com.urbit_iot.onekey.data.rpc.SetWiFiRPC;
 import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.gps.LocationService;
 import com.urbit_iot.onekey.data.source.internet.UModMqttService;
+import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
 import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.dagger.Internet;
 import com.urbit_iot.onekey.util.dagger.Local;
@@ -105,7 +104,7 @@ public class UModsRepository implements UModsDataSource {
 
 
     @NonNull
-    private UModMqttService uModMqttService;
+    private UModMqttServiceContract uModMqttService;
 
     /**
      * This variable has package local visibility so it can be accessed from tests.
@@ -140,7 +139,7 @@ public class UModsRepository implements UModsDataSource {
                            @Internet UModsDataSource uModsInternetDataSource,
                            @NonNull LocationService locationService,
                            @NonNull PhoneConnectivityInfo connectivityInfo,
-                           @NonNull UModMqttService uModMqttService) {
+                           @NonNull UModMqttServiceContract uModMqttService) {
         mUModsLANDataSource = checkNotNull(uModsRemoteDataSource);
         mUModsLocalDataSource = checkNotNull(uModsLocalDataSource);
         this.mUModsInternetDataSource = checkNotNull(uModsInternetDataSource);
@@ -219,8 +218,6 @@ public class UModsRepository implements UModsDataSource {
                                 .onErrorResumeNext(throwable -> Observable.empty())
                         )
                 )
-                //TODO test if necessary
-                //.takeUntil(Observable.timer(12L, TimeUnit.SECONDS))
                 .doOnNext(uMod -> {
                     Log.d("MQTT_SCAN", "H: " + Thread.currentThread().getName() +" FOUND: " + uMod);
                     mUModsLocalDataSource.saveUMod(uMod);

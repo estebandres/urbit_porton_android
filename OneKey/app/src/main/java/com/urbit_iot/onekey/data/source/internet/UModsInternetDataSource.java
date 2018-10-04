@@ -53,7 +53,7 @@ public class UModsInternetDataSource implements UModsDataSource {
     @NonNull
     private FirmwareFileDownloader mFirmwareFileDownloader;
     @NonNull
-    private UModMqttService mUModMqttService;
+    private UModMqttServiceContract mUModMqttService;
     @NonNull
     private String username;
 
@@ -61,7 +61,7 @@ public class UModsInternetDataSource implements UModsDataSource {
 
     @Inject
     public UModsInternetDataSource(@NonNull FirmwareFileDownloader firmwareDownloader,
-                                   @NonNull UModMqttService mUModMqttService,
+                                   @NonNull UModMqttServiceContract mUModMqttService,
                                    @NonNull String username) {
         this.mFirmwareFileDownloader = firmwareDownloader;
         this.mUModMqttService = mUModMqttService;
@@ -149,6 +149,8 @@ public class UModsInternetDataSource implements UModsDataSource {
                 TriggerRPC.Response.class)
                 .map(TriggerRPC.Response::getResponseResult);
     }
+
+    /*
     public Completable responseSubscriptionChecker(String uModUUID){
         //Observable.fromCallable(() -> mUModMqttService.getListOfSubscribedUModsUUIDs().contains())
         return Completable.fromCallable(() -> {
@@ -158,6 +160,7 @@ public class UModsInternetDataSource implements UModsDataSource {
             throw new Exception("RESPONSE SUBS MISSING");
         });
     }
+    */
 
     @Override
     public Observable<CreateUserRPC.Result> createUModUser(@NonNull UMod uMod, @NonNull CreateUserRPC.Arguments requestArguments) {

@@ -188,7 +188,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                     return Observable.from(uMods);
                 })
                 .doOnNext(uMod -> Log.d("1x1_DB", "UMOD: " + uMod.getUUID()))
-                .takeUntil(Observable.timer(100L, TimeUnit.MILLISECONDS))
+                .takeUntil(Observable.timer(2000L, TimeUnit.MILLISECONDS))
                 .compose(this.uModLocalDBBrander);
     }
 
