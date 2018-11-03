@@ -17,7 +17,7 @@ public interface UModMqttServiceContract {
 
     void subscribeToUModResponseTopic(UMod umod);
 
-    <T,S> Observable<S> publishRPC(String requestTopic, T request, Class<S> responseType);
+    <T,S> Observable<S> publishRPC(UMod targetUMod, T request, Class<S> responseType);
 
     Completable testConnectionToBroker();
 

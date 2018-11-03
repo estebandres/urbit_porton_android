@@ -180,6 +180,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         String sql = String.format("SELECT %s FROM %s", TextUtils.join(",", projection), UModEntry.UMODS_TABLE_NAME);
         return mDatabaseHelper.createQuery(UModEntry.UMODS_TABLE_NAME, sql)
                 .mapToList(mUModMapperFunction)
+                .take(1)//Absolutely necessary since mapToList can produce many results!!! See docs.
                 .doOnNext(uMods -> Log.d("1x1_DB", "TOTAL: " + uMods.size()))
                 .flatMap(uMods -> {
                     if (uMods.isEmpty()){
@@ -188,7 +189,7 @@ public class UModsLocalDBDataSource implements UModsDataSource {
                     return Observable.from(uMods);
                 })
                 .doOnNext(uMod -> Log.d("1x1_DB", "UMOD: " + uMod.getUUID()))
-                .takeUntil(Observable.timer(2000L, TimeUnit.MILLISECONDS))
+                .takeUntil(Observable.timer(500L, TimeUnit.MILLISECONDS))
                 .compose(this.uModLocalDBBrander);
     }
 

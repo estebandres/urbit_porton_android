@@ -19,11 +19,9 @@ import com.google.gson.GsonBuilder;
 import com.polidea.rxandroidble.RxBleClient;
 
 import com.urbit_iot.onekey.data.source.gps.LocationService;
-import com.urbit_iot.onekey.data.source.internet.AndroidPahoClientRxWrap;
 import com.urbit_iot.onekey.data.source.internet.FirmwareFileDownloader;
 import com.urbit_iot.onekey.data.source.internet.PahoClientRxWrap;
 import com.urbit_iot.onekey.data.source.internet.SimplifiedUModMqttService;
-import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
 import com.urbit_iot.onekey.data.source.internet.UModsInternetDataSource;
 import com.urbit_iot.onekey.data.source.lan.UModsBLEScanner;
@@ -41,13 +39,8 @@ import com.urbit_iot.onekey.util.dagger.LanOnly;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
-import net.eusashead.iot.mqtt.ObservableMqttClient;
-import net.eusashead.iot.mqtt.paho.PahoObservableMqttClient;
-
-import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
@@ -343,11 +336,16 @@ public class UModsRepositoryModule {
         MqttAsyncClient asyncClient = null;
         MemoryPersistence memoryPersistence = new MemoryPersistence();
         try {
+            /*
              asyncClient = new MqttAsyncClient(
                     "tcp://" + GlobalConstants.MQTT_BROKER__IP_ADDRESS +":" +
                             GlobalConstants.MQTT_BROKER__PORT,
                     MqttClient.generateClientId()
                      ,memoryPersistence);
+                     */
+            asyncClient = new MqttAsyncClient("tcp://test.mosquitto.org:1883",
+                    MqttClient.generateClientId()
+                    ,memoryPersistence);
         } catch (MqttException mqttExc) {
             Log.e("providePahoClientRxWrap","message"
                     + mqttExc.getMessage()

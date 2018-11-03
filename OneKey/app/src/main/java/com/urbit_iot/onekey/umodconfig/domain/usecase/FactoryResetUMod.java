@@ -25,7 +25,6 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.rpc.FactoryResetRPC;
 import com.urbit_iot.onekey.data.rpc.GetUsersRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
-import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
@@ -33,7 +32,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 

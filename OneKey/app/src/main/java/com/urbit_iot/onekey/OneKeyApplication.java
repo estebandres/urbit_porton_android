@@ -1,12 +1,7 @@
 package com.urbit_iot.onekey;
 
 import android.app.Application;
-import android.util.Log;
-
-import com.bugfender.sdk.Bugfender;
 import com.crashlytics.android.Crashlytics;
-import com.github.tony19.loggly.LogglyClient;
-import com.github.tony19.timber.loggly.LogglyTree;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepositoryComponent;
 import com.urbit_iot.onekey.data.source.UModsRepositoryModule;
 import com.urbit_iot.onekey.umodconfig.UModConfigComponent;

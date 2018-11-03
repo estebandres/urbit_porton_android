@@ -166,13 +166,13 @@ dependencies {
     implementation 'com.github.stealthcopter:AndroidNetworkTools:0.3.08'
 
     //mqtt paho wrapper uses rxjava2
-    implementation 'net.eusashead.mqtt:rxmqtt:1.1.1.RELEASE'
+    //implementation 'net.eusashead.mqtt:rxmqtt:1.1.1.RELEASE'
 
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
-    implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
+    //implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
 
     implementation 'com.github.akarnokd:rxjava2-interop:0.12.6'
-    implementation 'com.bugfender.sdk:android:1.+'
+    //implementation 'com.bugfender.sdk:android:1.+'
     implementation 'com.github.tony19:timber-loggly:1.0.1'
     implementation('com.crashlytics.sdk.android:crashlytics:2.9.3@aar') {
         transitive = true

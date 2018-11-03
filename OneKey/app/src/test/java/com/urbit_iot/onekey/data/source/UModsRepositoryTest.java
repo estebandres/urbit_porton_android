@@ -19,26 +19,13 @@ import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.gps.LocationService;
-import com.urbit_iot.onekey.data.source.internet.UModMqttService;
-import com.urbit_iot.onekey.data.source.lan.UModsBLEScanner;
-import com.urbit_iot.onekey.data.source.lan.UModsDNSSDScanner;
-import com.urbit_iot.onekey.data.source.lan.UModsLANDataSource;
-import com.urbit_iot.onekey.data.source.lan.UModsService;
-import com.urbit_iot.onekey.data.source.lan.UModsTCPScanner;
-import com.urbit_iot.onekey.data.source.lan.UModsWiFiScanner;
-import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
-
-import net.bytebuddy.asm.Advice;
-import net.eusashead.iot.mqtt.paho.OnError;
+import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runner.notification.RunListener;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -50,26 +37,19 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import hu.akarnokd.rxjava.interop.RxJavaInterop;
 import io.reactivex.Flowable;
-import io.reactivex.functions.Predicate;
-import io.reactivex.schedulers.Schedulers;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
-import rx.Scheduler;
-import rx.observers.TestSubscriber;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -101,7 +81,7 @@ public class UModsRepositoryTest {
     private PhoneConnectivityInfo connectivityInfoMock;
 
     @Mock
-    private UModMqttService mqttServiceMock;
+    private UModMqttServiceContract mqttServiceMock;
 
     @Mock
     private LocationService locationServiceMock;

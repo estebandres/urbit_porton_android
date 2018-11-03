@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-import com.bugfender.sdk.Bugfender;
 import com.crashlytics.android.Crashlytics;
 import com.f2prateek.rx.preferences2.Preference;
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
@@ -63,8 +62,8 @@ public class InvisibleChooserActivity extends AppCompatActivity {
             firstActivityIntent.putExtra(UModsActivity.APP_USER_NAME,appUser.getUserName());
             firstActivityIntent.putExtra(UModsActivity.APP_UUID,appUser.getAppUUID());
 
-            Bugfender.setDeviceString("user.phone", appUser.getUserName());
-            Bugfender.setDeviceString("user.appuid", appUser.getAppUUID());
+            //Bugfender.setDeviceString("user.phone", appUser.getUserName());
+            //Bugfender.setDeviceString("user.appuid", appUser.getAppUUID());
 
             //final LogglyTree logglyTree = new LogglyTree(GlobalConstants.LOGGLY_TOKEN);
 

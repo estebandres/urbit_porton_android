@@ -5,7 +5,6 @@ import android.util.Log;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
-import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
 import com.urbit_iot.onekey.umods.domain.usecase.RequestAccess;
 import com.urbit_iot.onekey.umodsnotification.domain.usecase.GetUModsForNotif;

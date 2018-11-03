@@ -131,7 +131,7 @@ public class UModsInternetDataSource implements UModsDataSource {
     public Observable<GetUserLevelRPC.Result> getUserLevel(@NonNull UMod uMod, @NonNull GetUserLevelRPC.Arguments requestArguments) {
         GetUserLevelRPC.Request userLevelRequest = new GetUserLevelRPC.Request(requestArguments,this.username,uMod.getUUID(),this.randomGenerator.nextInt());
 
-        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),userLevelRequest,GetUserLevelRPC.Response.class)
+        return mUModMqttService.publishRPC(uMod,userLevelRequest,GetUserLevelRPC.Response.class)
                 .map(GetUserLevelRPC.Response::getResponseResult);
     }
 
@@ -144,7 +144,7 @@ public class UModsInternetDataSource implements UModsDataSource {
                 uMod.getUUID(),
                 this.randomGenerator.nextInt());
 
-        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),
+        return mUModMqttService.publishRPC(uMod,
                 triggerRequest,
                 TriggerRPC.Response.class)
                 .map(TriggerRPC.Response::getResponseResult);
@@ -171,7 +171,7 @@ public class UModsInternetDataSource implements UModsDataSource {
                 this.randomGenerator.nextInt());
 
         return mUModMqttService.publishRPC(
-                        uMod.getUModRequestTopic(),
+                        uMod,
                         createUserRequest,
                         CreateUserRPC.Response.class)
                         .map(CreateUserRPC.Response::getResponseResult);
@@ -181,7 +181,7 @@ public class UModsInternetDataSource implements UModsDataSource {
     public Observable<UpdateUserRPC.Result> updateUModUser(@NonNull UMod uMod, @NonNull UpdateUserRPC.Arguments requestArguments) {
         UpdateUserRPC.Request updateUserRequest = new UpdateUserRPC.Request(requestArguments, this.username, uMod.getUUID(), this.randomGenerator.nextInt());
 
-        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),updateUserRequest,UpdateUserRPC.Response.class)
+        return mUModMqttService.publishRPC(uMod,updateUserRequest,UpdateUserRPC.Response.class)
                 .map(UpdateUserRPC.Response::getResponseResult);
     }
 
@@ -192,7 +192,7 @@ public class UModsInternetDataSource implements UModsDataSource {
                 this.username,
                 uMod.getUUID(),
                 this.randomGenerator.nextInt());
-        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),deleteRequest,DeleteUserRPC.Response.class)
+        return mUModMqttService.publishRPC(uMod,deleteRequest,DeleteUserRPC.Response.class)
                 .map(DeleteUserRPC.Response::getResponseResult);
     }
 
@@ -200,14 +200,14 @@ public class UModsInternetDataSource implements UModsDataSource {
     public Observable<GetUsersRPC.Result> getUModUsers(@NonNull UMod uMod, @NonNull GetUsersRPC.Arguments requestArgs) {
         GetUsersRPC.Request getUsersRequest = new GetUsersRPC.Request(requestArgs,this.username,uMod.getUUID(),this.randomGenerator.nextInt());
 
-        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),getUsersRequest,GetUsersRPC.Response.class)
+        return mUModMqttService.publishRPC(uMod,getUsersRequest,GetUsersRPC.Response.class)
                 .map(GetUsersRPC.Response::getResponseResult);
     }
 
     @Override
     public Observable<SysGetInfoRPC.Result> getSystemInfo(@NonNull UMod uMod, @NonNull SysGetInfoRPC.Arguments request) {
         SysGetInfoRPC.Request rpcRequest = new SysGetInfoRPC.Request(request,this.username,uMod.getUUID(),this.randomGenerator.nextInt());
-        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),rpcRequest, SysGetInfoRPC.Response.class)
+        return mUModMqttService.publishRPC(uMod,rpcRequest, SysGetInfoRPC.Response.class)
                 .map(SysGetInfoRPC.Response::getResponseResult);
 
 
@@ -227,7 +227,7 @@ public class UModsInternetDataSource implements UModsDataSource {
     @Override
     public Observable<FactoryResetRPC.Result> factoryResetUMod(UMod uMod, FactoryResetRPC.Arguments request) {
         FactoryResetRPC.Request factoryResetRequest = new FactoryResetRPC.Request(request, this.username, uMod.getUUID(), this.randomGenerator.nextInt());
-        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),factoryResetRequest,FactoryResetRPC.Response.class)
+        return mUModMqttService.publishRPC(uMod,factoryResetRequest,FactoryResetRPC.Response.class)
                 .map(FactoryResetRPC.Response::getResponseResult);
     }
 
@@ -248,7 +248,7 @@ public class UModsInternetDataSource implements UModsDataSource {
                 this.username,
                 uMod.getUUID(),
                 this.randomGenerator.nextInt());
-        return mUModMqttService.publishRPC(uMod.getUModRequestTopic(),
+        return mUModMqttService.publishRPC(uMod,
                 adminRequest,
                 AdminCreateUserRPC.Response.class)
                 .map(AdminCreateUserRPC.Response::getResponseResult);

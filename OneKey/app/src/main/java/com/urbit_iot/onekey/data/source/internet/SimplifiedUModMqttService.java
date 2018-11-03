@@ -4,12 +4,14 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.util.GlobalConstants;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -57,13 +59,15 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
     @Override
     public void subscribeToUModResponseTopic(String uModUUID) {
         String responseTopicForUMod = GlobalConstants.URBIT_PREFIX + uModUUID + "/response/" + this.appUsername;
+        Log.d("subscribeRespTopic","Attempt subscription  TOPIC: "
+                + responseTopicForUMod + " ON: " + Thread.currentThread().getName());
         this.pahoClientRxWrap.connectToBroker()
                 .andThen(this.pahoClientRxWrap.subscribeToTopic(responseTopicForUMod,0))
         //this.pahoClientRxWrap.subscribeToTopic(responseTopicForUMod,1)
                 .subscribe(
-                        () -> Log.d("MQTT_SRV","SUB_SUCCESS  TOPIC: "
+                        () -> Log.d("subscribeRespTopic","SUB_SUCCESS  TOPIC: "
                                 + responseTopicForUMod + " ON: " + Thread.currentThread().getName()),
-                        throwable -> Log.e("MQTT_SRV","SUB_FAIL  TOPIC: "
+                        throwable -> Log.e("subscribeRespTopic","SUB_FAIL  TOPIC: "
                                 + responseTopicForUMod + " ON: " + Thread.currentThread().getName(),throwable));
     }
 
@@ -73,20 +77,35 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
     }
 
     @Override
-    public <T, S> Observable<S> publishRPC(String requestTopic, T request, Class<S> responseType) {
+    public <T, S> Observable<S> publishRPC(UMod targetUMod, T request, Class<S> responseType) {
         String serializedRequest = gsonInstance.toJson(request);
-        Log.d("publishRPC", "TOPIC: " + requestTopic + "  Serialized Request: " + serializedRequest);
+        String requestTopic = targetUMod.getUModRequestTopic();
+        Log.d("publishRPC", "TOPIC: " + requestTopic + " ON: " + Thread.currentThread().getName() + "  Serialized Request: " + serializedRequest );
         return this.pahoClientRxWrap.connectToBroker()
-                .doOnCompleted(() -> Log.d("publishRPC","CONECTADO!"))
+                .doOnCompleted(() -> Log.d("publishRPC","CONECTADO!" + " ON: " + Thread.currentThread().getName()))
                 .andThen(this.pahoClientRxWrap.publishToTopic(serializedRequest.getBytes(), requestTopic, 0, false))
-                .doOnCompleted(() -> Log.d("publishRPC","PUBLICADO! " + requestTopic))
+                .doOnCompleted(() -> Log.d("publishRPC","PUBLICADO! " + requestTopic + " ON: " + Thread.currentThread().getName()))
                 .andThen(this.pahoClientRxWrap.receivedMessagesObservable())
-                .map(mqttMessage -> gsonInstance.fromJson(new String(mqttMessage.getPayload()),responseType))
+                //.doOnNext(message -> Log.d("publishRPC","RECIBIDO: " + requestTopic + " MSGE_IS_NULL: " + (message == null)))
+                //.filter(mqttMessage -> mqttMessage.)//TODO create mqtt message class wrapper to include source topic to filter by response topic
+                .filter(message -> message.getPayload().length > 0)
+                //.doOnNext(message -> Log.d("publishRPC","RECIBIDO: " + requestTopic + " MSGE: " + message.getPayload().length))
+                .flatMap(mqttMessage -> {
+                    try {
+                        S response = gsonInstance.fromJson(new String(mqttMessage.getPayload()), responseType);
+                        return Observable.just(response);
+                    } catch (JsonSyntaxException exc){
+                        Log.e("publishRPC","INVALID JSON SYNTAX: " + requestTopic + " ON: " + Thread.currentThread().getName());
+                        return Observable.empty();
+                    }
+                })
+                //.map(mqttMessage -> gsonInstance.fromJson(new String(mqttMessage.getPayload()),responseType))
                 //.doOnNext(s -> Log.d("publishRPC", s.toString()))
                 .filter(response -> ((RPC.Response)response).getResponseId() == ((RPC.Request)request).getRequestId()
                         && ((RPC.Response)response).getRequestTag().equalsIgnoreCase(((RPC.Request)request).getRequestTag()))
                 .doOnNext(response -> Log.d("publishRPC","PUB RESPONSE: " + response))
                 .timeout(6000L, TimeUnit.MILLISECONDS)
+                .doOnError(throwable -> Log.e("publishRPC", "FAIL TO PUBLISH: " + requestTopic + " CAUSE: " + throwable.getClass().getSimpleName() + " ON: " + Thread.currentThread().getName()))
                 .first()
                 .flatMap(response -> {
                     RPC.ResponseError responseError = ((RPC.Response)response).getResponseError();
@@ -183,7 +202,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                 + uModUUID;
         Log.d("MQTT_SERVICE","CANCELING: " + invitationsTopic);
         return this.pahoClientRxWrap.connectToBroker()
-                //.subscribeOn(Schedulers.io())//TODO use dagger injected scheduler
+                .subscribeOn(Schedulers.io())//TODO use dagger injected scheduler
                 .andThen(pahoClientRxWrap.publishToTopic(new byte[0],invitationsTopic,0,false))
                 .doOnCompleted(() -> Log.d("MQTT_SERVICE","SUCCESS ON CANCELING: " + invitationsTopic))
                 .doOnError(throwable -> Log.e("MQTT_SERVICE","FAILURE ON CANCELING: " + invitationsTopic,throwable));

@@ -28,7 +28,6 @@ import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.CreateUserRPC;
 import com.urbit_iot.onekey.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.onekey.data.source.UModsRepository;
-import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.IOException;
@@ -37,7 +36,6 @@ import java.net.HttpURLConnection;
 import javax.inject.Inject;
 
 import retrofit2.adapter.rxjava.HttpException;
-import rx.Completable;
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;

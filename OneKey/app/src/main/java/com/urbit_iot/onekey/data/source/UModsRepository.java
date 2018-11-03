@@ -40,7 +40,6 @@ import com.urbit_iot.onekey.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.gps.LocationService;
-import com.urbit_iot.onekey.data.source.internet.UModMqttService;
 import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
 import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.dagger.Internet;
@@ -56,7 +55,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -183,7 +181,7 @@ public class UModsRepository implements UModsDataSource {
      */
     //@RxLogObservable
     Observable<UMod> getUModsOneByOneFromCacheOrDB(){
-        if (!mCachedUMods.isEmpty()){//CACHE MULTIPLE HIT
+        if (!mCacheIsDirty && !mCachedUMods.isEmpty()){//CACHE MULTIPLE HIT
             Log.d("umods_rep","Map cache");
             return Observable.from(mCachedUMods.values())
                         .compose(this.uModCacheBrander);
@@ -191,7 +189,20 @@ public class UModsRepository implements UModsDataSource {
         //CACHE MISS
         Log.d("umods_rep","DB");
         return mUModsLocalDataSource.getUModsOneByOne()//never emits null umods.
-                .doOnNext(uMod -> mCachedUMods.put(uMod.getUUID(), uMod));
+                .doOnNext(uMod -> mCachedUMods.put(uMod.getUUID(), uMod))
+                .doAfterTerminate(this::subscribeToUModsTopics);
+    }
+
+    private void subscribeToUModsTopics(){
+        Observable.from(mCachedUMods.values())
+                .subscribeOn(Schedulers.io())
+                .flatMap(uMod -> Observable.just(uMod)
+                        .subscribeOn(Schedulers.io())
+                        .doOnNext(mUModsInternetDataSource::saveUMod))
+        .subscribe(uMod -> {},
+                throwable -> Log.e("UMODS_REPO",
+                        "FAIL TO SUBSCRIBE TO MODULE'S MQTT TOPICS",
+                        throwable));
     }
 
     /**
@@ -202,7 +213,7 @@ public class UModsRepository implements UModsDataSource {
      */
     Observable<UMod> getUModsOneByOneFromCacheOrDiskAndRefreshOnline(){//refresh umod data by
         return this.getUModsOneByOneFromCacheOrDB()
-                .flatMap(value -> Observable.just(value)
+                .flatMap(dbUMod -> Observable.just(dbUMod)
                         .subscribeOn(Schedulers.io())//TODO use scheduler provider by dagger)
                         .flatMap(uMod -> mUModsInternetDataSource.getSystemInfo(uMod,new SysGetInfoRPC.Arguments())
                                 .flatMap(result -> {
@@ -305,8 +316,8 @@ public class UModsRepository implements UModsDataSource {
             // Respond immediately with cache if available and not dirty
             if (!mCacheIsDirty) {
                 Log.d("umods_rep", "cached first" + mCachedUMods);
-                return cacheOrDBUModObs
-                        .doOnNext(mUModsInternetDataSource::saveUMod);//This subscribes to the umod mqtt topics
+                return cacheOrDBUModObs;
+                        //.doOnNext(mUModsInternetDataSource::saveUMod);//This subscribes to the umod mqtt topics
             }
             Log.d("umods_rep", "lanbrowse first");
             return Observable.mergeDelayError(
@@ -452,7 +463,7 @@ public class UModsRepository implements UModsDataSource {
      */
     public Observable<UMod> getSingleUModFromCacheOrDB(String uModUUID){
         UMod cachedUMod;
-        if (!mCachedUMods.isEmpty() && mCachedUMods.containsKey(uModUUID)){
+        if (!mCacheIsDirty && !mCachedUMods.isEmpty() && mCachedUMods.containsKey(uModUUID)){
             cachedUMod = mCachedUMods.get(uModUUID);
             return Observable.just(cachedUMod)
                     .compose(this.uModCacheBrander);
@@ -460,7 +471,10 @@ public class UModsRepository implements UModsDataSource {
         Log.d("rep_umods", "algo");
         return mUModsLocalDataSource.getUMod(uModUUID)
                 .filter(uMod -> uMod != null)
-                .doOnNext(uMod -> mCachedUMods.put(uMod.getUUID(), uMod));
+                .doOnNext(uMod -> {
+                    mUModsInternetDataSource.saveUMod(uMod);
+                    mCachedUMods.put(uMod.getUUID(), uMod);
+                });
     }
 
     @Override
@@ -508,7 +522,7 @@ public class UModsRepository implements UModsDataSource {
             if(uMod.isInAPMode()){
                 return Observable.just(new Pair<>(mUModsLANDataSource, null));
             } else {//Assumes a module is either in AP_MODE or STATION_MODE
-                mUModsInternetDataSource.saveUMod(uMod);//Checks for subscription
+                //mUModsInternetDataSource.saveUMod(uMod);//Checks for subscription
                 if (uMod.getAppUserLevel() == UModUser.Level.INVITED){
                     return Observable.just(new Pair<>(mUModsInternetDataSource,null));
                 }
