@@ -25,6 +25,7 @@ import com.urbit_iot.onekey.util.IntegerContainer;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -231,19 +232,68 @@ public class UModsPresenter implements UModsContract.Presenter {
         });
     }
 
+    private String getTimeDifferenceString(Date oldDate){
+        String timeDiffString = "Hace %s %s";
+        Date nowDate = new Date();
+        long millisecondsDiff = nowDate.getTime() - oldDate.getTime();
+        if (millisecondsDiff<15000L){
+            return null;
+        }
+        long units;
+        units = millisecondsDiff/(1000*3600*24*7);//weeks
+        if (units == 1){
+            return String.format(timeDiffString,"una","semana");
+        }
+        if (units > 1){
+            return String.format(timeDiffString,String.valueOf(units),"semanas");
+        }
+        units = millisecondsDiff/(1000*3600*24);//days
+        if (units == 1){
+            return String.format(timeDiffString,"un","día");
+        }
+        if (units > 1){
+            return String.format(timeDiffString,String.valueOf(units),"días");
+        }
+        units = millisecondsDiff/(1000*3600);//hours
+        if (units == 1){
+            return String.format(timeDiffString,"una","hora");
+        }
+        if (units > 1){
+            return String.format(timeDiffString,String.valueOf(units),"hs");
+        }
+        units = millisecondsDiff/(1000*60);//minutes
+        if (units == 1){
+            return String.format(timeDiffString,"un","min");
+        }
+        if (units > 1){
+            return String.format(timeDiffString,String.valueOf(units),"min");
+        }
+        units = millisecondsDiff/(1000);//seconds
+        return String.format(timeDiffString,String.valueOf(units),"seg");
+    }
+
     //TODO peer review view model creation rules
     private UModViewModel createViewModel(UMod uMod){
         Log.d("umods_pres", uMod.hashCode() + "\n" + uMod.toString());
         final String uModUUID;
         String itemMainText;
-        String itemLowerText;
-        boolean checkboxChecked;
-        boolean checkboxVisible;
+        String connectionTagText;
+        String gateStatusText;
+        boolean timeTextVisible = true;
+        String timeText = getTimeDifferenceString(uMod.getLastUpdateDate());
+        if (timeText == null){
+            timeTextVisible = false;
+        }
+        boolean notificationBellFilled;
+        boolean notificationBellVisible;
         String sliderText;
         boolean sliderVisible;
-        boolean itemOnClickListenerEnabled;
+        boolean settingsButtonVisible;
         boolean sliderEnabled;
-        UModsFragment.UModViewModelColors lowerTextColor, sliderBackgroundColor, sliderTextColor;
+        UModsFragment.UModViewModelColors connectionTagColor,
+                connectionTagTextColor, gateStatusTagColor,
+                gateStatusTagTextColor, sliderBackgroundColor, sliderTextColor;
+        boolean moduleTagsVisible = true;
 
         uModUUID = uMod.getUUID();
 
@@ -253,10 +303,43 @@ public class UModsPresenter implements UModsContract.Presenter {
             itemMainText = uModUUID;
         }
 
+        switch (uMod.getGateStatus()){
+            case OPEN:
+                gateStatusText = "ABIERTO";
+                gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
+                gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
+                break;
+            case CLOSED:
+                gateStatusText = "CERRADO";
+                gateStatusTagColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG;
+                gateStatusTagTextColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG_TEXT;
+                break;
+            case CLOSING:
+                gateStatusText = "CERRANDO";
+                gateStatusTagColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG;
+                gateStatusTagTextColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG_TEXT;
+                break;
+            case OPENING:
+                gateStatusText = "ABRIENDO";
+                gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
+                gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
+                break;
+            case PARTIAL_OPENING:
+                gateStatusText = "SEMI ABIERTO";
+                gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
+                gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
+                break;
+            default:
+                gateStatusText = "DESCONOCIDO";
+                gateStatusTagColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG;
+                gateStatusTagTextColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG_TEXT;
+                break;
+        }
+
         if (uMod.belongsToAppUser() && uMod.getState() != UMod.State.AP_MODE){
-            checkboxVisible = true;
+            notificationBellVisible = true;
         } else {
-            checkboxVisible = false;
+            notificationBellVisible = false;
         }
 
         //Default values
@@ -266,12 +349,6 @@ public class UModsPresenter implements UModsContract.Presenter {
         sliderBackgroundColor = null;
         sliderTextColor = null;
 
-        /*
-        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
-                || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN) {//LAN_SCAN means online but can be dnssd/ap/ble discovery
-            //shows action button only when online and is in station mode.
-        }
-        */
         if (uMod.getState() == UMod.State.STATION_MODE) {
             sliderEnabled = true;
             switch (uMod.getAppUserLevel()) {
@@ -303,75 +380,102 @@ public class UModsPresenter implements UModsContract.Presenter {
                     break;
                 default:
                     sliderText = "DEFAULT_NON";
-                    sliderBackgroundColor = UModsFragment.UModViewModelColors.STORED_BLUE;
+                    sliderBackgroundColor = UModsFragment.UModViewModelColors.OFFLINE_TAG;
                     sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
                     sliderVisible = false;
                     break;
             }
         }
 
-        checkboxChecked = uMod.isOngoingNotificationEnabled();
+        notificationBellFilled = uMod.isOngoingNotificationEnabled();
 
         if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
-                || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN){
-            itemLowerText = GlobalConstants.ONLINE_LOWER_TEXT;
-            lowerTextColor = UModsFragment.UModViewModelColors.ONLINE_GREEN;
+                || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN || timeText == null){
+            connectionTagText = GlobalConstants.ONLINE_LOWER_TEXT;
+            connectionTagColor = UModsFragment.UModViewModelColors.ONLINE_TAG;
+            connectionTagTextColor = UModsFragment.UModViewModelColors.ONLINE_TAG_TEXT;
         } else {
-            itemLowerText = GlobalConstants.STORED_LOWER_TEXT;
-            lowerTextColor = UModsFragment.UModViewModelColors.STORED_BLUE;
+            connectionTagText = "OFFLINE";
+            connectionTagColor = UModsFragment.UModViewModelColors.OFFLINE_TAG;
+            connectionTagTextColor = UModsFragment.UModViewModelColors.OFFLINE_TAG_TEXT;
+
+            gateStatusText = "DESCONOCIDO";
+            gateStatusTagColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG;
+            gateStatusTagTextColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG_TEXT;
+
         }
 
         //TODO Default until all states are defined i.e. what about BLE_MODE and OTA_UPDATE??
 
         switch (uMod.getAppUserLevel()){
             case ADMINISTRATOR:
-                itemOnClickListenerEnabled = true;
+                settingsButtonVisible = true;
                 break;
             case AUTHORIZED:
-                itemOnClickListenerEnabled = true;
+                settingsButtonVisible = true;
                 break;
             case PENDING:
-                itemOnClickListenerEnabled = false;
+                settingsButtonVisible = false;
                 break;
             case INVITED:
             case UNAUTHORIZED:
-                itemOnClickListenerEnabled = false;
+                settingsButtonVisible = false;
                 break;
             default:
-                itemOnClickListenerEnabled = false;
+                settingsButtonVisible = false;
                 break;
         }
 
         if (uMod.getState() == UMod.State.AP_MODE){
-            itemOnClickListenerEnabled = true;
+            settingsButtonVisible = true;
+            timeTextVisible = false;
+            moduleTagsVisible = false;
         }
 
-        return new UModViewModel(uMod, uModUUID, this, itemMainText, itemLowerText,
-                checkboxChecked, checkboxVisible, sliderText, sliderVisible, sliderEnabled, itemOnClickListenerEnabled,
-                lowerTextColor, sliderBackgroundColor, sliderTextColor) {
-            @Override
-            public void onSlideCompleted() {
-                //TODO this code shouldnt depend on external objects.
-                if(this.getuMod().belongsToAppUser()){
-                    this.getPresenter().triggerUMod(getuModUUID());
-                } else {
-                    //TODO this code shouldnt depend on external objects.
-                    if (this.getuMod().getState() == UMod.State.STATION_MODE){
-                        this.getPresenter().requestAccess(getuModUUID());
-                    }
+        if (uMod.belongsToAppUser()){
+            return new UModViewModel(uModUUID, itemMainText,
+                    connectionTagText, connectionTagColor, connectionTagTextColor,
+                    gateStatusText, gateStatusTagColor, gateStatusTagTextColor,
+                    moduleTagsVisible,
+                    timeText, timeTextVisible,
+                    notificationBellFilled, notificationBellVisible,
+                    sliderText, sliderVisible, sliderEnabled,
+                    settingsButtonVisible,
+                    sliderBackgroundColor,
+                    sliderTextColor) {
+                @Override
+                public void onSlideCompleted(UModsContract.Presenter presenter) {
+                    presenter.triggerUMod(getuModUUID());
                 }
-            }
 
-            @Override
-            public void onButtonToggled(Boolean toggleState) {
-                this.getPresenter().setNotificationStatus(getuModUUID(), toggleState);
-            }
+                @Override
+                public void onSettingsButtonClicked(UModsContract.Presenter presenter) {
+                    presenter.openUModConfig(getuModUUID());
+                }
+            };
+        } else {
+            return new UModViewModel(uModUUID, itemMainText,
+                    connectionTagText, connectionTagColor, connectionTagTextColor,
+                    gateStatusText, gateStatusTagColor, gateStatusTagTextColor,
+                    moduleTagsVisible,
+                    timeText, timeTextVisible,
+                    notificationBellFilled, notificationBellVisible,
+                    sliderText, sliderVisible, sliderEnabled,
+                    settingsButtonVisible,
+                    sliderBackgroundColor,
+                    sliderTextColor) {
+                @Override
+                public void onSlideCompleted(UModsContract.Presenter presenter) {
+                    presenter.requestAccess(getuModUUID());
 
-            @Override
-            public void onItemClicked() {
-                this.getPresenter().openUModConfig(getuModUUID());
-            }
-        };
+                }
+
+                @Override
+                public void onSettingsButtonClicked(UModsContract.Presenter presenter) {
+                    presenter.openUModConfig(getuModUUID());
+                }
+            };
+        }
     }
 
     private void processTasks(List<UModViewModel> uMods) {
@@ -651,7 +755,7 @@ public class UModsPresenter implements UModsContract.Presenter {
 
                     @Override
                     public void onNext(CalibrateUMod.ResponseValues responseValues) {
-                        if (responseValues.getResult().getGateStatus() == gateStatus){
+                        if (responseValues.getResult().getGateStatusCode() == gateStatus.getStatusID()){
                             mUModsView.showCalibrationSuccessMessage();
                         } else {
                             mUModsView.showCalibrationFailureMessage();

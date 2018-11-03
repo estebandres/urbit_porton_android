@@ -123,7 +123,6 @@ dependencies {
     implementation "io.reactivex:rxandroid:$rootProject.rxandroidVersion"
 
     //RX DNS-SD
-    implementation "com.github.andriydruk:dnssd:$rootProject.DNSSDVersion"
     implementation "com.github.andriydruk:rxdnssd:$rootProject.rxDNSSDVersion"
 
     //RX BLE

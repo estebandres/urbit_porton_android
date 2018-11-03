@@ -237,24 +237,30 @@ public class UModsRepositoryTest {
         //Given
         UMod cachedVersionMock = new UMod("777");
         cachedVersionMock.setAppUserLevel(UModUser.Level.AUTHORIZED);
-        uModsRepository.mCachedUMods.put("777", cachedVersionMock);
+        UModsRepository uModsRepositorySpy = spy(uModsRepository);
+        uModsRepositorySpy.mCachedUMods.put("777", cachedVersionMock);
         UMod discoveredUMod = new UMod("777");
         discoveredUMod.setuModSource(UMod.UModSource.LAN_SCAN);//Set LAN discovery
         discoveredUMod.setState(UMod.State.AP_MODE);//Set discovery state STATION_MODE
         when(lanDataSourceMock.getUModsOneByOne()).thenReturn(Observable.just(discoveredUMod));
         when(internetDataSourceMock.getUModsOneByOne()).thenReturn(Observable.empty());//Zero discoveries by MQTT scan
+        doNothing().when(uModsRepositorySpy).saveUMod(cachedVersionMock);
         //When
-        Observable<UMod> testObservable = uModsRepository.getUModsOneByOneFromLanAndInternetAndUpdateDBAndCache();
+        Observable<UMod> testObservable = uModsRepositorySpy.getUModsOneByOneFromLanAndInternetAndUpdateDBAndCache();
         Flowable<UMod> testFlowable = RxJavaInterop.toV2Flowable(testObservable);
         testFlowable.test()
                 .assertValue(uMod -> uMod.getuModSource() == UMod.UModSource.LAN_SCAN
                         && uMod.getState() == UMod.State.AP_MODE)
                 .assertComplete()
                 .assertValueCount(1);
+        verify(uModsRepositorySpy,times(1)).getUModsOneByOneFromLanAndInternetAndUpdateDBAndCache();
         verify(lanDataSourceMock,times(1)).getUModsOneByOne();
         verify(internetDataSourceMock,times(1)).getUModsOneByOne();
-        verify(dataBaseDataSourceMock, never()).saveUMod(any(UMod.class));
-        assertFalse(uModsRepository.mCacheIsDirty);
+        verify(uModsRepositorySpy,times(1)).saveUMod(cachedVersionMock);
+        verifyNoMoreInteractions(lanDataSourceMock);
+        verifyNoMoreInteractions(internetDataSourceMock);
+        verifyNoMoreInteractions(uModsRepositorySpy);
+        assertFalse(uModsRepositorySpy.mCacheIsDirty);
     }
 
     @Test

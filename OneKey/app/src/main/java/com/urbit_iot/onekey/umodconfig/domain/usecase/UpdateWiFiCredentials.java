@@ -56,88 +56,64 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
-        /*
-        final SetWiFiRPC.Request request =
-                new SetWiFiRPC.Request(
-                        new SetWiFiRPC.Arguments(values.getmWiFiSSID(),
-                                values.getmWiFiPassword()),"SetWiFiAP", 666);
-        */
-
+        uModsRepository.cachedFirst();
         return uModsRepository.getUMod(values.getmUModUUID())
-                .flatMap(new Func1<UMod, Observable<SetWiFiRPC.Result>>() {
-                    @Override
-                    public Observable<SetWiFiRPC.Result> call(final UMod uMod) {
-                        SetWiFiRPC.Arguments setWiFiArgs = new SetWiFiRPC.Arguments(values.getmWiFiSSID(), values.getmWiFiPassword());
-                        return uModsRepository.setWiFiAP(uMod,setWiFiArgs)
-                                .onErrorResumeNext(new Func1<Throwable, Observable<? extends SetWiFiRPC.Result>>() {
-                                    @Override
-                                    public Observable<SetWiFiRPC.Result> call(Throwable throwable) {
-                                        Log.e("setwifi_uc","Set WiFi Failure: " + throwable.getMessage());
-                                        if (throwable instanceof HttpException) {
-                                            String errorMessage = "";
-                                            try {
-                                                errorMessage = ((HttpException) throwable).response().errorBody().string();
-                                            }catch (IOException exc){
-                                                return Observable.error(exc);
-                                            }
-                                            int httpErrorCode = ((HttpException) throwable).response().code();
-
-                                            Log.e("setwifi_uc", "Set WiFi Failure on error CODE:"
-                                                    + httpErrorCode
-                                                    + " MESSAGE: "
-                                                    + errorMessage);
-
-                                            if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
-                                                    || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
-                                                Log.e("setwifi_uc", "Set WiFi Failure on AUTH CODE: " + httpErrorCode);
-                                            }
-                                            /*
-                                            if ((httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR
-                                                    && errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_OK)))) {
-                                                Log.e("setwifi_uc", "Set WiFi in progress!");
-                                                SetWiFiRPC.Result result = new SetWiFiRPC.Result(500, "no se");
-                                                return Observable.just(result);
-                                            }
-                                            */
-                                        }
-                                        throwable.printStackTrace();
-                                        return Observable.error(throwable);
+                .flatMap(uMod -> {
+                    SetWiFiRPC.Arguments setWiFiArgs = new SetWiFiRPC.Arguments(values.getmWiFiSSID(), values.getmWiFiPassword());
+                    return uModsRepository.setWiFiAP(uMod,setWiFiArgs)
+                            .onErrorResumeNext(throwable -> {
+                                Log.e("setwifi_uc","Set WiFi Failure: " + throwable.getMessage());
+                                if (throwable instanceof HttpException) {
+                                    String errorMessage = "";
+                                    try {
+                                        errorMessage = ((HttpException) throwable).response().errorBody().string();
+                                    }catch (IOException exc){
+                                        return Observable.error(exc);
                                     }
-                                })
-                                .flatMap(new Func1<SetWiFiRPC.Result, Observable<SetWiFiRPC.Result>>() {
-                                    @Override
-                                    public Observable<SetWiFiRPC.Result> call(SetWiFiRPC.Result result) {
-                                            Log.d("update_wifi", result.toString());
-                                            uMod.setWifiSSID(values.getmWiFiSSID());
-                                            uModsRepository.saveUMod(uMod);
+                                    int httpErrorCode = ((HttpException) throwable).response().code();
+
+                                    Log.e("setwifi_uc", "Set WiFi Failure on error CODE:"
+                                            + httpErrorCode
+                                            + " MESSAGE: "
+                                            + errorMessage);
+
+                                    if (httpErrorCode == HttpURLConnection.HTTP_UNAUTHORIZED
+                                            || httpErrorCode ==  HttpURLConnection.HTTP_FORBIDDEN){
+                                        Log.e("setwifi_uc", "Set WiFi Failure on AUTH CODE: " + httpErrorCode);
+                                    }
+                                    /*
+                                    if ((httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR
+                                            && errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_OK)))) {
+                                        Log.e("setwifi_uc", "Set WiFi in progress!");
+                                        SetWiFiRPC.Result result = new SetWiFiRPC.Result(500, "no se");
                                         return Observable.just(result);
                                     }
-                                });
-                    }
+                                    */
+                                }
+                                throwable.printStackTrace();
+                                return Observable.error(throwable);
+                            })
+                            .flatMap((Func1<SetWiFiRPC.Result, Observable<SetWiFiRPC.Result>>) result -> {
+                                    Log.d("update_wifi", result.toString());
+                                    uMod.setWifiSSID(values.getmWiFiSSID());
+                                    uModsRepository.saveUMod(uMod);
+                                return Observable.just(result);
+                            });
                 })
-                //The retry logic cannot go in the repository because it needs to retry the getUMod not only the RPC call.
                 //A retry should be performed when a timeout is produce because a umod changed its address or is suddenly disconnected.
                 //This makes sense because this operations is done in LAN MODE only.
-                .retry(new Func2<Integer, Throwable, Boolean>() {
-                    @Override
-                    public Boolean call(Integer retryCount, Throwable throwable) {
-                        Log.e("setwifi_uc", "Retry count: " + retryCount +
-                                "\n Excep msge: " + throwable.getMessage());
-                        if (retryCount == 1//Just the one retry
-                                && (throwable instanceof IOException)){
-                            uModsRepository.refreshUMods();
-                            return true;
-                        } else {
-                            return false;
-                        }
+                .retry((retryCount, throwable) -> {
+                    Log.e("setwifi_uc", "Retry count: " + retryCount +
+                            "\n Excep msge: " + throwable.getMessage());
+                    if (retryCount == 1//Just the one retry
+                            && (throwable instanceof IOException)){
+                        uModsRepository.refreshUMods();
+                        return true;
+                    } else {
+                        return false;
                     }
                 })
-                .map(new Func1<SetWiFiRPC.Result, ResponseValues>() {
-            @Override
-            public ResponseValues call(SetWiFiRPC.Result rpcResponse) {
-                return new ResponseValues(rpcResponse);
-            }
-        });
+                .map(ResponseValues::new);
     }
 
 

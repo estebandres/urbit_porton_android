@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -38,6 +39,8 @@ import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.yarolegovich.lovelydialog.LovelyChoiceDialog;
 import com.yarolegovich.lovelydialog.LovelyStandardDialog;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,7 +104,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mListAdapter = new UModsAdapter(this.getContext(), new ArrayList<>(0), mItemListener, getResources());
+        mListAdapter = new UModsAdapter(this.getContext(), new ArrayList<>(0), mItemListener, getResources(), mPresenter);
         mVibrator = (Vibrator) getActivity().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
@@ -492,6 +495,11 @@ public class UModsFragment extends Fragment implements UModsContract.View {
      */
     UModItemListener mItemListener = new UModItemListener() {
 
+        @Override
+        public boolean isFragmentVisible() {
+            return isVisible();
+        }
+
         public void vibrateOnActionButtonClick(){
             //TODO make three consecutive shorter vibrations
             mVibrator.vibrate(100L);
@@ -548,15 +556,17 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         private UModItemListener mItemListener;
         private Resources resources;
         private Context activityContext;
+        private UModsContract.Presenter presenter;
 
         public UModsAdapter(Context context,
                             List<UModViewModel> uMods,
                             UModItemListener itemListener,
-                            Resources resources) {
+                            Resources resources, UModsContract.Presenter presenter) {
             this.activityContext = context;
             setList(uMods);
             mItemListener = itemListener;
             this.resources = resources;
+            this.presenter = presenter;
         }
 
         public void replaceData(List<UModViewModel> uMods) {
@@ -648,7 +658,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
             LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
             //TODO consider the view holder pattern. Or the below null check.
-            rowView = inflater.inflate(R.layout.umod_item_card3, viewGroup, false);
+            rowView = inflater.inflate(R.layout.umod_item_card4, viewGroup, false);
             /*
             if (rowView == null) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
@@ -659,27 +669,58 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             //TODO if R.id.title is renamed then the project doesn't build. Why??
             TextView mainText = (TextView) rowView.findViewById(R.id.card_main_text);
             mainText.setSelected(true);//This will make the text rotate when too large.
-
             mainText.setText(viewModel.getItemMainText());
 
-            TextView lowerText = (TextView) rowView.findViewById(R.id.card_lower_text);
+            final ImageView ongoingNotifIndicator = rowView.findViewById(R.id.card_item_notif_indicator);
 
-            lowerText.setText(viewModel.getItemLowerText());
-            lowerText.setTextColor(ContextCompat.getColor(this.activityContext,viewModel.getLowerTextColor().asActualResource()));
+            RelativeLayout umodTags = rowView.findViewById(R.id.umod_tags);
 
-            final ImageView ongoingNotifIndicator = (ImageView) rowView.findViewById(R.id.card_item_notif_indicator);
+            if (viewModel.isModuleTagsVisible()){
+                RelativeLayout connectionTag = rowView.findViewById(R.id.connection_tag);
+                connectionTag.setBackground(resources.getDrawable(viewModel.getConnectionTagColor().asActualResource()));
+                TextView connectionTagText = rowView.findViewById(R.id.connection_tag_text);
+                connectionTagText.setText(viewModel.getConnectionTagText());
+                connectionTagText.setTextColor(ContextCompat.getColor(activityContext, viewModel.getConnectionTagTextColor().asActualResource()));
 
-            //final SlideView actionSlider = (SlideView) rowView.findViewById(R.id.card_slider);
+                RelativeLayout gateStatusTag = rowView.findViewById(R.id.gate_status_tag);
+                gateStatusTag.setBackground(resources.getDrawable(viewModel.getGateStatusTagColor().asActualResource()));
+                TextView gateStatusTagText = rowView.findViewById(R.id.gate_status_tag_text);
+                gateStatusTagText.setText(viewModel.getGateStatusTagText());
+                gateStatusTagText.setTextColor(ContextCompat.getColor(activityContext, viewModel.getGateStatusTagTextColor().asActualResource()));
 
-            final RelativeLayout upperLayout = (RelativeLayout) rowView.findViewById(R.id.umod_item_upper_layout);
+                umodTags.setVisibility(View.VISIBLE);
+            } else {
+                umodTags.setVisibility(View.GONE);
+            }
 
-            //actionSlider.getTextView().setSingleLine();
-            //actionSlider.getTextView().setEllipsize(TextUtils.TruncateAt.END);
-            //actionSlider.getTextView().setText(Integer.toString(actionSlider.getTextView().getWidth()) + "  " + Integer.toString(actionSlider.getWidth()));
-            final SlideToActView actionSlider = (SlideToActView) rowView.findViewById(R.id.card_slider);
+            TextView timeText = rowView.findViewById(R.id.item_time_text);
+            if (viewModel.isTimeTextVisible()){
+                timeText.setText(viewModel.getTimeText());
+                timeText.setVisibility(View.VISIBLE);
+            } else {
+                timeText.setVisibility(View.INVISIBLE);
+            }
+
+
+            ImageButton settingsButton = rowView.findViewById(R.id.umod_item_settings_button);
+            if (viewModel.isSettingsButtonVisible()){
+                settingsButton.setOnClickListener(buttonView -> {
+                    if (mItemListener.isFragmentVisible() && this.presenter!=null){
+                        Log.d("umods_frag","INDEX:" + i
+                                + "VM_HashCode: " + viewModel.hashCode()
+                                + "\nVM: " + viewModel.toString());
+                        viewModel.onSettingsButtonClicked(this.presenter);
+                    }
+                });
+                settingsButton.setVisibility(View.VISIBLE);
+            } else {
+                settingsButton.setVisibility(View.INVISIBLE);
+            }
+
+
+            final SlideToActView actionSlider = rowView.findViewById(R.id.card_slider);
 
             if(viewModel.isSliderVisible()){
-                //actionSlider.setOuterColor(viewModel.getSliderBackgroundColor().asActualResource());
                 actionSlider.setOuterColor(
                         ContextCompat.getColor(this.activityContext,
                                 viewModel.getSliderBackgroundColor().asActualResource()));
@@ -696,36 +737,11 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 actionSlider.setVisibility(View.GONE);
             }
 
-
-            /*
-            if(viewModel.isSliderVisible()){
-                actionSlider.setVisibility(View.VISIBLE);
-                ColorStateList sliderTextColorCSL = null;
-                ColorStateList sliderBackgroundCSL = null;
-                try{
-                    sliderBackgroundCSL = ResourcesCompat.getColorStateList(this.resources,viewModel.getSliderBackgroundColor().asActualResource(), null);
-                    sliderTextColorCSL = ResourcesCompat.getColorStateList(this.resources,viewModel.getSliderTextColor().asActualResource(),null);
-                }catch (Resources.NotFoundException nfExc){
-                    //sliderBackgroundCSL = sliderBackgroundCSL==null?ResourcesCompat.getColorStateList(this.resources,R.color.colorPrimaryDark, null):sliderBackgroundCSL;
-                    sliderBackgroundCSL = sliderBackgroundCSL==null?ColorStateList.valueOf(Color.DKGRAY):sliderBackgroundCSL;
-                    //sliderTextColorCSL = sliderTextColorCSL==null?ResourcesCompat.getColorStateList(this.resources,R.color.white, null):sliderTextColorCSL;
-                    sliderTextColorCSL = sliderTextColorCSL==null?ColorStateList.valueOf(Color.WHITE):sliderTextColorCSL;
-                }
-                actionSlider.setSlideBackgroundColor(sliderBackgroundCSL);
-                actionSlider.setTextColor(sliderTextColorCSL);
-                actionSlider.setEnabled(viewModel.isSliderEnabled());
-            } else {
-                actionSlider.setVisibility(View.GONE);
-            }
-            actionSlider.setText(viewModel.getSliderText());
-             */
-
-
             // NotifEnabled checkbox state
 
             if (viewModel.isOngoingNotifVisible()){
                 if (viewModel.isOngoingNotifIndicatorOn()){
-                    ongoingNotifIndicator.setImageDrawable(activityContext.getResources().getDrawable(R.drawable.notif_enabled_icon));
+                    ongoingNotifIndicator.setImageDrawable(activityContext.getResources().getDrawable(R.drawable.ic_notif_enabled_tilted_icon));
                 } else {
                     ongoingNotifIndicator.setImageDrawable(activityContext.getResources().getDrawable(R.drawable.notif_disabled_icon));
                 }
@@ -735,58 +751,18 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             }
 
 
-            /* NO SE QUE HACE ESTO??
-            if (uMod.isOngoingNotificationEnabled()) {
-                rowView.setBackgroundDrawable(viewGroup.getContext()
-                        .getResources().getDrawable(R.drawable.list_completed_touch_feedback));
-            } else {
-                rowView.setBackgroundDrawable(viewGroup.getContext()
-                        .getResources().getDrawable(R.drawable.touch_feedback));
-            }
-            */
-
-            /*
-            notifToggle.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View view) {
-                    viewModel.onButtonToggled(!viewModel.isOngoingNotifIndicatorOn());
-                    return true;
-                }
-            });
-            */
-
-            /*
-            actionSlider.setOnSlideCompleteListener(new SlideView.OnSlideCompleteListener() {
-                @Override
-                public void onSlideComplete(SlideView slideView) {
-                    viewModel.onSlideCompleted();
-                    mItemListener.vibrateOnActionButtonClick();
-                    actionSlider.setEnabled(false);
-                }
-            });
-            */
-
             actionSlider.setOnSlideCompleteListener(slideToActView -> {
-                viewModel.onSlideCompleted();
-                mItemListener.vibrateOnActionButtonClick();
-                //actionSlider.setLocked(true);
-                actionSlider.setEnabled(false);
-                Log.d("umods_frag","INDEX:" + i
-                        + "VM_HashCode: " + viewModel.hashCode()
-                        + "\nVM: " + viewModel.toString());
+                if (mItemListener.isFragmentVisible() && this.presenter!=null){
+                    viewModel.onSlideCompleted(this.presenter);
+                    mItemListener.vibrateOnActionButtonClick();
+                    //actionSlider.setLocked(true);
+                    actionSlider.setEnabled(false);
+                    Log.d("umods_frag","INDEX:" + i
+                            + "VM_HashCode: " + viewModel.hashCode()
+                            + "\nVM: " + viewModel.toString());
+                }
             });
 
-            if(viewModel.isItemOnClickListenerEnabled()){
-                upperLayout.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Log.d("umods_frag","INDEX:" + i
-                                + "VM_HashCode: " + viewModel.hashCode()
-                                + "\nVM: " + viewModel.toString());
-                        viewModel.onItemClicked();
-                    }
-                });
-            }
 
             return rowView;
         }
@@ -815,8 +791,11 @@ public class UModsFragment extends Fragment implements UModsContract.View {
 
         //void onRequestAccess(UMod requestedUMod);
 
+        boolean isFragmentVisible();
+
         void vibrateOnActionButtonClick();
     }
+
 
     public enum UModViewModelColors{
         TRIGGER_SLIDER_BACKGROUND {
@@ -831,16 +810,16 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 return R.color.trigger_slider_text;
             }
         },
-        STORED_BLUE {
+        OFFLINE_TAG {
             @Override
             public int asActualResource() {
-                return R.color.stored_blue;
+                return R.drawable.umods_tags__offline_background;
             }
         },
-        ONLINE_GREEN{
+        ONLINE_TAG {
             @Override
             public int asActualResource() {
-                return R.color.online_green;
+                return R.drawable.umods_tags__online_background;
             }
         },
         ACCESS_REQUEST_SLIDER_BACKGROUND{
@@ -853,6 +832,46 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             @Override
             public int asActualResource() {
                 return R.color.request_access_slider_text;
+            }
+        }, OPEN_GATE_TAG {
+            @Override
+            public int asActualResource() {
+                return R.drawable.umods_tags__open_gate_background;
+            }
+        }, OPEN_GATE_TAG_TEXT {
+            @Override
+            public int asActualResource() {
+                return R.color.request_access_slider_text;
+            }
+        }, CLOSED_GATE_TAG {
+            @Override
+            public int asActualResource() {
+                return R.drawable.umods_tags__closed_gate_background;
+            }
+        }, CLOSED_GATE_TAG_TEXT {
+            @Override
+            public int asActualResource() {
+                return R.color.white;
+            }
+        }, UNKNOWN_GATE_STATUS_TAG {
+            @Override
+            public int asActualResource() {
+                return R.drawable.umods_tags__unknown_gate_status_background;
+            }
+        }, UNKNOWN_GATE_STATUS_TAG_TEXT {
+            @Override
+            public int asActualResource() {
+                return R.color.offline_light_gray;
+            }
+        }, ONLINE_TAG_TEXT {
+            @Override
+            public int asActualResource() {
+                return R.color.white;
+            }
+        }, OFFLINE_TAG_TEXT {
+            @Override
+            public int asActualResource() {
+                return R.color.offline_light_gray;
             }
         };
         public abstract int asActualResource();

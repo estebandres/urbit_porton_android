@@ -61,7 +61,7 @@ public class CalibrateUMod extends SimpleUseCase<CalibrateUMod.RequestValues, Ca
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
 
-        final SetGateStatusRPC.Arguments reqArguments = new SetGateStatusRPC.Arguments(values.getGateStatus());
+        final SetGateStatusRPC.Arguments reqArguments = new SetGateStatusRPC.Arguments(values.getGateStatus().getStatusID());
         //TODO review operator usage
         mUModsRepository.cachedFirst();
         return mUModsRepository.getUMod(values.getUModUUID())

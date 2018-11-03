@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright (C) 2015 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center">
+
+    <android.support.v7.widget.CardView
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_margin="5dp"
+        app:cardElevation="7dp"
+        app:cardCornerRadius="22dp"
+        android:layout_gravity="center"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <ImageButton
+                android:id="@+id/umod_item_settings_button"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:layout_margin="10dp"
+                android:background="@drawable/ic_settings_black_48dp"/>
+
+            <LinearLayout
+                android:id="@+id/umod_item_inner_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:orientation="vertical"
+                android:gravity="end">
+
+                <RelativeLayout
+                    android:id="@+id/umod_item_upper_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:id="@+id/card_item_notif_indicator"
+                        android:layout_width="17dp"
+                        android:layout_height="17dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentTop="true"
+                        android:layout_marginTop="4dp"
+                        android:layout_marginEnd="10dp"
+                        android:textOff=""
+                        android:textOn=""
+                        android:src="@drawable/notif_toggle_selector"/>
+
+                    <TextView
+                        android:id="@+id/card_main_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toStartOf ="@id/card_item_notif_indicator"
+                        android:layout_marginEnd="2dp"
+                        android:textStyle="bold"
+                        android:textAlignment="textEnd"
+                        android:fontFamily="sans-serif-smallcaps"
+                        android:text="Garage Nona"
+                        android:textSize="20sp"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit ="marquee_forever"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:scrollHorizontally="true"
+                        android:textColor="@color/trigger_slider_background"/>
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/umod_tags"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="3dp">
+
+                    <TextView
+                        android:id="@+id/item_time_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toStartOf="@id/connection_tag"
+                        android:textSize="12sp"
+                        android:layout_centerVertical="true"
+                        android:text="Hace 23 min"
+                        android:textStyle="italic"
+                        android:textColor="#636363"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="4dp"
+                        android:paddingTop="0dp"
+                        android:paddingBottom="2dp"
+                        />
+
+
+                    <RelativeLayout
+                        android:id="@+id/connection_tag"
+                        android:layout_toStartOf="@id/gate_status_tag"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="2dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/ongoing_notification__controls_layout_background">
+                        <TextView
+                            android:id="@+id/connection_tag_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="12sp"
+                            android:text="ONLINE"
+                            android:textAllCaps="true"
+                            android:textStyle="bold"
+                            android:textColor="@color/white"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:paddingTop="0dp"
+                            android:paddingBottom="2dp"
+                            />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/gate_status_tag"
+                        android:layout_alignParentEnd="true"
+                        android:layout_marginEnd="5dp"
+                        android:layout_centerVertical="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/ongoing_notification__controls_layout_background">
+
+                        <TextView
+                            android:id="@+id/gate_status_tag_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentStart="true"
+                            android:layout_alignParentTop="true"
+                            android:paddingBottom="2dp"
+                            android:paddingEnd="10dp"
+                            android:paddingStart="10dp"
+                            android:paddingTop="0dp"
+                            android:text="CERRADO"
+                            android:textAllCaps="true"
+                            android:textColor="@color/white"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </RelativeLayout>
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.ncorti.slidetoact.SlideToActView
+                        android:id="@+id/card_slider"
+                        android:layout_width="260dp"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        app:text="SLIDE TO ACT"
+                        app:outer_color="@color/trigger_slider_background"
+                        app:inner_color="@color/white"
+                        app:text_size="14sp"
+                        app:slider_height="40dp"
+                        app:slider_locked="false"
+                        app:text_style="bold" />
+
+                </RelativeLayout>
+
+            </LinearLayout>
+        </RelativeLayout>
+
+
+
+    </android.support.v7.widget.CardView>
+
+</LinearLayout>

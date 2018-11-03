@@ -12,6 +12,7 @@ import com.burgstaller.okhttp.digest.DigestAuthenticator;
 import com.github.druk.rxdnssd.RxDnssd;
 import com.github.druk.rxdnssd.RxDnssdBindable;
 
+import com.github.druk.rxdnssd.RxDnssdEmbedded;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

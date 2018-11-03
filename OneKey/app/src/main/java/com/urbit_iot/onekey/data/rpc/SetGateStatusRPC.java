@@ -22,27 +22,34 @@ public class SetGateStatusRPC extends RPC {
             //(Mongoose side) Any Error.
             HttpURLConnection.HTTP_INTERNAL_ERROR);
 
-    public static class Arguments{
+    public static class GateStatusRPCModel{
         @SerializedName("status_code")
-        private UMod.GateStatus gateStatus;
+        private Integer gateStatusCode;
 
-        public Arguments(UMod.GateStatus gateStatus) {
-            this.gateStatus = gateStatus;
+        public GateStatusRPCModel(Integer gateStatus) {
+            this.gateStatusCode = gateStatus;
         }
 
-        public UMod.GateStatus getGateStatus() {
-            return gateStatus;
+        public Integer getGateStatusCode() {
+            return gateStatusCode;
         }
 
-        public void setGateStatus(UMod.GateStatus gateStatus) {
-            this.gateStatus = gateStatus;
+        public void setGateStatusCode(Integer gateStatusCode) {
+            this.gateStatusCode = gateStatusCode;
         }
 
         @Override
         public String toString() {
             return "Result{" +
-                    "gateStatus=" + gateStatus +
+                    "gateStatusCode=" + gateStatusCode +
                     '}';
+        }
+    }
+
+    public static class Arguments extends GateStatusRPCModel{
+
+        public Arguments(Integer gateStatus) {
+            super(gateStatus);
         }
     }
 
@@ -69,27 +76,10 @@ public class SetGateStatusRPC extends RPC {
         }
     }
 
-    public static class Result{
-        @SerializedName("status_code")
-        private UMod.GateStatus gateStatus;
+    public static class Result extends GateStatusRPCModel{
 
-        public Result(UMod.GateStatus gateStatus) {
-            this.gateStatus = gateStatus;
-        }
-
-        public UMod.GateStatus getGateStatus() {
-            return gateStatus;
-        }
-
-        public void setGateStatus(UMod.GateStatus gateStatus) {
-            this.gateStatus = gateStatus;
-        }
-
-        @Override
-        public String toString() {
-            return "Result{" +
-                    "gateStatus=" + gateStatus +
-                    '}';
+        public Result(Integer gateStatus) {
+            super(gateStatus);
         }
     }
 

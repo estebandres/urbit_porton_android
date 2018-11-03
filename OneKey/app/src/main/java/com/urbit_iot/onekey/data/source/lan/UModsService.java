@@ -84,5 +84,5 @@ public interface UModsService {
     Observable<Response<ResponseBody>> otaCommit(@Body OTACommitRPC.Arguments arguments);
 
     @POST("/rpc/Admin.SetGateStatus")
-    Observable<SetGateStatusRPC.Result> postSetUModGateStatus(SetGateStatusRPC.Arguments reqArguments);
+    Observable<SetGateStatusRPC.Result> postSetUModGateStatus(@Body SetGateStatusRPC.Arguments reqArguments);
 }

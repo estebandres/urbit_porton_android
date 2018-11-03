@@ -267,7 +267,11 @@ public class UModsRepository implements UModsDataSource {
                                         cachedUMod.setWifiSSID(connectivityInfo.getWifiAPSSID());
                                         break;
                                     case AP_MODE:
-                                        return Observable.just(discoveredUMod);
+                                        //An UMod that belongs to me somehow is in AP_MODE
+                                        cachedUMod.setState(UMod.State.AP_MODE);
+                                        cachedUMod.setuModSource(UMod.UModSource.LAN_SCAN);
+                                        saveUMod(cachedUMod);
+                                        return Observable.just(cachedUMod);
                                     default:
                                         return Observable.error(new Exception("Invalid state for lan discovered umod."));
                                 }
@@ -290,9 +294,7 @@ public class UModsRepository implements UModsDataSource {
                         cachedUMod.setOpen(discoveredUMod.isOpen());//Always true. TODO Review isOpen logic!
                         cachedUMod.setLastUpdateDate(discoveredUMod.getLastUpdateDate());
                         //CACHE UPDATE
-                        mUModsLocalDataSource.saveUMod(cachedUMod);
-                        mCachedUMods.put(cachedUMod.getUUID(),cachedUMod);
-
+                        saveUMod(cachedUMod);
                         return Observable.just(cachedUMod);
                     } else {//CACHE MISS
                         return Observable.just(discoveredUMod);
@@ -301,7 +303,7 @@ public class UModsRepository implements UModsDataSource {
                 .doOnTerminate(() -> mCacheIsDirty = false);
     }
 
-    //TODO try to replace Online Refresh by getGateStatus
+    //TODO try to replace Online Refresh by getGateStatusCode
     @Override
     //@RxLogObservable
     /**

@@ -329,11 +329,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
             latLongText = uMod.getuModLocation().getLatitude() + " "
                     + uMod.getuModLocation().getLongitude();
         }
-        String uModSysInfoText = uMod.getUUID()
-                + "\n" + uMod.getConnectionAddress()
-                + "\n" + addressText
-                + "\n" + uMod.getSWVersion()
-                + "\n" + latLongText;
+        String uModSysInfoText = "ID: " + uMod.getUUID() + " VERSIÓN: " + uMod.getSWVersion()
+                + "\nIP: " +uMod.getConnectionAddress();
         boolean updateButtonVisible = uMod.getuModSource() != UMod.UModSource.MQTT_SCAN;
 
         UModConfigViewModel viewModel =

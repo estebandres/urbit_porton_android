@@ -88,7 +88,7 @@ public final class UMod {
         PARTIAL_OPENING(4);
 
         private final Integer statusID;
-        private static SparseArray<GateStatus> map = new SparseArray<>();
+        private static Map<Integer,GateStatus> map = new HashMap<>();
         static {
             for (GateStatus gateStatus : GateStatus.values()) {
                 map.put(gateStatus.statusID, gateStatus);
@@ -137,6 +137,9 @@ public final class UMod {
 
     @NonNull
     private UModSource uModSource = UModSource.UNKNOWN;
+
+    @NonNull
+    private GateStatus gateStatus = GateStatus.UNKNOWN;
 
     @NonNull
     private boolean lanOperationEnabled;
@@ -547,6 +550,15 @@ public final class UMod {
 
     public void setLanOperationEnabled(@NonNull boolean lanOperationEnabled) {
         this.lanOperationEnabled = lanOperationEnabled;
+    }
+
+    @NonNull
+    public GateStatus getGateStatus() {
+        return gateStatus;
+    }
+
+    public void setGateStatus(@NonNull GateStatus gateStatus) {
+        this.gateStatus = gateStatus;
     }
 
     @Override

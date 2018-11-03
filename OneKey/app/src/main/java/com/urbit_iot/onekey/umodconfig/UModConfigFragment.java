@@ -66,8 +66,6 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private TextView mAliasTextInput;
 
-    private TextView mConnectionStatus;
-
     private TextView mUModSysInfoTextInput;
 
     private TextView mWiFiSSIDTextInput;
@@ -193,7 +191,6 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
         View root = inflater.inflate(R.layout.umod_config_frag, container, false);
 
-        mConnectionStatus = (TextView) root.findViewById(R.id.umod_connection_status);
         mAliasTextInput = (TextView) root.findViewById(R.id.alias_text_input);
         mUModSysInfoTextInput = (TextView) root.findViewById(R.id.umod_sys_info);
         mWiFiSSIDTextInput = (EditText) root.findViewById(R.id.wifi_ssid);
@@ -382,7 +379,6 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     public void showUModConfigs(final UModConfigViewModel viewModel) {
         mViewModel = viewModel;
 
-        mConnectionStatus.setText(mViewModel.getConnectionStatusText());
         mAliasTextInput.setText(mViewModel.getAliasText());
         mWiFiSSIDTextInput.setText(mViewModel.getWifiSSIDText());
         mUModSysInfoTextInput.setText(mViewModel.getuModSysInfoText());

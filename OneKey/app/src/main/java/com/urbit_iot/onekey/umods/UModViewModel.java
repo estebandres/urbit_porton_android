@@ -1,58 +1,71 @@
 package com.urbit_iot.onekey.umods;
 
 import com.google.common.base.Objects;
-import com.urbit_iot.onekey.data.UMod;
 
 /**
  * Created by steve-urbit on 27/11/17.
  */
 
 public abstract class UModViewModel {
-    private UMod uMod;
     private String uModUUID;
-    private UModsPresenter presenter;
     private String itemMainText;
-    private String itemLowerText;
+    private String connectionTagText;
+    private UModsFragment.UModViewModelColors connectionTagColor;
+    private UModsFragment.UModViewModelColors connectionTagTextColor;
+    private String gateStatusTagText;
+    private UModsFragment.UModViewModelColors gateStatusTagColor;
+    private UModsFragment.UModViewModelColors gateStatusTagTextColor;
+    private String timeText;
+    private boolean timeTextVisible;
     private boolean ongoingNotifIndicatorOn;
     private boolean ongoingNotifVisible;
     private String sliderText;
     private boolean sliderVisible;
     private boolean sliderEnabled;
-    private boolean itemOnClickListenerEnabled;
-    private UModsFragment.UModViewModelColors itemBackgroundColor;
-    private UModsFragment.UModViewModelColors lowerTextColor;
+    private boolean settingsButtonVisible;
     private UModsFragment.UModViewModelColors sliderBackgroundColor;
     private UModsFragment.UModViewModelColors sliderTextColor;
+    private boolean moduleTagsVisible;
 
 
-    public UModViewModel(UMod uMod, String uModUUID, UModsPresenter presenter, String itemMainText,
-                         String itemLowerText, boolean ongoingNotifIndicatorOn, boolean ongoingNotifVisible,
-                         String sliderText, boolean sliderVisible,
-                         boolean sliderEnabled, boolean itemOnClickListenerEnabled,
-                         UModsFragment.UModViewModelColors lowerTextColor,
+    public UModViewModel(String uModUUID, String itemMainText,
+                         String connectionTagText,
+                         UModsFragment.UModViewModelColors connectionTagColor,
+                         UModsFragment.UModViewModelColors connectionTagTextColor,
+                         String gateStatusTagText,
+                         UModsFragment.UModViewModelColors gateStatusTagColor,
+                         UModsFragment.UModViewModelColors gateStatusTagTextColor,
+                         boolean moduleTagsVisible,
+                         String timeText, boolean timeTextVisible,
+                         boolean ongoingNotifIndicatorOn, boolean ongoingNotifVisible,
+                         String sliderText, boolean sliderVisible, boolean sliderEnabled,
+                         boolean settingsButtonVisible,
                          UModsFragment.UModViewModelColors sliderBackgroundColor,
                          UModsFragment.UModViewModelColors sliderTextColor) {
-        this.uMod = uMod;
         this.uModUUID = uModUUID;
-        this.presenter = presenter;
         this.itemMainText = itemMainText;
-        this.itemLowerText = itemLowerText;
+        this.connectionTagText = connectionTagText;
+        this.connectionTagColor = connectionTagColor;
+        this.connectionTagTextColor = connectionTagTextColor;
+        this.gateStatusTagText = gateStatusTagText;
+        this.gateStatusTagColor = gateStatusTagColor;
+        this.gateStatusTagTextColor = gateStatusTagTextColor;
+        this.timeText = timeText;
+        this.timeTextVisible = timeTextVisible;
         this.ongoingNotifIndicatorOn = ongoingNotifIndicatorOn;
         this.ongoingNotifVisible = ongoingNotifVisible;
         this.sliderText = sliderText;
         this.sliderVisible = sliderVisible;
         this.sliderEnabled = sliderEnabled;
-        this.itemOnClickListenerEnabled = itemOnClickListenerEnabled;
-        this.lowerTextColor = lowerTextColor;
+        this.settingsButtonVisible = settingsButtonVisible;
         this.sliderBackgroundColor = sliderBackgroundColor;
         this.sliderTextColor = sliderTextColor;
+        this.moduleTagsVisible = moduleTagsVisible;
     }
 
-    public abstract void onSlideCompleted();
+    public abstract void onSlideCompleted(UModsContract.Presenter presenter);
 
-    public abstract void onButtonToggled(Boolean toggleState);
-
-    public abstract void onItemClicked();
+    public abstract void onSettingsButtonClicked(UModsContract.Presenter presenter);
 
     public String getuModUUID() {
         return uModUUID;
@@ -62,28 +75,12 @@ public abstract class UModViewModel {
         this.uModUUID = uModUUID;
     }
 
-    public UModsPresenter getPresenter() {
-        return presenter;
-    }
-
-    public void setPresenter(UModsPresenter presenter) {
-        this.presenter = presenter;
-    }
-
     public String getItemMainText() {
         return itemMainText;
     }
 
     public void setItemMainText(String itemMainText) {
         this.itemMainText = itemMainText;
-    }
-
-    public String getItemLowerText() {
-        return itemLowerText;
-    }
-
-    public void setItemLowerText(String itemLowerText) {
-        this.itemLowerText = itemLowerText;
     }
 
     public boolean isOngoingNotifIndicatorOn() {
@@ -110,38 +107,14 @@ public abstract class UModViewModel {
         this.sliderVisible = sliderVisible;
     }
 
-    public boolean isItemOnClickListenerEnabled() {
-        return itemOnClickListenerEnabled;
+    public boolean isSettingsButtonVisible() {
+        return settingsButtonVisible;
     }
 
-    public void setItemOnClickListenerEnabled(boolean itemOnClickListenerEnabled) {
-        this.itemOnClickListenerEnabled = itemOnClickListenerEnabled;
+    public void setSettingsButtonVisible(boolean settingsButtonVisible) {
+        this.settingsButtonVisible = settingsButtonVisible;
     }
 
-    public UMod getuMod() {
-        return uMod;
-    }
-
-    public void setuMod(UMod uMod) {
-        this.uMod = uMod;
-    }
-
-
-    public UModsFragment.UModViewModelColors getItemBackgroundColor() {
-        return itemBackgroundColor;
-    }
-
-    public void setItemBackgroundColor(UModsFragment.UModViewModelColors itemBackgroundColor) {
-        this.itemBackgroundColor = itemBackgroundColor;
-    }
-
-    public UModsFragment.UModViewModelColors getLowerTextColor() {
-        return lowerTextColor;
-    }
-
-    public void setLowerTextColor(UModsFragment.UModViewModelColors lowerTextColor) {
-        this.lowerTextColor = lowerTextColor;
-    }
 
     public UModsFragment.UModViewModelColors getSliderBackgroundColor() {
         return sliderBackgroundColor;
@@ -175,26 +148,38 @@ public abstract class UModViewModel {
         return Objects.equal(uModUUID, uModModel.uModUUID);
     }
 
-    @Override
-    public String toString() {
-        return "UModViewModel{" +
-                "uModHashCode=" + uMod.hashCode() +
-                ", uModUUID='" + uModUUID + '\'' +
-                ", presenterHashCode=" + presenter.hashCode() +
-                ", itemMainText='" + itemMainText + '\'' +
-                ", itemLowerText='" + itemLowerText + '\'' +
-                ", ongoingNotifIndicatorOn=" + ongoingNotifIndicatorOn +
-                ", ongoingNotifVisible=" + ongoingNotifVisible +
-                ", sliderText='" + sliderText + '\'' +
-                ", sliderVisible=" + sliderVisible +
-                ", sliderEnabled=" + sliderEnabled +
-                ", itemOnClickListenerEnabled=" + itemOnClickListenerEnabled +
-                ", itemBackgroundColor=" + itemBackgroundColor +
-                ", lowerTextColor=" + lowerTextColor +
-                ", sliderBackgroundColor=" + sliderBackgroundColor +
-                ", sliderTextColor=" + sliderTextColor +
-                '}';
+    public String getConnectionTagText() {
+        return connectionTagText;
     }
+
+    public void setConnectionTagText(String connectionTagText) {
+        this.connectionTagText = connectionTagText;
+    }
+
+    public UModsFragment.UModViewModelColors getConnectionTagColor() {
+        return connectionTagColor;
+    }
+
+    public void setConnectionTagColor(UModsFragment.UModViewModelColors connectionTagColor) {
+        this.connectionTagColor = connectionTagColor;
+    }
+
+    public String getGateStatusTagText() {
+        return gateStatusTagText;
+    }
+
+    public void setGateStatusTagText(String gateStatusTagText) {
+        this.gateStatusTagText = gateStatusTagText;
+    }
+
+    public UModsFragment.UModViewModelColors getGateStatusTagColor() {
+        return gateStatusTagColor;
+    }
+
+    public void setGateStatusTagColor(UModsFragment.UModViewModelColors gateStatusTagColor) {
+        this.gateStatusTagColor = gateStatusTagColor;
+    }
+
 
     public boolean isOngoingNotifVisible() {
         return ongoingNotifVisible;
@@ -202,5 +187,65 @@ public abstract class UModViewModel {
 
     public void setOngoingNotifVisible(boolean ongoingNotifVisible) {
         this.ongoingNotifVisible = ongoingNotifVisible;
+    }
+
+    public String getTimeText() {
+        return timeText;
+    }
+
+    public void setTimeText(String timeText) {
+        this.timeText = timeText;
+    }
+
+    public boolean isTimeTextVisible() {
+        return timeTextVisible;
+    }
+
+    public void setTimeTextVisible(boolean timeTextVisible) {
+        this.timeTextVisible = timeTextVisible;
+    }
+
+    public UModsFragment.UModViewModelColors getConnectionTagTextColor() {
+        return connectionTagTextColor;
+    }
+
+    public void setConnectionTagTextColor(UModsFragment.UModViewModelColors connectionTagTextColor) {
+        this.connectionTagTextColor = connectionTagTextColor;
+    }
+
+    public UModsFragment.UModViewModelColors getGateStatusTagTextColor() {
+        return gateStatusTagTextColor;
+    }
+
+    public void setGateStatusTagTextColor(UModsFragment.UModViewModelColors gateStatusTagTextColor) {
+        this.gateStatusTagTextColor = gateStatusTagTextColor;
+    }
+
+    @Override
+    public String toString() {
+        return "UModViewModel{" +
+                ", uModUUID='" + uModUUID + '\'' +
+                ", itemMainText='" + itemMainText + '\'' +
+                ", connectionTagText='" + connectionTagText + '\'' +
+                ", connectionTagColor=" + connectionTagColor +
+                ", gateStatusTagText='" + gateStatusTagText + '\'' +
+                ", gateStatusTagColor=" + gateStatusTagColor +
+                ", ongoingNotifIndicatorOn=" + ongoingNotifIndicatorOn +
+                ", ongoingNotifVisible=" + ongoingNotifVisible +
+                ", sliderText='" + sliderText + '\'' +
+                ", sliderVisible=" + sliderVisible +
+                ", sliderEnabled=" + sliderEnabled +
+                ", settingsButtonVisible=" + settingsButtonVisible +
+                ", sliderBackgroundColor=" + sliderBackgroundColor +
+                ", sliderTextColor=" + sliderTextColor +
+                '}';
+    }
+
+    public boolean isModuleTagsVisible() {
+        return moduleTagsVisible;
+    }
+
+    public void setModuleTagsVisible(boolean moduleTagsVisible) {
+        this.moduleTagsVisible = moduleTagsVisible;
     }
 }
