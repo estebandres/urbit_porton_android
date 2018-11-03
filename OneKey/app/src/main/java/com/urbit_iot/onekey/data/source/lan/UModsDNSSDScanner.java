@@ -1,28 +1,30 @@
 package com.urbit_iot.onekey.data.source.lan;
 
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.github.druk.rxdnssd.BonjourService;
 import com.github.druk.rxdnssd.RxDnssd;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.util.GlobalConstants;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
+import com.urbit_iot.onekey.util.schedulers.SchedulerProvider;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 import rx.Completable;
 import rx.Observable;
 import rx.Subscription;
 import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
 import rx.subjects.ReplaySubject;
 
 /**
@@ -30,12 +32,13 @@ import rx.subjects.ReplaySubject;
  */
 
 public class UModsDNSSDScanner {
+    @NonNull
     private RxDnssd rxDnssd;
-    private Map<String, UMod> mCachedUMods;
+
     private ReplaySubject<UMod> freshUModDnsScan;
-    private PublishSubject<Long> uModDnsScanTrigger;
+
     private AtomicBoolean scanInProgress;//TODO replace with atomicBoolean or a custom Lock that can be
-    private Subscription serviceProbeRegistration;
+
     //lock by one thread and unlocked by other.
     /*
     public class MyLock implements Lock {
@@ -57,27 +60,18 @@ public class UModsDNSSDScanner {
 
 }
      */
-    public UModsDNSSDScanner(RxDnssd rxDnssd){
-        this.mCachedUMods = new LinkedHashMap<>();
+
+    @NonNull
+    private BaseSchedulerProvider mSchedulerProvider;
+
+    @Inject
+    public UModsDNSSDScanner(@NonNull RxDnssd rxDnssd,
+                             @NonNull BaseSchedulerProvider mSchedulerProvider){
         this.rxDnssd = rxDnssd;
+        this.mSchedulerProvider = mSchedulerProvider;
         this.scanInProgress = new AtomicBoolean(false);
         this.freshUModDnsScan = ReplaySubject.create();
-        this.uModDnsScanTrigger = PublishSubject.create();
-        //TODO unsubscribe when application is destroyed
-        //this.serviceProbeRegistration = this.registerProbeService();
 
-    }
-
-    private Subscription registerProbeService(){
-        BonjourService bonjourService = new BonjourService
-                .Builder(0, 0, Build.DEVICE, "_http._tcp", "portonprobe")
-                .port(59328)
-                .build();
-        return this.rxDnssd.register(bonjourService)
-                .observeOn(Schedulers.io())
-                .subscribe(service -> { }, throwable -> {
-                    Log.e("DNSSD", "Error: ", throwable);
-                });
     }
 
 
@@ -95,8 +89,6 @@ public class UModsDNSSDScanner {
 
     //@RxLogObservable
     synchronized public Observable<UMod> browseLANForUMods(){
-        //Log.d("dnssd_scan", "BROWSE ALL THREAD: " + Thread.currentThread().getName() + "  scanInProgress: " + scanInProgress.get());
-        //return Observable.from(this.mCachedUMods.values());
         return Observable.defer(() -> Observable.just(true)
                 .map(aBoolean -> scanInProgress.compareAndSet(false,true))
                 //TODO review synchronization scheme (petri net validation)
@@ -120,14 +112,6 @@ public class UModsDNSSDScanner {
     }
 
     synchronized public Observable<UMod> browseLANForUMod(final String uModUUID){
-        /*
-        UMod cachedUMod = this.mCachedUMods.get(uModUUID);
-        if (cachedUMod == null){
-            return Observable.empty();
-        } else {
-            return Observable.just(cachedUMod);
-        }
-        */
         return this.browseLANForUMods().filter(uMod -> uMod.getUUID().equals(uModUUID));
     }
 
@@ -140,7 +124,7 @@ public class UModsDNSSDScanner {
                 .compose(rxDnssd.queryRecords())
                 // The compositions switch the current thread to the main thread
                 // so a new switch is needed in order to avoid
-                .observeOn(Schedulers.io())
+                .observeOn(mSchedulerProvider.io())
                 .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
                 .distinct()
                 .filter(bonjourService ->
@@ -158,7 +142,7 @@ public class UModsDNSSDScanner {
                 })
                 .flatMap(uMod ->
                         Observable.just(uMod)
-                                .subscribeOn(Schedulers.io())
+                                .subscribeOn(mSchedulerProvider.io())
                                 .flatMap(uMod1 ->
                                         testConnectionToModule(uMod1.getConnectionAddress())
                                                 .andThen(Observable.just(uMod1))
@@ -171,31 +155,16 @@ public class UModsDNSSDScanner {
                     freshUModDnsScan.onNext(uMod);
                 })
                 .doAfterTerminate(() -> scanInProgress.compareAndSet(true, false))
-                //Deals when the scanning is ended abruptly
+                //When the scanning is ended abruptly
                 .doOnUnsubscribe(() -> scanInProgress.compareAndSet(true, false)));
     }
 
-    public void testConnectionToModuleA(String ipAddress){
-        Socket clientSocket;
-        clientSocket = new Socket();
-        try{
-            clientSocket.connect(
-                    new InetSocketAddress(
-                            ipAddress,
-                            7777),
-                    1500);
-            clientSocket.close();
-        } catch (IOException exc) {
-            Log.d("DNSSD_SCAN","CONN TEST FAILURE: "+ ipAddress +"  " + exc.getMessage());
-        }
-    }
-
     //Tries to connect to the module so the ARP table is updated and the future http request is faster.
-    public Completable testConnectionToModule(String ipAddress){
+    public Completable testConnectionToModule(String ipAddress) {
         return Completable.fromCallable(() -> {
             Socket clientSocket;
             clientSocket = new Socket();
-            try{
+            try {
                 Log.d("DNSSD_SCAN", "TESTING CONN ON: " + Thread.currentThread().getName());
                 clientSocket.connect(
                         new InetSocketAddress(
@@ -207,39 +176,5 @@ public class UModsDNSSDScanner {
             }
             return true;
         });
-                /*
-                .subscribeOn(Schedulers.io())
-                .subscribe(() -> {},
-                        throwable -> Log.d("DNSSD_SCAN","CONN TEST FAILURE: "
-                                + ipAddress
-                                +"  "
-                                + throwable.getMessage()));*/
     }
-
-    /*
-    public void testConnectionToFoundUMod(UMod uMod){
-        Observable.fromCallable(() -> {
-            Socket clientSocket;
-            clientSocket = new Socket();
-            try{
-                clientSocket.connect(
-                        new InetSocketAddress(
-                                uMod.getConnectionAddress(),
-                                GlobalConstants.UMOD__TCP_ECHO_PORT),
-                        1000);
-                return uMod;
-            } finally {
-                clientSocket.close();
-            }
-        });
-        Completable.fromCallable(() -> {
-
-        }).subscribeOn(Schedulers.io())
-                .subscribe(() -> {},
-                        throwable -> Log.d("DNSSD_SCAN","CONN TEST FAILURE: "
-                                + uMod.getConnectionAddress()
-                                +"  "
-                                + throwable.getMessage()));
-    }
-    */
 }

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
@@ -11,14 +12,17 @@ import com.github.pwittchen.reactivewifi.ReactiveWifi;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.util.GlobalConstants;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
+import com.urbit_iot.onekey.util.schedulers.SchedulerProvider;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.inject.Inject;
 
 import rx.Observable;
 import rx.functions.Func1;
@@ -30,21 +34,23 @@ import rx.subjects.PublishSubject;
  */
 
 public class UModsWiFiScanner {
+    @NonNull
     private final Context appContext;
-    private Map<String, UMod> mCachedAPModeUMods;
     private AtomicBoolean scanInProgress;
     private PublishSubject<UMod> freshUModDnsScan;
+    @NonNull
+    private BaseSchedulerProvider mSchedulerProvider;
 
-    public UModsWiFiScanner(Context appContext) {
+    @Inject
+    public UModsWiFiScanner(@NonNull Context appContext,
+                            @NonNull BaseSchedulerProvider mSchedulerProvider) {
         this.appContext = appContext;
-        this.mCachedAPModeUMods = new LinkedHashMap<>();
+        this.mSchedulerProvider = mSchedulerProvider;
         this.scanInProgress = new AtomicBoolean(false);
         this.freshUModDnsScan = PublishSubject.create();
     }
 
     synchronized public Observable<UMod> browseWiFiForUMods() {
-        //return scanWiFi(null);
-        //return Observable.from(this.mCachedAPModeUMods.values());
         return Observable.just(true)
                 .map(aBoolean -> scanInProgress.compareAndSet(false,true))
                 .flatMap(mutexWasAcquired -> {
@@ -68,16 +74,6 @@ public class UModsWiFiScanner {
     }
 
     synchronized public Observable<UMod> browseWiFiForUMod(String uModUUID) {
-        //return scanWiFi(uModUUID);
-
-        /*
-        UMod cachedUMod = this.mCachedAPModeUMods.get(uModUUID);
-        if (cachedUMod == null){
-            return Observable.empty();
-        } else {
-            return Observable.just(cachedUMod);
-        }
-        */
         return Observable.just(true)
                 .map(aBoolean -> scanInProgress.compareAndSet(false,true))
                 .flatMap(mutexWasAcquired -> {
@@ -115,7 +111,7 @@ public class UModsWiFiScanner {
             return Observable.error(new Exception("Unsatisfied WiFi permissions"));
         }
         return ReactiveWifi.observeWifiAccessPoints(this.appContext)
-                .observeOn(Schedulers.io())
+                .observeOn(mSchedulerProvider.io())
                 .flatMap(Observable::from)
                 .distinct((Func1<ScanResult, Object>) scanResult -> scanResult.SSID)
                 .filter(scanResult -> scanResult.level > -75)

@@ -3,6 +3,8 @@ package com.urbit_iot.onekey.data.source.internet;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
+
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -17,11 +19,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
-import io.reactivex.subjects.CompletableSubject;
 import rx.Completable;
 import rx.CompletableEmitter;
 import rx.Observable;
-import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
 /**
@@ -49,8 +49,13 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
 
     private PublishSubject<Boolean> subscriptionsKillerSubject;
 
-    public PahoClientRxWrap(@NonNull MqttAsyncClient mqttAsyncClient) {
+    @NonNull
+    private BaseSchedulerProvider mSchedulerProvider;
+
+    public PahoClientRxWrap(@NonNull MqttAsyncClient mqttAsyncClient,
+                            @NonNull BaseSchedulerProvider mSchedulerProvider) {
         this.mqttAsyncClient = mqttAsyncClient;
+        this.mSchedulerProvider = mSchedulerProvider;
         this.requestedSubscriptionTopics = new HashSet<>();
         this.successfulSubscriptionTopics = new HashSet<>();
         this.mqttConnectOptions = new MqttConnectOptions();
@@ -71,7 +76,7 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
         Log.d("PAHO_CALLBK","CONNECT__ URI: " + serverURI + "  RECONNECT: " + reconnect);
         if (!requestedSubscriptionTopics.isEmpty()){
             subscribeToSeveralTopics(requestedSubscriptionTopics.toArray(new String[0]),1)
-                    .subscribeOn(Schedulers.io())//TODO use dagger injected scheduler
+                    .subscribeOn(mSchedulerProvider.io())//TODO use dagger injected scheduler
                     .retry(3L)
                     .subscribe(() -> Log.d("MQTT_WRAP", "Resubscription Success: "),
                             throwable -> Log.e("MQTT_WRAP", "Resubscription Error: " +
@@ -140,7 +145,7 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
                 completableEmitter.onError(interrExc);
             }
         })
-        .observeOn(Schedulers.io());
+        .observeOn(mSchedulerProvider.io());
     }
 
     public Completable publishToTopic(byte[] messagePayload, String topic, int qos, boolean retained){
@@ -173,7 +178,7 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
                         Thread.currentThread().getName(),interrExc);
             }
         })
-        .observeOn(Schedulers.io());
+        .observeOn(mSchedulerProvider.io());
     }
 
     public Completable subscribeToTopic(String topic, int qos){
@@ -221,7 +226,7 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
                 completableEmitter.onError(exception);
             }
         })
-        .observeOn(Schedulers.io());
+        .observeOn(mSchedulerProvider.io());
                 /*
         .doOnTerminate(() -> {
             Log.d("MQTT_SERVICE", "SUB___  FINALLY + UNLOCKING!!  " + Thread.currentThread().getName());
@@ -270,7 +275,7 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
                 completableEmitter.onError(exception);
             }
         })
-                .observeOn(Schedulers.io())
+                .observeOn(mSchedulerProvider.io())
                 .doOnCompleted(() -> requestedSubscriptionTopics = new HashSet<>(Arrays.asList(topics)))
                 /*
         .doOnTerminate(() -> {
@@ -307,6 +312,6 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
                 completableEmitter.onError(exception);
             }
         })
-        .observeOn(Schedulers.io());
+        .observeOn(mSchedulerProvider.io());
     }
 }

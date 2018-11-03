@@ -5,10 +5,13 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Location;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import com.google.android.gms.location.LocationRequest;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
+import com.urbit_iot.onekey.util.schedulers.SchedulerProvider;
 
 
 import java.util.Date;
@@ -18,9 +21,7 @@ import javax.inject.Inject;
 
 import hu.akarnokd.rxjava.interop.RxJavaInterop;
 import io.reactivex.BackpressureStrategy;
-import io.reactivex.Maybe;
 import rx.Observable;
-import io.reactivex.schedulers.Schedulers;
 import pl.charmas.android.reactivelocation2.ReactiveLocationProvider;
 
 /**
@@ -29,30 +30,25 @@ import pl.charmas.android.reactivelocation2.ReactiveLocationProvider;
 
 public class LocationService {
     private ReactiveLocationProvider locationProvider;
+    @NonNull
     private Context mContext;
+    @NonNull
+    private BaseSchedulerProvider mSchedulerProvider;
 
     @Inject
-    public LocationService(Context context) {
+    public LocationService(@NonNull Context context,
+                           @NonNull BaseSchedulerProvider mSchedulerProvider) {
         this.mContext = context;
         this.locationProvider = new ReactiveLocationProvider(context);
-        /*
+        this.mSchedulerProvider = mSchedulerProvider;
+
         getCurrentLocation()
-                .subscribeOn(Schedulers.io())
-                .subscribe(location -> {
-            Log.d("GPS_SCAN", "Result: " + location.toString());
-        },throwable -> {
-            Log.e("GPS_SCAN", "Failure: " + throwable.getMessage(), throwable);
-        },()->{
-            Log.d("GPS_SCAN", "Scan Fnished");
-        });
-        */
-        getCurrentLocation().subscribe(location -> {
-            Log.d("GPS_SCAN", "Result: " + location.toString() + " TIME: " + new Date(location.getTime()).toString());
-        }, throwable -> {
-            Log.e("GPS_SCAN", "Failure: " + throwable.getMessage(), throwable);
-        }, () -> {
-            Log.d("GPS_SCAN", "Scan Fnished");
-        });
+                .subscribeOn(this.mSchedulerProvider.io())
+                .subscribe(location -> Log.d("GPS_SCAN", "Result: " + location.toString()
+                                + " TIME: " + new Date(location.getTime()).toString()),
+                        throwable -> Log.e("GPS_SCAN", "Failure: "
+                                + throwable.getMessage(), throwable)
+                        , () -> Log.d("GPS_SCAN", "Scan Fnished"));
     }
 
     public Observable<Location> getCurrentLocation() {
@@ -76,7 +72,7 @@ public class LocationService {
         }
         //return RxJavaInterop.toV1Observable(s -> locationProvider.getUpdatedLocation(request).takeUntil(io.reactivex.Observable.timer(3L,TimeUnit.SECONDS)).firstElement());
         return RxJavaInterop.toV1Observable(locationProvider.getUpdatedLocation(request), BackpressureStrategy.BUFFER)
-                .observeOn(rx.schedulers.Schedulers.io())
+                .observeOn(mSchedulerProvider.io())
                 .doOnNext(location -> Log.d("LOCATION_SERVICE","" + location.toString() + " TIME: " + new Date(location.getTime()).toString() ))
                 .doOnError(throwable -> Log.e("LOCATION_SERVICE", "" + throwable.getMessage(),throwable))
                 .takeUntil(Observable.timer(2000L, TimeUnit.MILLISECONDS));
@@ -123,7 +119,7 @@ public class LocationService {
                         location.getLongitude(),
                         10),
                 BackpressureStrategy.BUFFER)
-                .subscribeOn(rx.schedulers.Schedulers.io())
+                .subscribeOn(mSchedulerProvider.io())
                 .flatMap(Observable::from)
                 .first()
                 .doOnNext(address -> Log.d("LOCATION_SERVICE", " ADDRESS: " + address.toString()))

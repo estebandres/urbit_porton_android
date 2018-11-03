@@ -10,7 +10,7 @@ import android.util.Log;
 
 import com.urbit_iot.onekey.OneKeyApplication;
 import com.urbit_iot.onekey.util.GlobalConstants;
-
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 
 import javax.inject.Inject;
@@ -23,6 +23,9 @@ public class UModsNotifService extends Service{
     public static boolean SERVICE_IS_ALIVE = false;
 
     private boolean serviceWasAlreadyStarted = false;
+
+    @Inject
+    BaseSchedulerProvider mSchedulerProvider;
 
     @Inject
     UModsNotifPresenter mPresenter;
@@ -39,7 +42,6 @@ public class UModsNotifService extends Service{
         OneKeyApplication oneKeyApplication = (OneKeyApplication) getApplication();
         DaggerUModsNotifComponent.builder()
                 .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponentSingleton())
-                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .uModsNotifPresenterModule(new UModsNotifPresenterModule(this.mNotificationViewsHandler))
                 .build()
                 .inject(this);
@@ -66,7 +68,7 @@ public class UModsNotifService extends Service{
         Log.d("SERVICE", "StartCommand" + intent.getAction() + Thread.currentThread().getName());
         Observable.just(intent)
                 .doOnNext(this::processActionPendingIntent)
-                .subscribeOn(Schedulers.io())
+                .subscribeOn(mSchedulerProvider.io())
                 .subscribe();
         return START_NOT_STICKY;
     }

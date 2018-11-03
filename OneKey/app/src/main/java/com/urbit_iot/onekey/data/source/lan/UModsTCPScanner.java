@@ -7,23 +7,18 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.util.GlobalConstants;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
-import java.net.SocketAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -34,7 +29,6 @@ import javax.inject.Inject;
 //import io.netty.buffer.ByteBuf;
 //import io.reactivex.netty.protocol.tcp.client.TcpClient;
 import rx.Observable;
-import rx.schedulers.Schedulers;
 
 /**
  * Created by andresteve07 on 05/07/18.
@@ -43,10 +37,14 @@ import rx.schedulers.Schedulers;
 public class UModsTCPScanner {
     private Context mContext;
     private LanAddressesCalculation addressesCalculator;
+    @NonNull
+    private BaseSchedulerProvider mSchedulerProvider;
 
     @Inject
-    public UModsTCPScanner(Context mContext) {
+    public UModsTCPScanner(Context mContext,
+                           @NonNull BaseSchedulerProvider mSchedulerProvider) {
         this.mContext = mContext;
+        this.mSchedulerProvider = mSchedulerProvider;
         this.setupCalculator();
         Observable.just(true)
                 .delay(3000L,TimeUnit.MILLISECONDS)
@@ -54,7 +52,7 @@ public class UModsTCPScanner {
                     Log.d("TCP_SCAN", "TEST ECHO: ");
                 })
                 //.flatMap(aBoolean -> TCPScanClient.tcpEchoRequest("172.18.191.68", 7777))
-                .subscribeOn(Schedulers.io()).subscribe();
+                .subscribeOn(this.mSchedulerProvider.io()).subscribe();
     }
     public void setupCalculator(){
         WifiManager wifi = (WifiManager)
@@ -149,7 +147,7 @@ public class UModsTCPScanner {
         return Observable.from(allAddresses)
                 .flatMap(ipAddressAsLong ->
                         Observable.just(longToStringIP(ipAddressAsLong))
-                        .subscribeOn(Schedulers.io())
+                        .subscribeOn(mSchedulerProvider.io())
                         .flatMap(this::performTCPEcho), 15)
                 .onErrorResumeNext(throwable -> {
                     if (throwable != null){

@@ -9,9 +9,9 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.data.UModUser;
 import com.urbit_iot.onekey.data.rpc.RPC;
 import com.urbit_iot.onekey.util.GlobalConstants;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -28,7 +28,6 @@ import retrofit2.Response;
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Completable;
 import rx.Observable;
-import rx.schedulers.Schedulers;
 
 /**
  * Created by andresteve07 on 28/10/18.
@@ -41,16 +40,20 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
     private String appUsername;
     @NonNull
     private Gson gsonInstance;
+    @NonNull
+    private BaseSchedulerProvider mSchedulerProvider;
 
     @Inject
     public SimplifiedUModMqttService(@NonNull PahoClientRxWrap pahoClientRxWrap,
                                      @NonNull String username,
-                                     @NonNull Gson gsonInstance) {
+                                     @NonNull Gson gsonInstance,
+                                     @NonNull BaseSchedulerProvider mSchedulerProvider) {
         this.pahoClientRxWrap = pahoClientRxWrap;
         this.appUsername = username;
         this.gsonInstance = gsonInstance;
+        this.mSchedulerProvider = mSchedulerProvider;
         this.pahoClientRxWrap.connectToBroker()
-                .subscribeOn(Schedulers.io())//TODO use dagger injected scheduler
+                .subscribeOn(this.mSchedulerProvider.io())//TODO use dagger injected scheduler
                 .subscribe(() -> {},
                         throwable -> Log.e("MQTT_SRV", "First Connection Failed  ERROR: " + throwable.getMessage())
                         );
@@ -157,7 +160,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
     public Observable<UMod> scanUModInvitations() {
         String invitationsTopic = this.appUsername + "/invitation/+";
         return this.pahoClientRxWrap.connectToBroker()
-                //.subscribeOn(Schedulers.io())//TODO use dagger injected scheduler
+                //.subscribeOn(mSchedulerProvider.io())//TODO use dagger injected scheduler
                 .andThen(this.pahoClientRxWrap.subscribeToTopic(invitationsTopic,0))
                 .andThen(this.pahoClientRxWrap.receivedMessagesObservable())
                 .doOnNext(mqttMessage -> Log.d("MQTT_SERVICE", "INVITATION: " + new String(mqttMessage.getPayload())))
@@ -202,7 +205,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                 + uModUUID;
         Log.d("MQTT_SERVICE","CANCELING: " + invitationsTopic);
         return this.pahoClientRxWrap.connectToBroker()
-                .subscribeOn(Schedulers.io())//TODO use dagger injected scheduler
+                .subscribeOn(mSchedulerProvider.io())//TODO use dagger injected scheduler
                 .andThen(pahoClientRxWrap.publishToTopic(new byte[0],invitationsTopic,0,false))
                 .doOnCompleted(() -> Log.d("MQTT_SERVICE","SUCCESS ON CANCELING: " + invitationsTopic))
                 .doOnError(throwable -> Log.e("MQTT_SERVICE","FAILURE ON CANCELING: " + invitationsTopic,throwable));
@@ -228,7 +231,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
     @Override
     public void clearAllSubscriptions() {
         this.pahoClientRxWrap.connectToBroker()
-                //.subscribeOn(Schedulers.io())//TODO use dagger injected scheduler
+                //.subscribeOn(mSchedulerProvider.io())//TODO use dagger injected scheduler
                 .andThen(this.pahoClientRxWrap.unsubscribeFromAllTopics())
                 .subscribe(() -> {},
                         throwable -> Log.e("MQTT_SRV", "UNSUB_ALL Error: " +

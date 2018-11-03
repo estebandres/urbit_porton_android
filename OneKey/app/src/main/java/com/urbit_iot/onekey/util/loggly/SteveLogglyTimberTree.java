@@ -1,5 +1,6 @@
 package com.urbit_iot.onekey.util.loggly;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.f2prateek.rx.preferences2.Preference;
@@ -7,6 +8,7 @@ import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.github.tony19.loggly.LogglyClient;
 import com.google.gson.Gson;
 import com.urbit_iot.onekey.util.GlobalConstants;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -17,8 +19,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import javax.inject.Inject;
 
 import rx.Observable;
 import rx.schedulers.Schedulers;
@@ -37,6 +37,8 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
     private RxSharedPreferences rxSharedPreferences;
     private Preference<String> serializedUnsentLogs;
     private Gson gsonInstance;
+    @NonNull
+    private BaseSchedulerProvider mSchedulerProvider;
 
     /** Log severity level */
     private enum SteveLogglyLevel {
@@ -47,8 +49,11 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
     }
 
 
-    public SteveLogglyTimberTree(String logglyToken, RxSharedPreferences rxSharedPreferences, Gson gsonInstance){
+    public SteveLogglyTimberTree(String logglyToken, RxSharedPreferences rxSharedPreferences,
+                                 Gson gsonInstance,
+                                 @NonNull BaseSchedulerProvider mSchedulerProvider){
         logglyClient = new LogglyClient(logglyToken);
+        this.mSchedulerProvider = mSchedulerProvider;
         this.unsentLogsMutex = new ReentrantLock();
         this.rxSharedPreferences = rxSharedPreferences;
         this.gsonInstance = gsonInstance;
@@ -63,7 +68,7 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
             this.unsentLogs = new ArrayList<>();
         }
         Observable.interval(30, TimeUnit.MINUTES)
-                .subscribeOn(Schedulers.io())
+                .subscribeOn(mSchedulerProvider.io())
                 .doOnNext(n -> {
                     unsentLogsMutex.lock();
                     if (!unsentLogs.isEmpty()){
@@ -74,7 +79,9 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
                     }
                     unsentLogsMutex.unlock();
                 })
-                .subscribe();
+                .subscribe(aLong -> {},
+                        throwable -> Log.e("LOGGLY", "RECURRENT JOB FAILED: "
+                                + throwable.getMessage(), throwable));
     }
 
     private void updateUnsentLogsPreference(List<String> unsentLogs){
@@ -350,7 +357,7 @@ public class SteveLogglyTimberTree extends Timber.HollowTree implements Timber.T
                         //TODO serialize unsents list to file or shared preferences!!
                     }
                 })
-                .subscribeOn(Schedulers.io())//TODO replace with dagger scheduler instance.
+                .subscribeOn(mSchedulerProvider.io())//TODO replace with dagger scheduler instance.
                 .subscribe();
     }
 

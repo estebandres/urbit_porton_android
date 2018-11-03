@@ -79,7 +79,6 @@ public class UModsActivity extends AppCompatActivity {
         // Create the presenter
         DaggerUModsComponent.builder()
                 .uModsRepositoryComponent(oneKeyApplication.createUModsRepositoryComponentSingleton(appUserPhoneNumber,appUUID))
-                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .uModsPresenterModule(new UModsPresenterModule(umodsFragment))
                 .build()
                 .inject(this);

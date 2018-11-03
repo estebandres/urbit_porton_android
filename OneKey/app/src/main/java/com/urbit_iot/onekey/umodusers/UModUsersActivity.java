@@ -63,7 +63,6 @@ public class UModUsersActivity extends AppCompatActivity {
         // Create the presenter
         DaggerUModUsersComponent.builder()
                 .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponentSingleton())
-                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .uModUsersPresenterModule(new UModUsersPresenterModule(umodUsersFragment)).build()
                 .inject(this);
 

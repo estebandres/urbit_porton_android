@@ -3,12 +3,6 @@ package com.urbit_iot.onekey;
 import android.content.Context;
 import android.preference.PreferenceManager;
 
-import com.burgstaller.okhttp.AuthenticationCacheInterceptor;
-import com.burgstaller.okhttp.CachingAuthenticatorDecorator;
-import com.burgstaller.okhttp.digest.CachingAuthenticator;
-import com.burgstaller.okhttp.digest.Credentials;
-import com.burgstaller.okhttp.digest.DigestAuthenticator;
-import com.f2prateek.rx.preferences2.Preference;
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
@@ -16,26 +10,16 @@ import com.google.gson.GsonBuilder;
 import com.urbit_iot.onekey.appuser.data.source.AppUserDataSource;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
 import com.urbit_iot.onekey.appuser.data.source.localfile.AppUserLocalFileDataSource;
-import com.urbit_iot.onekey.data.source.lan.UModsService;
 import com.urbit_iot.onekey.util.GlobalConstants;
-import com.urbit_iot.onekey.util.dagger.DigestAuth;
 import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.loggly.SteveLogglyTimberTree;
-import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
-import retrofit2.converter.gson.GsonConverterFactory;
-import retrofit2.http.Url;
 
 /**
  * This is a Dagger module. We use this to pass in the Context dependency to the
@@ -74,8 +58,9 @@ public final class ApplicationModule {
     @Provides
     @Singleton
     SteveLogglyTimberTree provideSteveLogglyTimberTree(RxSharedPreferences rxSharedPreferences,
-                                                       @Named("app_user")Gson gsonInstance){
-        return new SteveLogglyTimberTree(GlobalConstants.LOGGLY_TOKEN, rxSharedPreferences, gsonInstance);
+                                                       @Named("app_user")Gson gsonInstance,
+                                                       BaseSchedulerProvider mSchedulerProvider){
+        return new SteveLogglyTimberTree(GlobalConstants.LOGGLY_TOKEN, rxSharedPreferences, gsonInstance, mSchedulerProvider);
     }
 
     @Singleton

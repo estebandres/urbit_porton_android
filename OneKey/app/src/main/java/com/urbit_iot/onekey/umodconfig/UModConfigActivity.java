@@ -63,7 +63,6 @@ public class UModConfigActivity extends AppCompatActivity {
         DaggerUModConfigComponent.builder()
                 .uModConfigPresenterModule(new UModConfigPresenterModule(uModConfigFragment, uModUUID))
                 .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponentSingleton())
-                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .build()
                 .inject(this);
     }

@@ -11,8 +11,14 @@ import dagger.Provides;
 @Module
 public class SchedulerProviderModule {
 
+    private BaseSchedulerProvider schedulerProvider;
+
+    public SchedulerProviderModule() {
+        this.schedulerProvider = new SingleSchedulersProvider();
+    }
+
     @Provides
     BaseSchedulerProvider provideSchedulerProvider() {
-        return new SchedulerProvider();
+        return this.schedulerProvider;
     }
 }

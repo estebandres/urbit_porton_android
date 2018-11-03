@@ -22,6 +22,7 @@ import com.urbit_iot.onekey.umods.domain.usecase.TriggerUMod;
 import com.urbit_iot.onekey.util.EspressoIdlingResource;
 import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.IntegerContainer;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,10 +51,9 @@ public class UModsPresenter implements UModsContract.Presenter {
     private RxSharedPreferences rxSharedPreferences;
     private final PhoneConnectivityInfo mPhoneConnectivityInfo;
     private final CalibrateUMod mCalibrateUMod;
-    /*
+
     @NonNull
-    private final RetrofitUtils mRetrofitUtils;
-    */
+    private BaseSchedulerProvider mSchedulerProvider;
 
     private UModsFilterType mCurrentFiltering = UModsFilterType.ALL_UMODS;
 
@@ -71,7 +71,8 @@ public class UModsPresenter implements UModsContract.Presenter {
                           @NonNull RequestAccess requestAccess,
                           @NonNull RxSharedPreferences rxSharedPreferences,
                           @NonNull PhoneConnectivityInfo mPhoneConnectivityInfo,
-                          @NonNull CalibrateUMod mCalibrateUMod) {
+                          @NonNull CalibrateUMod mCalibrateUMod,
+                          @NonNull BaseSchedulerProvider mSchedulerProvider) {
         mUModsView = checkNotNull(umodsView, "tasksView cannot be null!");
         mGetUModsOneByOne = checkNotNull(getUModsOneByOne, "getUModsOneByOne cannot be null!");
         mGetUMods = checkNotNull(getUMods, "getUModUUID cannot be null!");
@@ -84,6 +85,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         this.rxSharedPreferences = rxSharedPreferences;
         this.mPhoneConnectivityInfo = checkNotNull(mPhoneConnectivityInfo,"mPhoneConnectivityInfo cannot be null!");
         this.mCalibrateUMod = checkNotNull(mCalibrateUMod, "mCalibrateUMod cannot be null!");
+        this.mSchedulerProvider = mSchedulerProvider;
     }
 
     /**
@@ -93,6 +95,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     @Inject
     void setupListeners() {
         mUModsView.setPresenter(this);
+        mUModsView.setSchedulerProvider(mSchedulerProvider);
     }
 
     @Override

@@ -9,6 +9,7 @@ import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
 import com.urbit_iot.onekey.umods.domain.usecase.RequestAccess;
 import com.urbit_iot.onekey.umodsnotification.domain.usecase.GetUModsForNotif;
 import com.urbit_iot.onekey.umodsnotification.domain.usecase.TriggerUModByNotif;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,7 +24,6 @@ import javax.inject.Inject;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 import timber.log.Timber;
 
@@ -47,6 +47,8 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
     private final RequestAccess mRequestAccess;
     @NonNull
     private final UModMqttServiceContract mUModMqttService;
+    @NonNull
+    private BaseSchedulerProvider mSchedulerProvider;
 
     private final PublishSubject<Boolean> cancelPreventiveLockingSubject;
 
@@ -55,12 +57,14 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
                                @NonNull GetUModsForNotif mGetUModsForNotif,
                                @NonNull TriggerUModByNotif mTriggerUModByNotif,
                                @NonNull RequestAccess mRequestAccess,
-                               @NonNull UModMqttServiceContract mUModMqttService) {
+                               @NonNull UModMqttServiceContract mUModMqttService,
+                               @NonNull BaseSchedulerProvider mSchedulerProvider) {
         this.mUModsNotifView = mUModsNotifView;
         this.mGetUModsForNotif = mGetUModsForNotif;
         this.mTriggerUModByNotif = mTriggerUModByNotif;
         this.mRequestAccess = mRequestAccess;
         this.mUModMqttService = mUModMqttService;
+        this.mSchedulerProvider = mSchedulerProvider;
         this.mCachedUModsMap = new LinkedHashMap<>();
         this.mCachedKeysList = new ArrayList<>();
         this.cancelPreventiveLockingSubject = PublishSubject.create();
@@ -237,7 +241,7 @@ public class UModsNotifPresenter implements UModsNotifContract.Presenter {
                     }
                 })
                 //TODO replace scheduler for dagger instance
-                .subscribeOn(Schedulers.io())
+                .subscribeOn(mSchedulerProvider.io())
                 .subscribe();
     }
 

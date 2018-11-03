@@ -20,6 +20,7 @@ import com.urbit_iot.onekey.data.rpc.TriggerRPC;
 import com.urbit_iot.onekey.data.rpc.UpdateUserRPC;
 import com.urbit_iot.onekey.data.source.gps.LocationService;
 import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import org.junit.After;
 import org.junit.Before;
@@ -28,6 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
@@ -42,15 +44,19 @@ import java.util.concurrent.TimeUnit;
 
 import hu.akarnokd.rxjava.interop.RxJavaInterop;
 import io.reactivex.Flowable;
+import io.reactivex.subscribers.TestSubscriber;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
+import rx.schedulers.Schedulers;
+import rx.schedulers.TestScheduler;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -86,6 +92,9 @@ public class UModsRepositoryTest {
     @Mock
     private LocationService locationServiceMock;
 
+    @Mock
+    private BaseSchedulerProvider schedulerProviderMock;
+
     @Rule public MockitoRule rule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
 
     private UModsRepository uModsRepository;
@@ -97,14 +106,19 @@ public class UModsRepositoryTest {
 
     @Before
     public void setUp() throws Exception {
+        /*
+        when(schedulerProviderMock.io()).thenReturn(Schedulers.io());
+        when(schedulerProviderMock.computation()).thenReturn(Schedulers.computation());
+        when(schedulerProviderMock.ui()).thenReturn(Schedulers.immediate());
+        */
         uModsRepository = new UModsRepository(
                 lanDataSourceMock,
                 dataBaseDataSourceMock,
                 internetDataSourceMock,
                 locationServiceMock,
                 connectivityInfoMock,
-                mqttServiceMock);
-
+                mqttServiceMock,
+                schedulerProviderMock);
     }
 
     @After
@@ -121,7 +135,7 @@ public class UModsRepositoryTest {
     }
 
     @Test
-    public void Given_ExistingCachedModules_When_FetchedOneByOneFromCacheOrDB_Then_CachedModulesAreReturned(){
+    public void Given_ExistingCachedModules_When_FetchedOneByOneFromCacheOrDB_Then_CachedModulesAreEmitted(){
         //Given
         UMod testingUMod = new UMod("123456");
         uModsRepository.mCachedUMods.put("123456",testingUMod);
@@ -132,17 +146,18 @@ public class UModsRepositoryTest {
                 .assertValueCount(1)
                 .assertValue(testingUMod)
                 .assertCompleted();
-        assertEquals(1,uModsRepository.mCachedUMods.size());
-        assertEquals(uModsRepository.mCachedUMods.get("123456"),testingUMod);
     }
 
     @Test
     public void Given_EmptyCache_When_FetchedOneByOneFromCacheOrDB_Then_DBModulesAreReturnedAndCacheIsUpdated(){
         //Given
-        uModsRepository.mCachedUMods.clear();
-        when(dataBaseDataSourceMock.getUModsOneByOne()).thenReturn(Observable.just(new UMod("888")));
+        UMod testingUMod = new UMod("888");
+        UModsRepository uModsRepositorySpy = spy(uModsRepository);
+        uModsRepositorySpy.mCachedUMods.clear();
+        when(dataBaseDataSourceMock.getUModsOneByOne()).thenReturn(Observable.just(testingUMod));
+        doNothing().when(uModsRepositorySpy).subscribeToUModsTopics();
         //When
-        Observable<UMod> testObservable = uModsRepository.getUModsOneByOneFromCacheOrDB();
+        Observable<UMod> testObservable = uModsRepositorySpy.getUModsOneByOneFromCacheOrDB();
         //Then
         testObservable.test()
                 .assertValueCount(1)
@@ -153,24 +168,17 @@ public class UModsRepositoryTest {
                 //Any Termination event unsubscribes the observable chain so
                 // the next assertion would not be necessary but is left to illustrate the comment.
                 .assertUnsubscribed()
-                .assertValue(new UMod("888"));
-        assertEquals(1,uModsRepository.mCachedUMods.size());
-        assertEquals(uModsRepository.mCachedUMods.get("888"),new UMod("888"));
+                .assertValue(testingUMod);
+        assertEquals(1,uModsRepositorySpy.mCachedUMods.size());
+        assertEquals(uModsRepositorySpy.mCachedUMods.get("888"),new UMod("888"));
+        verify(dataBaseDataSourceMock,times(1)).getUModsOneByOne();
+        verify(uModsRepositorySpy,times(1)).getUModsOneByOneFromCacheOrDB();
+        verify(uModsRepositorySpy,times(1)).subscribeToUModsTopics();
+        verifyNoMoreInteractions(dataBaseDataSourceMock);
+        verifyNoMoreInteractions(uModsRepositorySpy);
+
     }
 
-    @Test
-    public void Given_EmptyCacheAndEmptyDB_When_FetchedOneByOneFromCacheOrDB_Then_NoModulesAreReturned(){
-        //Given
-        uModsRepository.mCachedUMods.clear();
-        when(dataBaseDataSourceMock.getUModsOneByOne()).thenReturn(Observable.empty());
-        //When
-        Observable<UMod> testObservable = uModsRepository.getUModsOneByOneFromCacheOrDB();
-        //Then
-        testObservable.test()
-                .assertCompleted()
-                .assertNoValues();
-        assertEquals(0, uModsRepository.mCachedUMods.size());
-    }
 
     @Test
     public void Given_CachedVersionExistsForStationModeLanDiscovery_When_FetchedFromLanAndInternet_Then_UModsAreReturnedAndDBIsUpdated(){
@@ -327,7 +335,8 @@ public class UModsRepositoryTest {
         UMod cachedUMod = new UMod("999");
         Date sevenSecondsAgo = new Date(System.currentTimeMillis()-7000);
         cachedUMod.setLastUpdateDate(sevenSecondsAgo);
-        uModsRepository.mCachedUMods.put(cachedUMod.getUUID(), cachedUMod);
+        UModsRepository uModsRepositorySpy = spy(uModsRepository);
+        doReturn(Observable.just(cachedUMod)).when(uModsRepositorySpy).getUModsOneByOneFromCacheOrDB();
         SysGetInfoRPC.Result rpcResult = new SysGetInfoRPC.Result(
                 null, null, null, null, null,
                 0, 0, 0, 0, 0,0,
@@ -337,21 +346,21 @@ public class UModsRepositoryTest {
                         "got ip",
                         "SteveWiFi"),
                 null);
+
+        TestScheduler testScheduler = new TestScheduler();
         when(internetDataSourceMock.getSystemInfo(any(UMod.class),any(SysGetInfoRPC.Arguments.class)))
-                .thenReturn(Observable.just(rpcResult).delay(500L, TimeUnit.MILLISECONDS));
-        Date dateBeforeSubscription = new Date();
+                .thenReturn(Observable.just(rpcResult).delay(500L, TimeUnit.MILLISECONDS,testScheduler));
         //When
-        Observable<UMod> uModsObservable = uModsRepository.getUModsOneByOneFromCacheOrDiskAndRefreshOnline();
+        Observable<UMod> uModsObservable = uModsRepositorySpy.getUModsOneByOneFromCacheOrDiskAndRefreshOnline();
         Flowable<UMod> uModsFlowable = RxJavaInterop.toV2Flowable(uModsObservable);
 
-        //uModsObservable.test().assertCompleted();
+        when(schedulerProviderMock.io()).thenReturn(testScheduler);
+        TestSubscriber<UMod> testSubscriber = uModsFlowable.test();
+        testScheduler.advanceTimeBy(500L,TimeUnit.MILLISECONDS);
 
-        uModsFlowable
-                .test()
-                .await()
-                .assertValueCount(1)
-                .assertComplete()
-                .assertValue(uMod ->
+        testSubscriber.assertValueCount(1);
+        testSubscriber.assertComplete();
+        testSubscriber.assertValue(uMod ->
                         !uMod.getLastUpdateDate().equals(sevenSecondsAgo)
                         && uMod.getConnectionAddress() != null
                         && uMod.getConnectionAddress().equals(rpcResult.getWifi().getStaIp())
@@ -361,20 +370,23 @@ public class UModsRepositoryTest {
                         && uMod.getuModSource() == UMod.UModSource.MQTT_SCAN
                         );
 
-        verify(dataBaseDataSourceMock, times(1)).saveUMod(any(UMod.class));
-        assertFalse(uModsRepository.mCachedUMods.get("999").getLastUpdateDate().equals(sevenSecondsAgo));
+        verify(dataBaseDataSourceMock, times(1)).saveUMod(cachedUMod);
+        assertEquals(1,uModsRepositorySpy.mCachedUMods.size());
+        assertNotEquals(uModsRepositorySpy.mCachedUMods.get(cachedUMod.getUUID()).getLastUpdateDate(), sevenSecondsAgo);
     }
 
 
     @Test
-    //TODO este test queda ignorado porque en distintas computadoras con distintos procesadores tarda distintos tiempos
     public void Given_FourModulesRespondWithStaIp_When_RefreshingUModsOnline_Then_CompletionTimeShouldBeShorten() throws InterruptedException {
-        UMod cachedUMod = new UMod("999");
+        UMod firstCachedUMod = new UMod("111");
+        UMod secondCachedUMod = new UMod("222");
+        UMod thirdCachedUMod = new UMod("333");
+        UMod fourthCachedUMod = new UMod("444");
         //Same UMod is stored four times in the cache
-        uModsRepository.mCachedUMods.put("1", cachedUMod);
-        uModsRepository.mCachedUMods.put("2", cachedUMod);
-        uModsRepository.mCachedUMods.put("3", cachedUMod);
-        uModsRepository.mCachedUMods.put("4", cachedUMod);
+        uModsRepository.mCachedUMods.put(firstCachedUMod.getUUID(), firstCachedUMod);
+        uModsRepository.mCachedUMods.put(secondCachedUMod.getUUID(), secondCachedUMod);
+        uModsRepository.mCachedUMods.put(thirdCachedUMod.getUUID(), thirdCachedUMod);
+        uModsRepository.mCachedUMods.put(fourthCachedUMod.getUUID(), fourthCachedUMod);
         SysGetInfoRPC.Result rpcResult = new SysGetInfoRPC.Result(
                 null, null, null, null, null,
                 0, 0, 0, 0, 0,0,
@@ -384,97 +396,63 @@ public class UModsRepositoryTest {
                         "got ip",
                         "SteveWiFi"),
                 null);
+        TestScheduler testScheduler = new TestScheduler();
         when(internetDataSourceMock.getSystemInfo(any(UMod.class),any(SysGetInfoRPC.Arguments.class)))
-                .thenReturn(Observable.just(rpcResult).delay(500L, TimeUnit.MILLISECONDS));
+                .thenReturn(Observable.just(rpcResult).delay(500L, TimeUnit.MILLISECONDS,testScheduler));
+
+        when(schedulerProviderMock.io()).thenReturn(testScheduler);
 
         //When
         Observable<UMod> uModsObservable = uModsRepository.getUModsOneByOneFromCacheOrDiskAndRefreshOnline();
         Flowable<UMod> uModsFlowable = RxJavaInterop.toV2Flowable(uModsObservable);
 
-        //uModsObservable.test().assertCompleted();
+        TestSubscriber testSubscriber = uModsFlowable
+                .test();
+        testSubscriber.assertEmpty();
+        testScheduler.advanceTimeBy(500L,TimeUnit.MILLISECONDS);
+        testSubscriber.assertValueCount(4);
+        testSubscriber.assertComplete();
 
-        Instant beforeSubscription = Instant.now();
-        uModsFlowable
-                .test()
-                .await()
-                .assertValueCount(4)
-                .assertComplete();
-
-        Long executionTimeMillis = Duration.between(beforeSubscription,Instant.now()).toMillis();
-        //TODO why does it take always around 550?? Is 600 right? What if I run the same test on older slower hardware??
-        Log.d("TEST", "TIME " + executionTimeMillis);
-        assertTrue( executionTimeMillis < 600L);
+        assertEquals(4, uModsRepository.mCachedUMods.size());
+        verify(schedulerProviderMock,times(4)).io();
         verify(dataBaseDataSourceMock, times(4)).saveUMod(any(UMod.class));
+        verify(internetDataSourceMock,times(4)).getSystemInfo(any(UMod.class),any(SysGetInfoRPC.Arguments.class));
+        verifyNoMoreInteractions(schedulerProviderMock);
+        verifyNoMoreInteractions(dataBaseDataSourceMock);
+        verifyNoMoreInteractions(internetDataSourceMock);
     }
 
     @Test
-    public void Given_CacheIsCleanAndHasItems_When_GetOneByOne_Then_CacheUModsAreEmitted(){
+    public void Given_CacheIsClean_When_GetOneByOne_Then_CacheOrDBUModsShouldBeEmitted(){
         //GIVEN
-        UMod cachedUMod = new UMod("777");
-        uModsRepository.mCachedUMods.put(cachedUMod.getUUID(),cachedUMod);
-        uModsRepository.mCacheIsDirty = false;
+        UModsRepository uModsRepositorySpy = spy(uModsRepository);
+        uModsRepositorySpy.mCacheIsDirty = false;
+        doReturn(Observable.empty()).when(uModsRepositorySpy).getUModsOneByOneFromCacheOrDB();
         //WHEN
-        Observable<UMod> uModObservable = uModsRepository.getUModsOneByOne();
+        Observable<UMod> uModObservable = uModsRepositorySpy.getUModsOneByOne();
         //THEN
-        uModObservable.test().assertCompleted().assertValueCount(1).assertValue(new UMod("777"));
-        verify(internetDataSourceMock,times(1)).saveUMod(any(UMod.class));
-    }
-
-    @Test
-    public void Given_CacheIsCleanAndHasNoItems_When_GetOneByOne_Then_DBUModsAreEmitted(){
-        //GIVEN
-        UMod databaseUMod = new UMod("888");
-        uModsRepository.mCachedUMods.clear();
-        uModsRepository.mCacheIsDirty = false;
-        when(dataBaseDataSourceMock.getUModsOneByOne()).thenReturn(Observable.just(databaseUMod));
-        //WHEN
-        Observable<UMod> uModObservable = uModsRepository.getUModsOneByOne();
-        //THEN
-        uModObservable.test().assertCompleted().assertValueCount(1).assertValue(new UMod("888"));
-        verify(internetDataSourceMock,times(1)).saveUMod(any(UMod.class));
+        uModObservable.test();
+        verify(uModsRepositorySpy, times(1)).getUModsOneByOne();
+        verify(uModsRepositorySpy, times(1)).getUModsOneByOneFromCacheOrDB();
+        verifyNoMoreInteractions(uModsRepositorySpy);
     }
 
 
     @Test
-    public void Given_CacheIsDirtyThereAreLanDiscoveriesAndNoDBModules_When_GetOneByOne_Then_DiscoveriesAreEmitted(){
+    public void Given_CacheIsDirty_When_GetOneByOne_Then_DiscoveriesAndRefreshedShouldBeEmitted(){
         //GIVEN
-        UMod dnssdDiscoveryUMod = new UMod("888","192.168.8.8",true);
-        uModsRepository.mCacheIsDirty = true;
-        when(lanDataSourceMock.getUModsOneByOne()).thenReturn(Observable.just(dnssdDiscoveryUMod));
-        //This forces no internet refreshes.
-        uModsRepository.mCachedUMods.clear();
-        when(dataBaseDataSourceMock.getUModsOneByOne()).thenReturn(Observable.empty());
+        UModsRepository uModsRepositorySpy = spy(uModsRepository);
+        uModsRepositorySpy.mCacheIsDirty = true;
+        doReturn(Observable.empty()).when(uModsRepositorySpy).getUModsOneByOneFromLanAndInternetAndUpdateDBAndCache();
+        doReturn(Observable.empty()).when(uModsRepositorySpy).getUModsOneByOneFromCacheOrDiskAndRefreshOnline();
         //WHEN
-        Observable<UMod> uModObservable = uModsRepository.getUModsOneByOne();
+        Observable<UMod> uModObservable = uModsRepositorySpy.getUModsOneByOne();
         //THEN
-        uModObservable.test().assertCompleted().assertValueCount(1).assertValue(new UMod("888"));
-        assertFalse(uModsRepository.mCacheIsDirty);
-    }
-
-    @Test
-    public void Given_CacheIsDirtyAndThereIsOneLanDiscoveriesAndOneMqttRefresh_When_GetOneByOne_Then_BothUModsAreEmitted(){
-        //GIVEN
-        uModsRepository.mCacheIsDirty = true;
-        UMod dnssdDiscoveryUMod = new UMod("888","192.168.8.8",true);
-        when(lanDataSourceMock.getUModsOneByOne()).thenReturn(Observable.just(dnssdDiscoveryUMod));
-        //This forces one internet refresh.
-        UMod cachedUMod = new UMod("777");
-        uModsRepository.mCachedUMods.put(cachedUMod.getUUID(), cachedUMod);
-        SysGetInfoRPC.Result rpcResult = new SysGetInfoRPC.Result(
-                null, null, null, null, null,
-                0, 0, 0, 0, 0,0,
-                new SysGetInfoRPC.Result.Wifi(
-                        "192.168.7.7",
-                        "",
-                        "got ip",
-                        "SteveWiFi"),
-                null);
-        when(internetDataSourceMock.getSystemInfo(any(UMod.class),any(SysGetInfoRPC.Arguments.class)))
-                .thenReturn(Observable.just(rpcResult).delay(500L, TimeUnit.MILLISECONDS));
-        //WHEN
-        Observable<UMod> uModObservable = uModsRepository.getUModsOneByOne();
-        //THEN
-        uModObservable.test().awaitTerminalEvent().assertCompleted().assertValueCount(2);
+        uModObservable.test();
+        verify(uModsRepositorySpy, times(1)).getUModsOneByOne();
+        verify(uModsRepositorySpy, times(1)).getUModsOneByOneFromLanAndInternetAndUpdateDBAndCache();
+        verify(uModsRepositorySpy, times(1)).getUModsOneByOneFromCacheOrDiskAndRefreshOnline();
+        verifyNoMoreInteractions(uModsRepositorySpy);
     }
 
 

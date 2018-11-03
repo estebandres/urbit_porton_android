@@ -44,6 +44,7 @@ public class InvisibleChooserActivity extends AppCompatActivity {
 
         DaggerChooserComponent.builder()
                 .applicationModule(oneKeyApplication.getApplicationModule())
+                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .build()
                 .inject(this);
 

@@ -45,6 +45,7 @@ import com.urbit_iot.onekey.util.GlobalConstants;
 import com.urbit_iot.onekey.util.dagger.Internet;
 import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.LanOnly;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +69,6 @@ import rx.Observable;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -119,6 +119,9 @@ public class UModsRepository implements UModsDataSource {
     @VisibleForTesting
     boolean mCacheIsDirty = false;
 
+    @NonNull
+    private BaseSchedulerProvider mSchedulerProvider;
+
     /**
      * By marking the constructor with {@code @Inject}, Dagger will try to inject the dependencies
      * required to create an instance of the UModsRepository. Because {@link UModsDataSource} is an
@@ -137,12 +140,14 @@ public class UModsRepository implements UModsDataSource {
                            @Internet UModsDataSource uModsInternetDataSource,
                            @NonNull LocationService locationService,
                            @NonNull PhoneConnectivityInfo connectivityInfo,
-                           @NonNull UModMqttServiceContract uModMqttService) {
+                           @NonNull UModMqttServiceContract uModMqttService,
+                           @NonNull BaseSchedulerProvider mSchedulerProvider) {
         mUModsLANDataSource = checkNotNull(uModsRemoteDataSource);
         mUModsLocalDataSource = checkNotNull(uModsLocalDataSource);
         this.mUModsInternetDataSource = checkNotNull(uModsInternetDataSource);
         this.locationService = locationService;
         this.connectivityInfo = connectivityInfo;
+        this.mSchedulerProvider = mSchedulerProvider;
         this.uModMqttService = uModMqttService;
         this.mCachedUMods = new LinkedHashMap<>();
         this.uModCacheBrander = uModObservable -> uModObservable
@@ -193,11 +198,11 @@ public class UModsRepository implements UModsDataSource {
                 .doAfterTerminate(this::subscribeToUModsTopics);
     }
 
-    private void subscribeToUModsTopics(){
+    void subscribeToUModsTopics(){
         Observable.from(mCachedUMods.values())
-                .subscribeOn(Schedulers.io())
+                .subscribeOn(mSchedulerProvider.io())
                 .flatMap(uMod -> Observable.just(uMod)
-                        .subscribeOn(Schedulers.io())
+                        .subscribeOn(mSchedulerProvider.io())
                         .doOnNext(mUModsInternetDataSource::saveUMod))
         .subscribe(uMod -> {},
                 throwable -> Log.e("UMODS_REPO",
@@ -214,7 +219,7 @@ public class UModsRepository implements UModsDataSource {
     Observable<UMod> getUModsOneByOneFromCacheOrDiskAndRefreshOnline(){//refresh umod data by
         return this.getUModsOneByOneFromCacheOrDB()
                 .flatMap(dbUMod -> Observable.just(dbUMod)
-                        .subscribeOn(Schedulers.io())//TODO use scheduler provider by dagger)
+                        .subscribeOn(mSchedulerProvider.io())//TODO use scheduler provider by dagger)
                         .flatMap(uMod -> mUModsInternetDataSource.getSystemInfo(uMod,new SysGetInfoRPC.Arguments())
                                 .flatMap(result -> {
                                     if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){

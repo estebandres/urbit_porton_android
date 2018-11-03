@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import com.urbit_iot.onekey.BasePresenter;
 import com.urbit_iot.onekey.BaseView;
 import com.urbit_iot.onekey.data.UMod;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 
 import java.util.List;
 
@@ -15,6 +16,8 @@ import java.util.List;
 
 public interface UModsContract {
     interface View extends BaseView<Presenter> {
+
+        void setSchedulerProvider(BaseSchedulerProvider schedulerProvider);
 
         void setLoadingIndicator(boolean active);
 

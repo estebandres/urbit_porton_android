@@ -5,6 +5,8 @@ import com.urbit_iot.onekey.ApplicationModule;
 import com.urbit_iot.onekey.OneKeyApplication;
 import com.urbit_iot.onekey.appuser.data.source.AppUserRepository;
 import com.urbit_iot.onekey.data.source.internet.UModMqttServiceContract;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
+import com.urbit_iot.onekey.util.schedulers.SchedulerProvider;
 import com.urbit_iot.onekey.util.schedulers.SchedulerProviderComponent;
 
 import javax.inject.Singleton;
@@ -33,5 +35,7 @@ public interface UModsRepositoryComponent {
     UModMqttServiceContract getUModMqttService();//TODO breaks dependecy rule!
 
     PhoneConnectivityInfo getPhoneConnectivityInfo();//TODO breaks dependecy rule!
+
+    BaseSchedulerProvider getBaseSchedulerProvider();
 
 }

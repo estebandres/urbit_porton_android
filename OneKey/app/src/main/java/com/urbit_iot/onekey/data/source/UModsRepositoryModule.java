@@ -38,6 +38,7 @@ import com.urbit_iot.onekey.util.dagger.Local;
 import com.urbit_iot.onekey.util.dagger.LanOnly;
 import com.urbit_iot.onekey.util.networking.UrlHostSelectionInterceptor;
 import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
+import com.urbit_iot.onekey.util.schedulers.SchedulerProvider;
 
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -76,9 +77,9 @@ public class UModsRepositoryModule {
 
     @Singleton
     @Provides
-    UModsDNSSDScanner provideUModsDNSSD(Context context){
+    UModsDNSSDScanner provideUModsDNSSD(Context context, BaseSchedulerProvider mSchedulerProvider){
         RxDnssd rxDnssd = new RxDnssdBindable(context);
-        return new UModsDNSSDScanner(rxDnssd);
+        return new UModsDNSSDScanner(rxDnssd, mSchedulerProvider);
     }
 
     @Singleton
@@ -90,20 +91,20 @@ public class UModsRepositoryModule {
 
     @Singleton
     @Provides
-    UModsWiFiScanner provideUModsWiFiScanner(Context context){
-        return new UModsWiFiScanner(context);
+    UModsWiFiScanner provideUModsWiFiScanner(Context context, BaseSchedulerProvider mSchedulerProvider){
+        return new UModsWiFiScanner(context, mSchedulerProvider);
     }
 
     @Singleton
     @Provides
-    UModsTCPScanner provideUModsTCPScanner(Context context){
-        return new UModsTCPScanner(context);
+    UModsTCPScanner provideUModsTCPScanner(Context context, BaseSchedulerProvider schedulerProvider){
+        return new UModsTCPScanner(context, schedulerProvider);
     }
 
     @Singleton
     @Provides
-    LocationService provideLocationService(Context context){
-        return new LocationService(context);
+    LocationService provideLocationService(Context context, BaseSchedulerProvider mSchedulerProvider){
+        return new LocationService(context,mSchedulerProvider);
     }
 
     @Singleton
@@ -332,7 +333,7 @@ public class UModsRepositoryModule {
 
     @Provides
     @Singleton
-    PahoClientRxWrap providePahoClientRxWrap(){
+    PahoClientRxWrap providePahoClientRxWrap(BaseSchedulerProvider schedulerProvider){
         MqttAsyncClient asyncClient = null;
         MemoryPersistence memoryPersistence = new MemoryPersistence();
         try {
@@ -356,7 +357,7 @@ public class UModsRepositoryModule {
         if (asyncClient == null){
             return null;
         } else {
-            PahoClientRxWrap pahoClientRxWrap = new PahoClientRxWrap(asyncClient);
+            PahoClientRxWrap pahoClientRxWrap = new PahoClientRxWrap(asyncClient, schedulerProvider);
             asyncClient.setCallback(pahoClientRxWrap);
             return pahoClientRxWrap;
         }
@@ -365,7 +366,7 @@ public class UModsRepositoryModule {
 
     @Provides
     @Singleton
-    UModMqttServiceContract provideUModMqttServiceContract(PahoClientRxWrap clientRxWrap, Gson gson){
-        return new SimplifiedUModMqttService(clientRxWrap,this.appUserName,gson);
+    UModMqttServiceContract provideUModMqttServiceContract(PahoClientRxWrap clientRxWrap, Gson gson, BaseSchedulerProvider schedulerProvider){
+        return new SimplifiedUModMqttService(clientRxWrap,this.appUserName,gson, schedulerProvider);
     }
 }

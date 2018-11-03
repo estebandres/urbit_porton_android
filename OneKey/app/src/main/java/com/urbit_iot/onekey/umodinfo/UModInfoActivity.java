@@ -68,7 +68,6 @@ public class UModInfoActivity extends AppCompatActivity {
         DaggerUModInfoComponent.builder()
                 .uModInfoPresenterModule(new UModInfoPresenterModule(UModInfoFragment, taskId))
                 .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponentSingleton())
-                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .build()
                 .inject(this);
     }

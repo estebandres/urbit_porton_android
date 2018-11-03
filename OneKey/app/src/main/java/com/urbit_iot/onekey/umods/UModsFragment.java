@@ -35,12 +35,15 @@ import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.UModConfigFragment;
 import com.urbit_iot.onekey.umodsnotification.UModsNotifService;
 import com.urbit_iot.onekey.util.GlobalConstants;
+import com.urbit_iot.onekey.util.schedulers.BaseSchedulerProvider;
 import com.yarolegovich.lovelydialog.LovelyChoiceDialog;
 import com.yarolegovich.lovelydialog.LovelyStandardDialog;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -84,6 +87,9 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     private LovelyChoiceDialog calibrationDialogGateStatus;
     private LovelyStandardDialog calibrationDialogInitialConfirmation;
 
+    @NonNull
+    private BaseSchedulerProvider mSchedulerProvider;
+
     public UModsFragment() {
         // Requires empty public constructor
     }
@@ -109,6 +115,11 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     @Override
     public void setPresenter(@NonNull UModsContract.Presenter presenter) {
         mPresenter = checkNotNull(presenter);
+    }
+
+    @Override
+    public void setSchedulerProvider(@NonNull BaseSchedulerProvider schedulerProvider) {
+        mSchedulerProvider = checkNotNull(schedulerProvider);
     }
 
     @Nullable
@@ -486,16 +497,15 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             mVibrator.vibrate(100L);
             Observable.interval(500L, TimeUnit.MILLISECONDS)
                     .take(2)
-                    .subscribeOn(Schedulers.io())
+                    .subscribeOn(mSchedulerProvider.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .map(new Func1<Long, Object>() {
-                        @Override
-                        public Object call(Long aLong) {
-                            mVibrator.vibrate((aLong+1L)*200L);
-                            return null;
-                        }
+                    .map(aLong -> {
+                        mVibrator.vibrate((aLong+1L)*200L);
+                        return null;
                     })
-                    .subscribe();
+                    .subscribe(o -> {},
+                            throwable -> Log.e("UMODS_FRAG", "FAILED TO VIBRATE: "
+                                    + throwable.getMessage(),throwable));
         }
         /*
         @Override

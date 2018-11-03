@@ -79,7 +79,6 @@ public class StatisticsActivity extends AppCompatActivity {
         DaggerStatisticsComponent.builder()
                 .statisticsPresenterModule(new StatisticsPresenterModule(statisticsFragment))
                 .uModsRepositoryComponent(oneKeyApplication.getUModsRepositoryComponentSingleton())
-                .schedulerProviderComponent(oneKeyApplication.getSchedulerProviderComponentSingleton())
                 .build().inject(this);
     }
 

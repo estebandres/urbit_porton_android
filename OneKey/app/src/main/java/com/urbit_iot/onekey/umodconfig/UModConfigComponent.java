@@ -15,7 +15,7 @@ import dagger.Component;
  * scope must be specified. All fragment components use a custom scope for this purpose.
  */
 @FragmentScoped
-@Component(dependencies = {UModsRepositoryComponent.class, SchedulerProviderComponent.class},
+@Component(dependencies = {UModsRepositoryComponent.class},
         modules = UModConfigPresenterModule.class)
 public interface UModConfigComponent {
 
