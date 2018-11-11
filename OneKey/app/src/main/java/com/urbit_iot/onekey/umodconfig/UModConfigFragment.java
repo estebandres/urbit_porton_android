@@ -64,11 +64,11 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private UModConfigContract.Presenter mPresenter;
 
-    private TextView mAliasTextInput;
+    private EditText mAliasTextInput;
 
     private TextView mUModSysInfoTextInput;
 
-    private TextView mWiFiSSIDTextInput;
+    private EditText mWiFiSSIDTextInput;
 
     private TextView mWiFiPasswordTextInput;
 
@@ -92,7 +92,9 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private Dialog mFirmwareUpdateProgressDialog;
 
-    private ProgressBar mPorgressBar;
+    private Dialog mCalibrationResetDialog;
+
+    private ProgressBar mProgressBar;
 
     private LinearLayout mAllSettingsLinearLayout;
 
@@ -107,6 +109,12 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     private TextView mLocationText;
 
     private Location mUModLocation;
+
+    private LinearLayout mLocationSettingsLayout;
+
+    private boolean mUpdateLocation;
+
+    private ImageButton mCalibrationResetButton;
 
     public static UModConfigFragment newInstance() {
         return new UModConfigFragment();
@@ -131,56 +139,33 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        mUploadButton =
-                (FloatingActionButton) getActivity().findViewById(R.id.fab_upload_settings);
+        mUploadButton = getActivity().findViewById(R.id.fab_upload_settings);
         mUploadButton.hide();
         mUploadButton.setBackgroundColor(getResources().getColor(R.color.request_access_slider_background));
         mUploadButton.setImageResource(R.drawable.ic_upload);
-        mUploadButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                submitSettingsChanges();
-                mWiFiPasswordTextInput.setText("");
-                //mPresenter.getUModSystemInfo(mAliasTextInput.getText().toString());
-            }
+        mUploadButton.setOnClickListener(v -> {
+            submitSettingsChanges();
+            mWiFiPasswordTextInput.setText("");
         });
-
-        /*
-        Button uModButton = (Button) getActivity().findViewById(R.id.users_button);
-        uModButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mPresenter.adminUModUsers();
-            }
-        });
-        */
     }
 
     private void submitSettingsChanges(){
         String aliasText = mAliasTextInput.getText().toString();
-        if (!aliasText.contentEquals(mViewModel.getAliasText())){
-            mViewModel.setAliasText(aliasText);
-            mPresenter.updateUModAlias(mViewModel);
-        }
-        String wifiSSID = mWiFiSSIDTextInput.getText().toString();
-        String wifiPassword = mWiFiPasswordTextInput.getText().toString();
-        if (!Strings.isNullOrEmpty(wifiSSID)
-                && !wifiSSID.contentEquals(mViewModel.getAliasText())
-                && !Strings.isNullOrEmpty(wifiPassword)
-                && !wifiPassword.contentEquals(mViewModel.getAliasText())){
-            mViewModel.setWifiSSIDText(wifiSSID);
-            mViewModel.setWifiPasswordText(wifiPassword);
-            mPresenter.updateUModWiFiCredentials(mViewModel);
+        if (!Strings.isNullOrEmpty(aliasText)){
+            aliasText = aliasText.trim();
+        } else {
+            aliasText = null;
         }
 
-        //TODO replace with boolean flag set to true on click!
-        String addressString = mLocationText.getText().toString();
-        if (!Strings.isNullOrEmpty(addressString)
-                && !addressString.equalsIgnoreCase(mViewModel.getLocationText())){
-            mPresenter.updateUModLocationData();
+        String wifiSSID = null;
+        String wifiPassword = null;
+        if (mViewModel.isWifiSettingsVisible()){
+            wifiSSID = mWiFiSSIDTextInput.getText().toString();
+            wifiPassword = mWiFiPasswordTextInput.getText().toString();
         }
 
-        //mPresenter.updateUModLocationData();
+        mPresenter.updateSettings(aliasText, wifiSSID, wifiPassword, mUpdateLocation);
+        mUpdateLocation = false;
     }
 
 
@@ -191,29 +176,34 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
         View root = inflater.inflate(R.layout.umod_config_frag, container, false);
 
-        mAliasTextInput = (TextView) root.findViewById(R.id.alias_text_input);
-        mUModSysInfoTextInput = (TextView) root.findViewById(R.id.umod_sys_info);
-        mWiFiSSIDTextInput = (EditText) root.findViewById(R.id.wifi_ssid);
+        mAliasTextInput = root.findViewById(R.id.alias_text_input);
+        mUModSysInfoTextInput =  root.findViewById(R.id.umod_sys_info);
+        mWiFiSSIDTextInput = root.findViewById(R.id.wifi_ssid);
         mWiFiPasswordTextInput = (EditText) root.findViewById(R.id.wifi_password);
-        mUsersButton = (ImageButton) root.findViewById(R.id.users_button);
-        mFactoryResetButton = (ImageButton) root.findViewById(R.id.factory_reset_button);
-        mFirmwareUpdateButton = (ImageButton) root.findViewById(R.id.firmware_update_button);
-        mAdminSettingsLayout = (LinearLayout) root.findViewById(R.id.admin_settings);
-        mPorgressBar = (ProgressBar) root.findViewById(R.id.umod_config_load_bar);
-        mPorgressBar.setVisibility(View.GONE);
-        mAllSettingsLinearLayout = (LinearLayout) root.findViewById(R.id.all_settings);
-        mWiFiSettings = (LinearLayout) root.findViewById(R.id.wifi_settings);
-        TextView upgradeSubtext = (TextView) root.findViewById(R.id.upgrade_button_subtext);
+        mUsersButton =  root.findViewById(R.id.users_button);
+        mFactoryResetButton =  root.findViewById(R.id.factory_reset_button);
+        mFirmwareUpdateButton = root.findViewById(R.id.firmware_update_button);
+        mAdminSettingsLayout = root.findViewById(R.id.admin_settings);
+        mProgressBar = root.findViewById(R.id.umod_config_load_bar);
+        mProgressBar.setVisibility(View.GONE);
+        mAllSettingsLinearLayout = root.findViewById(R.id.all_settings);
+        mWiFiSettings =  root.findViewById(R.id.wifi_settings);
+        TextView upgradeSubtext = root.findViewById(R.id.upgrade_button_subtext);
         upgradeSubtext.setSelected(true);
-        mOngoingNotifSwitch = (Switch) root.findViewById(R.id.umod_notif_switch);
+        TextView recalibrateSubText = root.findViewById(R.id.calibration_reset_subtext);
+        recalibrateSubText.setSelected(true);
+        mOngoingNotifSwitch = root.findViewById(R.id.umod_notif_switch);
+        mLocationSettingsLayout = root.findViewById(R.id.location_settings);
         mLocationProgressBar = root.findViewById(R.id.umod_config__location_load_bar);
         mLocationProgressBar.setVisibility(View.GONE);
         mLocationUpdateButton = root.findViewById(R.id.umod_config__location_update_button);
         mLocationUpdateButton.setOnClickListener(view -> {
+            mUpdateLocation = true;
             mUploadButton.show();
             mPresenter.getPhoneLocation();
         });
         mLocationText = root.findViewById(R.id.umod_config__location_text);
+        mCalibrationResetButton = root.findViewById(R.id.calibration_reset_button);
 
         mTextWatcher = new TextWatcher() {
             @Override
@@ -243,13 +233,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                 .setTitle(R.string.firmware_update_dialog__title)
                 .setMessage(R.string.firmware_update_dialog__started_message)
                 .setNegativeButton(R.string.firmware_update_dialog__cancel_button,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                //mPresenter.cancelFirmwareUpgrade();
-                                Log.d("OTADialog", "CANCEL");
-                            }
-                        })
+                        (dialog, which) -> Log.d("OTADialog", "CANCEL"))
                 .setPositiveButton(R.string.firmware_update_dialog__update_button, (dialogInterface, i) -> {
                     mFirmwareUpdateProgressDialog.show();
                     mPresenter.updateUModFirmware();
@@ -260,7 +244,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         LayoutInflater dialogViewInflater = this.getLayoutInflater();
         View dialogView = dialogViewInflater.inflate(R.layout.firmware_update__dialog, null);
         TextView dialogMessage = dialogView.findViewById(R.id.firmware_update_dialog__message);
-        dialogMessage.setText("Este proceso podría tomar hasta 60 segundos.");
+        dialogMessage.setText(R.string.firmware_update_time_warning);
         //ProgressBar dialogProgressBar = dialogView.findViewById(R.id.firmware_update_dialog__progress_bar);
 
         mFirmwareUpdateProgressDialog =  new AlertDialog.Builder(getActivity())
@@ -275,31 +259,6 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                 .setCancelable(false)
                 .create();
 
-        /*
-        LayoutInflater dialogViewInflater = this.getLayoutInflater();
-        View dialogView = dialogViewInflater.inflate(R.layout.firmware_update__dialog, null);
-        TextView dialogMessage = dialogView.findViewById(R.id.firmware_update_dialog__message);
-        ProgressBar dialogProgressBar = dialogView.findViewById(R.id.firmware_update_dialog__progress_bar);
-        mFirmwareUpdateDialog =  new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.firmware_update_title)
-                //.setView(R.layout.firmware_update__dialog)
-                .setView(dialogView)
-                .setNegativeButton(R.string.firmware_update_cancel_text,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                //mPresenter.cancelFirmwareUpgrade();
-                                Log.d("OTADialog", "CANCEL");
-                            }
-                        })
-                .setPositiveButton("ACTUALIZAR", (dialogInterface, i) -> {
-                    dialogMessage.setText("Este proceso podría tomar hasta 60 segundos.");
-                    dialogProgressBar.setVisibility(View.VISIBLE);
-                    //mPresenter.updateUModFirmware();
-                })
-                .setCancelable(false)
-                .create();
-        */
         mFactoryResetDialog = new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.factory_reset_dialog__title)
                 .setMessage(R.string.factory_reset_dialog__message)
@@ -310,6 +269,15 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                 .setCancelable(false)
                 .create();
 
+        mCalibrationResetDialog = new AlertDialog.Builder(getActivity())
+                .setTitle(R.string.calibration_reset_dialog_title)
+                .setMessage(R.string.calibration_reset_dialog_msg)
+                .setNegativeButton("Cancelar",(dialogInterface, i) -> Log.d("CONFIG_FRAG", "Calibration Reset CANCELLED"))
+                .setPositiveButton("RESTAURAR", (dialogInterface, i) -> mPresenter.resetCalibration())
+                .setCancelable(false)
+                .create();
+
+        mCalibrationResetButton.setOnClickListener(view -> mCalibrationResetDialog.show());
 
         setHasOptionsMenu(true);
         setRetainInstance(true);
@@ -380,6 +348,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mViewModel = viewModel;
 
         mAliasTextInput.setText(mViewModel.getAliasText());
+        mAliasTextInput.setSelection(mAliasTextInput.getText().length());
         mWiFiSSIDTextInput.setText(mViewModel.getWifiSSIDText());
         mUModSysInfoTextInput.setText(mViewModel.getuModSysInfoText());
 
@@ -392,24 +361,21 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mOngoingNotifSwitch.setOnCheckedChangeListener((compoundButton, isChecked) ->
                 this.mPresenter.setNotificationStatus(viewModel.getuModUUID(),isChecked));
 
+        if (viewModel.isLocationSettingsLayoutVisible()){
+            mLocationSettingsLayout.setVisibility(View.VISIBLE);
+        } else {
+            mLocationSettingsLayout.setVisibility(View.GONE);
+        }
+
         if (viewModel.isAdminLayoutVisible()){
-            mFirmwareUpdateButton.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    //mPresenter.updateUModFirmware();
-                    mFirmwareUpdateDialog.show();
-                    return false;
-                }
+            mFirmwareUpdateButton.setOnLongClickListener(v -> {
+                mFirmwareUpdateDialog.show();
+                return false;
             });
 
             mFactoryResetButton.setOnClickListener(view -> mFactoryResetDialog.show());
 
-            mUsersButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mPresenter.adminUModUsers();
-                }
-            });
+            mUsersButton.setOnClickListener(v -> mPresenter.adminUModUsers());
 
             if (viewModel.isWifiSettingsVisible()){
                 mWiFiSettings.setVisibility(View.VISIBLE);
@@ -427,10 +393,13 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
             mAdminSettingsLayout.setVisibility(View.GONE);
         }
         this.updateLocationText(viewModel.getLocationText());
-        //mLocationText.addTextChangedListener(mTextWatcher);
         mAllSettingsLinearLayout.setVisibility(View.VISIBLE);
     }
 
+    @Override
+    public void showSettingsApplySuccessMsg() {
+        showSnackBarMessage(getString(R.string.settings_apply_success_message));
+    }
 
     @Override
     public void showAliasConfigFailMsg() {
@@ -478,6 +447,16 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     }
 
     @Override
+    public void showCalibrationResetSuccessMsg() {
+        showSnackBarMessage(getString(R.string.calibration_reset_success));
+    }
+
+    @Override
+    public void showCalibrationResetFailMsg() {
+        showSnackBarMessage(getString(R.string.calibration_reset_failed));
+    }
+
+    @Override
     public void finishActivity() {
         Activity configActivity = getActivity();
         if (configActivity!=null){
@@ -492,12 +471,12 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     @Override
     public void showProgressBar() {
-        this.mPorgressBar.setVisibility(View.VISIBLE);
+        this.mProgressBar.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void hideProgressBar() {
-        this.mPorgressBar.setVisibility(View.GONE);
+        this.mProgressBar.setVisibility(View.GONE);
     }
 
     @Override
@@ -556,11 +535,11 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     @Override
     public void showLocationUpdateSuccessMsg() {
-        showSnackBarMessage("UBICACIÓN ACTUALIZADA");
+        showSnackBarMessage(getString(R.string.location_update_success_msg));
     }
 
     @Override
     public void showLocationUpdateFailureMsg() {
-        showSnackBarMessage("ERROR AL ACTUALIZAR LA UBICACIÓN");
+        showSnackBarMessage(getString(R.string.location_update_failure_msg));
     }
 }

@@ -17,26 +17,25 @@ public class GetGateStatusRPC extends RPC {
         private GetGateStatusRPC.Arguments methodArguments;
         public Request(String requester, boolean isAdmin, Arguments args, String tagPrefix, int id) {
             super(
-                    GlobalConstants.RPC_METHOD_NAME__GET_GATE_STATUS,
-                    GlobalConstants.RPC_METHOD_CODE__GET_GATE_STATUS,
+                    GlobalConstants.RPC_METHOD_NAME__ADMIN_GET_GATE_STATUS,
+                    GlobalConstants.RPC_METHOD_CODE__ADMIN_GET_GATE_STATUS,
                     requester,
                     tagPrefix,
                     id);
             this.methodArguments = args;
-            //this.changeMethod(isAdmin);
+            this.changeMethod(isAdmin);
         }
 
-        /*
         public void changeMethod(boolean isAdmin){
             if (isAdmin){
-                super.setMethodName(GlobalConstants.RPC_METHOD_NAME__ADMIN_TRIGGER);
-                super.setMethodCode(GlobalConstants.RPC_METHOD_CODE__ADMIN_TRIGGER);
+                super.setMethodName(GlobalConstants.RPC_METHOD_NAME__ADMIN_GET_GATE_STATUS);
+                super.setMethodCode(GlobalConstants.RPC_METHOD_CODE__ADMIN_GET_GATE_STATUS);
             } else {
-                super.setMethodName(GlobalConstants.RPC_METHOD_NAME__USER_TRIGGER);
-                super.setMethodCode(GlobalConstants.RPC_METHOD_CODE__USER_TRIGGER);
+                super.setMethodName(GlobalConstants.RPC_METHOD_NAME__USER_GET_GATE_STATUS);
+                super.setMethodCode(GlobalConstants.RPC_METHOD_CODE__USER_GET_GATE_STATUS);
             }
         }
-        */
+
 
         public Arguments getMethodArguments() {
             return methodArguments;

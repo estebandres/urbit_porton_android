@@ -24,10 +24,12 @@ import android.util.Log;
 import com.google.common.base.Strings;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.data.UModUser;
+import com.urbit_iot.onekey.data.source.PhoneConnectivityInfo;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.FactoryResetUMod;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetCurrentLocation;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModAndUpdateInfo;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.GetUModSystemInfo;
+import com.urbit_iot.onekey.umodconfig.domain.usecase.ResetUModCalibration;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.SaveUMod;
 import com.urbit_iot.onekey.data.UMod;
 import com.urbit_iot.onekey.umodconfig.domain.usecase.UpdateUModAlias;
@@ -45,7 +47,6 @@ import javax.inject.Inject;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -88,6 +89,9 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     private final GetCurrentLocation mGetCurrentLocation;
 
     @NonNull
+    private final ResetUModCalibration mResetUModCalibration;
+
+    @NonNull
     private final UpdateUModLocationData mUpdateUModLocationData;
 
     @Nullable
@@ -100,6 +104,11 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     private Location mCurrentLocation;
     @Nullable
     private String mCurrentLocationAddressString;
+
+    private UModConfigViewModel viewModel = null;
+
+    @NonNull
+    private PhoneConnectivityInfo mConnectivityInfo;
 
 
     /**
@@ -118,7 +127,9 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                                @NonNull UpgradeUModFirmware mUpgradeUModFirmware,
                                @NonNull SetOngoingNotificationStatus mSetOngoingNotificationStatus,
                                @NonNull GetCurrentLocation mGetCurrentLocation,
-                               @NonNull UpdateUModLocationData mUpdateUModLocationData) {
+                               @NonNull ResetUModCalibration mResetUModCalibration,
+                               @NonNull UpdateUModLocationData mUpdateUModLocationData,
+                               @NonNull PhoneConnectivityInfo mConnectivityInfo) {
         this.mUModUUID = umodUUID;
         this.mUModConfigView = addTaskView;
         this.mGetUModAndUpdateInfo = getUModAndUpdateInfo;
@@ -130,7 +141,9 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         this.mUpgradeUModFirmware = mUpgradeUModFirmware;
         this.mSetOngoingNotificationStatus = mSetOngoingNotificationStatus;
         this.mGetCurrentLocation = mGetCurrentLocation;
+        this.mResetUModCalibration = mResetUModCalibration;
         this.mUpdateUModLocationData = mUpdateUModLocationData;
+        this.mConnectivityInfo = mConnectivityInfo;
     }
 
     /**
@@ -144,9 +157,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
     @Override
     public void subscribe() {
-        if (mUModUUID != null) {
-            populateUModSettings();
-        }
+        populateUModSettings();
     }
 
     @Override
@@ -161,6 +172,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         mSetOngoingNotificationStatus.unsubscribe();
         mGetCurrentLocation.unsubscribe();
         mUpdateUModLocationData.unsubscribe();
+        mResetUModCalibration.unsubscribe();
     }
 
     @Override
@@ -168,6 +180,12 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         mUModConfigView.hideCompletely();
         if (Strings.isNullOrEmpty(mUModUUID)) {
             throw new RuntimeException("populateUModSettings() was called but umod is null.");
+        }
+        if (this.viewModel!=null){
+            if (mUModConfigView.isActive()){
+                mUModConfigView.showUModConfigs(this.viewModel);
+                return;
+            }
         }
         mUModConfigView.showProgressBar();
         final IntegerContainer onNextCount = new IntegerContainer(0);
@@ -211,7 +229,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                 } else {
                     Log.d("conf_prs", response.getUMod().toString());
                     if (mUModConfigView.isActive()){
-                        mUModConfigView.showUModConfigs(createViewModel(uModToConfig));
+                        viewModel = createViewModel(uModToConfig);
+                        mUModConfigView.showUModConfigs(viewModel);
                     }
                 }
             }
@@ -332,6 +351,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         String uModSysInfoText = "ID: " + uMod.getUUID() + " VERSIÓN: " + uMod.getSWVersion()
                 + "\nIP: " +uMod.getConnectionAddress();
         boolean updateButtonVisible = uMod.getuModSource() != UMod.UModSource.MQTT_SCAN;
+        boolean locationSettingsLayoutVisible = uMod.getState() != UMod.State.AP_MODE;
 
         UModConfigViewModel viewModel =
                 new UModConfigViewModel(uModUUID,
@@ -343,7 +363,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         wifiPasswordText,
                         wifiSettingsVisible,
                         ongoingNotifSwitchChecked,
-                        addressText, updateButtonVisible);
+                        locationSettingsLayoutVisible, addressText,
+                        updateButtonVisible);
 
         return viewModel;
     }
@@ -409,14 +430,11 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         Observable.timer(1100L, TimeUnit.MILLISECONDS)
                                 .subscribeOn(Schedulers.computation())
                                 .observeOn(AndroidSchedulers.mainThread())
-                                .map(new Func1<Long, Object>() {
-                                    @Override
-                                    public Object call(Long aLong) {
-                                        if (mUModConfigView.isActive()){
-                                            mUModConfigView.finishActivity();
-                                        }
-                                        return aLong;
+                                .map(aLong -> {
+                                    if (mUModConfigView.isActive()){
+                                        mUModConfigView.finishActivity();
                                     }
+                                    return aLong;
                                 })
                                 .subscribe();
                     }
@@ -508,5 +526,85 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
 
             }
         });
+    }
+
+    @Override
+    public void updateSettings(String newAlias, String newWifiSsid, String newWifiPassword, boolean updateLocation) {
+        Observable<UpdateUModAlias.ResponseValues> updateAliasObs;
+        Observable<UpdateWiFiCredentials.ResponseValues> updateWifiCredentialsObs;
+        Observable<UpdateUModLocationData.ResponseValues> updateLocationObs;
+        if (Strings.isNullOrEmpty(newAlias)
+                || this.viewModel.getAliasText().equals(newAlias)){
+            updateAliasObs = Observable.empty();
+        } else {
+            this.viewModel.setAliasText(newAlias);
+            updateAliasObs = mUpdateUModAlias.buildUseCase(
+                    new UpdateUModAlias.RequestValues(this.mUModUUID,newAlias));
+        }
+
+        if (!Strings.isNullOrEmpty(newWifiSsid)
+                && !Strings.isNullOrEmpty(newWifiPassword)){//Wifi credentials validation here?
+            updateWifiCredentialsObs = mUpdateWiFiCredentials.buildUseCase(
+                    new UpdateWiFiCredentials.RequestValues(
+                            this.mUModUUID,
+                            newWifiSsid,
+                            newWifiPassword));
+            this.viewModel.setWifiSSIDText(newWifiSsid);
+            this.viewModel.setWifiPasswordText(newWifiPassword);
+        } else {
+            updateWifiCredentialsObs = Observable.empty();
+        }
+        if (updateLocation && mCurrentLocation != null){
+            updateLocationObs = mUpdateUModLocationData.buildUseCase(new UpdateUModLocationData.RequestValues(
+                    mUModUUID,
+                    mCurrentLocation,
+                    mCurrentLocationAddressString));
+        } else {
+            updateLocationObs = Observable.empty();
+        }
+
+        updateAliasObs.toCompletable()
+                .onErrorComplete(throwable -> {
+                    mUModConfigView.showAliasConfigFailMsg();
+                    return true;
+                })
+                .andThen(updateLocationObs.toCompletable())
+                .doOnCompleted(() -> mCurrentLocation = null)
+                .onErrorComplete(throwable -> {
+                    mUModConfigView.showLocationUpdateFailureMsg();
+                    mCurrentLocation = null;
+                    return true;
+                })
+                .andThen(updateWifiCredentialsObs.toCompletable())
+                .timeout(4000L,TimeUnit.MILLISECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(mUModConfigView::showSettingsApplySuccessMsg,
+                        throwable -> mUModConfigView.showWiFiCredentialsConfigFailMsg());
+    }
+
+    @Override
+    public void resetCalibration() {
+        mResetUModCalibration.execute(new ResetUModCalibration.RequestValues(
+                this.mUModUUID,
+                mConnectivityInfo.getConnectionType()
+                        == PhoneConnectivityInfo.ConnectionType.WIFI,
+                mConnectivityInfo.getWifiAPSSID()),
+                new Subscriber<ResetUModCalibration.ResponseValues>() {
+                    @Override
+                    public void onCompleted() {
+                        mUModConfigView.showCalibrationResetSuccessMsg();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        mUModConfigView.showCalibrationResetFailMsg();
+                    }
+
+                    @Override
+                    public void onNext(ResetUModCalibration.ResponseValues responseValues) {
+                        Log.d("CONFIG_PRES", "Reset Calibration Result: " + responseValues.getResult().toString());
+                    }
+                });
     }
 }

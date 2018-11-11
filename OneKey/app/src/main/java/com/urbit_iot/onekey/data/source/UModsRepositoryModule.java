@@ -345,7 +345,7 @@ public class UModsRepositoryModule {
                     MqttClient.generateClientId()
                      ,memoryPersistence);
                      */
-            asyncClient = new MqttAsyncClient("tcp://test.mosquitto.org:1883",
+            asyncClient = new MqttAsyncClient("tcp://198.46.163.51:1883",
                     MqttClient.generateClientId()
                     ,memoryPersistence);
         } catch (MqttException mqttExc) {

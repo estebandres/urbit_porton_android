@@ -33,6 +33,7 @@
     <style name="WifiCredsEditTextStyle" parent="Widget.AppCompat.EditText">
         <item name="colorControlActivated">@color/colorPrimary</item>
         <item name="colorControlNormal">@color/colorPrimaryDark</item>
+        <item name="android:background">@android:color/transparent</item>
     </style>
 
     <style name="Desamb_WifiCredsEditTextStyle">

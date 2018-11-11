@@ -19,6 +19,7 @@ package com.urbit_iot.onekey.umodconfig.domain.usecase;
 import android.location.Location;
 import android.support.annotation.NonNull;
 
+import com.google.common.base.Strings;
 import com.urbit_iot.onekey.RxUseCase;
 import com.urbit_iot.onekey.SimpleUseCase;
 import com.urbit_iot.onekey.data.UMod;
@@ -57,17 +58,24 @@ public class GetCurrentLocation extends SimpleUseCase<GetCurrentLocation.Request
                 .flatMap(location ->{
                     return uModsRepository.getAddressFromLocation(location)
                             .filter(address -> address!=null)
-                            .switchIfEmpty(Observable.error(new Exception("agefgs")))
+                            .switchIfEmpty(Observable.error(new Exception("No location data found")))
                             .retry((integer, throwable) -> integer < 3)
                             .flatMap(address ->{
-                                String locationString;
-                                if (address.getThoroughfare().trim()
-                                        .equalsIgnoreCase(address.getFeatureName().trim())){
-                                    locationString = address.getThoroughfare();
+                                String locationString = null;
+                                if (address.getThoroughfare() != null
+                                        && address.getFeatureName() != null){
+                                    if(address.getThoroughfare().trim()
+                                            .equalsIgnoreCase(address.getFeatureName().trim())){
+                                        locationString = address.getThoroughfare();
+                                    } else {
+                                        locationString = address.getThoroughfare()
+                                                + "  "
+                                                + address.getFeatureName();
+                                    }
                                 } else {
-                                    locationString = address.getThoroughfare()
-                                            + "  "
-                                            + address.getFeatureName();
+                                    if (!Strings.isNullOrEmpty(address.getAddressLine(0))){
+                                        locationString = address.getAddressLine(0);
+                                    }
                                 }
                                 return Observable.just(
                                         new ResponseValues(location, locationString));
@@ -99,4 +107,5 @@ public class GetCurrentLocation extends SimpleUseCase<GetCurrentLocation.Request
             return locationAddress;
         }
     }
+
 }

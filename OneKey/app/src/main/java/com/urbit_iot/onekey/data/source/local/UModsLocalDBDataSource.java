@@ -83,38 +83,35 @@ public class UModsLocalDBDataSource implements UModsDataSource {
         UModsDbHelper dbHelper = new UModsDbHelper(context);
         SqlBrite sqlBrite = SqlBrite.create();
         mDatabaseHelper = sqlBrite.wrapDatabaseHelper(dbHelper, schedulerProvider.io());
-        mUModMapperFunction = new Func1<Cursor, UMod>() {
-            @Override
-            public UMod call(Cursor c) {
-                String uuid = c.getString(c.getColumnIndexOrThrow(UModEntry.UUID_CN));
-                String alias = c.getString(c.getColumnIndexOrThrow(UModEntry.ALIAS_CN));
-                boolean lanOperationEnabled = c.getInt(c.getColumnIndexOrThrow(UModEntry.LAN_OPERATION_ENABLED_CN))>0;
-                String wifiSSID = c.getString(c.getColumnIndexOrThrow(UModEntry.WIFI_SSID_CN));
-                String macAddress = c.getString(c.getColumnIndexOrThrow(UModEntry.MAC_ADDRESS_CN));
-                boolean notifEnabled = c.getInt(c.getColumnIndexOrThrow(UModEntry.NOTIF_ENABLED_CN))>0;
-                String connectionAddress = c.getString(c.getColumnIndexOrThrow(UModEntry.CONNECTION_ADDRESS_CN));
-                UMod.State state = UMod.State.from(c.getInt(c.getColumnIndexOrThrow(UModEntry.UMOD_STATE_CN)));
-                UModUser.Level userStatus = UModUser.Level.from(c.getInt(c.getColumnIndexOrThrow(UModEntry.APP_USER_STATUS_CN)));
-                String lastReport = c.getString(c.getColumnIndexOrThrow(UModEntry.LAST_REPORT_CN));
-                String productUUID = c.getString(c.getColumnIndexOrThrow(UModEntry.PROD_UUID_CN));
-                String hwVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.HW_VERSION_CN));
-                String swVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.SW_VERSION_CN));
-                Double longitude = c.getDouble(c.getColumnIndexOrThrow(UModEntry.LONGITUDE_CN));
-                Double latitude = c.getDouble(c.getColumnIndexOrThrow(UModEntry.LATITUDE_CN));
-                String addressText = c.getString(c.getColumnIndexOrThrow(UModEntry.ADDRESS_TEXT_CN));
-                Location uModLocation = new Location("DBDataSource");
-                uModLocation.setLatitude(latitude);
-                uModLocation.setLongitude(longitude);
-                Date lastUpdate;
-                try{
-                    lastUpdate = dateFormat.parse(c.getString(c.getColumnIndexOrThrow(UModEntry.LAST_UPDATE_DATE_CN)));
-                } catch (ParseException parseExc){
-                    lastUpdate = new Date(0L);
-                }
-
-                return new UMod(uuid, alias, lanOperationEnabled, wifiSSID, connectionAddress, state, userStatus, notifEnabled,
-                        macAddress, lastReport, productUUID, hwVersion, swVersion, uModLocation, addressText, lastUpdate);
+        mUModMapperFunction = c -> {
+            String uuid = c.getString(c.getColumnIndexOrThrow(UModEntry.UUID_CN));
+            String alias = c.getString(c.getColumnIndexOrThrow(UModEntry.ALIAS_CN));
+            boolean lanOperationEnabled = c.getInt(c.getColumnIndexOrThrow(UModEntry.LAN_OPERATION_ENABLED_CN))>0;
+            String wifiSSID = c.getString(c.getColumnIndexOrThrow(UModEntry.WIFI_SSID_CN));
+            String macAddress = c.getString(c.getColumnIndexOrThrow(UModEntry.MAC_ADDRESS_CN));
+            boolean notifEnabled = c.getInt(c.getColumnIndexOrThrow(UModEntry.NOTIF_ENABLED_CN))>0;
+            String connectionAddress = c.getString(c.getColumnIndexOrThrow(UModEntry.CONNECTION_ADDRESS_CN));
+            UMod.State state = UMod.State.from(c.getInt(c.getColumnIndexOrThrow(UModEntry.UMOD_STATE_CN)));
+            UModUser.Level userStatus = UModUser.Level.from(c.getInt(c.getColumnIndexOrThrow(UModEntry.APP_USER_STATUS_CN)));
+            String lastReport = c.getString(c.getColumnIndexOrThrow(UModEntry.LAST_REPORT_CN));
+            String productUUID = c.getString(c.getColumnIndexOrThrow(UModEntry.PROD_UUID_CN));
+            String hwVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.HW_VERSION_CN));
+            String swVersion = c.getString(c.getColumnIndexOrThrow(UModEntry.SW_VERSION_CN));
+            Double longitude = c.getDouble(c.getColumnIndexOrThrow(UModEntry.LONGITUDE_CN));
+            Double latitude = c.getDouble(c.getColumnIndexOrThrow(UModEntry.LATITUDE_CN));
+            String addressText = c.getString(c.getColumnIndexOrThrow(UModEntry.ADDRESS_TEXT_CN));
+            Location uModLocation = new Location("DBDataSource");
+            uModLocation.setLatitude(latitude);
+            uModLocation.setLongitude(longitude);
+            Date lastUpdate;
+            try{
+                lastUpdate = dateFormat.parse(c.getString(c.getColumnIndexOrThrow(UModEntry.LAST_UPDATE_DATE_CN)));
+            } catch (ParseException parseExc){
+                lastUpdate = new Date(0L);
             }
+
+            return new UMod(uuid, alias, lanOperationEnabled, wifiSSID, connectionAddress, state, userStatus, notifEnabled,
+                    macAddress, lastReport, productUUID, hwVersion, swVersion, uModLocation, addressText, lastUpdate);
         };
         this.uModLocalDBBrander = new Observable.Transformer<UMod, UMod>() {
             @Override

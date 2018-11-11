@@ -111,6 +111,7 @@
                     app:cardElevation="7dp">
 
                     <LinearLayout
+                        android:id="@+id/location_settings"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
@@ -201,7 +202,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_horizontal"
-                            android:layout_marginBottom="2dp"
+                            android:layout_marginBottom="5dp"
                             android:layout_marginTop="5dp"
                             app:cardBackgroundColor="@color/colorControlActivated"
                             app:cardCornerRadius="2dp"
@@ -266,7 +267,7 @@
 
                             <LinearLayout
                                 android:layout_width="0dp"
-                                android:layout_height="match_parent"
+                                android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:orientation="vertical">
 
@@ -275,7 +276,7 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:layout_gravity="center_horizontal"
-                                    android:layout_margin="5dp"
+                                    android:layout_margin="3dp"
                                     app:cardBackgroundColor="@color/colorControlActivated"
                                     app:cardCornerRadius="2dp"
                                     app:cardElevation="7dp">
@@ -287,24 +288,32 @@
                                         android:orientation="vertical">
 
                                         <ImageButton
-                                            android:id="@+id/users_button"
+                                            android:id="@+id/firmware_update_button"
                                             android:layout_width="40dp"
                                             android:layout_height="40dp"
                                             android:layout_gravity="center_horizontal"
                                             android:layout_marginTop="5dp"
                                             android:background="?attr/selectableItemBackgroundBorderless"
                                             android:hapticFeedbackEnabled="true"
-                                            android:src="@drawable/ic_contacts_black_24dp" />
+                                            android:src="@drawable/ic_system_update_alt_black_24dp" />
 
                                         <TextView
-                                            android:layout_width="wrap_content"
+                                            android:id="@+id/upgrade_button_subtext"
+                                            android:layout_width="70dp"
                                             android:layout_height="wrap_content"
                                             android:layout_gravity="center_horizontal"
-                                            android:text="USUARIOS"
+                                            android:ellipsize="marquee"
+                                            android:focusable="true"
+                                            android:focusableInTouchMode="true"
+                                            android:marqueeRepeatLimit="marquee_forever"
                                             android:padding="5dp"
+                                            android:scrollHorizontally="true"
+                                            android:singleLine="true"
+                                            android:text="ACTUALIZAR MODULO"
                                             android:textAppearance="@style/TextAppearance.AppCompat.Small"
                                             android:textStyle="bold" />
                                     </LinearLayout>
+
                                 </android.support.v7.widget.CardView>
                             </LinearLayout>
 
@@ -319,7 +328,7 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:layout_gravity="center_horizontal"
-                                    android:layout_margin="5dp"
+                                    android:layout_margin="3dp"
                                     app:cardBackgroundColor="@color/colorControlActivated"
                                     app:cardCornerRadius="2dp"
                                     app:cardElevation="7dp">
@@ -353,7 +362,6 @@
                                 </android.support.v7.widget.CardView>
                             </LinearLayout>
 
-
                             <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
@@ -365,7 +373,7 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:layout_gravity="center_horizontal"
-                                    android:layout_margin="5dp"
+                                    android:layout_margin="3dp"
                                     app:cardBackgroundColor="@color/colorControlActivated"
                                     app:cardCornerRadius="2dp"
                                     app:cardElevation="7dp">
@@ -377,29 +385,75 @@
                                         android:orientation="vertical">
 
                                         <ImageButton
-                                            android:id="@+id/firmware_update_button"
+                                            android:id="@+id/calibration_reset_button"
                                             android:layout_width="40dp"
                                             android:layout_height="40dp"
                                             android:layout_gravity="center_horizontal"
                                             android:layout_marginTop="5dp"
                                             android:background="?attr/selectableItemBackgroundBorderless"
                                             android:hapticFeedbackEnabled="true"
-                                            android:src="@drawable/ic_system_update_alt_black_24dp" />
+                                            android:src="@drawable/ic_calibration_dark" />
 
                                         <TextView
-                                            android:id="@+id/upgrade_button_subtext"
-                                            android:layout_width="70dp"
+                                            android:id="@+id/calibration_reset_subtext"
+                                            android:layout_width="match_parent"
                                             android:layout_height="wrap_content"
                                             android:layout_gravity="center_horizontal"
                                             android:ellipsize="marquee"
                                             android:focusable="true"
                                             android:focusableInTouchMode="true"
                                             android:marqueeRepeatLimit="marquee_forever"
-                                            android:paddingBottom="5dp"
-                                            android:paddingTop="5dp"
+                                            android:padding="5dp"
                                             android:scrollHorizontally="true"
                                             android:singleLine="true"
-                                            android:text="ACTUALIZAR MODULO"
+                                            android:text="RESTAURAR CALIBRACIÓN"
+                                            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                                            android:textStyle="bold" />
+                                    </LinearLayout>
+
+                                </android.support.v7.widget.CardView>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+                                    xmlns:app="http://schemas.android.com/apk/res-auto"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_gravity="center_horizontal"
+                                    android:layout_margin="3dp"
+                                    app:cardBackgroundColor="@color/colorControlActivated"
+                                    app:cardCornerRadius="2dp"
+                                    app:cardElevation="7dp">
+
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="center"
+                                        android:orientation="vertical">
+
+                                        <ImageButton
+                                            android:id="@+id/users_button"
+                                            android:layout_width="40dp"
+                                            android:layout_height="40dp"
+                                            android:layout_gravity="center_horizontal"
+                                            android:layout_marginTop="5dp"
+                                            android:background="?attr/selectableItemBackgroundBorderless"
+                                            android:hapticFeedbackEnabled="true"
+                                            android:src="@drawable/ic_contacts_black_24dp" />
+
+                                        <TextView
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_gravity="center_horizontal"
+                                            android:text="USUARIOS"
+                                            android:paddingTop="5dp"
+                                            android:paddingBottom="5dp"
+                                            android:textAlignment="center"
                                             android:textAppearance="@style/TextAppearance.AppCompat.Small"
                                             android:textStyle="bold" />
                                     </LinearLayout>

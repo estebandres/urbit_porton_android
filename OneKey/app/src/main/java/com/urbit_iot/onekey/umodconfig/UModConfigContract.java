@@ -89,6 +89,12 @@ public interface UModConfigContract {
         void showLocationUpdateSuccessMsg();
 
         void showLocationUpdateFailureMsg();
+
+        void showSettingsApplySuccessMsg();
+
+        void showCalibrationResetSuccessMsg();
+
+        void showCalibrationResetFailMsg();
     }
 
     interface Presenter extends BasePresenter {
@@ -112,5 +118,9 @@ public interface UModConfigContract {
         void getPhoneLocation();
 
         void updateUModLocationData();
+
+        void updateSettings(String aliasText, String wifiSSID, String wifiPassword, boolean mUpdateLocation);
+
+        void resetCalibration();
     }
 }
