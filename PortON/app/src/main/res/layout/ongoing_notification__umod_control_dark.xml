@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="64dp"
+    android:padding="2dp"
+    android:background="@color/colorPrimary">
+
+    <RelativeLayout
+        android:id="@+id/notif_icon_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true">
+
+        <ImageView
+            android:id="@+id/notif_big_icon"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:padding="2dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:src="@drawable/logo"/>
+
+        <ImageView
+            android:id="@+id/notif_small_icon"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_alignBottom="@id/notif_big_icon"
+            android:layout_alignEnd="@id/notif_big_icon"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/notification_main"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toEndOf="@+id/notif_icon_container"
+        android:layout_toStartOf="@+id/ongoing_notification__action_button_layout"
+        android:layout_marginEnd="10dp"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:background="@drawable/ongoing_notification__notification_main_shadowed_background">
+
+        <TextView
+            android:id="@+id/notif_title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:fontFamily="sans-serif-smallcaps"
+            android:layout_marginEnd="8dp"
+            android:text="Notification "
+            android:singleLine="true"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/notif_control_buttons"
+            android:layout_below="@+id/notif_title_text"
+            android:layout_alignParentEnd="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="2dp"
+            android:padding="3dp"
+            android:background="@drawable/ongoing_notification__controls_layout_shadowed_background">
+
+            <ImageButton
+                android:id="@+id/notif_update_button"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/ic_refresh_white_24dp"
+                android:scaleType="fitCenter"
+                android:layout_marginEnd="30dp"
+                android:layout_marginStart="5dp"
+                android:background="@null"/>
+
+            <LinearLayout
+                android:id="@+id/notif_navigation_buttons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical">
+                <ImageButton
+                    android:id="@+id/notif_back_button"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_skip_previous_black_24dp"
+                    android:scaleType="fitCenter"
+                    android:background="@null"
+                    android:visibility="gone"/>
+
+                <ImageButton
+                    android:id="@+id/notif_next_button"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/ic_skip_next_white_24dp"
+                    android:scaleType="fitCenter"
+                    android:layout_marginEnd="10dp"
+                    android:background="@null"/>
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/notif_lock_button"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="5dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_lock_outline_white_24dp"
+                android:background="@null"/>
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/progress_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/notif_title_text"
+            android:layout_alignEnd="@+id/notif_title_text"
+            android:paddingBottom="4dp"
+            android:paddingEnd="8dp"
+            android:paddingStart="8dp"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:indeterminate="true" />
+            <!-- android:progressDrawable="@drawable/notification_progressbar_drawable" -->
+
+            <TextView
+                android:id="@+id/progress_reason_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:textAllCaps="true"
+                android:text="Intentanto acción..."
+                android:textColor="@color/colorPrimary"
+                android:layout_below="@id/progress_bar"
+                android:layout_alignEnd="@id/progress_bar"
+                />
+
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/ongoing_notification__action_button_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentEnd="true"
+
+        android:layout_marginEnd="5dp"
+        android:background="@drawable/ongoing_notification__action_layout_background">
+
+        <ImageButton
+            android:id="@+id/notif_action_button"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:paddingBottom="5dp"
+            android:src="@drawable/ic_eject_gray_24dp"
+            android:scaleType="fitCenter"
+            android:layout_centerInParent="true"
+            android:background="@null" />
+
+    </RelativeLayout>
+
+
+
+</RelativeLayout>
