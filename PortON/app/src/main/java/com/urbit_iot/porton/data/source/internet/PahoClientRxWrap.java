@@ -62,7 +62,7 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
         mqttConnectOptions.setAutomaticReconnect(true);
         mqttConnectOptions.setCleanSession(true);
         mqttConnectOptions.setMaxInflight(200);
-        mqttConnectOptions.setConnectionTimeout(4);
+        mqttConnectOptions.setConnectionTimeout(15);
         //Keep alive defaults to 60 secs
         this.messagesSubject = PublishSubject.create();
         this.connectionMutex = new Semaphore(1);
@@ -162,7 +162,7 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
                 }
                 Log.d("MQTT_SRV","PUB___ IN-FLIGHT MSGS COUNT: " + mqttAsyncClient.getInFlightMessageCount());//Will always fail on nullpointer why??
                 IMqttToken publIMqttToken = mqttAsyncClient.publish(topic, messagePayload, qos, retained);
-                publIMqttToken.waitForCompletion(6000);
+                publIMqttToken.waitForCompletion(8200L);
                 Log.d("MQTT_SRV", "PUB___ SUCCESS!  ON: " + Thread.currentThread().getName());
                 publishMutex.release();
                 completableEmitter.onCompleted();

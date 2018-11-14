@@ -112,6 +112,9 @@ public class UModsFragment extends Fragment implements UModsContract.View {
     @Override
     public void setPresenter(@NonNull UModsContract.Presenter presenter) {
         mPresenter = checkNotNull(presenter);
+        if (this.mListAdapter != null){
+            mListAdapter.setPresenter(this.mPresenter);
+        }
     }
 
     @Override
@@ -770,6 +773,10 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 index++;
             }
             this.mViewModelsList.remove(index);
+        }
+
+        public void setPresenter(UModsContract.Presenter mPresenter) {
+            this.presenter = mPresenter;
         }
     }
 

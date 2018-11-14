@@ -19,6 +19,8 @@ public interface UModMqttServiceContract {
 
     <T,S> Observable<S> publishRPC(UMod targetUMod, T request, Class<S> responseType);
 
+    <T,S> Observable<S> publishRPC(UMod targetUMod, T request, Class<S> responseType, int qos);
+
     Completable testConnectionToBroker();
 
     Observable<UMod> scanUModInvitations();

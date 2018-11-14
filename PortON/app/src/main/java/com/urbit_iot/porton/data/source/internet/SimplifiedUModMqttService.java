@@ -79,14 +79,20 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
         this.subscribeToUModResponseTopic(umod.getUUID());
     }
 
+
     @Override
     public <T, S> Observable<S> publishRPC(UMod targetUMod, T request, Class<S> responseType) {
+        return this.publishRPC(targetUMod, request, responseType, 1);
+    }
+
+    @Override
+    public <T, S> Observable<S> publishRPC(UMod targetUMod, T request, Class<S> responseType, int qos) {
         String serializedRequest = gsonInstance.toJson(request);
         String requestTopic = targetUMod.getUModRequestTopic();
         Log.d("publishRPC", "TOPIC: " + requestTopic + " ON: " + Thread.currentThread().getName() + "  Serialized Request: " + serializedRequest );
         return this.pahoClientRxWrap.connectToBroker()
                 .doOnCompleted(() -> Log.d("publishRPC","CONECTADO!" + " ON: " + Thread.currentThread().getName()))
-                .andThen(this.pahoClientRxWrap.publishToTopic(serializedRequest.getBytes(), requestTopic, 0, false))
+                .andThen(this.pahoClientRxWrap.publishToTopic(serializedRequest.getBytes(), requestTopic, qos, false))
                 .doOnCompleted(() -> Log.d("publishRPC","PUBLICADO! " + requestTopic + " ON: " + Thread.currentThread().getName()))
                 .andThen(this.pahoClientRxWrap.receivedMessagesObservable())
                 //.doOnNext(message -> Log.d("publishRPC","RECIBIDO: " + requestTopic + " MSGE_IS_NULL: " + (message == null)))
@@ -107,8 +113,8 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                 .filter(response -> ((RPC.Response)response).getResponseId() == ((RPC.Request)request).getRequestId()
                         && ((RPC.Response)response).getRequestTag().equalsIgnoreCase(((RPC.Request)request).getRequestTag()))
                 .doOnNext(response -> Log.d("publishRPC","PUB RESPONSE: " + response))
-                .timeout(6000L, TimeUnit.MILLISECONDS)
-                .doOnError(throwable -> Log.e("publishRPC", "FAIL TO PUBLISH: " + requestTopic + " CAUSE: " + throwable.getClass().getSimpleName() + " ON: " + Thread.currentThread().getName()))
+                .timeout(8000L, TimeUnit.MILLISECONDS)
+                .doOnError(throwable -> Log.e("publishRPC", "FAIL TO PUBLISH: " + serializedRequest + "  TO TOPIC: " + requestTopic + " CAUSE: " + throwable.getClass().getSimpleName() + " ON: " + Thread.currentThread().getName()))
                 .first()
                 .flatMap(response -> {
                     RPC.ResponseError responseError = ((RPC.Response)response).getResponseError();
