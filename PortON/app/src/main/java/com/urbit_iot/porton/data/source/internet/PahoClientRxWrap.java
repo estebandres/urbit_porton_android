@@ -182,12 +182,18 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
     }
 
     public Completable subscribeToTopic(String topic, int qos){
+        return subscribeToTopic(topic,qos,true);
+    }
+
+    public Completable subscribeToTopic(String topic, int qos, boolean storeTopicForResubscription){
         return Completable.fromEmitter((CompletableEmitter completableEmitter) -> {
             try {
                 //connectionMutex.acquireUninterruptibly();
                 //Log.d("MQTT_SERVICE", "SUB___ LOCKED!!  " + Thread.currentThread().getName());
                 subscriptionMutex.acquireUninterruptibly();
-                requestedSubscriptionTopics.add(topic);
+                if (storeTopicForResubscription){
+                    requestedSubscriptionTopics.add(topic);
+                }
                 subscriptionMutex.release();
                 if (!mqttAsyncClient.isConnected()){
                     Log.e("MQTT_SRV", "SUB___ FAILURE TOPIC: " + topic +  "Client is Disconnected" +
@@ -233,6 +239,43 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
             connectionMutex.release();
         })
         */
+    }
+
+    public Completable unsubscribeFromTopic(String topic){
+        return Completable.fromEmitter((CompletableEmitter completableEmitter) -> {
+            try {
+                if (!mqttAsyncClient.isConnected()){
+                    Log.e("MQTT_SRV", "UNSUB___ FAILURE TOPIC: " + topic +  "Client is Disconnected" +
+                            "TYPE: " + "Custom type" + "ON: " + Thread.currentThread().getName());
+                    completableEmitter.onError(new Exception("Client is Disconnected"));
+                    return;
+                }
+                mqttAsyncClient.unsubscribe(topic, null, new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        Log.d("MQTT_SRV", "UNSUB___ SUCCESS! TOPIC: " + topic +  " ON: " + Thread.currentThread().getName());
+                        subscriptionMutex.acquireUninterruptibly();
+                        successfulSubscriptionTopics.add(topic);
+                        subscriptionMutex.release();
+                        completableEmitter.onCompleted();
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        Log.e("MQTT_SRV", "UNSUB___ FAILURE TOPIC: " + topic + " CAUSE: " + exception.getMessage() +
+                                "TYPE: " + exception.getClass().getSimpleName() + "ON: " +
+                                Thread.currentThread().getName(),exception);
+                        completableEmitter.onError(exception);
+                    }
+                });
+            } catch (MqttException exception) {
+                Log.e("MQTT_SRV", "UNSUB___ FAILURE TOPIC: " + topic +" CAUSE: " + exception.getMessage() +
+                        "TYPE: " + exception.getClass().getSimpleName() + "ON: " +
+                        Thread.currentThread().getName(),exception);
+                completableEmitter.onError(exception);
+            }
+        })
+                .observeOn(mSchedulerProvider.io());
     }
 
     public Completable subscribeToSeveralTopics(String[] topics, int qos){

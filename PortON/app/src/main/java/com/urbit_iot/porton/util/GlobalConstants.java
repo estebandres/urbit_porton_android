@@ -23,7 +23,7 @@ public final class GlobalConstants {
 
     public static final String FIRMWARE_SERVER__IP_ADDRESS = "192.168.1.7";
     public static final String FIRMWARE_SERVER__PORT = "3289";
-    public static final String MQTT_BROKER__IP_ADDRESS = "35.196.19.239";
+    public static final String MQTT_BROKER__IP_ADDRESS = "devbroker.urbit-iot.tk";
     public static final Integer MQTT_BROKER__PORT = 1883;
 
     //------------COMMON RPC_FIELD_NAMES-----------------

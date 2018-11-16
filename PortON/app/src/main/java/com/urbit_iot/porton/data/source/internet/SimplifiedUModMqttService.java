@@ -164,11 +164,8 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
 
     @Override
     public Observable<UMod> scanUModInvitations() {
-        String invitationsTopic = this.appUsername + "/invitation/+";
-        return this.pahoClientRxWrap.connectToBroker()
-                //.subscribeOn(mSchedulerProvider.io())//TODO use dagger injected scheduler
-                .andThen(this.pahoClientRxWrap.subscribeToTopic(invitationsTopic,0))
-                .andThen(this.pahoClientRxWrap.receivedMessagesObservable())
+        return this.pahoClientRxWrap.receivedMessagesObservable()
+                .doOnSubscribe(this::resetInvitationTopic)
                 .doOnNext(mqttMessage -> Log.d("MQTT_SERVICE", "INVITATION: " + new String(mqttMessage.getPayload())))
                 .takeUntil(Observable.timer(5200L,TimeUnit.MILLISECONDS))
                 .flatMap(mqttMessage -> {
@@ -188,6 +185,15 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                 });
     }
 
+    private void resetInvitationTopic(){
+        String invitationsTopic = this.appUsername + "/invitation/+";
+        this.pahoClientRxWrap.connectToBroker()
+                //.subscribeOn(mSchedulerProvider.io())//TODO use dagger injected scheduler
+                .andThen(this.pahoClientRxWrap.unsubscribeFromTopic(invitationsTopic))
+                .andThen(this.pahoClientRxWrap.subscribeToTopic(invitationsTopic,0,false))
+                .subscribe(() -> Log.d("SERVICE", "INVITATION RESET SUCCESSFUL"),
+                        throwable -> Log.e("SERVICE", "INVITATION RESET FAILURE",throwable));
+    }
     //TODO is this a method for UMod class? Please avoid repetition
     private String getUUIDFromUModAdvertisedID(String hostName){
         String uModUUID = null;

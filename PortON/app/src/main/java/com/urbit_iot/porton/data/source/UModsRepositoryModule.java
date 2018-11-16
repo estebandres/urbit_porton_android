@@ -204,7 +204,7 @@ public class UModsRepositoryModule {
                 .authenticator(new CachingAuthenticatorDecorator(digestAuthenticator,authCache))
                 .addInterceptor(new AuthenticationCacheInterceptor(authCache))
                 .dispatcher(dispatcher)
-                .connectTimeout(2000L, TimeUnit.MILLISECONDS)
+                .connectTimeout(5000L, TimeUnit.MILLISECONDS)
                 .readTimeout(8000L, TimeUnit.MILLISECONDS)
                 //.writeTimeout(15000L,TimeUnit.MILLISECONDS)
                 .build();
@@ -240,7 +240,7 @@ public class UModsRepositoryModule {
                 .addInterceptor(urlHostSelectionInterceptor)
                 .authenticator(new CachingAuthenticatorDecorator(digestAuthenticator,authCache))
                 .addInterceptor(new AuthenticationCacheInterceptor(authCache))
-                .connectTimeout(2000L, TimeUnit.MILLISECONDS)
+                .connectTimeout(5000L, TimeUnit.MILLISECONDS)
                 .readTimeout(8000L, TimeUnit.MILLISECONDS)
                 .build();
     }
@@ -336,16 +336,11 @@ public class UModsRepositoryModule {
         MqttAsyncClient asyncClient = null;
         MemoryPersistence memoryPersistence = new MemoryPersistence();
         try {
-            /*
              asyncClient = new MqttAsyncClient(
                     "tcp://" + GlobalConstants.MQTT_BROKER__IP_ADDRESS +":" +
                             GlobalConstants.MQTT_BROKER__PORT,
-                    MqttClient.generateClientId()
+                     this.appUserName
                      ,memoryPersistence);
-                     */
-            asyncClient = new MqttAsyncClient("tcp://198.46.163.51:1883",
-                    MqttClient.generateClientId()
-                    ,memoryPersistence);
         } catch (MqttException mqttExc) {
             Log.e("providePahoClientRxWrap","message"
                     + mqttExc.getMessage()

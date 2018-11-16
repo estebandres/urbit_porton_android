@@ -186,7 +186,7 @@ public class UModsRepository implements UModsDataSource {
      */
     //@RxLogObservable
     Observable<UMod> getUModsOneByOneFromCacheOrDB(){
-        if (!mCacheIsDirty && !mCachedUMods.isEmpty()){//CACHE MULTIPLE HIT
+        if (!mCachedUMods.isEmpty()){//CACHE MULTIPLE HIT
             Log.d("umods_rep","Map cache");
             return Observable.from(mCachedUMods.values())
                         .compose(this.uModCacheBrander);
@@ -278,10 +278,13 @@ public class UModsRepository implements UModsDataSource {
                                 }
                                 break;
                             case MQTT_SCAN:
-                                // if cached then belongsToAppUser is always true
+                                // Todo Review if cached then belongsToAppUser is always true
                                 // This 'retries' cancellation
-                                uModMqttService.cancelMyInvitation(discoveredUMod);
-                                return Observable.empty();
+                                if (cachedUMod.belongsToAppUser()){
+                                    uModMqttService.cancelMyInvitation(discoveredUMod);
+                                    return Observable.empty();
+                                }
+                                break;
                             default:
                                 return Observable.error(new Exception("Unknown Source for discovered umod."));
                         }
@@ -372,7 +375,7 @@ public class UModsRepository implements UModsDataSource {
     public void saveUMod(@NonNull UMod uMod) {
         checkNotNull(uMod);
         mUModsLocalDataSource.saveUMod(uMod);
-        //mUModsInternetDataSource.saveUMod(uMod);
+        mUModsInternetDataSource.saveUMod(uMod);
 
         mCachedUMods.put(uMod.getUUID(), uMod);
     }

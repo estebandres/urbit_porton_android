@@ -28,69 +28,43 @@ public class UModsBLEScanner {
 
     public UModsBLEScanner(RxBleClient mRxBleClient) {
         this.mRxBleClient = mRxBleClient;
+
     }
 
     //Scans for BLE devices for 4 seconds.
-    @RxLogObservable
+    //@RxLogObservable
     public Observable<UMod> bleScanForUMods(){
-        return Observable.defer(new Func0<Observable<UMod>>() {
-            @Override
-            public Observable<UMod> call() {
-                return mRxBleClient.observeStateChanges()
-                        .switchMap(new Func1<RxBleClient.State, Observable<ScanResult>>() {
-                            @Override
-                            public Observable<ScanResult> call(RxBleClient.State state) {
-                                switch (state) {
-                                    case READY:
-                                        // everything should work
-                                        return mRxBleClient.scanBleDevices(
-                                                new ScanSettings.Builder()
-                                                        .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                                                        .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-                                                        .build(),
-                                                new ScanFilter.Builder()
-                                                        .build());
-                                    case BLUETOOTH_NOT_AVAILABLE:
-                                        // basically no functionality will work here
-                                    case LOCATION_PERMISSION_NOT_GRANTED:
-                                        // scanning and connecting will not work
-                                    case BLUETOOTH_NOT_ENABLED:
-                                        // scanning and connecting will not work
-                                    case LOCATION_SERVICES_NOT_ENABLED:
-                                        // scanning will not work
-                                    default:
-                                        return Observable.empty();
-                                }
-                            }
-                        })
-                        .takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
-                        .distinct()
-                        .doOnError(new Action1<Throwable>() {
-                            @Override
-                            public void call(Throwable throwable) {
-                                Log.e("ble_scan", "" + throwable.getMessage());
-                            }
-                        })
-                        .doOnNext(new Action1<ScanResult>() {
-                            @Override
-                            public void call(ScanResult scanResult) {
-                                Log.d("ble_scan",scanResult.toString());
-                            }
-                        })
-                        .filter(new Func1<ScanResult, Boolean>() {
-                            @Override
-                            public Boolean call(ScanResult scanResult) {
-                                return scanResult.getBleDevice().getName() != null && scanResult.getBleDevice().getName().matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX);
-                            }
-                        })
-                        .map(new Func1<ScanResult, UMod>() {
-                            @Override
-                            public UMod call(ScanResult scanResult) {
-                                return new UMod(scanResult.getBleDevice().getName(),
-                                        scanResult.getBleDevice().getMacAddress());
-                            }
-                        });
-            }
-        });
+        return Observable.defer(() -> mRxBleClient.observeStateChanges()
+                .switchMap( state -> {
+                    switch (state) {
+                        case READY:
+                            // everything should work
+                            return mRxBleClient.scanBleDevices(
+                                    new ScanSettings.Builder()
+                                            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                                            .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                                            .build(),
+                                    new ScanFilter.Builder()
+                                            .build());
+                        case BLUETOOTH_NOT_AVAILABLE:
+                            // basically no functionality will work here
+                        case LOCATION_PERMISSION_NOT_GRANTED:
+                            // scanning and connecting will not work
+                        case BLUETOOTH_NOT_ENABLED:
+                            // scanning and connecting will not work
+                        case LOCATION_SERVICES_NOT_ENABLED:
+                            // scanning will not work
+                        default:
+                            return Observable.empty();
+                    }
+                })
+                //.takeUntil(Observable.timer(4000L, TimeUnit.MILLISECONDS))
+                .distinct()
+                .doOnError(throwable -> Log.e("ble_scan", "" + throwable.getMessage()))
+                .doOnNext(scanResult -> Log.d("ble_scan",scanResult.toString()))
+                .filter(scanResult -> scanResult.getBleDevice().getName() != null
+                        && scanResult.getBleDevice().getName().matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX))
+                .map(scanResult -> new UMod(scanResult.getBleDevice().getName(),
+                        scanResult.getBleDevice().getMacAddress())));
     }
 }
