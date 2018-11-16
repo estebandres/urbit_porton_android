@@ -19,6 +19,7 @@ package com.urbit_iot.porton.umods.domain.usecase;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.common.base.Strings;
 import com.urbit_iot.porton.RxUseCase;
 import com.urbit_iot.porton.SimpleUseCase;
 import com.urbit_iot.porton.appuser.data.source.AppUserRepository;
@@ -41,9 +42,9 @@ import timber.log.Timber;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * Fetches the list of tasks.
+ * Executes Trigger RPC on a given UMod.
  */
-public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, TriggerUMod.ResponseValues> {
+public class TriggerUModUC extends SimpleUseCase<TriggerUModUC.RequestValues, TriggerUModUC.ResponseValues> {
 
     private final UModsRepository mUModsRepository;
     private final AppUserRepository mAppUserRepository;
@@ -52,10 +53,10 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
     private String uModAPSSID;
 
     @Inject
-    public TriggerUMod(@NonNull UModsRepository uModsRepository,
-                       @NonNull BaseSchedulerProvider schedulerProvider,
-                       @NonNull AppUserRepository mAppUserRepository,
-                       @NonNull PhoneConnectivity connectivityInfo) {
+    public TriggerUModUC(@NonNull UModsRepository uModsRepository,
+                         @NonNull BaseSchedulerProvider schedulerProvider,
+                         @NonNull AppUserRepository mAppUserRepository,
+                         @NonNull PhoneConnectivity connectivityInfo) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(uModsRepository, "uModsRepository cannot be null!");
         this.mAppUserRepository = checkNotNull(mAppUserRepository,"mAppUserRepository cannot be null!");
@@ -82,6 +83,9 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
         return mUModsRepository.getUMod(values.getUModUUID())
                 .flatMap(uMod -> {
                     uModAPSSID = "";
+                    if (!Strings.isNullOrEmpty(uMod.getWifiSSID())){
+                        uModAPSSID = uMod.getWifiSSID();
+                    }
                     return mUModsRepository.triggerUMod(uMod, requestArguments)
                             .onErrorResumeNext(throwable -> {
                                 if (throwable instanceof HttpException){
@@ -105,7 +109,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                             + errorMessage);
 
                                     //401 occurs when some admin deleted me
-                                    if (httpErrorCode != 0 && (httpErrorCode == 401 || httpErrorCode == 403)){
+                                    if (httpErrorCode == 401 || httpErrorCode == 403){
                                         /*
                                         if (uMod.getAppUserLevel()== UModUser.Level.INVITED){
                                             mUModsRepository.deleteUMod(uMod.getUUID());
@@ -145,12 +149,11 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                                                                             + " MESSAGE: "
                                                                             + errorMessage1);
                                                                     //Could ocurr if
-                                                                    if (httpErrorCode1 != 0
-                                                                        && httpErrorCode1 == 500
+                                                                    if (httpErrorCode1 == 500
                                                                             && errorMessage1.contains("404")) {//TODO is this case possible?
-                                                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                                                mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
-                                                                                return Observable.error(new DeletedUserException(uMod));
+                                                                        uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                                        mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
+                                                                        return Observable.error(new DeletedUserException(uMod));
                                                                     }
                                                                 }
                                                                 return Observable.error(throwable1);

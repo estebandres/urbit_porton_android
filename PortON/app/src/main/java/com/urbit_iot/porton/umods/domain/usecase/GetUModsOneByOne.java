@@ -32,19 +32,16 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
 
     private final UModsRepository mUModsRepository;
     private final AppUserRepository mAppUserRepository;
-    private final UModMqttServiceContract mUModMqttService;
     private final BaseSchedulerProvider schedulerProvider;
 
     @Inject
     public GetUModsOneByOne(@NonNull UModsRepository tasksRepository,
                             @NonNull AppUserRepository appUserRepository,
-                            @NonNull BaseSchedulerProvider schedulerProvider,
-                            @NonNull UModMqttServiceContract mUModMqttService) {
+                            @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         this.schedulerProvider = schedulerProvider;
         mUModsRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
         mAppUserRepository = checkNotNull(appUserRepository, "appUserRepository cannot be null!");
-        this.mUModMqttService = mUModMqttService;
     }
 
     @Override
@@ -111,8 +108,9 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                                                         + errorMessage);
 
                                                 //401 and 403 aren't considered because the call is made with urbit:urbit
-                                                if (httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR
-                                                        || httpErrorCode == HttpURLConnection.HTTP_NOT_FOUND){
+                                                //As defined in the API and because mongoose limitations all API errors are retrieved with 500 error code
+                                                //but inside the error message the actual error code can be found.
+                                                if (httpErrorCode == HttpURLConnection.HTTP_INTERNAL_ERROR){
                                                     if (errorMessage.contains(Integer.toString(HttpURLConnection.HTTP_NOT_FOUND))) {
                                                         uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
                                                         return Observable.just(uMod);

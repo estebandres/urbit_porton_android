@@ -18,7 +18,7 @@ import com.urbit_iot.porton.umods.domain.usecase.GetUMods;
 import com.urbit_iot.porton.umods.domain.usecase.GetUModsOneByOne;
 import com.urbit_iot.porton.umods.domain.usecase.RequestAccess;
 import com.urbit_iot.porton.umods.domain.usecase.SetOngoingNotificationStatus;
-import com.urbit_iot.porton.umods.domain.usecase.TriggerUMod;
+import com.urbit_iot.porton.umods.domain.usecase.TriggerUModUC;
 import com.urbit_iot.porton.util.EspressoIdlingResource;
 import com.urbit_iot.porton.util.GlobalConstants;
 import com.urbit_iot.porton.util.IntegerContainer;
@@ -45,7 +45,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     private final UModsContract.View mUModsView;
     private final GetUMods mGetUMods;
     private final ClearAlienUMods mClearAlienUMods;
-    private final TriggerUMod mTriggerUMod;
+    private final TriggerUModUC mTriggerUModUC;
     private final GetUModsOneByOne mGetUModsOneByOne;
     private final SetOngoingNotificationStatus mSetOngoingNotificationStatus;
     private final RequestAccess mRequestAccess;
@@ -68,7 +68,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                           @NonNull GetUModsOneByOne getUModsOneByOne,
                           @NonNull SetOngoingNotificationStatus setOngoingNotificationStatus,
                           @NonNull ClearAlienUMods clearAlienUMods,
-                          @NonNull TriggerUMod triggerUMod,
+                          @NonNull TriggerUModUC triggerUModUC,
                           @NonNull RequestAccess requestAccess,
                           @NonNull RxSharedPreferences rxSharedPreferences,
                           @NonNull PhoneConnectivity mPhoneConnectivity,
@@ -80,7 +80,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         mSetOngoingNotificationStatus = checkNotNull(setOngoingNotificationStatus, "setOngoingNotificationStatus cannot be null!");
         mClearAlienUMods = checkNotNull(clearAlienUMods,
                 "clearAlienUMods cannot be null!");
-        mTriggerUMod = checkNotNull(triggerUMod, "userTriggerUMod cannot be null!");
+        mTriggerUModUC = checkNotNull(triggerUModUC, "userTriggerUMod cannot be null!");
         mRequestAccess = checkNotNull(requestAccess, "requestAccess cannot be null!");
         //this.mRetrofitUtils = mRetrofitUtils;
         this.rxSharedPreferences = rxSharedPreferences;
@@ -118,7 +118,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     public void unsubscribe() {
         mGetUMods.unsubscribe();
         mClearAlienUMods.unsubscribe();
-        mTriggerUMod.unsubscribe();
+        mTriggerUModUC.unsubscribe();
         mGetUModsOneByOne.unsubscribe();
         mSetOngoingNotificationStatus.unsubscribe();
         mRequestAccess.unsubscribe();
@@ -601,8 +601,8 @@ public class UModsPresenter implements UModsContract.Presenter {
         // that the app is busy until the response is handled.
         EspressoIdlingResource.increment(); // App is busy until further notice
 
-        TriggerUMod.RequestValues requestValue = new TriggerUMod.RequestValues(uModUUID);
-        mTriggerUMod.execute(requestValue, new Subscriber<TriggerUMod.ResponseValues>() {
+        TriggerUModUC.RequestValues requestValue = new TriggerUModUC.RequestValues(uModUUID);
+        mTriggerUModUC.execute(requestValue, new Subscriber<TriggerUModUC.ResponseValues>() {
             @Override
             public void onCompleted() {
                 mUModsView.enableActionSlider(uModUUID);
@@ -623,8 +623,8 @@ public class UModsPresenter implements UModsContract.Presenter {
                 Log.e("UMODS_PRES","Trigger Failure: " + e.getMessage() + " TYPE: " + e.getClass().getSimpleName(), e);
                 Timber.e("Fail to Trigger UModUUID: " + uModUUID + " Cause: " + e.getMessage());
                 mUModsView.showOpenCloseFail();
-                if (e instanceof TriggerUMod.DeletedUserException){
-                    UMod saidUMod = ((TriggerUMod.DeletedUserException) e).getInaccessibleUMod();
+                if (e instanceof TriggerUModUC.DeletedUserException){
+                    UMod saidUMod = ((TriggerUModUC.DeletedUserException) e).getInaccessibleUMod();
                     if (saidUMod.getAppUserLevel() == UModUser.Level.INVITED){
                         mUModsView.removeItem(saidUMod.getUUID());
                         return;
@@ -636,7 +636,7 @@ public class UModsPresenter implements UModsContract.Presenter {
             }
 
             @Override
-            public void onNext(TriggerUMod.ResponseValues responseValues) {
+            public void onNext(TriggerUModUC.ResponseValues responseValues) {
 
                 TriggerRPC.Result triggerResult = responseValues.getResult();
                 Log.d("umods_pr", "RPC is " + triggerResult.toString());
