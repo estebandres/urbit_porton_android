@@ -115,6 +115,10 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private ImageButton mCalibrationResetButton;
 
+    private LinearLayout adminButtonsLayout;
+
+    private LinearLayout firmwareUpdateBox;
+
     public static UModConfigFragment newInstance() {
         return new UModConfigFragment();
     }
@@ -203,6 +207,8 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         });
         mLocationText = root.findViewById(R.id.umod_config__location_text);
         mCalibrationResetButton = root.findViewById(R.id.calibration_reset_button);
+        adminButtonsLayout = root.findViewById(R.id.admin_buttons);
+        firmwareUpdateBox = root.findViewById(R.id.firmware_update_card);
 
         mTextWatcher = new TextWatcher() {
             @Override
@@ -367,14 +373,27 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         }
 
         if (viewModel.isAdminLayoutVisible()){
-            mFirmwareUpdateButton.setOnLongClickListener(v -> {
-                mFirmwareUpdateDialog.show();
-                return false;
-            });
+            if (viewModel.isControlButtonsVisible()){
+                mFirmwareUpdateButton.setOnLongClickListener(v -> {
+                    mFirmwareUpdateDialog.show();
+                    return false;
+                });
 
-            mFactoryResetButton.setOnClickListener(view -> mFactoryResetDialog.show());
+                mFactoryResetButton.setOnClickListener(view -> mFactoryResetDialog.show());
 
-            mUsersButton.setOnClickListener(v -> mPresenter.adminUModUsers());
+                mUsersButton.setOnClickListener(v -> mPresenter.adminUModUsers());
+
+                adminButtonsLayout.setVisibility(View.VISIBLE);
+
+                if (viewModel.isUpdateButtonVisible()){
+                    firmwareUpdateBox.setVisibility(View.VISIBLE);
+                } else {
+                    firmwareUpdateBox.setVisibility(View.GONE);
+                }
+
+            } else {
+                adminButtonsLayout.setVisibility(View.GONE);
+            }
 
             if (viewModel.isWifiSettingsVisible()){
                 mWiFiSettings.setVisibility(View.VISIBLE);
@@ -382,11 +401,6 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
                 mWiFiSettings.setVisibility(View.GONE);
             }
 
-            if (viewModel.isUpdateButtonVisible()){
-                mFirmwareUpdateButton.setVisibility(View.VISIBLE);
-            } else {
-                mFirmwareUpdateButton.setVisibility(View.INVISIBLE);
-            }
             mAdminSettingsLayout.setVisibility(View.VISIBLE);
         } else {
             mAdminSettingsLayout.setVisibility(View.GONE);

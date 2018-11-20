@@ -330,6 +330,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         String aliasText = uMod.getAlias();
         String wifiSSIDText = uMod.getWifiSSID();
         boolean adminLayoutVisible = uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR;
+        boolean controlButtonsVisible = uMod.getAppUserLevel() == UModUser.Level.ADMINISTRATOR
+                && uMod.getState() == UMod.State.STATION_MODE;
         String wifiPasswordText = null;
         boolean wifiSettingsVisible = uMod.getState() == UMod.State.AP_MODE;
         boolean ongoingNotifSwitchChecked = uMod.isOngoingNotificationEnabled();
@@ -350,7 +352,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         }
         String uModSysInfoText = "ID: " + uMod.getUUID() + " VERSIÓN: " + uMod.getSWVersion()
                 + "\nIP: " +uMod.getConnectionAddress();
-        boolean updateButtonVisible = uMod.getuModSource() != UMod.UModSource.MQTT_SCAN;
+        boolean updateButtonVisible = uMod.getWifiSSID() != null
+                && uMod.getWifiSSID().equals(mConnectivityInfo.getWifiAPSSID());
         boolean locationSettingsLayoutVisible = uMod.getState() != UMod.State.AP_MODE;
 
         UModConfigViewModel viewModel =
@@ -364,7 +367,9 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         wifiSettingsVisible,
                         ongoingNotifSwitchChecked,
                         locationSettingsLayoutVisible, addressText,
-                        updateButtonVisible);
+                        updateButtonVisible,
+                        controlButtonsVisible
+                        );
 
         return viewModel;
     }

@@ -440,10 +440,10 @@ public class UModUsersFragment extends Fragment implements UModUsersContract.Vie
                 levelButton.setVisibility(View.VISIBLE);
                 switch (viewModel.getLevelButtonImage()){
                     case FULL_CROWN:
-                        levelButton.setImageResource(R.drawable.ic_put_crown);
+                        levelButton.setImageResource(R.drawable.ic_enable_crown);
                         break;
                     case CROSSED_CROWN:
-                        levelButton.setImageResource(R.drawable.ic_remove_crown);
+                        levelButton.setImageResource(R.drawable.ic_disable_crown);
                         break;
                     default:
                         levelButton.setVisibility(View.INVISIBLE);

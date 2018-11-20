@@ -17,6 +17,7 @@ public class UModConfigViewModel {
     private boolean locationSettingsLayoutVisible;
     private String locationText;
     private boolean updateButtonVisible;
+    private boolean controlButtonsVisible;
 
     public UModConfigViewModel(String uModUUID,
                                String connectionStatusText,
@@ -29,7 +30,8 @@ public class UModConfigViewModel {
                                boolean ongoingNotifSwitchChecked,
                                boolean locationSettingsLayoutVisible,
                                String locationText,
-                               boolean updateButtonVisible) {
+                               boolean updateButtonVisible,
+                               boolean controlButtonsVisible) {
         this.uModUUID = uModUUID;
         this.connectionStatusText = connectionStatusText;
         this.aliasText = aliasText;
@@ -42,6 +44,7 @@ public class UModConfigViewModel {
         this.locationSettingsLayoutVisible = locationSettingsLayoutVisible;
         this.locationText = locationText;
         this.updateButtonVisible = updateButtonVisible;
+        this.controlButtonsVisible = controlButtonsVisible;
     }
 
     public String getuModUUID() {
@@ -138,5 +141,13 @@ public class UModConfigViewModel {
 
     public void setLocationSettingsLayoutVisible(boolean locationSettingsLayoutVisible) {
         this.locationSettingsLayoutVisible = locationSettingsLayoutVisible;
+    }
+
+    public boolean isControlButtonsVisible() {
+        return controlButtonsVisible;
+    }
+
+    public void setControlButtonsVisible(boolean controlButtonsVisible) {
+        this.controlButtonsVisible = controlButtonsVisible;
     }
 }

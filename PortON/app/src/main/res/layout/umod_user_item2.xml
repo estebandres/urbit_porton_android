@@ -91,7 +91,7 @@
             android:layout_margin="10dp"
             android:layout_gravity="center_vertical"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_put_crown"
+            android:src="@drawable/ic_enable_crown"
             android:hapticFeedbackEnabled="true"
             android:background="?attr/selectableItemBackgroundBorderless"/>
 
