@@ -79,7 +79,7 @@ public class UModsRepositoryTest {
     private UModsDataSource dataBaseDataSourceMock;
 
     @Mock
-    private PhoneConnectivityInfo connectivityInfoMock;
+    private PhoneConnectivity connectivityInfoMock;
 
     @Mock
     private UModMqttServiceContract mqttServiceMock;
@@ -496,7 +496,7 @@ public class UModsRepositoryTest {
         invitedModeUMod.setuModSource(UMod.UModSource.LAN_SCAN);
         invitedModeUMod.setState(UMod.State.STATION_MODE);
         invitedModeUMod.setAppUserLevel(UModUser.Level.AUTHORIZED);
-        when(connectivityInfoMock.getConnectionType()).thenReturn(PhoneConnectivityInfo.ConnectionType.WIFI);
+        when(connectivityInfoMock.getConnectionType()).thenReturn(PhoneConnectivity.ConnectionType.WIFI);
         //WHEN
         Observable<Pair<UModsDataSource,UModsDataSource>> datasourcesObservable = uModsRepository.getDataSourceChoices(invitedModeUMod);
         Flowable<Pair<UModsDataSource,UModsDataSource>> datasourceChoicesFlowable = RxJavaInterop.toV2Flowable(datasourcesObservable);
@@ -514,7 +514,7 @@ public class UModsRepositoryTest {
         UMod invitedModeUMod = new UMod("666");
         invitedModeUMod.setState(UMod.State.STATION_MODE);
         invitedModeUMod.setAppUserLevel(UModUser.Level.AUTHORIZED);
-        when(connectivityInfoMock.getConnectionType()).thenReturn(PhoneConnectivityInfo.ConnectionType.WIFI);
+        when(connectivityInfoMock.getConnectionType()).thenReturn(PhoneConnectivity.ConnectionType.WIFI);
         invitedModeUMod.setuModSource(UMod.UModSource.CACHE);
         invitedModeUMod.setWifiSSID("SteveWifi");
         when(connectivityInfoMock.getWifiAPSSID()).thenReturn("SteveWifi");
@@ -536,7 +536,7 @@ public class UModsRepositoryTest {
         UMod invitedModeUMod = new UMod("666");
         invitedModeUMod.setState(UMod.State.STATION_MODE);
         invitedModeUMod.setAppUserLevel(UModUser.Level.AUTHORIZED);
-        when(connectivityInfoMock.getConnectionType()).thenReturn(PhoneConnectivityInfo.ConnectionType.WIFI);
+        when(connectivityInfoMock.getConnectionType()).thenReturn(PhoneConnectivity.ConnectionType.WIFI);
         invitedModeUMod.setuModSource(UMod.UModSource.CACHE);
         invitedModeUMod.setWifiSSID("SteveWifi");
         when(connectivityInfoMock.getWifiAPSSID()).thenReturn("Incu");
@@ -558,7 +558,7 @@ public class UModsRepositoryTest {
         UMod invitedModeUMod = new UMod("666");
         invitedModeUMod.setState(UMod.State.STATION_MODE);
         invitedModeUMod.setAppUserLevel(UModUser.Level.AUTHORIZED);
-        when(connectivityInfoMock.getConnectionType()).thenReturn(PhoneConnectivityInfo.ConnectionType.WIFI);
+        when(connectivityInfoMock.getConnectionType()).thenReturn(PhoneConnectivity.ConnectionType.WIFI);
         invitedModeUMod.setuModSource(UMod.UModSource.CACHE);
         invitedModeUMod.setWifiSSID("SteveWifi");
         when(connectivityInfoMock.getWifiAPSSID()).thenReturn("SteveWifi");

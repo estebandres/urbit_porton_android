@@ -25,7 +25,7 @@ import com.urbit_iot.porton.SimpleUseCase;
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.rpc.SetGateStatusRPC;
-import com.urbit_iot.porton.data.source.PhoneConnectivityInfo;
+import com.urbit_iot.porton.data.source.PhoneConnectivity;
 import com.urbit_iot.porton.data.source.UModsRepository;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 
@@ -46,13 +46,13 @@ public class CalibrateUMod extends SimpleUseCase<CalibrateUMod.RequestValues, Ca
 
     private final UModsRepository mUModsRepository;
     //TODO Ugly dependencies are ugly. Brakes dependency rule!
-    private final PhoneConnectivityInfo connectivityInfo;
+    private final PhoneConnectivity connectivityInfo;
     private String uModAPSSID;
 
     @Inject
     public CalibrateUMod(@NonNull UModsRepository uModsRepository,
                          @NonNull BaseSchedulerProvider schedulerProvider,
-                         @NonNull PhoneConnectivityInfo connectivityInfo) {
+                         @NonNull PhoneConnectivity connectivityInfo) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(uModsRepository, "uModsRepository cannot be null!");
         this.connectivityInfo = connectivityInfo;

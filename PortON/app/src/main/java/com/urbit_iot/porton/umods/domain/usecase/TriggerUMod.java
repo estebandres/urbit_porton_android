@@ -26,7 +26,7 @@ import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.porton.data.rpc.TriggerRPC;
-import com.urbit_iot.porton.data.source.PhoneConnectivityInfo;
+import com.urbit_iot.porton.data.source.PhoneConnectivity;
 import com.urbit_iot.porton.data.source.UModsRepository;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 
@@ -48,14 +48,14 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
     private final UModsRepository mUModsRepository;
     private final AppUserRepository mAppUserRepository;
     //TODO Ugly dependencies are ugly. Brakes dependency rule!
-    private final PhoneConnectivityInfo connectivityInfo;
+    private final PhoneConnectivity connectivityInfo;
     private String uModAPSSID;
 
     @Inject
     public TriggerUMod(@NonNull UModsRepository uModsRepository,
                        @NonNull BaseSchedulerProvider schedulerProvider,
                        @NonNull AppUserRepository mAppUserRepository,
-                       @NonNull PhoneConnectivityInfo connectivityInfo) {
+                       @NonNull PhoneConnectivity connectivityInfo) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         mUModsRepository = checkNotNull(uModsRepository, "uModsRepository cannot be null!");
         this.mAppUserRepository = checkNotNull(mAppUserRepository,"mAppUserRepository cannot be null!");
@@ -182,7 +182,7 @@ public class TriggerUMod extends SimpleUseCase<TriggerUMod.RequestValues, Trigge
                     if (retryCount == 1
                             && (throwable instanceof IOException)
                             //This sort of data should be given as a request value to the usecase in order to isolate the layer.
-                            && connectivityInfo.getConnectionType() == PhoneConnectivityInfo.ConnectionType.WIFI
+                            && connectivityInfo.getConnectionType() == PhoneConnectivity.ConnectionType.WIFI
                             && uModAPSSID.equals(connectivityInfo.getWifiAPSSID())){
                         mUModsRepository.refreshUMods();
                         return true;

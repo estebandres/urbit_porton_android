@@ -33,7 +33,7 @@ public interface UModsRepositoryComponent {
 
     UModMqttServiceContract getUModMqttService();//TODO breaks dependecy rule!
 
-    PhoneConnectivityInfo getPhoneConnectivityInfo();//TODO breaks dependecy rule!
+    PhoneConnectivity getPhoneConnectivityInfo();//TODO breaks dependecy rule!
 
     BaseSchedulerProvider getBaseSchedulerProvider();
 

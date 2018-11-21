@@ -10,7 +10,7 @@ import com.urbit_iot.porton.RxUseCase;
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.rpc.TriggerRPC;
-import com.urbit_iot.porton.data.source.PhoneConnectivityInfo;
+import com.urbit_iot.porton.data.source.PhoneConnectivity;
 import com.urbit_iot.porton.data.source.UModsDataSource;
 import com.urbit_iot.porton.umods.domain.usecase.CalibrateUMod;
 import com.urbit_iot.porton.umods.domain.usecase.ClearAlienUMods;
@@ -50,7 +50,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     private final SetOngoingNotificationStatus mSetOngoingNotificationStatus;
     private final RequestAccess mRequestAccess;
     private RxSharedPreferences rxSharedPreferences;
-    private final PhoneConnectivityInfo mPhoneConnectivityInfo;
+    private final PhoneConnectivity mPhoneConnectivity;
     private final CalibrateUMod mCalibrateUMod;
 
     @NonNull
@@ -71,7 +71,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                           @NonNull TriggerUMod triggerUMod,
                           @NonNull RequestAccess requestAccess,
                           @NonNull RxSharedPreferences rxSharedPreferences,
-                          @NonNull PhoneConnectivityInfo mPhoneConnectivityInfo,
+                          @NonNull PhoneConnectivity mPhoneConnectivity,
                           @NonNull CalibrateUMod mCalibrateUMod,
                           @NonNull BaseSchedulerProvider mSchedulerProvider) {
         mUModsView = checkNotNull(umodsView, "tasksView cannot be null!");
@@ -84,7 +84,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         mRequestAccess = checkNotNull(requestAccess, "requestAccess cannot be null!");
         //this.mRetrofitUtils = mRetrofitUtils;
         this.rxSharedPreferences = rxSharedPreferences;
-        this.mPhoneConnectivityInfo = checkNotNull(mPhoneConnectivityInfo,"mPhoneConnectivityInfo cannot be null!");
+        this.mPhoneConnectivity = checkNotNull(mPhoneConnectivity,"mPhoneConnectivity cannot be null!");
         this.mCalibrateUMod = checkNotNull(mCalibrateUMod, "mCalibrateUMod cannot be null!");
         this.mSchedulerProvider = mSchedulerProvider;
     }
@@ -740,8 +740,8 @@ public class UModsPresenter implements UModsContract.Presenter {
                 new CalibrateUMod.RequestValues(
                         this.triggeredUModUUID,
                         gateStatus,
-                        mPhoneConnectivityInfo.getConnectionType() == PhoneConnectivityInfo.ConnectionType.WIFI,
-                        mPhoneConnectivityInfo.getWifiAPSSID()),
+                        mPhoneConnectivity.getConnectionType() == PhoneConnectivity.ConnectionType.WIFI,
+                        mPhoneConnectivity.getWifiAPSSID()),
                 new Subscriber<CalibrateUMod.ResponseValues>() {
                     @Override
                     public void onCompleted() {

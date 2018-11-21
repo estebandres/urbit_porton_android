@@ -181,6 +181,11 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
         .observeOn(mSchedulerProvider.io());
     }
 
+    public void addRequestedSubscriptionTopic(String topic){
+        subscriptionMutex.acquireUninterruptibly();
+        requestedSubscriptionTopics.add(topic);
+        subscriptionMutex.release();
+    }
     public Completable subscribeToTopic(String topic, int qos){
         return subscribeToTopic(topic,qos,true);
     }

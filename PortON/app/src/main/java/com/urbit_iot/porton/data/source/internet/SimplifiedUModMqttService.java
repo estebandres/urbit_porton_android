@@ -65,6 +65,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
         Log.d("subscribeRespTopic","Attempt subscription  TOPIC: "
                 + responseTopicForUMod + " ON: " + Thread.currentThread().getName());
         this.pahoClientRxWrap.connectToBroker()
+                .doOnError(throwable -> pahoClientRxWrap.addRequestedSubscriptionTopic(responseTopicForUMod))
                 .andThen(this.pahoClientRxWrap.subscribeToTopic(responseTopicForUMod,0))
         //this.pahoClientRxWrap.subscribeToTopic(responseTopicForUMod,1)
                 .subscribe(

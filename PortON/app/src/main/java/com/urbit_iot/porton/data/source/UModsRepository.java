@@ -48,7 +48,6 @@ import com.urbit_iot.porton.util.dagger.LanOnly;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Date;
@@ -60,7 +59,6 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.Response;
@@ -98,7 +96,7 @@ public class UModsRepository implements UModsDataSource {
     private LocationService locationService;
 
     @NonNull
-    private PhoneConnectivityInfo connectivityInfo;
+    private PhoneConnectivity connectivityInfo;
 
 
     @NonNull
@@ -139,7 +137,7 @@ public class UModsRepository implements UModsDataSource {
                            @Local UModsDataSource uModsLocalDataSource,
                            @Internet UModsDataSource uModsInternetDataSource,
                            @NonNull LocationService locationService,
-                           @NonNull PhoneConnectivityInfo connectivityInfo,
+                           @NonNull PhoneConnectivity connectivityInfo,
                            @NonNull UModMqttServiceContract uModMqttService,
                            @NonNull BaseSchedulerProvider mSchedulerProvider) {
         mUModsLANDataSource = checkNotNull(uModsRemoteDataSource);

@@ -40,7 +40,6 @@ import com.urbit_iot.porton.util.networking.UrlHostSelectionInterceptor;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
-import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
@@ -115,8 +114,8 @@ public class UModsRepositoryModule {
 
     @Singleton
     @Provides
-    PhoneConnectivityInfo providePhoneConnectivityInfo(Context context){
-        return new PhoneConnectivityInfo(context);
+    PhoneConnectivity providePhoneConnectivityInfo(Context context){
+        return new PhoneConnectivity(context);
     }
 
     @Singleton

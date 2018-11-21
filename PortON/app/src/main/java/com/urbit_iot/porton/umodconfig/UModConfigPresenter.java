@@ -24,7 +24,7 @@ import android.util.Log;
 import com.google.common.base.Strings;
 import com.urbit_iot.porton.RxUseCase;
 import com.urbit_iot.porton.data.UModUser;
-import com.urbit_iot.porton.data.source.PhoneConnectivityInfo;
+import com.urbit_iot.porton.data.source.PhoneConnectivity;
 import com.urbit_iot.porton.umodconfig.domain.usecase.FactoryResetUMod;
 import com.urbit_iot.porton.umodconfig.domain.usecase.GetCurrentLocation;
 import com.urbit_iot.porton.umodconfig.domain.usecase.GetUModAndUpdateInfo;
@@ -37,6 +37,7 @@ import com.urbit_iot.porton.umodconfig.domain.usecase.UpdateUModLocationData;
 import com.urbit_iot.porton.umodconfig.domain.usecase.UpdateWiFiCredentials;
 import com.urbit_iot.porton.umodconfig.domain.usecase.UpgradeUModFirmware;
 import com.urbit_iot.porton.umodconfig.domain.usecase.SetOngoingNotificationStatus;
+import com.urbit_iot.porton.util.GlobalConstants;
 import com.urbit_iot.porton.util.IntegerContainer;
 
 import java.util.concurrent.TimeUnit;
@@ -108,7 +109,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     private UModConfigViewModel viewModel = null;
 
     @NonNull
-    private PhoneConnectivityInfo mConnectivityInfo;
+    private PhoneConnectivity mConnectivityInfo;
 
 
     /**
@@ -129,7 +130,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                                @NonNull GetCurrentLocation mGetCurrentLocation,
                                @NonNull ResetUModCalibration mResetUModCalibration,
                                @NonNull UpdateUModLocationData mUpdateUModLocationData,
-                               @NonNull PhoneConnectivityInfo mConnectivityInfo) {
+                               @NonNull PhoneConnectivity mConnectivityInfo) {
         this.mUModUUID = umodUUID;
         this.mUModConfigView = addTaskView;
         this.mGetUModAndUpdateInfo = getUModAndUpdateInfo;
@@ -205,16 +206,20 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
             @Override
             public void onError(Throwable e) {
                 Log.e("conf_pr", "Error while populating: ", e);
-                //TODO BUG-RISK Improve this with exception subclass polymorphism
                 if (e instanceof GetUModAndUpdateInfo.UnconnectedFromAPModeUModException){
-                    //TODO should the presenter call finishActivity or the fragment do it as part of launchWiFiSettings??
-                    mUModConfigView.launchWiFiSettings();
-                } else {
-                    if (mUModConfigView.isActive()){
-                        mUModConfigView.finishActivity();
+                    //mUModConfigView.launchWiFiSettings();
+                    if (mConnectivityInfo.connectToWifiAP(
+                            GlobalConstants.URBIT_PREFIX+mUModUUID,
+                            GlobalConstants.URBIT_PREFIX+mUModUUID)){
+                        Observable.timer(10000L, TimeUnit.MILLISECONDS)
+                                .doOnNext(aLong -> populateUModSettings())
+                                .subscribe();
+                        return;
                     }
                 }
-
+                if (mUModConfigView.isActive()){
+                    mUModConfigView.finishActivity();
+                }
             }
 
             @Override
@@ -235,6 +240,10 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                 }
             }
         });
+    }
+
+    private void connectToAPModeUMod(String mUModUUID){
+
     }
 
     @Override
@@ -593,7 +602,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         mResetUModCalibration.execute(new ResetUModCalibration.RequestValues(
                 this.mUModUUID,
                 mConnectivityInfo.getConnectionType()
-                        == PhoneConnectivityInfo.ConnectionType.WIFI,
+                        == PhoneConnectivity.ConnectionType.WIFI,
                 mConnectivityInfo.getWifiAPSSID()),
                 new Subscriber<ResetUModCalibration.ResponseValues>() {
                     @Override

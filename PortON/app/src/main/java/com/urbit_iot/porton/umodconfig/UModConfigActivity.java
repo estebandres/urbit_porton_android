@@ -31,12 +31,13 @@ public class UModConfigActivity extends AppCompatActivity {
         setContentView(R.layout.umod_config_act);
 
         // Set up the toolbar.
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.umod_config_toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setDisplayShowHomeEnabled(true);
+            actionBar.setTitle(R.string.umod_config_bar_title);
         }
 
         UModConfigFragment uModConfigFragment =

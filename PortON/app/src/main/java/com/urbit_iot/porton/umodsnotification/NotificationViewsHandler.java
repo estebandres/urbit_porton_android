@@ -79,9 +79,10 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         String channelDescription = this.mContext.getString(R.string.channel_description);
         int importance = 0;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            importance = NotificationManager.IMPORTANCE_MAX;
+            importance = NotificationManager.IMPORTANCE_LOW;
             NotificationChannel notificationChannel =
                     new NotificationChannel(CHANNEL_ID, channelName, importance);
+            //notificationChannel.setSound(null,null);
             notificationChannel.setDescription(channelDescription);
             this.notificationManager.createNotificationChannel(notificationChannel);
         }
