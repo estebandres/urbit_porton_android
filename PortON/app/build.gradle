@@ -75,7 +75,13 @@ android {
     android.variantFilter { variant ->
         if (variant.buildType.name.equals('release')
                 && variant.getFlavors().get(0).name.equals('mock')) {
-            variant.setIgnore(true);
+            variant.setIgnore(true)
+        }
+    }
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+            def appName = "porton"
+            outputFileName = appName+"-${variant.versionName}.apk"
         }
     }
     // Always show the result of every unit test, even if it passes.
