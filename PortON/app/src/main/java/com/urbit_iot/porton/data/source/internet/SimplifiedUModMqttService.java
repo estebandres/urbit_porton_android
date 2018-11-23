@@ -1,6 +1,7 @@
 package com.urbit_iot.porton.data.source.internet;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -37,7 +38,8 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
     @NonNull
     private PahoClientRxWrap pahoClientRxWrap;
     @NonNull
-    private String appUsername;
+    @VisibleForTesting
+    String appUsername;
     @NonNull
     private Gson gsonInstance;
     @NonNull
@@ -96,10 +98,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                 .andThen(this.pahoClientRxWrap.publishToTopic(serializedRequest.getBytes(), requestTopic, qos, false))
                 .doOnCompleted(() -> Log.d("publishRPC","PUBLICADO! " + requestTopic + " ON: " + Thread.currentThread().getName()))
                 .andThen(this.pahoClientRxWrap.receivedMessagesObservable())
-                //.doOnNext(message -> Log.d("publishRPC","RECIBIDO: " + requestTopic + " MSGE_IS_NULL: " + (message == null)))
-                //.filter(mqttMessage -> mqttMessage.)//TODO create mqtt message class wrapper to include source topic to filter by response topic
                 .filter(message -> message.getPayload().length > 0)
-                //.doOnNext(message -> Log.d("publishRPC","RECIBIDO: " + requestTopic + " MSGE: " + message.getPayload().length))
                 .flatMap(mqttMessage -> {
                     try {
                         S response = gsonInstance.fromJson(new String(mqttMessage.getPayload()), responseType);
@@ -109,12 +108,10 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                         return Observable.empty();
                     }
                 })
-                //.map(mqttMessage -> gsonInstance.fromJson(new String(mqttMessage.getPayload()),responseType))
-                //.doOnNext(s -> Log.d("publishRPC", s.toString()))
                 .filter(response -> ((RPC.Response)response).getResponseId() == ((RPC.Request)request).getRequestId()
                         && ((RPC.Response)response).getRequestTag().equalsIgnoreCase(((RPC.Request)request).getRequestTag()))
                 .doOnNext(response -> Log.d("publishRPC","PUB RESPONSE: " + response))
-                .timeout(8000L, TimeUnit.MILLISECONDS)
+                .timeout(8000L, TimeUnit.MILLISECONDS,this.mSchedulerProvider.computation())
                 .doOnError(throwable -> Log.e("publishRPC", "FAIL TO PUBLISH: " + serializedRequest + "  TO TOPIC: " + requestTopic + " CAUSE: " + throwable.getClass().getSimpleName() + " ON: " + Thread.currentThread().getName()))
                 .first()
                 .flatMap(response -> {
@@ -186,7 +183,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                 });
     }
 
-    private void resetInvitationTopic(){
+    void resetInvitationTopic(){
         String invitationsTopic = this.appUsername + "/invitation/+";
         this.pahoClientRxWrap.connectToBroker()
                 //.subscribeOn(mSchedulerProvider.io())//TODO use dagger injected scheduler
@@ -196,7 +193,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                         throwable -> Log.e("SERVICE", "INVITATION RESET FAILURE",throwable));
     }
     //TODO is this a method for UMod class? Please avoid repetition
-    private String getUUIDFromUModAdvertisedID(String hostName){
+    String getUUIDFromUModAdvertisedID(String hostName){
         String uModUUID = null;
 
         Pattern pattern = Pattern.compile(
