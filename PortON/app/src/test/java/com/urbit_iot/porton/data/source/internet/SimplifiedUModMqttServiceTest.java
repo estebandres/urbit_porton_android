@@ -315,13 +315,13 @@ public class SimplifiedUModMqttServiceTest {
                 + UUID;
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
         when(mSchedulerProviderMock.io()).thenReturn(Schedulers.io());
-        when(pahoClientRxWrapMock.publishToTopic(new byte[0],invitationsTopic,1,false)).thenReturn(Completable.complete());
+        when(pahoClientRxWrapMock.publishToTopic(new byte[0],invitationsTopic,1,true)).thenReturn(Completable.complete());
         //WHEN
         simplifiedUModMqttService.cancelUModInvitation(userName,UUID);
         //THEN
         verify(pahoClientRxWrapMock,times(1)).connectToBroker();
         verify(mSchedulerProviderMock,times(2)).io();
-        verify(pahoClientRxWrapMock,times(1)).publishToTopic(new byte[0],invitationsTopic,1,false);
+        verify(pahoClientRxWrapMock,times(1)).publishToTopic(new byte[0],invitationsTopic,1,true);
     }
 
     @Test

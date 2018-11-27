@@ -162,9 +162,15 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
                 }
                 Log.d("MQTT_SRV","PUB___ IN-FLIGHT MSGS COUNT: " + mqttAsyncClient.getInFlightMessageCount());//Will always fail on nullpointer why??
                 IMqttToken publIMqttToken = mqttAsyncClient.publish(topic, messagePayload, qos, retained);
+                if (qos == 1){//Workaround because paho isn't thread safe for qos 0
+                    publishMutex.release();
+                }
                 publIMqttToken.waitForCompletion(8200L);
+                if (qos == 0){//Workaround because paho isn't thread safe for qos 0
+                    publishMutex.release();
+                }
                 Log.d("MQTT_SRV", "PUB___ SUCCESS!  ON: " + Thread.currentThread().getName());
-                publishMutex.release();
+
                 completableEmitter.onCompleted();
             } catch (MqttException exception) {
                 Log.e("MQTT_SRV", "PUB___ FAILURE: " + exception.getMessage() +

@@ -30,6 +30,7 @@ import com.urbit_iot.porton.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.porton.data.rpc.CreateUserRPC;
 import com.urbit_iot.porton.data.rpc.DeleteUserRPC;
 import com.urbit_iot.porton.data.rpc.FactoryResetRPC;
+import com.urbit_iot.porton.data.rpc.GetGateStatusRPC;
 import com.urbit_iot.porton.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.porton.data.rpc.GetUsersRPC;
 import com.urbit_iot.porton.data.rpc.OTACommitRPC;
@@ -218,6 +219,36 @@ public class UModsRepository implements UModsDataSource {
         return this.getUModsOneByOneFromCacheOrDB()
                 .flatMap(dbUMod -> Observable.just(dbUMod)
                         .subscribeOn(mSchedulerProvider.io())//TODO use scheduler provider by dagger)
+                        .flatMap(uMod -> mUModsInternetDataSource.getUModGateStatus(uMod,new GetGateStatusRPC.Arguments())
+                                .flatMap(result -> {
+                                    if (result.getStatusCode()!=null){
+                                        UMod.GateStatus gateStatus = UMod.GateStatus.from(result.getStatusCode());
+                                        if(gateStatus != null){
+                                            uMod.setGateStatus(gateStatus);
+                                        } else {
+                                            return Observable.empty();
+                                        }
+                                        uMod.setLastUpdateDate(new Date());
+                                        uMod.setState(UMod.State.STATION_MODE);
+                                        uMod.setuModSource(UMod.UModSource.MQTT_SCAN);
+                                    }
+                                    return Observable.just(uMod);
+                                })
+                                .onErrorResumeNext(throwable -> Observable.empty())
+                        )
+                )
+                .doOnNext(uMod -> {
+                    Log.d("MQTT_SCAN", "H: " + Thread.currentThread().getName() +" FOUND: " + uMod);
+                    mUModsLocalDataSource.saveUMod(uMod);
+                    mCachedUMods.put(uMod.getUUID(),uMod);
+                });
+    }
+
+    /*
+    Observable<UMod> getUModsOneByOneFromCacheOrDiskAndRefreshOnline(){//refresh umod data by
+        return this.getUModsOneByOneFromCacheOrDB()
+                .flatMap(dbUMod -> Observable.just(dbUMod)
+                        .subscribeOn(mSchedulerProvider.io())//TODO use scheduler provider by dagger)
                         .flatMap(uMod -> mUModsInternetDataSource.getSystemInfo(uMod,new SysGetInfoRPC.Arguments())
                                 .flatMap(result -> {
                                     if (!Strings.isNullOrEmpty(result.getWifi().getStaIp())){
@@ -238,6 +269,7 @@ public class UModsRepository implements UModsDataSource {
                     mCachedUMods.put(uMod.getUUID(),uMod);
                 });
     }
+    */
 
     /**
      * Merges all modules discovered by Lan(DNS-SD + TCP-SCAN + WIFI-SCAN) and Internet(MQTT Invitations),
@@ -266,19 +298,18 @@ public class UModsRepository implements UModsDataSource {
                                         break;
                                     case AP_MODE:
                                         //An UMod that belongs to me somehow is in AP_MODE
-                                        cachedUMod.setState(UMod.State.AP_MODE);
-                                        cachedUMod.setuModSource(UMod.UModSource.LAN_SCAN);
-                                        cachedUMod.setConnectionAddress(GlobalConstants.AP_DEFAULT_IP_ADDRESS);
-                                        saveUMod(cachedUMod);
-                                        return Observable.just(cachedUMod);
+                                        break;
                                     default:
                                         return Observable.error(new Exception("Invalid state for lan discovered umod."));
                                 }
                                 break;
                             case MQTT_SCAN:
+                                if (cachedUMod.getAppUserLevel() == UModUser.Level.PENDING){
+                                    break;
+                                }
                                 // Todo Review if cached then belongsToAppUser is always true
                                 // This 'retries' cancellation
-                                if (cachedUMod.belongsToAppUser()){
+                                if (cachedUMod.canBeTriggeredByAppUser()){
                                     uModMqttService.cancelMyInvitation(discoveredUMod);
                                     return Observable.empty();
                                 }
@@ -290,8 +321,9 @@ public class UModsRepository implements UModsDataSource {
                         //TODO check if all necessary fields are being updated.
                         //** IMPORTANT: AppUserLevel should remain as in DB **
                         cachedUMod.setuModSource(discoveredUMod.getuModSource());
-                        //An accepted invitation never reaches this setter
-                        cachedUMod.setConnectionAddress(discoveredUMod.getConnectionAddress());
+                        if (discoveredUMod.getConnectionAddress() != null){//Could be null when pending and invitation.
+                            cachedUMod.setConnectionAddress(discoveredUMod.getConnectionAddress());
+                        }
                         cachedUMod.setState(discoveredUMod.getState());
                         cachedUMod.setOpen(discoveredUMod.isOpen());//Always true. TODO Review isOpen logic!
                         cachedUMod.setLastUpdateDate(discoveredUMod.getLastUpdateDate());
@@ -908,6 +940,22 @@ public class UModsRepository implements UModsDataSource {
 
     public Observable<SetGateStatusRPC.Result>
     setUModGateStatus(UMod uMod, SetGateStatusRPC.Arguments reqArguments){
-        return mUModsLANDataSource.setUModGateStatus(uMod, reqArguments);
+        SetGateStatusRPC.Request setGateStatusRequest =
+                new SetGateStatusRPC.Request(reqArguments,null,null,0);
+        RPCExecutor<SetGateStatusRPC.Response, SetGateStatusRPC.Request> setGateStatusExecutor =
+                new RPCExecutor<SetGateStatusRPC.Response, SetGateStatusRPC.Request>(uMod, setGateStatusRequest) {
+                    @Override
+                    public Observable<SetGateStatusRPC.Response> executeRPC() {
+                        SetGateStatusRPC.Response setGateStatusResp = new SetGateStatusRPC.Response(null,0,null,null);
+                        setResponse(setGateStatusResp);
+                        return this.getCurrentDataSource().setUModGateStatus(this.getTargetUMod(), reqArguments)
+                                .map(result -> {
+                                    setGateStatusResp.setResponseResult(result);
+                                    return setGateStatusResp;
+                                });
+                    }
+                };
+        return this.executeRPC(setGateStatusExecutor)
+                .map(SetGateStatusRPC.Response::getResponseResult);
     }
 }

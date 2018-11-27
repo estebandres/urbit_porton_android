@@ -26,6 +26,7 @@ import com.urbit_iot.porton.data.rpc.CreateUserRPC;
 import com.urbit_iot.porton.data.rpc.DeleteUserRPC;
 import com.urbit_iot.porton.data.rpc.EnableUpdateRPC;
 import com.urbit_iot.porton.data.rpc.FactoryResetRPC;
+import com.urbit_iot.porton.data.rpc.GetGateStatusRPC;
 import com.urbit_iot.porton.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.porton.data.rpc.GetUsersRPC;
 import com.urbit_iot.porton.data.rpc.OTACommitRPC;
@@ -132,6 +133,11 @@ public interface UModsDataSource {
 
     default Observable<SetGateStatusRPC.Result>
     setUModGateStatus(UMod uMod, SetGateStatusRPC.Arguments reqArguments){
+        return Observable.empty();
+    }
+
+    default Observable<GetGateStatusRPC.Result>
+    getUModGateStatus(UMod uMod, GetGateStatusRPC.Arguments reqArguments){
         return Observable.empty();
     }
 }

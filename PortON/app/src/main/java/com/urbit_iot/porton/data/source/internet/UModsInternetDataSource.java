@@ -23,6 +23,7 @@ import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.porton.data.rpc.CreateUserRPC;
 import com.urbit_iot.porton.data.rpc.FactoryResetRPC;
+import com.urbit_iot.porton.data.rpc.GetGateStatusRPC;
 import com.urbit_iot.porton.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.porton.data.rpc.GetUsersRPC;
 import com.urbit_iot.porton.data.rpc.OTACommitRPC;
@@ -250,5 +251,18 @@ public class UModsInternetDataSource implements UModsDataSource {
                 adminRequest,
                 AdminCreateUserRPC.Response.class)
                 .map(AdminCreateUserRPC.Response::getResponseResult);
+    }
+
+    @Override
+    public Observable<GetGateStatusRPC.Result> getUModGateStatus(UMod uMod, GetGateStatusRPC.Arguments reqArguments) {
+        GetGateStatusRPC.Request gateStatus = new GetGateStatusRPC.Request(
+                this.username,
+                uMod.getAppUserLevel()==UModUser.Level.ADMINISTRATOR,
+                reqArguments,
+                uMod.getUUID(),
+                this.randomGenerator.nextInt());
+        return mUModMqttService.publishRPC(uMod,
+                gateStatus,GetGateStatusRPC.Response.class)
+                .map(GetGateStatusRPC.Response::getResponseResult);
     }
 }

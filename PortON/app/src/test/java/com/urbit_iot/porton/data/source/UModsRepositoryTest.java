@@ -9,16 +9,19 @@ import com.urbit_iot.porton.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.porton.data.rpc.CreateUserRPC;
 import com.urbit_iot.porton.data.rpc.DeleteUserRPC;
 import com.urbit_iot.porton.data.rpc.FactoryResetRPC;
+import com.urbit_iot.porton.data.rpc.GetGateStatusRPC;
 import com.urbit_iot.porton.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.porton.data.rpc.GetUsersRPC;
 import com.urbit_iot.porton.data.rpc.OTACommitRPC;
 import com.urbit_iot.porton.data.rpc.RPC;
+import com.urbit_iot.porton.data.rpc.SetGateStatusRPC;
 import com.urbit_iot.porton.data.rpc.SetWiFiRPC;
 import com.urbit_iot.porton.data.rpc.SysGetInfoRPC;
 import com.urbit_iot.porton.data.rpc.TriggerRPC;
 import com.urbit_iot.porton.data.rpc.UpdateUserRPC;
 import com.urbit_iot.porton.data.source.gps.LocationService;
 import com.urbit_iot.porton.data.source.internet.UModMqttServiceContract;
+import com.urbit_iot.porton.util.GlobalConstants;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 
 import org.junit.After;
@@ -232,11 +235,13 @@ public class UModsRepositoryTest {
         //Given
         UMod cachedVersionMock = new UMod("777");
         cachedVersionMock.setAppUserLevel(UModUser.Level.AUTHORIZED);
+        cachedVersionMock.setConnectionAddress("192.168.14.88");
         UModsRepository uModsRepositorySpy = spy(uModsRepository);
         uModsRepositorySpy.mCachedUMods.put("777", cachedVersionMock);
         UMod discoveredUMod = new UMod("777");
         discoveredUMod.setuModSource(UMod.UModSource.LAN_SCAN);//Set LAN discovery
         discoveredUMod.setState(UMod.State.AP_MODE);//Set discovery state STATION_MODE
+        discoveredUMod.setConnectionAddress(GlobalConstants.AP_DEFAULT_IP_ADDRESS);
         when(lanDataSourceMock.getUModsOneByOne()).thenReturn(Observable.just(discoveredUMod));
         when(internetDataSourceMock.getUModsOneByOne()).thenReturn(Observable.empty());//Zero discoveries by MQTT scan
         doNothing().when(uModsRepositorySpy).saveUMod(cachedVersionMock);
@@ -255,6 +260,7 @@ public class UModsRepositoryTest {
         verifyNoMoreInteractions(lanDataSourceMock);
         verifyNoMoreInteractions(internetDataSourceMock);
         verifyNoMoreInteractions(uModsRepositorySpy);
+        assertEquals(GlobalConstants.AP_DEFAULT_IP_ADDRESS,cachedVersionMock.getConnectionAddress());
         assertFalse(uModsRepositorySpy.mCacheIsDirty);
     }
 
@@ -330,26 +336,48 @@ public class UModsRepositoryTest {
         assertFalse(uModsRepository.mCacheIsDirty);
     }
 
+    @Test
+    public void Given_PendingCachedVersionExistsForMqttDiscovery_When_FetchedFromLanAndInternet_Then_CachedIsUpdatedAndEmitted(){
+        //Given
+        UMod cachedVersionMock = new UMod("777");
+        cachedVersionMock.setAppUserLevel(UModUser.Level.PENDING);
+        uModsRepository.mCachedUMods.put("777", cachedVersionMock);
+
+        UMod discoveredUMod = new UMod("777");
+        discoveredUMod.setAppUserLevel(UModUser.Level.INVITED);
+        discoveredUMod.setuModSource(UMod.UModSource.MQTT_SCAN);
+        discoveredUMod.setState(UMod.State.STATION_MODE);
+        discoveredUMod.setConnectionAddress(null);
+
+        when(lanDataSourceMock.getUModsOneByOne()).thenReturn(Observable.empty());//Zero discoveries by lan scan
+        when(internetDataSourceMock.getUModsOneByOne()).thenReturn(Observable.just(discoveredUMod));
+        //When
+        Observable<UMod> testObservable = uModsRepository.getUModsOneByOneFromLanAndInternetAndUpdateDBAndCache();
+        Flowable<UMod> testFlowable = RxJavaInterop.toV2Flowable(testObservable);
+        testFlowable.test()
+                .assertValueCount(1)
+                .assertComplete();
+        verify(lanDataSourceMock,times(1)).getUModsOneByOne();
+        verify(internetDataSourceMock,times(1)).getUModsOneByOne();
+        verify(dataBaseDataSourceMock, times(1)).saveUMod(any(UMod.class));
+        assertFalse(uModsRepository.mCacheIsDirty);
+        assertEquals(UModUser.Level.PENDING, cachedVersionMock.getAppUserLevel());
+        assertEquals(UMod.UModSource.MQTT_SCAN, cachedVersionMock.getuModSource());
+    }
+
     //TODO test other cases
     @Test
-    public void Given_ModuleResponseHasStaIp_When_RefreshingUModsOnline_Then_UModIsUpdatedAndSavedToDB() throws InterruptedException {
+    public void Given_ModuleResponseHasNotNullStatus_When_RefreshingUModsOnline_Then_UModIsUpdatedAndSavedToDB() throws InterruptedException {
         UMod cachedUMod = new UMod("999");
         Date sevenSecondsAgo = new Date(System.currentTimeMillis()-7000);
         cachedUMod.setLastUpdateDate(sevenSecondsAgo);
         UModsRepository uModsRepositorySpy = spy(uModsRepository);
         doReturn(Observable.just(cachedUMod)).when(uModsRepositorySpy).getUModsOneByOneFromCacheOrDB();
-        SysGetInfoRPC.Result rpcResult = new SysGetInfoRPC.Result(
-                null, null, null, null, null,
-                0, 0, 0, 0, 0,0,
-                new SysGetInfoRPC.Result.Wifi(
-                        "192.168.8.8",
-                        "",
-                        "got ip",
-                        "SteveWiFi"),
-                null);
-
+        GetGateStatusRPC.Result rpcResult = new GetGateStatusRPC.Result(
+                UMod.GateStatus.OPEN.getStatusID(),
+                13);
         TestScheduler testScheduler = new TestScheduler();
-        when(internetDataSourceMock.getSystemInfo(any(UMod.class),any(SysGetInfoRPC.Arguments.class)))
+        when(internetDataSourceMock.getUModGateStatus(any(UMod.class),any(GetGateStatusRPC.Arguments.class)))
                 .thenReturn(Observable.just(rpcResult).delay(500L, TimeUnit.MILLISECONDS,testScheduler));
         //When
         Observable<UMod> uModsObservable = uModsRepositorySpy.getUModsOneByOneFromCacheOrDiskAndRefreshOnline();
@@ -363,10 +391,7 @@ public class UModsRepositoryTest {
         testSubscriber.assertComplete();
         testSubscriber.assertValue(uMod ->
                         !uMod.getLastUpdateDate().equals(sevenSecondsAgo)
-                        && uMod.getConnectionAddress() != null
-                        && uMod.getConnectionAddress().equals(rpcResult.getWifi().getStaIp())
-                        && uMod.getWifiSSID() != null
-                        && uMod.getWifiSSID().equals(rpcResult.getWifi().getSsid())
+                        && uMod.getGateStatus() == UMod.GateStatus.OPEN
                         && uMod.getState() == UMod.State.STATION_MODE
                         && uMod.getuModSource() == UMod.UModSource.MQTT_SCAN
                         );
@@ -378,7 +403,7 @@ public class UModsRepositoryTest {
 
 
     @Test
-    public void Given_FourModulesRespondWithStaIp_When_RefreshingUModsOnline_Then_CompletionTimeShouldBeShorten() throws InterruptedException {
+    public void Given_FourModulesRespondWithNonNullStatuses_When_RefreshingUModsOnline_Then_CompletionTimeShouldBeShorten() throws InterruptedException {
         UMod firstCachedUMod = new UMod("111");
         UMod secondCachedUMod = new UMod("222");
         UMod thirdCachedUMod = new UMod("333");
@@ -388,17 +413,12 @@ public class UModsRepositoryTest {
         uModsRepository.mCachedUMods.put(secondCachedUMod.getUUID(), secondCachedUMod);
         uModsRepository.mCachedUMods.put(thirdCachedUMod.getUUID(), thirdCachedUMod);
         uModsRepository.mCachedUMods.put(fourthCachedUMod.getUUID(), fourthCachedUMod);
-        SysGetInfoRPC.Result rpcResult = new SysGetInfoRPC.Result(
-                null, null, null, null, null,
-                0, 0, 0, 0, 0,0,
-                new SysGetInfoRPC.Result.Wifi(
-                        "192.168.8.8",
-                        "",//TODO WARNING: mongoose returns apIP as empty string when staIp is available
-                        "got ip",
-                        "SteveWiFi"),
-                null);
+        GetGateStatusRPC.Result rpcResult = new GetGateStatusRPC.Result(
+                UMod.GateStatus.OPEN.getStatusID(),
+                13);
+
         TestScheduler testScheduler = new TestScheduler();
-        when(internetDataSourceMock.getSystemInfo(any(UMod.class),any(SysGetInfoRPC.Arguments.class)))
+        when(internetDataSourceMock.getUModGateStatus(any(UMod.class),any(GetGateStatusRPC.Arguments.class)))
                 .thenReturn(Observable.just(rpcResult).delay(500L, TimeUnit.MILLISECONDS,testScheduler));
 
         when(schedulerProviderMock.io()).thenReturn(testScheduler);
@@ -417,7 +437,8 @@ public class UModsRepositoryTest {
         assertEquals(4, uModsRepository.mCachedUMods.size());
         verify(schedulerProviderMock,times(4)).io();
         verify(dataBaseDataSourceMock, times(4)).saveUMod(any(UMod.class));
-        verify(internetDataSourceMock,times(4)).getSystemInfo(any(UMod.class),any(SysGetInfoRPC.Arguments.class));
+        verify(internetDataSourceMock,times(4))
+                .getUModGateStatus(any(UMod.class),any(GetGateStatusRPC.Arguments.class));
         verifyNoMoreInteractions(schedulerProviderMock);
         verifyNoMoreInteractions(dataBaseDataSourceMock);
         verifyNoMoreInteractions(internetDataSourceMock);
@@ -854,6 +875,18 @@ public class UModsRepositoryTest {
         verify(uModsRepositorySpy,atMost(1)).executeRPC(executorCaptor.capture());
         UModsRepository.RPCExecutor capturedExecutor = executorCaptor.getValue();
         assertTrue(capturedExecutor.getRequest() instanceof FactoryResetRPC.Request);
+    }
+
+    @Test
+    public void When_setUmodGateStatus_Then_ExecuteRPCIsCalledOnlyOnceWithProperTypes(){
+        //When
+        UModsRepository uModsRepositorySpy = spy(uModsRepository);
+        uModsRepositorySpy.setUModGateStatus(any(UMod.class), any(SetGateStatusRPC.Arguments.class));
+        //Then
+        ArgumentCaptor<UModsRepository.RPCExecutor> executorCaptor = ArgumentCaptor.forClass(UModsRepository.RPCExecutor.class);
+        verify(uModsRepositorySpy,atMost(1)).executeRPC(executorCaptor.capture());
+        UModsRepository.RPCExecutor capturedExecutor = executorCaptor.getValue();
+        assertTrue(capturedExecutor.getRequest() instanceof SetGateStatusRPC.Request);
     }
 
     @Test

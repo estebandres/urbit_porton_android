@@ -51,6 +51,7 @@ public class TriggerUModUC extends SimpleUseCase<TriggerUModUC.RequestValues, Tr
     //TODO Ugly dependencies are ugly. Brakes dependency rule!
     private final PhoneConnectivity connectivityInfo;
     private String uModAPSSID;
+    private UModUser.Level appUserLevel;
 
     @Inject
     public TriggerUModUC(@NonNull UModsRepository uModsRepository,
@@ -86,6 +87,7 @@ public class TriggerUModUC extends SimpleUseCase<TriggerUModUC.RequestValues, Tr
                     if (!Strings.isNullOrEmpty(uMod.getWifiSSID())){
                         uModAPSSID = uMod.getWifiSSID();
                     }
+                    this.appUserLevel = uMod.getAppUserLevel();
                     return mUModsRepository.triggerUMod(uMod, requestArguments)
                             .onErrorResumeNext(throwable -> {
                                 if (throwable instanceof HttpException){
@@ -117,6 +119,7 @@ public class TriggerUModUC extends SimpleUseCase<TriggerUModUC.RequestValues, Tr
                                         }
                                         */
                                         uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                        this.appUserLevel = UModUser.Level.UNAUTHORIZED;
                                         mUModsRepository.saveUMod(uMod);
                                         return Observable.error(new DeletedUserException(uMod));
                                     }
@@ -151,9 +154,10 @@ public class TriggerUModUC extends SimpleUseCase<TriggerUModUC.RequestValues, Tr
                                                                     //Could ocurr if
                                                                     if (httpErrorCode1 == 500
                                                                             && errorMessage1.contains("404")) {//TODO is this case possible?
-                                                                        uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                                        mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
-                                                                        return Observable.error(new DeletedUserException(uMod));
+                                                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                                                                this.appUserLevel = UModUser.Level.UNAUTHORIZED;
+                                                                                mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
+                                                                                return Observable.error(new DeletedUserException(uMod));
                                                                     }
                                                                 }
                                                                 return Observable.error(throwable1);
@@ -163,6 +167,7 @@ public class TriggerUModUC extends SimpleUseCase<TriggerUModUC.RequestValues, Tr
                                                                 Log.d("trigger_uc", "Get User Level Success: "+result.toString());
                                                                 Timber.d("Get User Level Success: "+result.toString());
                                                                 uMod.setAppUserLevel(result.getUserLevel());
+                                                                this.appUserLevel = result.getUserLevel();
                                                                 mUModsRepository.saveUMod(uMod);
                                                                 return mUModsRepository.triggerUMod(uMod, requestArguments);
                                                             });
@@ -193,7 +198,7 @@ public class TriggerUModUC extends SimpleUseCase<TriggerUModUC.RequestValues, Tr
                         return false;
                     }
                 })
-                .map(ResponseValues::new);
+                .map(result1 -> new ResponseValues(result1,this.appUserLevel));
     }
 
     public static final class RequestValues implements RxUseCase.RequestValues {
@@ -212,13 +217,19 @@ public class TriggerUModUC extends SimpleUseCase<TriggerUModUC.RequestValues, Tr
     public static final class ResponseValues implements RxUseCase.ResponseValues {
 
         private final TriggerRPC.Result result;
+        private final UModUser.Level appUserLevel;
 
-        public ResponseValues(@NonNull TriggerRPC.Result result) {
+        public ResponseValues(@NonNull TriggerRPC.Result result, UModUser.Level appUserLevel) {
             this.result = checkNotNull(result, "result cannot be null!");
+            this.appUserLevel = appUserLevel;
         }
 
         public TriggerRPC.Result getResult() {
             return result;
+        }
+
+        public UModUser.Level getAppUserLevel() {
+            return appUserLevel;
         }
     }
 

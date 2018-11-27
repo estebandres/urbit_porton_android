@@ -50,12 +50,12 @@ public class GetGateStatusRPC extends RPC {
         @SerializedName("status_code")
         private Integer statusCode;
         @SerializedName("opening_percentage")
-        private Float openingPorcentage;
+        private Integer closingPercentage;
 
 
-        public Result(Integer statusCode, Float openingPorcentage) {
+        public Result(Integer statusCode, Integer closingPercentage) {
             this.statusCode = statusCode;
-            this.openingPorcentage = openingPorcentage;
+            this.closingPercentage = closingPercentage;
         }
 
         public Integer getStatusCode() {
@@ -66,19 +66,19 @@ public class GetGateStatusRPC extends RPC {
             this.statusCode = statusCode;
         }
 
-        public Float getOpeningPorcentage() {
-            return openingPorcentage;
+        public Integer getClosingPercentage() {
+            return closingPercentage;
         }
 
-        public void setOpeningPorcentage(Float openingPorcentage) {
-            this.openingPorcentage = openingPorcentage;
+        public void setClosingPercentage(Integer closingPercentage) {
+            this.closingPercentage = closingPercentage;
         }
 
         @Override
         public String toString() {
             return "Result{" +
                     "statusCode=" + statusCode +
-                    ", openingPorcentage=" + openingPorcentage +
+                    ", closingPercentage=" + closingPercentage +
                     '}';
         }
     }

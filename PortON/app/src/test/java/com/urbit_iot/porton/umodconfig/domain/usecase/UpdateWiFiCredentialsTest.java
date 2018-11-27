@@ -232,7 +232,7 @@ public class UpdateWiFiCredentialsTest {
         responseValues.assertError(IOException.class)
                 .assertValueCount(0);
         verify(uModsRepositoryMock,times(1)).getUMod(uMod.getUUID());
-        verify(uModsRepositoryMock,times(1)).setWiFiAP(any(UMod.class),any(SetWiFiRPC.Arguments.class));
+        verify(uModsRepositoryMock,times(2)).setWiFiAP(any(UMod.class),any(SetWiFiRPC.Arguments.class));
 
         verify(uModsRepositoryMock,times(1)).cachedFirst();
         verify(uModsRepositoryMock,times(1)).refreshUMods();

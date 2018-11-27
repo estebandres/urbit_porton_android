@@ -773,6 +773,7 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 index++;
             }
             this.mViewModelsList.remove(index);
+            notifyDataSetChanged();
         }
 
         public void setPresenter(UModsContract.Presenter mPresenter) {

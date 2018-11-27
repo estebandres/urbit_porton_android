@@ -642,24 +642,27 @@ public class UModsPresenter implements UModsContract.Presenter {
                 Log.d("umods_pr", "RPC is " + triggerResult.toString());
                 Timber.d("Successful Trigger UModUUID: "+ uModUUID + " " + triggerResult.toString());
                 //For older APIs (v1/v2) then display trigger success
-                if (!Strings.isNullOrEmpty(triggerResult.getMessage())){
-                    mUModsView.showOpenCloseSuccess();
-                    return;
-                }
                 //For APIv3 this should never be null but still.
                 if (triggerResult.getStatusCode() == null){
-                    return;
-                }
-                switch (triggerResult.getStatusCode()){
-                    case -2:
-                        mUModsView.showDisconnectedSensorDialog();
-                        break;
-                    case -1:
-                        mUModsView.showCalibrationDialogs();
-                        break;
-                    default:
+                    if (!Strings.isNullOrEmpty(triggerResult.getMessage())){
                         mUModsView.showOpenCloseSuccess();
-                        break;
+                        return;
+                    }
+                }
+                if (responseValues.getAppUserLevel() == UModUser.Level.ADMINISTRATOR){
+                    switch (triggerResult.getStatusCode()){
+                        case -2:
+                            mUModsView.showDisconnectedSensorDialog();
+                            break;
+                        case -1:
+                            mUModsView.showCalibrationDialogs();
+                            break;
+                        default:
+                            mUModsView.showOpenCloseSuccess();
+                            break;
+                    }
+                } else {
+                    mUModsView.showOpenCloseSuccess();
                 }
             }
         });

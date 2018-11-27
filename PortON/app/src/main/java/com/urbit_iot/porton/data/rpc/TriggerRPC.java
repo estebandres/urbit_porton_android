@@ -51,16 +51,16 @@ public class TriggerRPC extends RPC {
         @SerializedName("status_code")
         private Integer statusCode;
         @SerializedName("opening_percentage")
-        private Integer openingPercentage;
+        private Integer closingPercentage;
 
         public Result(String message){
             this.message = message;
         }
 
-        public Result(String message, Integer statusCode, Integer openingPercentage) {
+        public Result(String message, Integer statusCode, Integer closingPercentage) {
             this.message = message;
             this.statusCode = statusCode;
-            this.openingPercentage = openingPercentage;
+            this.closingPercentage = closingPercentage;
         }
 
         public String getMessage() {
@@ -79,12 +79,12 @@ public class TriggerRPC extends RPC {
             this.statusCode = statusCode;
         }
 
-        public Integer getOpeningPercentage() {
-            return openingPercentage;
+        public Integer getClosingPercentage() {
+            return closingPercentage;
         }
 
-        public void setOpeningPercentage(Integer openingPercentage) {
-            this.openingPercentage = openingPercentage;
+        public void setClosingPercentage(Integer closingPercentage) {
+            this.closingPercentage = closingPercentage;
         }
 
         @Override
@@ -92,7 +92,7 @@ public class TriggerRPC extends RPC {
             return "Result{" +
                     "message='" + message + '\'' +
                     ", statusCode=" + statusCode +
-                    ", openingPercentage=" + openingPercentage +
+                    ", closingPercentage=" + closingPercentage +
                     '}';
         }
     }

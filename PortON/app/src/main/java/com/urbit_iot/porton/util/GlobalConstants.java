@@ -66,9 +66,8 @@ public final class GlobalConstants {
     public static final int RPC_METHOD_CODE__ADMIN_TRIGGER      = 105;
     public static final int RPC_METHOD_CODE__ADMIN_CREATE_USER  = 106;
     public static final int RPC_METHOD_CODE__ENABLE_UPDATE      = 107;
-    public static final int RPC_METHOD_CODE__ADMIN_GET_GATE_STATUS = 204;
-
     public static final int RPC_METHOD_CODE__SET_GATE_STATUS    = 108;
+    public static final int RPC_METHOD_CODE__ADMIN_GET_GATE_STATUS = 109;
 
     public static final int RPC_METHOD_CODE__CREATE_USER        = 200;
     public static final int RPC_METHOD_CODE__USER_STATUS        = 201;

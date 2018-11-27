@@ -216,7 +216,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
         Log.d("MQTT_SERVICE","CANCELING: " + invitationsTopic);
         return this.pahoClientRxWrap.connectToBroker()
                 .subscribeOn(mSchedulerProvider.io())//TODO use dagger injected scheduler
-                .andThen(pahoClientRxWrap.publishToTopic(new byte[0],invitationsTopic,1,false))
+                .andThen(pahoClientRxWrap.publishToTopic(new byte[0],invitationsTopic,1,true))
                 .doOnCompleted(() -> Log.d("MQTT_SERVICE","SUCCESS ON CANCELING: " + invitationsTopic))
                 .doOnError(throwable -> Log.e("MQTT_SERVICE","FAILURE ON CANCELING: " + invitationsTopic,throwable));
     }
