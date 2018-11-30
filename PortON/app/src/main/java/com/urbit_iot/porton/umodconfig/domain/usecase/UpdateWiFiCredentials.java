@@ -22,6 +22,7 @@ import android.util.Log;
 import com.urbit_iot.porton.RxUseCase;
 import com.urbit_iot.porton.SimpleUseCase;
 import com.urbit_iot.porton.data.UMod;
+import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.rpc.SetWiFiRPC;
 import com.urbit_iot.porton.data.source.UModsRepository;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
@@ -57,6 +58,9 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
         uModsRepository.cachedFirst();
         return uModsRepository.getUMod(values.getmUModUUID())
                 .flatMap(uMod -> {
+                    if (uMod.getState() != UMod.State.AP_MODE || uMod.getAppUserLevel() != UModUser.Level.ADMINISTRATOR ){
+                        return Observable.error(new NotAdminUserOrNotAPModeUModException());
+                    }
                     SetWiFiRPC.Arguments setWiFiArgs = new SetWiFiRPC.Arguments(values.getmWiFiSSID(), values.getmWiFiPassword());
                     return uModsRepository.setWiFiAP(uMod,setWiFiArgs)
                             .onErrorResumeNext(throwable -> {
@@ -150,6 +154,12 @@ public class UpdateWiFiCredentials extends SimpleUseCase<UpdateWiFiCredentials.R
 
         public SetWiFiRPC.Result getRpcResult() {
             return this.rpcResult;
+        }
+    }
+
+    public static final class NotAdminUserOrNotAPModeUModException extends Exception{
+        NotAdminUserOrNotAPModeUModException(){
+            super("User is not an Admin or the module isn't in AP_MODE.");
         }
     }
 }

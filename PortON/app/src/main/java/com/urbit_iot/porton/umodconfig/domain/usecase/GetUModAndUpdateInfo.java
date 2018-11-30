@@ -32,6 +32,7 @@ import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.source.UModsRepository;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 
 import javax.inject.Inject;
 
@@ -83,106 +84,57 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
                     }
                     //TODO review behaviour
                     return mAppUserRepository.getAppUser().flatMap(appUser -> {
-                        CreateUserRPC.Arguments createUserArgs = new CreateUserRPC.Arguments(appUser.getCredentialsString());
-                        return mUModsRepository.createUModUser(uMod, createUserArgs).flatMap(result -> {
-                                    //User Creation Succeeded
-                                    Log.d("getumod+info_uc","User Creation Succeeded!");
-                                    uMod.setMqttResponseTopic(appUser.getUserName());
-                                    uMod.setAppUserLevel(result.getUserLevel());
+                        GetUserLevelRPC.Arguments getUserLevelArgs =
+                                new GetUserLevelRPC.Arguments(appUser.getUserName());
+                        return mUModsRepository.getUserLevel(uMod,getUserLevelArgs).flatMap(result -> {
+                            Log.d("getumod+info_uc","Get User Level Succeeded!: "+result.toString());
+                            uMod.setAppUserLevel(result.getUserLevel());
+                            mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
+                            return Observable.just(uMod);
+                        })
+                        .onErrorResumeNext(throwable -> {
+                            Log.e("getumod+info_uc", "Get User Status Failed: " + throwable.getMessage());
+                            if (throwable instanceof HttpException) {
+                                int httpErrorCode = ((HttpException) throwable).response().code();
+                                String errorMessage = "";
+                                try {
+                                    errorMessage = ((HttpException) throwable).response().errorBody().string();
+                                } catch (Exception exc) {
+                                    return Observable.error(exc);
+                                }
 
-                                    mUModsRepository.saveUMod(uMod);
-                                    if (uMod.isInAPMode()){
-                                        return mUModsRepository.getCurrentLocation().flatMap(location -> {
-                                            uMod.setuModLocation(location);
-                                            mUModsRepository.saveUMod(uMod);
-                                            return Observable.just(uMod);
-                                        }).switchIfEmpty(Observable.just(uMod));
-                                    }
-                                    return Observable.just(uMod);
-                                })
-                                //TODO discus retry policy.
-                                .onErrorResumeNext(throwable -> {
-                                    Log.e("getumod+info_uc", "Create User Failed: " +throwable.getMessage());
-                                    if (throwable instanceof HttpException) {
-                                        //Check for HTTP UNAUTHORIZED error code
-                                        int httpErrorCode = ((HttpException) throwable).response().code();
-                                        String errorMessage = "";
-                                        try {
-                                            errorMessage = ((HttpException) throwable).response().errorBody().string();
-                                        }catch (Exception exc){
-                                            return Observable.error(exc);
-                                        }
+                                Log.e("getumod+info_uc", "Get User Status (urbit:urbit) Failed on error CODE:"
+                                        + httpErrorCode
+                                        +" MESSAGE: "
+                                        + errorMessage);
 
-                                        Log.e("getumod+info_uc", "Get User Status (urbit:urbit) Failed on error CODE:"
-                                                +httpErrorCode
-                                                +" MESSAGE: "
-                                                + errorMessage);
-
-                                        //If user is already created
-                                        //Improve  httpErrorCode != 0 to isValidHttpCode(httpErrorCode)
-                                        if (httpErrorCode != 0) {
-                                            if (httpErrorCode == 401 || httpErrorCode == 403){
-                                                uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
+                                if (GetUserLevelRPC.ALLOWED_ERROR_CODES.contains(httpErrorCode)) {
+                                    if (httpErrorCode == 500 && errorMessage.contains("404")){//This means user is configuring an AP_MODE module
+                                        if (uMod.getState() == UMod.State.AP_MODE){
+                                            CreateUserRPC.Arguments createUserArgs = new CreateUserRPC.Arguments(appUser.getCredentialsString());
+                                            return mUModsRepository.createUModUser(uMod, createUserArgs).flatMap(result -> {
+                                                //User Creation Succeeded
+                                                Log.d("getumod+info_uc","User Creation Succeeded!");
+                                                uMod.setMqttResponseTopic(appUser.getUserName());
+                                                uMod.setAppUserLevel(result.getUserLevel());
+                                                mUModsRepository.saveUMod(uMod);
                                                 return Observable.just(uMod);
-                                            }
-                                            if (httpErrorCode == 409
-                                                    || errorMessage.contains("409")
-                                                    || errorMessage.contains("412")){
-                                                //TODO evaluate the benefit of getting the user_type in the error body.
-                                                //That may save us the next request (Deserialization using JSONObject)
-                                                GetUserLevelRPC.Arguments getUserLevelArgs =
-                                                        new GetUserLevelRPC.Arguments(appUser.getUserName());
-                                                return mUModsRepository.getUserLevel(uMod,getUserLevelArgs).flatMap(result -> {
-                                                            Log.d("getumod+info_uc","Get User Level Succeeded!: "+result.toString());
-                                                            uMod.setAppUserLevel(result.getUserLevel());
-                                                            //uMod.setMqttResponseTopic(appUser.getUserName());
-                                                            //TODO when CACHE state doesnt display wifi cred settings. Change mapping on presenter!!
-                                                           // uMod.setuModSource(UMod.UModSource.LAN_SCAN);
-                                                            mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
-                                                            return Observable.just(uMod);
-                                                        })
-                                                        .onErrorResumeNext(throwable1 -> {
-                                                            Log.e("getumod+info_uc", "Get User Status Failed: " + throwable1.getMessage());
-                                                            if (throwable1 instanceof HttpException) {
-                                                                //Check for HTTP UNAUTHORIZED error code
-                                                                int httpErrorCode1 = ((HttpException) throwable1).response().code();
-                                                                String errorMessage1 = "";
-                                                                try {
-                                                                    errorMessage1 = ((HttpException) throwable1).response().errorBody().string();
-                                                                } catch (Exception exc) {
-                                                                    return Observable.error(exc);
-                                                                }
-
-                                                                Log.e("getumod+info_uc", "Get User Status (urbit:urbit) Failed on error CODE:"
-                                                                        + httpErrorCode1
-                                                                        +" MESSAGE: "
-                                                                        + errorMessage1);
-
-                                                                //If user is already created
-                                                                //Improve  httpErrorCode != 0 to isValidHttpCode(httpErrorCode)
-                                                                if (httpErrorCode1 != 0) {
-                                                                    if (httpErrorCode1 == 500){
-                                                                        if (errorMessage1.contains("user not found")){
-                                                                            uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
-                                                                            mUModsRepository.saveUMod(uMod);//Careful icarus!!! uMod may change
-                                                                            return Observable.just(uMod);
-                                                                        }
-                                                                        //It also can fail on: BAD_REQUEST, "userName is required" but we cannot overcome that error.
-                                                                    }
-                                                                }
-                                                            }
-                                                            //when the error is from other source like a timeout it is forwarded to the presenter.
-                                                            return Observable.error(throwable1);
-                                                        });
-                                            }
+                                            });
+                                        } else {
+                                            uMod.setAppUserLevel(UModUser.Level.UNAUTHORIZED);
+                                            mUModsRepository.saveUMod(uMod);
+                                            return Observable.error(new DeletedUserException(uMod));
                                         }
                                     }
-                                    //when the error is from other source like a timeout it is forwarded to the presenter.
-                                    return Observable.error(throwable);
-                                });
+                                    if (httpErrorCode == HttpURLConnection.HTTP_BAD_REQUEST){
+                                        return Observable.error(new IncompatibleAPIException());
+                                    }
+                                }
+                            }
+                            //when the error is from other source like a timeout it is forwarded to the presenter.
+                            return Observable.error(throwable);
+                        });
                     });
-
                 })
                 .flatMap(uMod -> {
                     SysGetInfoRPC.Arguments args = new SysGetInfoRPC.Arguments();
@@ -257,6 +209,24 @@ public class GetUModAndUpdateInfo extends SimpleUseCase<GetUModAndUpdateInfo.Req
         }
         public String getAPModeUModUUID(){
             return this.mAPModeUModUUID;
+        }
+    }
+
+    public static class DeletedUserException extends Exception{
+        private UMod inaccessibleUMod;
+        public DeletedUserException(UMod inaccessibleUMod){
+            super("The user was deleted by an Admin.");
+            this.inaccessibleUMod = inaccessibleUMod;
+        }
+
+        public UMod getInaccessibleUMod(){
+            return this.inaccessibleUMod;
+        }
+    }
+
+    public static class IncompatibleAPIException extends Exception{
+        public IncompatibleAPIException(){
+            super("Used API is incompatible");
         }
     }
 }

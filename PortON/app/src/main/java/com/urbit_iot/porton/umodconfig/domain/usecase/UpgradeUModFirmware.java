@@ -23,6 +23,7 @@ import com.google.common.base.Strings;
 import com.urbit_iot.porton.RxUseCase;
 import com.urbit_iot.porton.SimpleUseCase;
 import com.urbit_iot.porton.data.UMod;
+import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.rpc.EnableUpdateRPC;
 import com.urbit_iot.porton.data.rpc.OTACommitRPC;
 import com.urbit_iot.porton.data.rpc.SysGetInfoRPC;
@@ -43,12 +44,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class UpgradeUModFirmware extends SimpleUseCase<UpgradeUModFirmware.RequestValues, UpgradeUModFirmware.ResponseValues> {
 
     private final UModsRepository uModsRepository;
+    private final BaseSchedulerProvider schedulerProvider;
 
     @Inject
     public UpgradeUModFirmware(@NonNull UModsRepository tasksRepository,
                                @NonNull BaseSchedulerProvider schedulerProvider) {
         super(schedulerProvider.io(), schedulerProvider.ui());
         uModsRepository = tasksRepository;
+        this.schedulerProvider = schedulerProvider;
     }
 
     @Override
@@ -64,7 +67,10 @@ public class UpgradeUModFirmware extends SimpleUseCase<UpgradeUModFirmware.Reque
 
         return uModsRepository.getUMod(values.getUModUUID())
                 .flatMap(uMod -> {
-                    Log.d("OTA_UC","Downloading File...to update " + uMod.toString());
+                    if (uMod.getAppUserLevel() != UModUser.Level.ADMINISTRATOR){
+                        return Observable.error(new UserIsNotAdminException());
+                    }
+                    Log.d("OTA_UC","Downloading File...to update " + uMod.toString() + " ON: " + Thread.currentThread().getName());
                     //return uModsRepository.getSystemInfo(uMod,request);
                     return uModsRepository.getFirmwareImageFile(uMod)
                             .flatMap(file -> {
@@ -87,11 +93,11 @@ public class UpgradeUModFirmware extends SimpleUseCase<UpgradeUModFirmware.Reque
                                                                 responseBodyResponse.toString());
                                                         if (!responseBodyResponse.isSuccessful()){
                                                             Log.d("OTA_UC","Update Post Failed!!");
-                                                            return Observable.error(new Exception("postFirmwareUpdate failed."));
+                                                            return Observable.error(new PostFirmwareFailException());
                                                         } else {
-                                                            return Observable.timer(25L,TimeUnit.SECONDS)
+                                                            return Observable.timer(25L,TimeUnit.SECONDS,this.schedulerProvider.computation())
                                                                     .flatMap(aLong -> {
-                                                                        Log.d("OTA_UC","Verifying umod version");
+                                                                        Log.d("OTA_UC","Verifying umod version" + " ON: " + Thread.currentThread().getName());
                                                                         SysGetInfoRPC.Arguments sysGetInfoArgs = new SysGetInfoRPC.Arguments();
                                                                         return uModsRepository.getSystemInfo(uMod, sysGetInfoArgs)
                                                                                 .flatMap(result -> {
@@ -104,7 +110,7 @@ public class UpgradeUModFirmware extends SimpleUseCase<UpgradeUModFirmware.Reque
                                                                                         return uModsRepository.otaCommit(uMod, otaCommitArgs);
                                                                                     } else {
                                                                                         Log.d("OTA_UC","Versions mismatch. Upgrade FAILED.");
-                                                                                        return Observable.error(new Exception("Incorrect firmware version after update."));
+                                                                                        return Observable.error(new InconsistentVersionAfterUpgradeException());
                                                                                     }
                                                                                 });
                                                                     });
@@ -120,7 +126,7 @@ public class UpgradeUModFirmware extends SimpleUseCase<UpgradeUModFirmware.Reque
                         return Observable.just(new ResponseValues(otaCommitResponse.code()));
                     } else {
                         Log.d("OTA_UC","Update commit FAILED " + otaCommitResponse.toString());
-                        return Observable.error(new Exception("Unsuccessful OTA commit."));
+                        return Observable.error(new OtaCommitException());
                     }
                 });
     }
@@ -177,4 +183,30 @@ public class UpgradeUModFirmware extends SimpleUseCase<UpgradeUModFirmware.Reque
             return this.uModUUID;
         }
     }
+
+    public static final class UserIsNotAdminException extends Exception{
+        UserIsNotAdminException(){
+            super("User is not an Admin.");
+        }
+    }
+
+    public static final class PostFirmwareFailException extends Exception{
+        PostFirmwareFailException(){
+            super("Post Firmware was unsuccessful");
+        }
+    }
+
+    public static final class InconsistentVersionAfterUpgradeException extends Exception{
+        InconsistentVersionAfterUpgradeException(){
+            super("Actual uMod version is not the one expected");
+        }
+    }
+
+    public static final class OtaCommitException extends Exception{
+        OtaCommitException(){
+            super("OTA Commit failure, UMod will rollback to its previous version.");
+        }
+    }
+
+
 }

@@ -14,11 +14,11 @@ import java.util.List;
 
 public class GetUserLevelRPC {
     public static final List<Integer> ALLOWED_ERROR_CODES = Arrays.asList(
-            //HttpURLConnection.HTTP_BAD_REQUEST,
-            //HttpURLConnection.HTTP_NOT_FOUND,
+            HttpURLConnection.HTTP_BAD_REQUEST,
+            HttpURLConnection.HTTP_NOT_FOUND,
             //(Mongoose side) Digest Auth + ACL this call is performed with urbit:urbit so never should fail.
-            HttpURLConnection.HTTP_UNAUTHORIZED,
-            HttpURLConnection.HTTP_FORBIDDEN,
+            //HttpURLConnection.HTTP_UNAUTHORIZED,
+            //HttpURLConnection.HTTP_FORBIDDEN,
             //(Mongoose side) Any Error.
             HttpURLConnection.HTTP_INTERNAL_ERROR);
 
