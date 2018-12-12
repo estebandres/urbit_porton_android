@@ -1,6 +1,8 @@
 package com.urbit_iot.porton.data.source.internet;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+
 import android.util.Log;
 
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
@@ -32,22 +34,29 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
     @NonNull
     private MqttAsyncClient mqttAsyncClient;
 
-    private Set<String> requestedSubscriptionTopics;
+    @VisibleForTesting
+    Set<String> requestedSubscriptionTopics;
 
-    private Set<String> successfulSubscriptionTopics;
+    @VisibleForTesting
+    Set<String> successfulSubscriptionTopics;
 
-    private MqttConnectOptions mqttConnectOptions;
+    @VisibleForTesting
+    MqttConnectOptions mqttConnectOptions;
 
     @NonNull
     private PublishSubject<MqttMessageWrapper> messagesSubject;
 
-    private Semaphore connectionMutex;
+    @VisibleForTesting
+    Semaphore connectionMutex;
 
-    private Semaphore publishMutex;
+    @VisibleForTesting
+    Semaphore publishMutex;
 
-    private Semaphore subscriptionMutex;
+    @VisibleForTesting
+    Semaphore subscriptionMutex;
 
-    private PublishSubject<Boolean> subscriptionsKillerSubject;
+    @VisibleForTesting
+    PublishSubject<Boolean> subscriptionsKillerSubject;
 
     @NonNull
     private BaseSchedulerProvider mSchedulerProvider;
@@ -258,7 +267,9 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
                     public void onSuccess(IMqttToken asyncActionToken) {
                         Log.d("MQTT_SRV", "UNSUB___ SUCCESS! TOPIC: " + topic +  " ON: " + Thread.currentThread().getName());
                         subscriptionMutex.acquireUninterruptibly();
-                        successfulSubscriptionTopics.add(topic);
+                        if(successfulSubscriptionTopics.contains(topic)){
+                            successfulSubscriptionTopics.remove(topic);
+                        }
                         subscriptionMutex.release();
                         completableEmitter.onCompleted();
                     }
