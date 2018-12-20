@@ -13,7 +13,7 @@ import com.urbit_iot.porton.umods.UModsComponent;
 import com.urbit_iot.porton.util.schedulers.SchedulerProviderComponent;
 import com.urbit_iot.porton.util.schedulers.SchedulerProviderModule;
 
- import com.urbit_iot.porton.appuser.data.source.DaggerAppUserRepositoryComponent;
+import com.urbit_iot.porton.appuser.data.source.DaggerAppUserRepositoryComponent;
 import com.urbit_iot.porton.util.schedulers.DaggerSchedulerProviderComponent;
 import com.urbit_iot.porton.data.source.DaggerUModsRepositoryComponent;
 
@@ -36,13 +36,13 @@ import io.fabric.sdk.android.Fabric;
  */
 public class PortONApplication extends Application {
 
-    private UModsRepositoryComponent mUModsRepositoryComponent;
+    protected UModsRepositoryComponent mUModsRepositoryComponent;
 
-    private SchedulerProviderComponent mSchedulerProviderComponent;
+    protected SchedulerProviderComponent mSchedulerProviderComponent;
 
-    private AppUserRepositoryComponent mAppUserRepositoryComponent;
+    protected AppUserRepositoryComponent mAppUserRepositoryComponent;
 
-    private ApplicationModule applicationModule;
+    protected ApplicationModule applicationModule;
 
     @Override
     public void onCreate() {

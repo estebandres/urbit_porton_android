@@ -46,6 +46,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
 
     @Override
     public Observable<ResponseValues> buildUseCase(final RequestValues values) {
+        Log.d("STEVE-TEST", "CASO DE USO " + mUModsRepository.hashCode());
 
         Observable<UMod> oneByOneFromCache = Completable
                 .fromAction(mUModsRepository::cachedFirst)

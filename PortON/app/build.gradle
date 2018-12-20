@@ -38,7 +38,7 @@ android {
         versionCode gitVersionCodeTime
         versionName gitVersionName
 
-        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+        testInstrumentationRunner 'com.urbit_iot.porton.PortonMockTestRunner'
         multiDexEnabled true
     }
     buildTypes {
@@ -146,6 +146,9 @@ dependencies {
     // compileOnly 'org.glassfish:javax.annotation:10.0-b28' not needed for dagger > 2.1-SNAPSHOT
     implementation "com.google.dagger:dagger:$rootProject.daggerVersion"
 
+    testAnnotationProcessor "com.google.dagger:dagger-compiler:$rootProject.daggerVersion"
+    androidTestAnnotationProcessor "com.google.dagger:dagger-compiler:$rootProject.daggerVersion"
+
     //libphonenumber
     implementation "com.googlecode.libphonenumber:libphonenumber:$rootProject.libphonenumber"
 
@@ -203,9 +206,21 @@ dependencies {
     androidTestImplementation "com.android.support.test:runner:$rootProject.ext.runnerVersion"
     androidTestImplementation "com.android.support.test:rules:$rootProject.ext.runnerVersion"
     androidTestImplementation "junit:junit:$rootProject.ext.junitVersion"
-    androidTestImplementation "org.mockito:mockito-android:$rootProject.ext.mockitoVersion"
-    androidTestImplementation "com.google.dexmaker:dexmaker:$rootProject.ext.dexmakerVersion"
-    androidTestImplementation "com.google.dexmaker:dexmaker-mockito:$rootProject.ext.dexmakerVersion"
+    //androidTestImplementation "org.mockito:mockito-android:$rootProject.ext.mockitoVersion"
+
+    androidTestImplementation ("org.mockito:mockito-android:$rootProject.ext.mockitoVersion"){
+        exclude group: 'net.bytebuddy', module: 'byte-buddy'
+        exclude group: 'net.bytebuddy', module: 'byte-buddy-android'
+        exclude group: 'net.bytebuddy', module: 'byte-buddy-agent'
+    }
+    // Explicitly include byte-buddy 1.8.22 to fix a build error with Mockito 2.23
+    androidTestImplementation 'net.bytebuddy:byte-buddy:1.8.22'
+    androidTestImplementation 'net.bytebuddy:byte-buddy-android:1.8.22'
+    androidTestImplementation 'net.bytebuddy:byte-buddy-agent:1.8.22'
+    
+
+    androidTestImplementation "com.linkedin.dexmaker:dexmaker:$rootProject.ext.dexmakerVersion"
+    //androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:$rootProject.ext.dexmakerVersion"
 
     // Espresso UI Testing
     androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.espressoVersion"
