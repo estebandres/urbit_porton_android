@@ -4,6 +4,7 @@ package com.urbit_iot.porton.data.source;
 import com.urbit_iot.porton.ApplicationModule;
 import com.urbit_iot.porton.PortONApplication;
 
+import com.urbit_iot.porton.TestingApplicationModule;
 import com.urbit_iot.porton.umods.UModsActivityTest;
 import com.urbit_iot.porton.util.schedulers.SchedulerProviderComponent;
 

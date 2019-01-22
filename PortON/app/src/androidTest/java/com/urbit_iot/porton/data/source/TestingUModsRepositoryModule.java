@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 @Module
 public class TestingUModsRepositoryModule extends UModsRepositoryModule{
-    private UModsRepository repoMock;
 
     public TestingUModsRepositoryModule(String appUserName, String appUUID) {
         super(appUserName, appUUID);
@@ -22,7 +21,6 @@ public class TestingUModsRepositoryModule extends UModsRepositoryModule{
     @Provides
     @Singleton
     UModsRepository provideUModsRepository(){
-        Log.d("STEVE","Creando el REPO!");
         return mock(UModsRepository.class);
     }
 

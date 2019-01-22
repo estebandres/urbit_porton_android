@@ -221,6 +221,7 @@ public class UModsPresenter implements UModsContract.Presenter {
 
             @Override
             public void onCompleted() {
+                EspressoIdlingResource.decrement();
                 mUModsView.setLoadingIndicator(false);
                 if (onNextCount.getValue() <= 0) {
                     Log.e("umods_pr", "getUModsOnexOne didn't retreive any result: " + onNextCount);
@@ -237,6 +238,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                 Log.e("umods_pr", "" + e.getMessage());
                 mUModsView.setLoadingIndicator(false);
                 mUModsView.showLoadingUModsError();
+                EspressoIdlingResource.decrement();
             }
 
             @Override
@@ -406,7 +408,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                 break;
         }
 
-        if (uMod.belongsToAppUser() && uMod.getState() != UMod.State.AP_MODE){
+        if (uMod.canBeTriggeredByAppUser() && uMod.getState() != UMod.State.AP_MODE){
             notificationBellVisible = true;
         } else {
             notificationBellVisible = false;
@@ -428,6 +430,8 @@ public class UModsPresenter implements UModsContract.Presenter {
                     sliderBackgroundColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_BACKGROUND;
                     sliderVisible = true;
                     sliderEnabled = false;
+                    moduleTagsVisible = false;
+                    notificationBellVisible = false;
                     break;
                 case AUTHORIZED:
                     sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
@@ -447,6 +451,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                     sliderBackgroundColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_BACKGROUND;
                     sliderTextColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_TEXT;
                     sliderVisible = true;
+                    moduleTagsVisible = false;
                     break;
                 default:
                     sliderText = "DEFAULT_NON";
@@ -676,7 +681,7 @@ public class UModsPresenter implements UModsContract.Presenter {
             @Override
             public void onCompleted() {
                 mUModsView.enableActionSlider(uModUUID);
-
+                EspressoIdlingResource.decrement();
             }
 
             @Override
@@ -695,14 +700,21 @@ public class UModsPresenter implements UModsContract.Presenter {
                 mUModsView.showOpenCloseFail();
                 if (e instanceof TriggerUModUC.DeletedUserException){
                     UMod saidUMod = ((TriggerUModUC.DeletedUserException) e).getInaccessibleUMod();
+                    if (saidUMod != null){
+                        mUModsView.removeItem(saidUMod.getUUID());
+                    }
+                    /*
                     if (saidUMod.getAppUserLevel() == UModUser.Level.INVITED){
                         mUModsView.removeItem(saidUMod.getUUID());
                         return;
                     }
                     mUModsView.appendUMod(createViewModel(saidUMod));
                     return;
+                    */
+                } else {
+                    mUModsView.enableActionSlider(uModUUID);
                 }
-                mUModsView.enableActionSlider(uModUUID);
+                EspressoIdlingResource.decrement();
             }
 
             @Override
@@ -756,6 +768,7 @@ public class UModsPresenter implements UModsContract.Presenter {
             public void onCompleted() {
                 //mUModsView.enableActionSlider(uModUUID);
                 loadUMods(false);
+                EspressoIdlingResource.decrement();
             }
 
             @Override
@@ -766,6 +779,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                 Timber.e("Request Access Failed: " + e.getMessage());
                 mUModsView.showRequestAccessFailedMessage();
                 mUModsView.enableActionSlider(uModUUID);
+                EspressoIdlingResource.decrement();
             }
 
             @Override

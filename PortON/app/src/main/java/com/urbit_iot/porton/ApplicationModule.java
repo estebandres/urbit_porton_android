@@ -27,7 +27,7 @@ import dagger.Provides;
  * com.urbit_iot.porton.data.source.UModsRepositoryComponent}.
  */
 @Module
-public final class ApplicationModule {
+public class ApplicationModule {
 
     private final Context mContext;
 

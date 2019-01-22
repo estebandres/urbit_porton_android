@@ -4,7 +4,6 @@ import com.urbit_iot.porton.ApplicationModule;
 import com.urbit_iot.porton.PortONApplication;
 import com.urbit_iot.porton.appuser.data.source.AppUserRepositoryComponent;
 import com.urbit_iot.porton.data.source.DaggerTestingUModsRepositoryComponent;
-import com.urbit_iot.porton.data.source.DaggerUModsRepositoryComponent;
 import com.urbit_iot.porton.data.source.TestingUModsRepositoryModule;
 import com.urbit_iot.porton.data.source.UModsRepositoryComponent;
 import com.urbit_iot.porton.util.schedulers.SchedulerProviderComponent;
