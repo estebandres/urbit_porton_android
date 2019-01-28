@@ -88,6 +88,7 @@ public final class GlobalConstants {
     public static final String ONLINE_LOWER_TEXT = "online";
     public static final String STORED_LOWER_TEXT = "recordado";
     public static final String ONGOING_NOTIFICATION_STATE_KEY = "app_settings__ongoing_notification_state";
+    public static final String NOTIFICATIONS_CHANNEL_ID = "urbit_porton_app_notif_channel_id";
 
 
     public interface ACTION {

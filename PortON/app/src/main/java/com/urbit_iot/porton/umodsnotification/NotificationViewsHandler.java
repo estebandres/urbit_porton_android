@@ -35,7 +35,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
     private RemoteViews noConfiguredUModsCollapsedViews;
     private RemoteViews allUModsAreNotifDisabledCollapsedViews;
 
-    public static final String CHANNEL_ID = String.valueOf(new Random().nextInt());
+    public static final String CHANNEL_ID = GlobalConstants.NOTIFICATIONS_CHANNEL_ID;
     private String currentChannelID;
     //private RemoteViews expandedViews;
 
