@@ -958,4 +958,9 @@ public class UModsRepository implements UModsDataSource {
         return this.executeRPC(setGateStatusExecutor)
                 .map(SetGateStatusRPC.Response::getResponseResult);
     }
+
+    @Override
+    public Observable<GetGateStatusRPC.Response> getUModGateStatusUpdates() {
+        return this.mUModsInternetDataSource.getUModGateStatusUpdates();
+    }
 }

@@ -21,7 +21,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +31,6 @@ import io.reactivex.Flowable;
 import io.reactivex.subscribers.TestSubscriber;
 import rx.Completable;
 import rx.Observable;
-import rx.Scheduler;
 import rx.observers.AssertableSubscriber;
 import rx.schedulers.Schedulers;
 import rx.schedulers.TestScheduler;
@@ -85,9 +83,12 @@ public class SimplifiedUModMqttServiceTest {
 
     @After
     public void tearDown() throws Exception {
+        verifyNoMoreInteractions(pahoClientRxWrapMock,
+                mSchedulerProviderMock);
         reset(  pahoClientRxWrapMock,
                 mSchedulerProviderMock );
         simplifiedUModMqttService = null;
+
     }
 
     @Test
@@ -96,11 +97,12 @@ public class SimplifiedUModMqttServiceTest {
         UMod moduloMock= new UMod("111");
         //WHEN
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
-        when(pahoClientRxWrapMock.subscribeToTopic(any(String.class),any(Integer.class))).thenReturn(Completable.complete());
-        simplifiedUModMqttService.subscribeToUModResponseTopic(moduloMock.getUUID());
+        //when(pahoClientRxWrapMock.subscribeToTopic(any(String.class),any(Integer.class))).thenReturn(Completable.complete());
+        when(pahoClientRxWrapMock.subscribeToSeveralTopics(any(String[].class),any(Integer.class))).thenReturn(Completable.complete());
+        simplifiedUModMqttService.subscribeToUModTopics(moduloMock.getUUID());
         //THEN
         verify(pahoClientRxWrapMock,times(1)).connectToBroker();
-        verify(pahoClientRxWrapMock,times(1)).subscribeToTopic(any(String.class),any(Integer.class));
+        verify(pahoClientRxWrapMock,times(1)).subscribeToSeveralTopics(any(String[].class),any(Integer.class));
         verifyNoMoreInteractions(pahoClientRxWrapMock);
 
     }
@@ -112,10 +114,11 @@ public class SimplifiedUModMqttServiceTest {
         SimplifiedUModMqttService simplifiedUModMqttServiceSpy= spy(simplifiedUModMqttService);
         //WHEN
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
-        when(pahoClientRxWrapMock.subscribeToTopic(any(String.class),any(Integer.class))).thenReturn(Completable.complete());
-        simplifiedUModMqttServiceSpy.subscribeToUModResponseTopic(moduloMock);
+        //when(pahoClientRxWrapMock.subscribeToTopic(any(String.class),any(Integer.class))).thenReturn(Completable.complete());
+        when(pahoClientRxWrapMock.subscribeToSeveralTopics(any(String[].class),any(Integer.class))).thenReturn(Completable.complete());
+        simplifiedUModMqttServiceSpy.subscribeToUModTopics(moduloMock);
         //THEN
-        verify(simplifiedUModMqttServiceSpy,times(1)).subscribeToUModResponseTopic(moduloMock.getUUID());
+        verify(simplifiedUModMqttServiceSpy,times(1)).subscribeToUModTopics(moduloMock.getUUID());
     }
 
     //TODO COPIAR CAMBIOS DE STEVE
@@ -131,7 +134,7 @@ public class SimplifiedUModMqttServiceTest {
         mqttMessage.setPayload(jsonResponse.getBytes());
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
         when(pahoClientRxWrapMock.publishToTopic(jsonRequest.getBytes(),moduloMock.getUModRequestTopic(),1,false)).thenReturn(Completable.complete());
-        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(mqttMessage));
+        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(new MqttMessageWrapper("111",mqttMessage)));
         TestScheduler testScheduler = new TestScheduler();
         when(mSchedulerProviderMock.computation()).thenReturn(testScheduler);
         //WHEN
@@ -154,12 +157,12 @@ public class SimplifiedUModMqttServiceTest {
         mqttMessage.setPayload(jsonResponse.getBytes());
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
         when(pahoClientRxWrapMock.publishToTopic(jsonRequest.getBytes(),moduloMock.getUModRequestTopic(),1,false)).thenReturn(Completable.complete());
-        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(mqttMessage));
+        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(new MqttMessageWrapper("111",mqttMessage)));
         TestScheduler testScheduler = new TestScheduler();
         when(mSchedulerProviderMock.computation()).thenReturn(testScheduler);
         //WHEN
         when(pahoClientRxWrapMock.publishToTopic(jsonRequest.getBytes(),moduloMock.getUModRequestTopic(),1,false)).thenReturn(Completable.complete());
-        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(mqttMessage));
+        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(new MqttMessageWrapper("111",mqttMessage)));
         AssertableSubscriber testSubscriber = simplifiedUModMqttService.publishRPC(moduloMock,request,response.getClass()).test();
         testScheduler.advanceTimeBy(8,TimeUnit.SECONDS);
         testSubscriber.assertNotCompleted();
@@ -179,11 +182,11 @@ public class SimplifiedUModMqttServiceTest {
         when(mSchedulerProviderMock.computation()).thenReturn(testScheduler);
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
         when(pahoClientRxWrapMock.publishToTopic(jsonRequest.getBytes(),moduloMock.getUModRequestTopic(),1,false)).thenReturn(Completable.complete());
-        PublishSubject<MqttMessage> emisorDeRespuestas = PublishSubject.create();
+        PublishSubject<MqttMessageWrapper> emisorDeRespuestas = PublishSubject.create();
         when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(emisorDeRespuestas.asObservable());
         //WHEN
         AssertableSubscriber testSubscriber = simplifiedUModMqttService.publishRPC(moduloMock,request,response.getClass()).test();
-        emisorDeRespuestas.onNext(mqttMessage);
+        emisorDeRespuestas.onNext(new MqttMessageWrapper("111",mqttMessage));
         testScheduler.advanceTimeBy(8, TimeUnit.SECONDS);
         testSubscriber.assertError(TimeoutException.class)
                 .assertValueCount(0);
@@ -201,7 +204,7 @@ public class SimplifiedUModMqttServiceTest {
         mqttMessage.setPayload(jsonResponse.getBytes());
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
         when(pahoClientRxWrapMock.publishToTopic(any(byte[].class),any(String.class),any(Integer.class),any(Boolean.class))).thenReturn(Completable.complete());
-        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(mqttMessage));
+        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(new MqttMessageWrapper("111",mqttMessage)));
         TestScheduler testScheduler = new TestScheduler();
         when(mSchedulerProviderMock.computation()).thenReturn(testScheduler);
         //WHEN
@@ -226,7 +229,7 @@ public class SimplifiedUModMqttServiceTest {
         mqttMessage.setPayload(jsonResponse.getBytes());
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
         when(pahoClientRxWrapMock.publishToTopic(any(byte[].class),any(String.class),any(Integer.class),any(Boolean.class))).thenReturn(Completable.complete());
-        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(mqttMessage));
+        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(new MqttMessageWrapper("111",mqttMessage)));
         TestScheduler testScheduler = new TestScheduler();
         when(mSchedulerProviderMock.computation()).thenReturn(testScheduler);
         //WHEN
@@ -251,7 +254,7 @@ public class SimplifiedUModMqttServiceTest {
         mqttMessage.setPayload(jsonResponse.getBytes());
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
         when(pahoClientRxWrapMock.publishToTopic(any(byte[].class),any(String.class),any(Integer.class),any(Boolean.class))).thenReturn(Completable.complete());
-        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(mqttMessage));
+        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(new MqttMessageWrapper("111",mqttMessage)));
         TestScheduler testScheduler = new TestScheduler();
         when(mSchedulerProviderMock.computation()).thenReturn(testScheduler);
         //WHEN
@@ -270,7 +273,7 @@ public class SimplifiedUModMqttServiceTest {
         //GIVEN
         SimplifiedUModMqttService simplifiedUModMqttServiceSpy= spy(simplifiedUModMqttService);
         MqttMessage mqttMessage= new MqttMessage();
-        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(mqttMessage));
+        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(new MqttMessageWrapper("111",mqttMessage)));
         doNothing().when(simplifiedUModMqttServiceSpy).resetInvitationTopic();
         //WHEN
         simplifiedUModMqttServiceSpy.scanUModInvitations().test()
@@ -282,12 +285,12 @@ public class SimplifiedUModMqttServiceTest {
     public void Given_RecibiendoMensajeInvitacionConUUIDDNoNulo_When_scanUModInvitations_Then_DevuelvoObservableConModulo(){
         //GIVEN
         SimplifiedUModMqttService simplifiedUModMqttServiceSpy= spy(simplifiedUModMqttService);
-        when(pahoClientRxWrapMock.subscribeToTopic(any(String.class),any(Integer.class))).thenReturn(Completable.complete());
+        when(pahoClientRxWrapMock.subscribeToSeveralTopics(any(String[].class),any(Integer.class))).thenReturn(Completable.complete());
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
         MqttMessage mqttMessage= new MqttMessage();
         UMod modulo= new UMod("123");
         mqttMessage.setPayload(modulo.getAlias().getBytes());
-        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(mqttMessage));
+        when(pahoClientRxWrapMock.receivedMessagesObservable()).thenReturn(Observable.just(new MqttMessageWrapper("111",mqttMessage)));
         doNothing().when(simplifiedUModMqttServiceSpy).resetInvitationTopic();
         doReturn(modulo.getUUID()).when(simplifiedUModMqttServiceSpy).getUUIDFromUModAdvertisedID(mqttMessage.toString());
         //WHEN
@@ -301,7 +304,7 @@ public class SimplifiedUModMqttServiceTest {
                 .assertValue(uMod -> uMod.getState() == UMod.State.STATION_MODE)
                 .assertValue(uMod -> uMod.getConnectionAddress() == null);
 
-        verify(simplifiedUModMqttServiceSpy,times(1)).subscribeToUModResponseTopic(modulo);
+        verify(simplifiedUModMqttServiceSpy,times(1)).subscribeToUModTopics(modulo);
     }
 
     @Test

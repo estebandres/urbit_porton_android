@@ -39,7 +39,7 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
     private MqttConnectOptions mqttConnectOptions;
 
     @NonNull
-    private PublishSubject<MqttMessage> messagesSubject;
+    private PublishSubject<MqttMessageWrapper> messagesSubject;
 
     private Semaphore connectionMutex;
 
@@ -94,14 +94,14 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         Log.d("PAHO_CALLBK","MESSAGE__ TOPIC: " + topic + "  MSG: " + message.toString());
-        this.messagesSubject.onNext(message);
+        this.messagesSubject.onNext(new MqttMessageWrapper(topic, message));
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken token) {
         Log.d("PAHO_CALLBK","DELIVERY__ TOKEN: " + Arrays.toString(token.getTopics()));
     }
-    public Observable<MqttMessage> receivedMessagesObservable(){
+    public Observable<MqttMessageWrapper> receivedMessagesObservable(){
         return this.messagesSubject.asObservable();
     }
 
@@ -197,10 +197,8 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
     }
 
     public Completable subscribeToTopic(String topic, int qos, boolean storeTopicForResubscription){
-        return Completable.fromEmitter((CompletableEmitter completableEmitter) -> {
+        return Completable.fromEmitter(completableEmitter -> {
             try {
-                //connectionMutex.acquireUninterruptibly();
-                //Log.d("MQTT_SERVICE", "SUB___ LOCKED!!  " + Thread.currentThread().getName());
                 subscriptionMutex.acquireUninterruptibly();
                 if (storeTopicForResubscription){
                     requestedSubscriptionTopics.add(topic);
@@ -244,12 +242,6 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
             }
         })
         .observeOn(mSchedulerProvider.io());
-                /*
-        .doOnTerminate(() -> {
-            Log.d("MQTT_SERVICE", "SUB___  FINALLY + UNLOCKING!!  " + Thread.currentThread().getName());
-            connectionMutex.release();
-        })
-        */
     }
 
     public Completable unsubscribeFromTopic(String topic){
@@ -290,10 +282,16 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
     }
 
     public Completable subscribeToSeveralTopics(String[] topics, int qos){
+        return subscribeToSeveralTopics(topics,qos,true);
+    }
+    public Completable subscribeToSeveralTopics(String[] topics, int qos, boolean storeTopicsForResubscription){
         return Completable.fromEmitter(completableEmitter -> {
             try {
-                //connectionMutex.acquireUninterruptibly();
-                //Log.d("MQTT_SERVICE", "SUB___ LOCKED!!  " + Thread.currentThread().getName());
+                subscriptionMutex.acquireUninterruptibly();
+                if (storeTopicsForResubscription){
+                    requestedSubscriptionTopics.addAll(Arrays.asList(topics));
+                }
+                subscriptionMutex.release();
                 if (!mqttAsyncClient.isConnected()){
                     Log.e("MQTT_SRV", "SUB-MANY___ FAILURE!  ON: " + Thread.currentThread().getName());
                     completableEmitter.onError(new Exception());
@@ -311,6 +309,9 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
                     @Override
                     public void onSuccess(IMqttToken asyncActionToken) {
                         Log.d("MQTT_SRV", "SUB-MANY___ SUCCESS!  ON: " + Thread.currentThread().getName());
+                        subscriptionMutex.acquireUninterruptibly();
+                        successfulSubscriptionTopics.addAll(Arrays.asList(topics));
+                        subscriptionMutex.release();
                         completableEmitter.onCompleted();
                     }
 
@@ -329,15 +330,7 @@ public class PahoClientRxWrap implements MqttCallbackExtended{
                 completableEmitter.onError(exception);
             }
         })
-                .observeOn(mSchedulerProvider.io())
-                .doOnCompleted(() -> requestedSubscriptionTopics = new HashSet<>(Arrays.asList(topics)))
-                /*
-        .doOnTerminate(() -> {
-            Log.d("MQTT_SERVICE", "SUB___  FINALLY + UNLOCKING!!  " + Thread.currentThread().getName());
-            connectionMutex.release();
-        })
-        */
-                ;
+                .observeOn(mSchedulerProvider.io());
     }
 
     public Completable unsubscribeFromAllTopics(){

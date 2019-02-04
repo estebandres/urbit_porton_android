@@ -87,7 +87,7 @@ public class UModsInternetDataSource implements UModsDataSource {
     public void saveUMod(@NonNull UMod uMod) {
         //&& !uMod.isInAPMode()
         if (uMod.belongsToAppUser()){// TODO in case the user was deleted after creation then requestAccess is possible on MQTT
-            mUModMqttService.subscribeToUModResponseTopic(uMod);//Warning hazard of network on main
+            mUModMqttService.subscribeToUModTopics(uMod);//Warning hazard of network on main
         }
     }
 
@@ -264,5 +264,10 @@ public class UModsInternetDataSource implements UModsDataSource {
         return mUModMqttService.publishRPC(uMod,
                 gateStatus,GetGateStatusRPC.Response.class)
                 .map(GetGateStatusRPC.Response::getResponseResult);
+    }
+
+    @Override
+    public Observable<GetGateStatusRPC.Response> getUModGateStatusUpdates() {
+        return this.mUModMqttService.getUModsGateStatusUpdates();
     }
 }

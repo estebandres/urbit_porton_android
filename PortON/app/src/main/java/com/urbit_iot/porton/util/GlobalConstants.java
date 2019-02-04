@@ -85,10 +85,16 @@ public final class GlobalConstants {
     public static final String PENDING_SLIDER_TEXT = "ESPERANDO AUTORIZACIÓN";
     public static final String REQUEST_ACCESS_SLIDER_TEXT = "SOLICITAR ACCESO";
 
-    public static final String ONLINE_LOWER_TEXT = "online";
+    public static final String ONLINE_TAG__TEXT = "online";
     public static final String STORED_LOWER_TEXT = "recordado";
     public static final String ONGOING_NOTIFICATION_STATE_KEY = "app_settings__ongoing_notification_state";
     public static final String NOTIFICATIONS_CHANNEL_ID = "urbit_porton_app_notif_channel_id";
+    public static final String OPEN_GATE__TAG_TEXT = "ABIERTO";
+    public static final String OPENING_GATE__TAG_TEXT = "ABRIENDO";
+    public static final String CLOSED_GATE__TAG_TEXT = "CERRADO";
+    public static final String CLOSING_GATE__TAG_TEXT = "CERRANDO";
+    public static final String UNKNOWN_GATE_STATUS__TAG_TEXT = "DESCONOCIDO";
+    public static final String OFFLINE_TAG__TEXT = "OFFLINE";
 
 
     public interface ACTION {

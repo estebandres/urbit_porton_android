@@ -634,6 +634,17 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         }
         */
 
+        public int getUModItemIndex(String umodUUID){
+            int index = 0;
+            for (UModViewModel model : this.mViewModelsList){
+                if (model.getuModUUID().equals(umodUUID)){
+                    return index;
+                }
+                index++;
+            }
+            return -1;
+        }
+
         @Override
         public int getCount() {
             return mViewModelsList.size();
@@ -879,4 +890,44 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         public abstract int asActualResource();
     }
 
+    @Override
+    public void updateUModGateStatus(String umodUUID, String gateStatusTagText,
+                                     UModViewModelColors gateStatusTagColor,
+                                     UModViewModelColors gateStatusTagTextColor) {
+        int umodListIndex = this.mListAdapter.getUModItemIndex(umodUUID);
+        if (umodListIndex<0){
+            return;
+        }
+        UModViewModel viewModel = this.mListAdapter.getItem(umodListIndex);
+        viewModel.setConnectionTagColor(UModViewModelColors.ONLINE_TAG);
+        viewModel.setConnectionTagTextColor(UModViewModelColors.ONLINE_TAG_TEXT);
+        viewModel.setConnectionTagText(GlobalConstants.ONLINE_TAG__TEXT);
+        viewModel.setGateStatusTagColor(gateStatusTagColor);
+        viewModel.setConnectionTagTextColor(gateStatusTagTextColor);
+        viewModel.setGateStatusTagText(gateStatusTagText);
+
+        if (umodListIndex >= this.mListView.getFirstVisiblePosition()
+                && umodListIndex<=this.mListView.getLastVisiblePosition()){
+            View itemView = this.mListView.getChildAt(umodListIndex - this.mListView.getFirstVisiblePosition());
+            if (itemView != null){
+                TextView timeText = itemView.findViewById(R.id.item_time_text);
+                timeText.setVisibility(View.GONE);
+                RelativeLayout umodTags = itemView.findViewById(R.id.umod_tags);
+                RelativeLayout connectionTag = itemView.findViewById(R.id.connection_tag);
+                connectionTag.setBackground(getResources().getDrawable(UModViewModelColors.ONLINE_TAG.asActualResource()));
+                TextView connectionTagText = itemView.findViewById(R.id.connection_tag_text);
+                connectionTagText.setText(GlobalConstants.ONLINE_TAG__TEXT);
+                connectionTagText.setTextColor(ContextCompat.getColor(getActivity(), UModViewModelColors.ONLINE_TAG_TEXT.asActualResource()));
+
+                RelativeLayout gateStatusTag = itemView.findViewById(R.id.gate_status_tag);
+                gateStatusTag.setBackground(getResources().getDrawable(gateStatusTagColor.asActualResource()));
+                TextView gateStatusTagTextView= itemView.findViewById(R.id.gate_status_tag_text);
+                gateStatusTagTextView.setText(gateStatusTagText);
+                gateStatusTagTextView.setTextColor(ContextCompat.getColor(getActivity(), gateStatusTagTextColor.asActualResource()));
+
+                umodTags.setVisibility(View.VISIBLE);
+            }
+        }
+
+    }
 }

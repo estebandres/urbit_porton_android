@@ -1,6 +1,7 @@
 package com.urbit_iot.porton.data.source.internet;
 
 import com.urbit_iot.porton.data.UMod;
+import com.urbit_iot.porton.data.rpc.GetGateStatusRPC;
 
 import java.util.List;
 
@@ -13,9 +14,9 @@ import rx.Observable;
 
 public interface UModMqttServiceContract {
 
-    void subscribeToUModResponseTopic(String uModUUID);
+    void subscribeToUModTopics(String uModUUID);
 
-    void subscribeToUModResponseTopic(UMod umod);
+    void subscribeToUModTopics(UMod umod);
 
     <T,S> Observable<S> publishRPC(UMod targetUMod, T request, Class<S> responseType);
 
@@ -32,4 +33,6 @@ public interface UModMqttServiceContract {
     Completable cancelSeveralUModInvitations(List<String> listOfNames, UMod uMod);
 
     void clearAllSubscriptions();
+
+    Observable<GetGateStatusRPC.Response> getUModsGateStatusUpdates();
 }

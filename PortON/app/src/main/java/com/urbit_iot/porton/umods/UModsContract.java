@@ -83,6 +83,10 @@ public interface UModsContract {
         void showCalibrationSuccessMessage();
 
         void showCalibrationFailureMessage();
+
+        void updateUModGateStatus(String umodUUID, String gateStatusTagText,
+                                  UModsFragment.UModViewModelColors gateStatusTagColor,
+                                  UModsFragment.UModViewModelColors gateStatusTagTextColor);
     }
 
     interface Presenter extends BasePresenter {
@@ -110,5 +114,7 @@ public interface UModsContract {
         boolean fetchOngoingNotificationPreference();
 
         void processCalibrationDialogChoice(int choice);
+
+        void subscribeToGateStatusUpdates();
     }
 }

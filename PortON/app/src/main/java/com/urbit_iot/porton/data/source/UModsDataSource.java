@@ -140,4 +140,9 @@ public interface UModsDataSource {
     getUModGateStatus(UMod uMod, GetGateStatusRPC.Arguments reqArguments){
         return Observable.empty();
     }
+
+    default Observable<GetGateStatusRPC.Response>
+    getUModGateStatusUpdates(){
+        return Observable.empty();
+    }
 }

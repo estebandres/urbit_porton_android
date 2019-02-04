@@ -4,10 +4,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
 
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;
+import com.urbit_iot.porton.data.rpc.GetGateStatusRPC;
 import com.urbit_iot.porton.data.rpc.RPC;
 import com.urbit_iot.porton.util.GlobalConstants;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -62,24 +65,26 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
     }
 
     @Override
-    public void subscribeToUModResponseTopic(String uModUUID) {
+    public void subscribeToUModTopics(String uModUUID) {
         String responseTopicForUMod = GlobalConstants.URBIT_PREFIX + uModUUID + "/response/" + this.appUsername;
-        Log.d("subscribeRespTopic","Attempt subscription  TOPIC: "
+        String statusTopicForUMod = GlobalConstants.URBIT_PREFIX + uModUUID + "/status";
+        String[] topics = {responseTopicForUMod,statusTopicForUMod};
+                Log.d("subscribeRespTopic","Attempt subscription  TOPIC: "
                 + responseTopicForUMod + " ON: " + Thread.currentThread().getName());
         this.pahoClientRxWrap.connectToBroker()
                 .doOnError(throwable -> pahoClientRxWrap.addRequestedSubscriptionTopic(responseTopicForUMod))
-                .andThen(this.pahoClientRxWrap.subscribeToTopic(responseTopicForUMod,0))
+                .andThen(this.pahoClientRxWrap.subscribeToSeveralTopics(topics,0))
         //this.pahoClientRxWrap.subscribeToTopic(responseTopicForUMod,1)
                 .subscribe(
-                        () -> Log.d("subscribeRespTopic","SUB_SUCCESS  TOPIC: "
-                                + responseTopicForUMod + " ON: " + Thread.currentThread().getName()),
-                        throwable -> Log.e("subscribeRespTopic","SUB_FAIL  TOPIC: "
-                                + responseTopicForUMod + " ON: " + Thread.currentThread().getName(),throwable));
+                        () -> Log.d("subscribeRespTopic","SUB_SUCCESS  TOPICS: "
+                                + Arrays.asList(topics) + " ON: " + Thread.currentThread().getName()),
+                        throwable -> Log.e("subscribeRespTopic","SUB_FAIL  TOPICS: "
+                                + Arrays.asList(topics) + " ON: " + Thread.currentThread().getName(),throwable));
     }
 
     @Override
-    public synchronized void subscribeToUModResponseTopic(UMod umod) {
-        this.subscribeToUModResponseTopic(umod.getUUID());
+    public synchronized void subscribeToUModTopics(UMod umod) {
+        this.subscribeToUModTopics(umod.getUUID());
     }
 
 
@@ -98,10 +103,11 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                 .andThen(this.pahoClientRxWrap.publishToTopic(serializedRequest.getBytes(), requestTopic, qos, false))
                 .doOnCompleted(() -> Log.d("publishRPC","PUBLICADO! " + requestTopic + " ON: " + Thread.currentThread().getName()))
                 .andThen(this.pahoClientRxWrap.receivedMessagesObservable())
-                .filter(message -> message.getPayload().length > 0)
-                .flatMap(mqttMessage -> {
+                .filter(messageWrapper -> messageWrapper.getMqttMessage().getPayload().length > 0)
+                .filter(messageWrapper -> messageWrapper.getTopic().contains(targetUMod.getUUID()))
+                .flatMap(messageWrapper -> {
                     try {
-                        S response = gsonInstance.fromJson(new String(mqttMessage.getPayload()), responseType);
+                        S response = gsonInstance.fromJson(new String(messageWrapper.getMqttMessage().getPayload()), responseType);
                         return Observable.just(response);
                     } catch (JsonSyntaxException exc){
                         Log.e("publishRPC","INVALID JSON SYNTAX: " + requestTopic + " ON: " + Thread.currentThread().getName());
@@ -164,10 +170,10 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
     public Observable<UMod> scanUModInvitations() {
         return this.pahoClientRxWrap.receivedMessagesObservable()
                 .doOnSubscribe(this::resetInvitationTopic)
-                .doOnNext(mqttMessage -> Log.d("MQTT_SERVICE", "INVITATION: " + new String(mqttMessage.getPayload())))
+                .doOnNext(messageWrapper -> Log.d("MQTT_SERVICE", "INVITATION: " + new String(messageWrapper.getMqttMessage().getPayload())))
                 .takeUntil(Observable.timer(5200L,TimeUnit.MILLISECONDS))
-                .flatMap(mqttMessage -> {
-                    String msgPayload = new String(mqttMessage.getPayload());
+                .flatMap(messageWrapper -> {
+                    String msgPayload = new String(messageWrapper.getMqttMessage().getPayload());
                     String uModUUID = getUUIDFromUModAdvertisedID(msgPayload);
                     if (uModUUID != null) {
                         UMod invitedUMod = new UMod(uModUUID);
@@ -175,7 +181,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                         invitedUMod.setuModSource(UMod.UModSource.MQTT_SCAN);
                         invitedUMod.setState(UMod.State.STATION_MODE);
                         invitedUMod.setConnectionAddress(null);
-                        subscribeToUModResponseTopic(invitedUMod);
+                        subscribeToUModTopics(invitedUMod);
                         return Observable.just(invitedUMod);
                     } else {
                         return Observable.empty();
@@ -247,5 +253,48 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                         throwable -> Log.e("MQTT_SRV", "UNSUB_ALL Error: " +
                                 throwable.getMessage() + " Type: " +
                                 throwable.getClass().getSimpleName()));
+    }
+
+    public Observable<GetGateStatusRPC.Response> getUModsGateStatusUpdates(){
+        return this.pahoClientRxWrap.receivedMessagesObservable()
+                .filter(messageWrapper -> messageWrapper.getTopic().contains("status"))
+                .flatMap(messageWrapper -> {
+                    try{
+                        String umodUUID = getUUIDFromUModStatusTopic(messageWrapper.getTopic());
+                        if (Strings.isNullOrEmpty(umodUUID)){
+                            return Observable.empty();
+                        }
+                        GetGateStatusRPC.Result gateStatusResult =
+                                gsonInstance.fromJson(new String(messageWrapper.getMqttMessage().getPayload()),
+                                        GetGateStatusRPC.Result.class);
+                        GetGateStatusRPC.Response gateStatusResponse =
+                                new GetGateStatusRPC.Response(gateStatusResult,
+                                        123456789,
+                                        umodUUID,
+                                        null);
+                        Log.d("MQTT_SERVICE","STATUS UPDATE: " + gateStatusResponse);
+                        return Observable.just(gateStatusResponse);
+                    } catch (JsonSyntaxException exc){
+                        Log.e("MQTT_SERVICE","INVALID JSON SYNTAX: " +
+                                new String(messageWrapper.getMqttMessage().getPayload()) +
+                                " ON: " + Thread.currentThread().getName());
+                        return Observable.empty();
+                    }
+                });
+    }
+
+
+    String getUUIDFromUModStatusTopic(String statusTopic){
+        String uModUUID = null;
+
+        Pattern pattern = Pattern.compile(
+                GlobalConstants.URBIT_PREFIX
+                        + GlobalConstants.DEVICE_UUID_REGEX+"/status");
+        Matcher matcher = pattern.matcher(statusTopic);
+
+        if (matcher.find()){
+            uModUUID = matcher.group(1);
+        }
+        return uModUUID;
     }
 }

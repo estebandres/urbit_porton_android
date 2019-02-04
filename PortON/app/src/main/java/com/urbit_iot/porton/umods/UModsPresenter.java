@@ -14,6 +14,7 @@ import com.urbit_iot.porton.data.source.PhoneConnectivity;
 import com.urbit_iot.porton.data.source.UModsDataSource;
 import com.urbit_iot.porton.umods.domain.usecase.CalibrateUMod;
 import com.urbit_iot.porton.umods.domain.usecase.ClearAlienUMods;
+import com.urbit_iot.porton.umods.domain.usecase.GateStatusUpdates;
 import com.urbit_iot.porton.umods.domain.usecase.GetUMods;
 import com.urbit_iot.porton.umods.domain.usecase.GetUModsOneByOne;
 import com.urbit_iot.porton.umods.domain.usecase.RequestAccess;
@@ -43,15 +44,26 @@ public class UModsPresenter implements UModsContract.Presenter {
 
 
     private final UModsContract.View mUModsView;
+    @NonNull
     private final GetUMods mGetUMods;
+    @NonNull
     private final ClearAlienUMods mClearAlienUMods;
+    @NonNull
     private final TriggerUModUC mTriggerUModUC;
+    @NonNull
     private final GetUModsOneByOne mGetUModsOneByOne;
+    @NonNull
     private final SetOngoingNotificationStatus mSetOngoingNotificationStatus;
+    @NonNull
     private final RequestAccess mRequestAccess;
+    @NonNull
     private RxSharedPreferences rxSharedPreferences;
+    @NonNull
     private final PhoneConnectivity mPhoneConnectivity;
+    @NonNull
     private final CalibrateUMod mCalibrateUMod;
+    @NonNull
+    private final GateStatusUpdates gateStatusUpdates;
 
     @NonNull
     private BaseSchedulerProvider mSchedulerProvider;
@@ -73,6 +85,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                           @NonNull RxSharedPreferences rxSharedPreferences,
                           @NonNull PhoneConnectivity mPhoneConnectivity,
                           @NonNull CalibrateUMod mCalibrateUMod,
+                          @NonNull GateStatusUpdates statusUpdates,
                           @NonNull BaseSchedulerProvider mSchedulerProvider) {
         mUModsView = checkNotNull(umodsView, "tasksView cannot be null!");
         mGetUModsOneByOne = checkNotNull(getUModsOneByOne, "getUModsOneByOne cannot be null!");
@@ -86,6 +99,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         this.rxSharedPreferences = rxSharedPreferences;
         this.mPhoneConnectivity = checkNotNull(mPhoneConnectivity,"mPhoneConnectivity cannot be null!");
         this.mCalibrateUMod = checkNotNull(mCalibrateUMod, "mCalibrateUMod cannot be null!");
+        this.gateStatusUpdates = statusUpdates;
         this.mSchedulerProvider = mSchedulerProvider;
     }
 
@@ -122,6 +136,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         mGetUModsOneByOne.unsubscribe();
         mSetOngoingNotificationStatus.unsubscribe();
         mRequestAccess.unsubscribe();
+        this.gateStatusUpdates.unsubscribe();
     }
 
     @Override
@@ -214,6 +229,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                 if (forceUpdate){
                     mUModsView.refreshOngoingNotification();
                 }
+                subscribeToGateStatusUpdates();
             }
 
             @Override
@@ -230,6 +246,60 @@ public class UModsPresenter implements UModsContract.Presenter {
                 onNextCount.plusOne();
             }
         });
+    }
+
+    public void subscribeToGateStatusUpdates() {
+        this.gateStatusUpdates.execute(new GateStatusUpdates.RequestValues(), new Subscriber<GateStatusUpdates.ResponseValues>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.e("UMODS_PRESENTER","GateStatusUpdates failure: " + e.getMessage(), e);
+            }
+
+            @Override
+            public void onNext(GateStatusUpdates.ResponseValues responseValues) {
+                String gateStatusTagText;
+                UModsFragment.UModViewModelColors gateStatusTagColor;
+                UModsFragment.UModViewModelColors gateStatusTagTextColor;
+                UMod.GateStatus gateStatus = UMod.GateStatus.from(responseValues.getGateStatus().getStatusCode());
+                //TODO switch logic is replicated inside createViewModel method.
+                switch (gateStatus){
+                    case OPENING:
+                        gateStatusTagText = GlobalConstants.OPENING_GATE__TAG_TEXT;
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
+                        break;
+                    case OPEN:
+                        gateStatusTagText = GlobalConstants.OPEN_GATE__TAG_TEXT;
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
+                        break;
+                    case CLOSING:
+                        gateStatusTagText = GlobalConstants.CLOSING_GATE__TAG_TEXT;
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG_TEXT;
+                        break;
+                    case CLOSED:
+                        gateStatusTagText = GlobalConstants.CLOSED_GATE__TAG_TEXT;
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG_TEXT;
+                        break;
+                    default:
+                        gateStatusTagText = GlobalConstants.UNKNOWN_GATE_STATUS__TAG_TEXT;
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG_TEXT;
+                        break;
+                }
+
+                mUModsView.updateUModGateStatus(responseValues.getUmodUUID(),
+                        gateStatusTagText, gateStatusTagColor, gateStatusTagTextColor);
+            }
+        });
+
     }
 
     private String getTimeDifferenceString(Date oldDate){
@@ -305,22 +375,22 @@ public class UModsPresenter implements UModsContract.Presenter {
 
         switch (uMod.getGateStatus()){
             case OPEN:
-                gateStatusText = "ABIERTO";
+                gateStatusText = GlobalConstants.OPEN_GATE__TAG_TEXT;;
                 gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
                 gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
                 break;
             case CLOSED:
-                gateStatusText = "CERRADO";
+                gateStatusText = GlobalConstants.CLOSED_GATE__TAG_TEXT;
                 gateStatusTagColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG;
                 gateStatusTagTextColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG_TEXT;
                 break;
             case CLOSING:
-                gateStatusText = "CERRANDO";
+                gateStatusText = GlobalConstants.CLOSING_GATE__TAG_TEXT;
                 gateStatusTagColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG;
                 gateStatusTagTextColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG_TEXT;
                 break;
             case OPENING:
-                gateStatusText = "ABRIENDO";
+                gateStatusText = GlobalConstants.OPENING_GATE__TAG_TEXT;
                 gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
                 gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
                 break;
@@ -330,7 +400,7 @@ public class UModsPresenter implements UModsContract.Presenter {
                 gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
                 break;
             default:
-                gateStatusText = "DESCONOCIDO";
+                gateStatusText = GlobalConstants.UNKNOWN_GATE_STATUS__TAG_TEXT;
                 gateStatusTagColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG;
                 gateStatusTagTextColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG_TEXT;
                 break;
@@ -391,11 +461,11 @@ public class UModsPresenter implements UModsContract.Presenter {
 
         if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
                 || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN || timeText == null){
-            connectionTagText = GlobalConstants.ONLINE_LOWER_TEXT;
+            connectionTagText = GlobalConstants.ONLINE_TAG__TEXT;
             connectionTagColor = UModsFragment.UModViewModelColors.ONLINE_TAG;
             connectionTagTextColor = UModsFragment.UModViewModelColors.ONLINE_TAG_TEXT;
         } else {
-            connectionTagText = "OFFLINE";
+            connectionTagText = GlobalConstants.OFFLINE_TAG__TEXT;
             connectionTagColor = UModsFragment.UModViewModelColors.OFFLINE_TAG;
             connectionTagTextColor = UModsFragment.UModViewModelColors.OFFLINE_TAG_TEXT;
 

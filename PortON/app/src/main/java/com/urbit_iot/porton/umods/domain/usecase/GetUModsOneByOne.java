@@ -159,7 +159,7 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
         mUModsRepository.cachedFirst();
         return mUModsRepository.getUModsOneByOne()
                 //.switchIfEmpty()
-                .doOnNext(mUModMqttService::subscribeToUModResponseTopic)
+                .doOnNext(mUModMqttService::subscribeToUModTopics)
                 .toCompletable()
                 .doOnCompleted(() -> {
                     if (values.isForceUpdate()) {
