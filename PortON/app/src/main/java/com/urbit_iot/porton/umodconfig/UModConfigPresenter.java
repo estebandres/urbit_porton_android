@@ -47,6 +47,7 @@ import javax.inject.Inject;
 
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
@@ -111,6 +112,11 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     @NonNull
     private PhoneConnectivity mConnectivityInfo;
 
+    private Subscription finishActivityAfterFactoryReset;
+
+    private Subscription launchPopulationAfterReconnection;
+
+    private Subscription updateSettingsSubscription;
 
     /**
      * Dagger strictly enforces that arguments not marked with {@code @Nullable} are not injected
@@ -174,6 +180,15 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         mGetCurrentLocation.unsubscribe();
         mUpdateUModLocationData.unsubscribe();
         mResetUModCalibration.unsubscribe();
+        if (finishActivityAfterFactoryReset != null){
+            finishActivityAfterFactoryReset.unsubscribe();
+        }
+        if (launchPopulationAfterReconnection != null){
+            launchPopulationAfterReconnection.unsubscribe();
+        }
+        if (updateSettingsSubscription != null){
+            updateSettingsSubscription.unsubscribe();
+        }
     }
 
     @Override
@@ -211,7 +226,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                     if (mConnectivityInfo.connectToWifiAP(
                             GlobalConstants.URBIT_PREFIX+mUModUUID,
                             GlobalConstants.URBIT_PREFIX+mUModUUID)){
-                        Observable.timer(10000L, TimeUnit.MILLISECONDS)
+                        launchPopulationAfterReconnection = Observable.timer(10000L, TimeUnit.MILLISECONDS)
                                 .doOnNext(aLong -> populateUModSettings())
                                 .subscribe();
                         return;
@@ -441,7 +456,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                     public void onNext(FactoryResetUMod.ResponseValues responseValues) {
                         onNextCount.plusOne();
                         mUModConfigView.showResetSuccessMsg();
-                        Observable.timer(1100L, TimeUnit.MILLISECONDS)
+                        finishActivityAfterFactoryReset = Observable.timer(1100L, TimeUnit.MILLISECONDS)
                                 .subscribeOn(Schedulers.computation())
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .map(aLong -> {
@@ -454,6 +469,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                     }
                 });
     }
+
 
     @Override
     public void setNotificationStatus(@NonNull String uModUUID, final Boolean notificationEnabled) {
@@ -577,7 +593,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
             updateLocationObs = Observable.empty();
         }
 
-        updateAliasObs.toCompletable()
+        updateSettingsSubscription = updateAliasObs.toCompletable()
                 .onErrorComplete(throwable -> {
                     mUModConfigView.showAliasConfigFailMsg();
                     return true;
