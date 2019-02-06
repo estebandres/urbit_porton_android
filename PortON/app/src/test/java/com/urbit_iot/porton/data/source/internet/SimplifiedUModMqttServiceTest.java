@@ -69,7 +69,7 @@ public class SimplifiedUModMqttServiceTest {
         gsonInstance = new GsonBuilder()
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .create();
-
+        //when the rule has STRICT_STUB then every stub verifies the interaction so there is no need to add those verify's.
         when(mSchedulerProviderMock.io()).thenReturn(Schedulers.io());
         when(mSchedulerProviderMock.computation()).thenReturn(Schedulers.computation());
         when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
@@ -83,6 +83,7 @@ public class SimplifiedUModMqttServiceTest {
 
     @After
     public void tearDown() throws Exception {
+        //when the rule has STRICT_STUB then every stub verifies the interaction so there is no need to add those verify's.
         verifyNoMoreInteractions(pahoClientRxWrapMock,
                 mSchedulerProviderMock);
         reset(  pahoClientRxWrapMock,
@@ -118,7 +119,9 @@ public class SimplifiedUModMqttServiceTest {
         when(pahoClientRxWrapMock.subscribeToSeveralTopics(any(String[].class),any(Integer.class))).thenReturn(Completable.complete());
         simplifiedUModMqttServiceSpy.subscribeToUModTopics(moduloMock);
         //THEN
+        verify(simplifiedUModMqttServiceSpy,times(1)).subscribeToUModTopics(moduloMock);
         verify(simplifiedUModMqttServiceSpy,times(1)).subscribeToUModTopics(moduloMock.getUUID());
+        verifyNoMoreInteractions(simplifiedUModMqttServiceSpy);
     }
 
     //TODO COPIAR CAMBIOS DE STEVE
@@ -279,6 +282,9 @@ public class SimplifiedUModMqttServiceTest {
         simplifiedUModMqttServiceSpy.scanUModInvitations().test()
                 .assertCompleted()
                 .assertValueCount(0);
+        verify(simplifiedUModMqttServiceSpy, times(1)).scanUModInvitations();
+        verify(simplifiedUModMqttServiceSpy, times(1)).getUUIDFromUModAdvertisedID(any(String.class));
+        verifyNoMoreInteractions(simplifiedUModMqttServiceSpy);
     }
 
     @Test
@@ -304,7 +310,11 @@ public class SimplifiedUModMqttServiceTest {
                 .assertValue(uMod -> uMod.getState() == UMod.State.STATION_MODE)
                 .assertValue(uMod -> uMod.getConnectionAddress() == null);
 
-        verify(simplifiedUModMqttServiceSpy,times(1)).subscribeToUModTopics(modulo);
+        verify(simplifiedUModMqttServiceSpy,times(1)).scanUModInvitations();
+        verify(simplifiedUModMqttServiceSpy, times(1)).getUUIDFromUModAdvertisedID(any(String.class));
+        verify(simplifiedUModMqttServiceSpy, times(1)).subscribeToUModTopics(any(UMod.class));
+        verify(simplifiedUModMqttServiceSpy,times(1)).subscribeToUModTopics(modulo.getUUID());
+        verifyNoMoreInteractions(simplifiedUModMqttServiceSpy);
     }
 
     @Test
@@ -336,7 +346,9 @@ public class SimplifiedUModMqttServiceTest {
         //WHEN
         simplifiedUModMqttServiceSpy.cancelMyInvitation(moduloMock);
         //THEN
+        verify(simplifiedUModMqttServiceSpy,times(1)).cancelMyInvitation(moduloMock);
         verify(simplifiedUModMqttServiceSpy,times(1)).cancelUModInvitation(simplifiedUModMqttServiceSpy.appUsername,moduloMock.getUUID());
+        verifyNoMoreInteractions(simplifiedUModMqttServiceSpy);
     }
 
     @Test
@@ -362,6 +374,9 @@ public class SimplifiedUModMqttServiceTest {
         testScheduler.advanceTimeBy(300L,TimeUnit.MILLISECONDS);
         //THEN2
         testSubscriber.assertComplete();
+        verify(simplifiedUModMqttServiceSpy,times(1)).cancelSeveralUModInvitations(topicos,moduloMock);
+        verify(simplifiedUModMqttServiceSpy, times(14)).cancelUModInvitation(any(String.class),any(String.class));
+        verifyNoMoreInteractions(simplifiedUModMqttServiceSpy);
     }
 
     @Test
