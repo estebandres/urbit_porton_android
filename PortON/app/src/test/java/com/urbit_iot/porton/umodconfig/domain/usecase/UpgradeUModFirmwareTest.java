@@ -167,11 +167,16 @@ public class UpgradeUModFirmwareTest {
         Observable<UpgradeUModFirmware.ResponseValues> responsevalues = this.upgradeUModFirmware.buildUseCase(requestValues);
         Flowable<UpgradeUModFirmware.ResponseValues> testFlowable = RxJavaInterop.toV2Flowable(responsevalues);
 
+        TestScheduler testScheduler = new TestScheduler();
+        Mockito.doReturn(testScheduler).when(schedulerProvider).computation();
+
         //When
         io.reactivex.subscribers.TestSubscriber tester = testFlowable.test();
         //AssertableSubscriber <UpgradeUModFirmware.ResponseValues >responseValues  = this.upgradeUModFirmware.buildUseCase(requestValues).test();
 
+
         //Then
+        testScheduler.advanceTimeBy(500L,TimeUnit.MILLISECONDS);//Delay before post
         tester.assertError(UpgradeUModFirmware.PostFirmwareFailException.class)
                 .assertValueCount(0);
         verify(uModsRepositoryMock,times(1)).getUMod(uMod.getUUID());
@@ -220,6 +225,7 @@ public class UpgradeUModFirmwareTest {
         AssertableSubscriber <UpgradeUModFirmware.ResponseValues >responseValues  = this.upgradeUModFirmware.buildUseCase(requestValues).test();
 
         //Then
+        testScheduler.advanceTimeBy(500L,TimeUnit.MILLISECONDS);//Delay before post
         testScheduler.advanceTimeBy(25L,TimeUnit.SECONDS);
         responseValues.assertCompleted()
                 .assertValueCount(1);
@@ -273,6 +279,7 @@ public class UpgradeUModFirmwareTest {
         //AssertableSubscriber <UpgradeUModFirmware.ResponseValues >responseValues  = this.upgradeUModFirmware.buildUseCase(requestValues).test();
 
         //Then
+        testScheduler.advanceTimeBy(500L,TimeUnit.MILLISECONDS);//Delay before post
         testScheduler.advanceTimeBy(25L,TimeUnit.SECONDS);
         tester.assertError(UpgradeUModFirmware.OtaCommitException.class)
                 .assertValueCount(0);
@@ -327,9 +334,11 @@ public class UpgradeUModFirmwareTest {
         //AssertableSubscriber <UpgradeUModFirmware.ResponseValues >responseValues  = this.upgradeUModFirmware.buildUseCase(requestValues).test();
 
         //Then
+        testScheduler.advanceTimeBy(500L,TimeUnit.MILLISECONDS);//Delay before post
         testScheduler.advanceTimeBy(25L,TimeUnit.SECONDS);
         tester.assertError(UpgradeUModFirmware.InconsistentVersionAfterUpgradeException.class)
                 .assertValueCount(0);
+        verify(uModsRepositoryMock,times(1)).refreshUMods();
         verify(uModsRepositoryMock,times(1)).getUMod(uMod.getUUID());
         verify(uModsRepositoryMock,times(1)).getFirmwareImageFile(uMod);
         verify(uModsRepositoryMock,times(1)).enableUModUpdate(any(UMod.class),any(EnableUpdateRPC.Arguments.class));

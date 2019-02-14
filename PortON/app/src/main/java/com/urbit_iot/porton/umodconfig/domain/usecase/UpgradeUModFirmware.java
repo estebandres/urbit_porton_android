@@ -80,8 +80,9 @@ public class UpgradeUModFirmware extends SimpleUseCase<UpgradeUModFirmware.Reque
                                 if(file.getName().contains(uMod.getSWVersion())){
                                     return Observable.error(new UpgradeIsntNeccessary(uMod.getSWVersion()));
                                 } else {
-                                    Log.d("OTA_UC","Posting file: " + file.getName() + " size: "+file.length());
+                                    Log.d("OTA_UC","Posting file: " + file.getName() + " size: "+file.length() + " ON: " + Thread.currentThread().getName());
                                     return uModsRepository.enableUModUpdate(uMod, new EnableUpdateRPC.Arguments())
+                                            .delay(500L,TimeUnit.MILLISECONDS, this.schedulerProvider.computation())
                                             .flatMap(enablingResult -> uModsRepository.postFirmwareUpdateToUMod(uMod, file)
                                                     .flatMap(responseBodyResponse -> {
                                                         if (file.delete()){

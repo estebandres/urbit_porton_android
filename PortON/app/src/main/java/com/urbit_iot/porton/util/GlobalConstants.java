@@ -21,7 +21,7 @@ public final class GlobalConstants {
     public static final String AP_DEFAULT_IP_ADDRESS = "192.168.4.1";
     public static final Integer UMOD__TCP_ECHO_PORT = 7777;
 
-    public static final String FIRMWARE_SERVER__IP_ADDRESS = "192.168.1.7";
+    public static final String FIRMWARE_SERVER__IP_ADDRESS = "192.168.0.3";
     public static final String FIRMWARE_SERVER__PORT = "3289";
     public static final String MQTT_BROKER__IP_ADDRESS = "devbroker.urbit-iot.tk";
     public static final Integer MQTT_BROKER__PORT = 1883;

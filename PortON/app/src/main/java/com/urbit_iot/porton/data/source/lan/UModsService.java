@@ -3,6 +3,7 @@ package com.urbit_iot.porton.data.source.lan;
 import com.urbit_iot.porton.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.porton.data.rpc.CreateUserRPC;
 import com.urbit_iot.porton.data.rpc.DeleteUserRPC;
+import com.urbit_iot.porton.data.rpc.EnableUpdateRPC;
 import com.urbit_iot.porton.data.rpc.FactoryResetRPC;
 import com.urbit_iot.porton.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.porton.data.rpc.GetUsersRPC;
@@ -85,4 +86,7 @@ public interface UModsService {
 
     @POST("/rpc/Admin.SetGateStatus")
     Observable<SetGateStatusRPC.Result> postSetUModGateStatus(@Body SetGateStatusRPC.Arguments reqArguments);
+
+    @POST("/rpc/Admin.EnableUpdate")
+    Observable<EnableUpdateRPC.Result> postEnableUpdate(@Body EnableUpdateRPC.Arguments reqArguments);
 }

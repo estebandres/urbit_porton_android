@@ -27,25 +27,28 @@ public class FirmwareFileDownloader {
     }
 
     public Observable<File> downloadFirmwareFile(){
-        String downloadUrl = "http://"
-                + GlobalConstants.FIRMWARE_SERVER__IP_ADDRESS
-                + ":"
-                + GlobalConstants.FIRMWARE_SERVER__PORT
-                + "/firmware_update";
+        return Observable.defer(() -> {
+            String downloadUrl = "http://"
+                    + GlobalConstants.FIRMWARE_SERVER__IP_ADDRESS
+                    + ":"
+                    + GlobalConstants.FIRMWARE_SERVER__PORT
+                    + "/firmware_update";
 
-        File firmwareFile = new File(this.appContext.getFilesDir(), "firmware_update.zip");
-        try{
-            FileUtils.copyURLToFile(new URL(downloadUrl),firmwareFile,2000,2000);
-        } catch(MalformedURLException mExc){
-            mExc.printStackTrace();
-        } catch (IOException ioExc){
-            ioExc.printStackTrace();
-        }
-        Log.d("file_downloader","Downloaded File: " + firmwareFile.length());
-        if (firmwareFile.length() > 0){
-            return Observable.just(firmwareFile);
-        } else {
-            return Observable.error(new Exception("file_downloader Empty file was retrieve."));
-        }
+            File firmwareFile = new File(this.appContext.getFilesDir(), "firmware_update.zip");
+            try{
+                FileUtils.copyURLToFile(new URL(downloadUrl),firmwareFile,8000,20000);
+            } catch(MalformedURLException mExc){
+                mExc.printStackTrace();
+            } catch (IOException ioExc){
+                ioExc.printStackTrace();
+            }
+            //TODO add real size validation and Hash validation
+            Log.d("file_downloader","Downloaded File: " + firmwareFile.length());
+            if (firmwareFile.length() > 0){
+                return Observable.just(firmwareFile);
+            } else {
+                return Observable.error(new Exception("file_downloader Empty file was retrieve."));
+            }
+        });
     }
 }

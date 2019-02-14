@@ -203,9 +203,9 @@ public class UModsRepositoryModule {
                 .authenticator(new CachingAuthenticatorDecorator(digestAuthenticator,authCache))
                 .addInterceptor(new AuthenticationCacheInterceptor(authCache))
                 .dispatcher(dispatcher)
-                .connectTimeout(5000L, TimeUnit.MILLISECONDS)
-                .readTimeout(8000L, TimeUnit.MILLISECONDS)
-                //.writeTimeout(15000L,TimeUnit.MILLISECONDS)
+                .connectTimeout(4000L, TimeUnit.MILLISECONDS)
+                //.readTimeout(5000L, TimeUnit.MILLISECONDS)
+                //.writeTimeout(5000L,TimeUnit.MILLISECONDS)
                 .build();
     }
 
@@ -239,8 +239,9 @@ public class UModsRepositoryModule {
                 .addInterceptor(urlHostSelectionInterceptor)
                 .authenticator(new CachingAuthenticatorDecorator(digestAuthenticator,authCache))
                 .addInterceptor(new AuthenticationCacheInterceptor(authCache))
-                .connectTimeout(5000L, TimeUnit.MILLISECONDS)
-                .readTimeout(8000L, TimeUnit.MILLISECONDS)
+                .connectTimeout(4000L, TimeUnit.MILLISECONDS)
+                //.readTimeout(5000L, TimeUnit.MILLISECONDS)
+                //.writeTimeout(5000L,TimeUnit.MILLISECONDS)
                 .build();
     }
 

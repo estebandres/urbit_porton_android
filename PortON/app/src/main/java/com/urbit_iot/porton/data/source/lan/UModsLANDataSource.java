@@ -9,6 +9,7 @@ import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.rpc.AdminCreateUserRPC;
 import com.urbit_iot.porton.data.rpc.CreateUserRPC;
 import com.urbit_iot.porton.data.rpc.DeleteUserRPC;
+import com.urbit_iot.porton.data.rpc.EnableUpdateRPC;
 import com.urbit_iot.porton.data.rpc.FactoryResetRPC;
 import com.urbit_iot.porton.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.porton.data.rpc.GetUsersRPC;
@@ -269,5 +270,11 @@ public class UModsLANDataSource implements UModsDataSource {
     setUModGateStatus(UMod uMod, SetGateStatusRPC.Arguments reqArguments){
         this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
         return this.appUserUModsService.postSetUModGateStatus(reqArguments);
+    }
+
+    public Observable<EnableUpdateRPC.Result>
+    enableUModUpdate(UMod uMod, EnableUpdateRPC.Arguments arguments){
+        this.urlHostSelectionInterceptor.setHost(uMod.getConnectionAddress());
+        return this.appUserUModsService.postEnableUpdate(arguments);
     }
 }

@@ -56,8 +56,8 @@ ext {
     rxDNSSDVersion = '0.9.10'
     libphonenumber = '8.2.0'
     rxPreferences = '2.0.0-RC3'//forces rxjava2.x to the project
-    retrofit = '2.3.0'
-    okhttpDigest = '1.16'
+    retrofit = '2.5.0'
+    okhttpDigest = '1.18'
     retrofitConverterGson = '2.1.0'
-    retrofitAdapterRxJava = '2.0.2'
+    retrofitAdapterRxJava = '2.5.0'
 }

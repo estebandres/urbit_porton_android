@@ -606,11 +606,14 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                     return true;
                 })
                 .andThen(updateWifiCredentialsObs.toCompletable())
-                .timeout(4000L,TimeUnit.MILLISECONDS)
+                //.timeout(4000L,TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(mUModConfigView::showSettingsApplySuccessMsg,
-                        throwable -> mUModConfigView.showWiFiCredentialsConfigFailMsg());
+                        throwable -> {
+                    Log.e("config_pres","Failed to config: " + throwable.getMessage(), throwable);
+                    mUModConfigView.showWiFiCredentialsConfigFailMsg();}
+                        );
     }
 
     @Override
