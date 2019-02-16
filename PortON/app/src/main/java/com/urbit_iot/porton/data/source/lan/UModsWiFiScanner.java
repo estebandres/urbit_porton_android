@@ -7,13 +7,16 @@ import android.net.wifi.ScanResult;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.util.Pair;
 
 import com.github.pwittchen.reactivewifi.ReactiveWifi;
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;
+import com.urbit_iot.porton.umodconfig.UModConfigFragment;
 import com.urbit_iot.porton.util.GlobalConstants;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -113,5 +116,29 @@ public class UModsWiFiScanner {
                     scanInProgress = false;
                     scanMutex.release();
                 });
+    }
+
+
+    public Observable<List<Pair<String,Integer>>> listOfNearbySSIDs(){
+        if (ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(this.appContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return Observable.error(new Exception("Unsatisfied WiFi permissions"));
+        }
+        return ReactiveWifi.observeWifiAccessPoints(this.appContext)
+                .observeOn(mSchedulerProvider.io())
+                .flatMap(Observable::from)
+                //.doOnNext(scanResult -> Log.d("WIFI_SCAN","RESULTADO: " + scanResult.SSID + "  " + scanResult.level))
+                .distinct(scanResult -> scanResult.SSID)
+                .filter(scanResult -> scanResult.level > -86)
+                .filter(scanResult -> !scanResult.SSID.matches(GlobalConstants.URBIT_PREFIX + GlobalConstants.DEVICE_UUID_REGEX) )
+                .takeUntil(Observable.timer(5000L, TimeUnit.MILLISECONDS))
+                .map(scanResult -> new Pair<>(scanResult.SSID, scanResult.level))
+                .toList();
     }
 }

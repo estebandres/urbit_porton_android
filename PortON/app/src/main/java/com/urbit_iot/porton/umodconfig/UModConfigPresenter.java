@@ -20,11 +20,13 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.util.Pair;
 
 import com.google.common.base.Strings;
 import com.urbit_iot.porton.RxUseCase;
 import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.source.PhoneConnectivity;
+import com.urbit_iot.porton.data.source.lan.TCPScanClient;
 import com.urbit_iot.porton.umodconfig.domain.usecase.FactoryResetUMod;
 import com.urbit_iot.porton.umodconfig.domain.usecase.GetCurrentLocation;
 import com.urbit_iot.porton.umodconfig.domain.usecase.GetUModAndUpdateInfo;
@@ -39,12 +41,16 @@ import com.urbit_iot.porton.umodconfig.domain.usecase.UpgradeUModFirmware;
 import com.urbit_iot.porton.umodconfig.domain.usecase.SetOngoingNotificationStatus;
 import com.urbit_iot.porton.util.GlobalConstants;
 import com.urbit_iot.porton.util.IntegerContainer;
+import com.urbit_iot.porton.data.source.lan.UModsWiFiScanner;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 
+import rx.Completable;
 import rx.Observable;
 import rx.Subscriber;
 import rx.Subscription;
@@ -112,11 +118,15 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
     @NonNull
     private PhoneConnectivity mConnectivityInfo;
 
+    @NonNull
+    private UModsWiFiScanner wifiScanner;
+
     private Subscription finishActivityAfterFactoryReset;
 
     private Subscription launchPopulationAfterReconnection;
 
     private Subscription updateSettingsSubscription;
+    private Subscription ssidLoader;
 
     /**
      * Dagger strictly enforces that arguments not marked with {@code @Nullable} are not injected
@@ -136,7 +146,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                                @NonNull GetCurrentLocation mGetCurrentLocation,
                                @NonNull ResetUModCalibration mResetUModCalibration,
                                @NonNull UpdateUModLocationData mUpdateUModLocationData,
-                               @NonNull PhoneConnectivity mConnectivityInfo) {
+                               @NonNull PhoneConnectivity mConnectivityInfo,
+                               @NonNull UModsWiFiScanner wifiScanner) {
         this.mUModUUID = umodUUID;
         this.mUModConfigView = addTaskView;
         this.mGetUModAndUpdateInfo = getUModAndUpdateInfo;
@@ -151,6 +162,7 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         this.mResetUModCalibration = mResetUModCalibration;
         this.mUpdateUModLocationData = mUpdateUModLocationData;
         this.mConnectivityInfo = mConnectivityInfo;
+        this.wifiScanner = wifiScanner;
     }
 
     /**
@@ -189,6 +201,9 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         if (updateSettingsSubscription != null){
             updateSettingsSubscription.unsubscribe();
         }
+        if (ssidLoader != null){
+            ssidLoader.unsubscribe();
+        }
     }
 
     @Override
@@ -223,12 +238,21 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                 Log.e("conf_pr", "Error while populating: ", e);
                 if (e instanceof GetUModAndUpdateInfo.UnconnectedFromAPModeUModException){
                     //mUModConfigView.launchWiFiSettings();
+                    loadNearbyWifisList();
+                    //mUModConfigView.showConnectingToModuleAnimation();
                     if (mConnectivityInfo.connectToWifiAP(
                             GlobalConstants.URBIT_PREFIX+mUModUUID,
                             GlobalConstants.URBIT_PREFIX+mUModUUID)){
-                        launchPopulationAfterReconnection = Observable.timer(10000L, TimeUnit.MILLISECONDS)
-                                .doOnNext(aLong -> populateUModSettings())
-                                .subscribe();
+                        launchPopulationAfterReconnection = Completable.timer(2500L, TimeUnit.MILLISECONDS)
+                                .doOnCompleted(() -> Log.d("CONFIG_PRES","TIMER COMP"))
+                                .andThen(Completable.timer(500L, TimeUnit.MILLISECONDS)
+                                        .doOnCompleted(() -> Log.d("CONFIG_PRES","MINI-TIMER COMP"))
+                                        .andThen(TCPScanClient.tcpEchoCompletable(GlobalConstants.AP_DEFAULT_IP_ADDRESS,
+                                                GlobalConstants.UMOD__TCP_ECHO_PORT))
+                                        .retry(16))
+                                .doOnCompleted(() -> populateUModSettings())
+                                .subscribe(() -> {},
+                                        throwable -> Log.e("CONFIG_PRES","Could not connect to module!",throwable));
                         return;
                     }
                 }
@@ -252,9 +276,36 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         viewModel = createViewModel(uModToConfig);
                         mUModConfigView.showUModConfigs(viewModel);
                     }
+                    if (uModToConfig.isInAPMode()){
+                        loadNearbyWifisList();
+                    }
                 }
             }
         });
+    }
+
+    private void loadNearbyWifisList() {
+        ssidLoader = this.wifiScanner.listOfNearbySSIDs()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(Observable::from)
+                .map(pair -> {
+                    Pair<String, UModConfigFragment.SignalStrength> newPair;
+                    if (pair.second <= -70){
+                        newPair = new Pair<>(pair.first, UModConfigFragment.SignalStrength.LOW);
+                    }
+                    else if (pair.second < -65){
+                        newPair = new Pair<>(pair.first, UModConfigFragment.SignalStrength.MEDIUM);
+                    }
+                    else {
+                        newPair = new Pair<>(pair.first, UModConfigFragment.SignalStrength.HIGH);
+                    }
+                    return newPair;
+
+                })
+                .toList()
+                .subscribe(mUModConfigView::loadWifiSsidSpinnerData,
+                        throwable -> Log.e("CONFIG_PRES","load wifi ssids failed: ", throwable));
     }
 
     private void connectToAPModeUMod(String mUModUUID){
@@ -379,6 +430,12 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
         boolean updateButtonVisible = uMod.getWifiSSID() != null
                 && uMod.getWifiSSID().equals(mConnectivityInfo.getWifiAPSSID());
         boolean locationSettingsLayoutVisible = uMod.getState() != UMod.State.AP_MODE;
+        List<String> wifiSsidsList = null;
+        if (uMod.isInAPMode()){
+            wifiSsidsList = new ArrayList<>();
+
+        }
+
 
         UModConfigViewModel viewModel =
                 new UModConfigViewModel(uModUUID,
@@ -392,8 +449,8 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                         ongoingNotifSwitchChecked,
                         locationSettingsLayoutVisible, addressText,
                         updateButtonVisible,
-                        controlButtonsVisible
-                        );
+                        controlButtonsVisible,
+                        wifiSsidsList);
 
         return viewModel;
     }

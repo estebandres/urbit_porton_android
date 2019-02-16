@@ -1,5 +1,8 @@
 package com.urbit_iot.porton.umodconfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by steve-urbit on 04/02/18.
  */
@@ -18,6 +21,7 @@ public class UModConfigViewModel {
     private String locationText;
     private boolean updateButtonVisible;
     private boolean controlButtonsVisible;
+    private List<String> wifiSsidsList;
 
     public UModConfigViewModel(String uModUUID,
                                String connectionStatusText,
@@ -31,7 +35,8 @@ public class UModConfigViewModel {
                                boolean locationSettingsLayoutVisible,
                                String locationText,
                                boolean updateButtonVisible,
-                               boolean controlButtonsVisible) {
+                               boolean controlButtonsVisible,
+                               List<String> wifiSsidsList) {
         this.uModUUID = uModUUID;
         this.connectionStatusText = connectionStatusText;
         this.aliasText = aliasText;
@@ -45,6 +50,7 @@ public class UModConfigViewModel {
         this.locationText = locationText;
         this.updateButtonVisible = updateButtonVisible;
         this.controlButtonsVisible = controlButtonsVisible;
+        this.wifiSsidsList = wifiSsidsList;
     }
 
     public String getuModUUID() {
@@ -149,5 +155,13 @@ public class UModConfigViewModel {
 
     public void setControlButtonsVisible(boolean controlButtonsVisible) {
         this.controlButtonsVisible = controlButtonsVisible;
+    }
+
+    public List<String> getWifiSsidsList() {
+        return wifiSsidsList;
+    }
+
+    public void setWifiSsidsList(List<String> wifiSsidsList) {
+        this.wifiSsidsList = wifiSsidsList;
     }
 }

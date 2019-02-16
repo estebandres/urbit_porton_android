@@ -406,9 +406,7 @@ public class UModsRepository implements UModsDataSource {
     public void saveUMod(@NonNull UMod uMod) {
         checkNotNull(uMod);
         mUModsLocalDataSource.saveUMod(uMod);
-        if (!uMod.isInAPMode()){
-            mUModsInternetDataSource.saveUMod(uMod);
-        }
+        mUModsInternetDataSource.saveUMod(uMod);
 
         mCachedUMods.put(uMod.getUUID(), uMod);
     }

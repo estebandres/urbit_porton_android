@@ -34,13 +34,18 @@ import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -49,6 +54,11 @@ import com.urbit_iot.porton.R;
 import com.urbit_iot.porton.umodsnotification.UModsNotifService;
 import com.urbit_iot.porton.umodusers.UModUsersActivity;
 import com.urbit_iot.porton.util.GlobalConstants;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -67,7 +77,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private TextView mUModSysInfoTextInput;
 
-    private EditText mWiFiSSIDTextInput;
+    //private EditText mWiFiSSIDTextInput;
 
     private TextView mWiFiPasswordTextInput;
 
@@ -119,6 +129,10 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
     private LinearLayout firmwareUpdateBox;
 
+    private Spinner wifiSsidSpinner;
+
+    private CustomSpinnerAdapter customSpinnerAdapter;
+
     public static UModConfigFragment newInstance() {
         return new UModConfigFragment();
     }
@@ -163,11 +177,12 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         String wifiSSID = null;
         String wifiPassword = null;
         if (mViewModel.isWifiSettingsVisible()){
-            wifiSSID = mWiFiSSIDTextInput.getText().toString();
+            wifiSSID = ((Pair<String,SignalStrength>)wifiSsidSpinner.getSelectedItem()).first;
             wifiPassword = mWiFiPasswordTextInput.getText().toString();
         }
 
         mPresenter.updateSettings(aliasText, wifiSSID, wifiPassword, mUpdateLocation);
+
         mUpdateLocation = false;
     }
 
@@ -181,7 +196,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
         mAliasTextInput = root.findViewById(R.id.alias_text_input);
         mUModSysInfoTextInput =  root.findViewById(R.id.umod_sys_info);
-        mWiFiSSIDTextInput = root.findViewById(R.id.wifi_ssid);
+        //mWiFiSSIDTextInput = root.findViewById(R.id.wifi_ssid);
         mWiFiPasswordTextInput = (EditText) root.findViewById(R.id.wifi_password);
         mUsersButton =  root.findViewById(R.id.users_button);
         mFactoryResetButton =  root.findViewById(R.id.factory_reset_button);
@@ -209,6 +224,11 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         mCalibrationResetButton = root.findViewById(R.id.calibration_reset_button);
         adminButtonsLayout = root.findViewById(R.id.admin_buttons);
         firmwareUpdateBox = root.findViewById(R.id.firmware_update_card);
+        wifiSsidSpinner = root.findViewById(R.id.wifi_ssid_spinner);
+        customSpinnerAdapter = new CustomSpinnerAdapter(this.getContext(),
+                Collections.singletonList(new Pair<>("Buscando WiFi cercanos ...",
+                        SignalStrength.UNKNOWN)));
+        wifiSsidSpinner.setAdapter(customSpinnerAdapter);
 
         mTextWatcher = new TextWatcher() {
             @Override
@@ -354,11 +374,11 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
 
         mAliasTextInput.setText(mViewModel.getAliasText());
         mAliasTextInput.setSelection(mAliasTextInput.getText().length());
-        mWiFiSSIDTextInput.setText(mViewModel.getWifiSSIDText());
+        //mWiFiSSIDTextInput.setText(mViewModel.getWifiSSIDText());
         mUModSysInfoTextInput.setText(mViewModel.getuModSysInfoText());
 
         mAliasTextInput.addTextChangedListener(mTextWatcher);
-        mWiFiSSIDTextInput.addTextChangedListener(mTextWatcher);
+        //mWiFiSSIDTextInput.addTextChangedListener(mTextWatcher);
         mWiFiPasswordTextInput.addTextChangedListener(mTextWatcher);
 
         mOngoingNotifSwitch.setChecked(viewModel.isOngoingNotifSwitchChecked());
@@ -469,6 +489,21 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         showSnackBarMessage(getString(R.string.calibration_reset_failed));
     }
 
+
+    @Override
+    public void loadWifiSsidSpinnerData(List<Pair<String, SignalStrength>> ssidList) {
+
+        /*
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(getContext(), R.layout.wifi_ssid_spinner_custom_item,ssidList);
+        this.wifiSsidSpinner.setAdapter(spinnerAdapter);
+         */
+        if (ssidList == null || ssidList.isEmpty()){
+            return;
+        }
+        this.customSpinnerAdapter.setItemsList(ssidList);
+
+    }
+
     @Override
     public void finishActivity() {
         Activity configActivity = getActivity();
@@ -554,5 +589,77 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
     @Override
     public void showLocationUpdateFailureMsg() {
         showSnackBarMessage(getString(R.string.location_update_failure_msg));
+    }
+
+    class CustomSpinnerAdapter extends BaseAdapter {
+        Context context;
+        List<Pair<String,SignalStrength>> items;
+
+        public CustomSpinnerAdapter(Context applicationContext, List<Pair<String,SignalStrength>> items) {
+            this.context = applicationContext;
+            this.items = items;
+        }
+
+        public CustomSpinnerAdapter(Context appContext){
+            this.context = appContext;
+            this.items = new ArrayList<>();
+        }
+
+        public void setItemsList(List<Pair<String,SignalStrength>> items){
+            this.items = items;
+            notifyDataSetChanged();
+        }
+        @Override
+        public int getCount() {
+            return items.size();
+        }
+
+        @Override
+        public Pair<String, SignalStrength> getItem(int i) {
+            return items.get(i);
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
+
+        @Override
+        public View getView(int i, View view, ViewGroup viewGroup) {
+            LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
+            view = inflater.inflate(R.layout.wifi_ssid_spinner_custom_item, null);
+            ImageView icon = view.findViewById(R.id.signal_strength_icon);
+            TextView names = view.findViewById(R.id.ssid_text);
+            icon.setImageResource(items.get(i).second.toActualResource());
+            names.setText(items.get(i).first);
+            return view;
+        }
+    }
+    public enum SignalStrength {
+        UNKNOWN{
+            @Override
+            public int toActualResource() {
+                return R.drawable.ic_scanning_wifis;
+            }
+        },
+        LOW{
+            @Override
+            public int toActualResource() {
+                return R.drawable.ic_wifi_low_signal_with_one_bar;
+            }
+        },
+        MEDIUM {
+            @Override
+            public int toActualResource() {
+                return R.drawable.ic_medium_wifi_signal_with_two_bars;
+            }
+        },
+        HIGH {
+            @Override
+            public int toActualResource() {
+                return R.drawable.ic_high_wifi_signal_indicator;
+            }
+        };
+        public abstract int toActualResource();
     }
 }

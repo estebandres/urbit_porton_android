@@ -17,9 +17,12 @@
 package com.urbit_iot.porton.umodconfig;
 
 import android.support.annotation.NonNull;
+import android.util.Pair;
 
 import com.urbit_iot.porton.BasePresenter;
 import com.urbit_iot.porton.BaseView;
+
+import java.util.List;
 
 /**
  * This specifies the contract between the view and the presenter.
@@ -93,6 +96,8 @@ public interface UModConfigContract {
         void showCalibrationResetSuccessMsg();
 
         void showCalibrationResetFailMsg();
+
+        void loadWifiSsidSpinnerData(List<Pair<String, UModConfigFragment.SignalStrength>> ssidList);
     }
 
     interface Presenter extends BasePresenter {

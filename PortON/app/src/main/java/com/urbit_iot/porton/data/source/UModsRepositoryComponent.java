@@ -5,6 +5,7 @@ import com.urbit_iot.porton.ApplicationModule;
 import com.urbit_iot.porton.PortONApplication;
 import com.urbit_iot.porton.appuser.data.source.AppUserRepository;
 import com.urbit_iot.porton.data.source.internet.UModMqttServiceContract;
+import com.urbit_iot.porton.data.source.lan.UModsWiFiScanner;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.porton.util.schedulers.SchedulerProviderComponent;
 
@@ -36,5 +37,7 @@ public interface UModsRepositoryComponent {
     PhoneConnectivity getPhoneConnectivityInfo();//TODO breaks dependecy rule!
 
     BaseSchedulerProvider getBaseSchedulerProvider();
+
+    UModsWiFiScanner getUModsWiFiScanner();
 
 }

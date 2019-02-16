@@ -84,6 +84,11 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
 
     @Override
     public synchronized void subscribeToUModTopics(UMod umod) {
+        if (umod.isInAPMode()){
+            pahoClientRxWrap.addRequestedSubscriptionTopic(GlobalConstants.URBIT_PREFIX + umod.getUUID() + "/response/" + this.appUsername);
+            pahoClientRxWrap.addRequestedSubscriptionTopic(GlobalConstants.URBIT_PREFIX + umod.getUUID() + "/status");
+            return;
+        }
         this.subscribeToUModTopics(umod.getUUID());
     }
 
@@ -169,8 +174,11 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
     @Override
     public Observable<UMod> scanUModInvitations() {
         return this.pahoClientRxWrap.receivedMessagesObservable()
+                .subscribeOn(this.mSchedulerProvider.io())
                 .doOnSubscribe(this::resetInvitationTopic)
-                .doOnNext(messageWrapper -> Log.d("MQTT_SERVICE", "INVITATION: " + new String(messageWrapper.getMqttMessage().getPayload())))
+                .doOnNext(messageWrapper -> Log.d("MQTT_SERVICE", "INVITATION: "
+                        + new String(messageWrapper.getMqttMessage().getPayload())
+                        + " ON: " + Thread.currentThread().getName()))
                 .takeUntil(Observable.timer(5200L,TimeUnit.MILLISECONDS))
                 .flatMap(messageWrapper -> {
                     String msgPayload = new String(messageWrapper.getMqttMessage().getPayload());

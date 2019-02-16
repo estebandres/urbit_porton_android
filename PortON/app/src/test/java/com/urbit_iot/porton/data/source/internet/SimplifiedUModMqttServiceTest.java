@@ -280,6 +280,7 @@ public class SimplifiedUModMqttServiceTest {
         doNothing().when(simplifiedUModMqttServiceSpy).resetInvitationTopic();
         //WHEN
         simplifiedUModMqttServiceSpy.scanUModInvitations().test()
+                .awaitTerminalEvent()
                 .assertCompleted()
                 .assertValueCount(0);
         verify(simplifiedUModMqttServiceSpy, times(1)).scanUModInvitations();
@@ -288,7 +289,7 @@ public class SimplifiedUModMqttServiceTest {
     }
 
     @Test
-    public void Given_RecibiendoMensajeInvitacionConUUIDDNoNulo_When_scanUModInvitations_Then_DevuelvoObservableConModulo(){
+    public void Given_RecibiendoMensajeInvitacionConUUIDDNoNulo_When_scanUModInvitations_Then_DevuelvoObservableConModulo() throws InterruptedException {
         //GIVEN
         SimplifiedUModMqttService simplifiedUModMqttServiceSpy= spy(simplifiedUModMqttService);
         when(pahoClientRxWrapMock.subscribeToSeveralTopics(any(String[].class),any(Integer.class))).thenReturn(Completable.complete());
@@ -302,7 +303,9 @@ public class SimplifiedUModMqttServiceTest {
         //WHEN
         Observable<UMod> testObservable = simplifiedUModMqttServiceSpy.scanUModInvitations();
         Flowable<UMod> testFlowable = RxJavaInterop.toV2Flowable(testObservable);
-        testFlowable.test()
+        TestSubscriber<UMod> testSubscriber = testFlowable.test();
+
+        testSubscriber.await()
                 .assertValues(modulo)
                 .assertValueCount(1)
                 .assertValue(uMod -> uMod.getAppUserLevel() == UModUser.Level.INVITED)
