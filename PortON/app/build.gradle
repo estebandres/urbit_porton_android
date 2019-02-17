@@ -123,7 +123,7 @@ dependencies {
     implementation "com.android.support:recyclerview-v7:$rootProject.supportLibraryVersion"
     implementation "com.android.support:support-v4:$rootProject.supportLibraryVersion"
     implementation "com.android.support.test.espresso:espresso-idling-resource:$rootProject.espressoVersion"
-    implementation "com.google.guava:guava:$rootProject.guavaVersion"
+    api "com.google.guava:guava:$rootProject.guavaVersion"
 
     //RXJAVA
     implementation "io.reactivex:rxjava:$rootProject.rxjavaVersion"
@@ -133,7 +133,7 @@ dependencies {
     implementation "com.github.andriydruk:rxdnssd:$rootProject.rxDNSSDVersion"
 
     //RX BLE
-    implementation 'com.polidea.rxandroidble:rxandroidble:1.4.3'
+    implementation "com.polidea.rxandroidble:rxandroidble:$rootProject.polideaBleVersion"
 
     //SQLBRITE
     implementation "com.squareup.sqlbrite:sqlbrite:$rootProject.sqlbriteVersion"
@@ -143,7 +143,7 @@ dependencies {
 
     //DAGGER2
     annotationProcessor "com.google.dagger:dagger-compiler:$rootProject.daggerVersion"
-    compileOnly 'org.glassfish:javax.annotation:10.0-b28'
+    // compileOnly 'org.glassfish:javax.annotation:10.0-b28' not needed for dagger > 2.1-SNAPSHOT
     implementation "com.google.dagger:dagger:$rootProject.daggerVersion"
 
     //libphonenumber
@@ -159,44 +159,45 @@ dependencies {
     implementation "com.squareup.retrofit2:adapter-rxjava:$rootProject.retrofitAdapterRxJava"
 
     //reactiveWiFi
-    implementation 'com.github.pwittchen:reactivewifi:0.3.0'
+    implementation "com.github.pwittchen:reactivewifi:$rootProject.reactivewifiVersion"
 
     //Apache Commons IO
-    implementation 'commons-io:commons-io:2.5'
+    implementation "commons-io:commons-io:$rootProject.apacheCommonsIOVersion"
 
     //Slide to Act View
-    implementation 'com.ncorti:slidetoact:0.3.0'
+    implementation "com.ncorti:slidetoact:$rootProject.slidetoactVersion"
     implementation 'com.github.MAXDeliveryNG:slideview:1.1.0'
 
     //ping LAN addresses to determine reachable host
     implementation 'com.github.stealthcopter:AndroidNetworkTools:0.3.08'
 
     //mqtt paho wrapper uses rxjava2
-    //implementation 'net.eusashead.mqtt:rxmqtt:1.1.1.RELEASE'
+    //implementation 'net.eusashead.mqtt:rxmqtt:1.1.1.RELEASE' //unused
 
-    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
+    implementation "org.eclipse.paho:org.eclipse.paho.client.mqttv3:$rootProject.pahoMqttVersion"
     //implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
 
-    implementation 'com.github.akarnokd:rxjava2-interop:0.12.6'
+    implementation "com.github.akarnokd:rxjava2-interop:$rootProject.rxInteropVersion"
     //implementation 'com.bugfender.sdk:android:1.+'
-    implementation 'com.github.tony19:timber-loggly:1.0.1'
-    implementation('com.crashlytics.sdk.android:crashlytics:2.9.3@aar') {
+    implementation "com.github.tony19:timber-loggly:$rootProject.timberLogglyVersion"
+    implementation("com.crashlytics.sdk.android:crashlytics:$rootProject.crashlyticsVersion") {
         transitive = true
     }
-    api 'com.google.guava:guava:25.1-android'
 
     //implementation 'io.reactivex:rxnetty-http:0.5.2'
-    implementation 'pl.charmas.android:android-reactive-location2:2.1@aar'
-    implementation 'com.google.android.gms:play-services-location:16.0.0'
+    implementation "pl.charmas.android:android-reactive-location2:$rootProject.reactiveLocation2Version"
+    implementation "com.google.android.gms:play-services-location:$rootProject.googlePlayLocationVersion"
+    implementation "com.google.android.gms:play-services-places:$rootProject.googlePlayPlacesVersion"
 
-    implementation 'com.yarolegovich:lovely-dialog:1.1.0'
+    implementation "com.yarolegovich:lovely-dialog:$rootProject.lovelyDialogVersion"
 
     // Dependencies for local unit tests
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
 
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoVersion"
     //testImplementation "org.mockito:mockito-all:$rootProject.ext.mockitoVersion"
-    testImplementation "org.hamcrest:hamcrest-all:$rootProject.ext.hamcrestVersion"
+    testImplementation "org.hamcrest:hamcrest:$rootProject.ext.hamcrestVersion"
+    testImplementation "org.hamcrest:hamcrest-library:$rootProject.ext.hamcrestVersion"
 
     // Android Testing Support Library's runner and rules
     androidTestImplementation "com.android.support.test:runner:$rootProject.ext.runnerVersion"

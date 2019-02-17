@@ -166,6 +166,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void submitSettingsChanges(){
         String aliasText = mAliasTextInput.getText().toString();
         if (!Strings.isNullOrEmpty(aliasText)){
@@ -177,6 +178,7 @@ public class UModConfigFragment extends Fragment implements UModConfigContract.V
         String wifiSSID = null;
         String wifiPassword = null;
         if (mViewModel.isWifiSettingsVisible()){
+            //TODO Dangerous cast, find alternative!
             wifiSSID = ((Pair<String,SignalStrength>)wifiSsidSpinner.getSelectedItem()).first;
             wifiPassword = mWiFiPasswordTextInput.getText().toString();
         }

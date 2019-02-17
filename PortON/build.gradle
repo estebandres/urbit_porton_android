@@ -38,26 +38,41 @@ ext {
     buildToolsVersion = '26.0.2'
 
     // App dependencies
-    supportLibraryVersion = '27.0.2'
-    guavaVersion = '18.0'
-    junitVersion = '4.12'
-    mockitoVersion = '2.+'
-    powerMockito = '1.6.2'
-    hamcrestVersion = '1.3'
-    runnerVersion = '0.5'
-    rulesVersion = '0.5'
-    espressoVersion = '2.2.2'
-    rxjavaVersion = '1.3.2'
-    rxandroidVersion = '1.2.1'
-    sqlbriteVersion = '0.7.0'
-    daggerVersion = '2.13'
-    dexmakerVersion = '1.2'
-    gsonVersion = '2.8.1'
-    rxDNSSDVersion = '0.9.10'
-    libphonenumber = '8.2.0'
-    rxPreferences = '2.0.0-RC3'//forces rxjava2.x to the project
-    retrofit = '2.5.0'
-    okhttpDigest = '1.18'
-    retrofitConverterGson = '2.1.0'
-    retrofitAdapterRxJava = '2.5.0'
+
+    //By Companies
+    supportLibraryVersion = '27.1.1'
+    guavaVersion = '27.0.1-android'//latest
+    junitVersion = '4.12'//latest
+    runnerVersion = '1.0.2'//latest
+    rulesVersion = '1.0.2'//latest
+    espressoVersion = '3.0.2'//latest
+    rxjavaVersion = '1.3.6'//latest for RX1
+    rxandroidVersion = '1.2.1'//latest for RX1
+    sqlbriteVersion = '1.1.2'//3.2.0 latest to be replaced with SQLDelight
+    daggerVersion = '2.21'//latest
+    dexmakerVersion = '1.2'//latest
+    gsonVersion = '2.8.1'//2.8.5
+    libphonenumber = '8.10.5'//latest
+    retrofit = '2.5.0'//latest
+    retrofitConverterGson = '2.5.0'//latest
+    retrofitAdapterRxJava = '2.5.0'//latest
+    polideaBleVersion = '1.7.0'// is friezed use RX2 rxandroidble2 instead
+    apacheCommonsIOVersion = '2.6'//latest
+    pahoMqttVersion = '1.2.0'//latest
+    timberLogglyVersion = '1.0.1'//latest
+    crashlyticsVersion = '2.9.3@aar'//latest
+    googlePlayLocationVersion = '16.0.0'//latest
+    googlePlayPlacesVersion = '16.0.0'//latest
+
+    //By Independent devs
+    mockitoVersion = '2.+'//latest
+    hamcrestVersion = '2.1'//latest
+    rxDNSSDVersion = '0.9.12'//latest
+    rxPreferences = '2.0.0'//latest: uses RX2
+    okhttpDigest = '1.18'//latest
+    reactivewifiVersion = '0.3.0'//latest for RX1
+    slidetoactVersion = '0.5.1'//latest
+    rxInteropVersion = '0.13.5'//latest
+    reactiveLocation2Version = '2.1@aar'//latest
+    lovelyDialogVersion = '1.1.0'//latest
 }
