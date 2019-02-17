@@ -272,6 +272,42 @@ public class SimplifiedUModMqttServiceTest {
     }
 
     @Test
+    public void Given_requestPublishFails_When_publishRPC_Then_ErrorIsPropagated(){
+        //GIVEN
+        UMod moduloMock= new UMod("111");
+        RPC.Request request = new CreateUserRPC.Request(null,"2123", "a",123);
+        RPC.Response response = new CreateUserRPC.Response(null,123,"a",null);
+        String jsonRequest = gsonInstance.toJson(request);
+        String jsonResponse = gsonInstance.toJson(response);
+        MqttMessage mqttMessage= new MqttMessage();
+        mqttMessage.setPayload(jsonResponse.getBytes());
+        when(pahoClientRxWrapMock.connectToBroker()).thenReturn(Completable.complete());
+
+        TestScheduler testScheduler = new TestScheduler();
+        when(mSchedulerProviderMock.computation()).thenReturn(testScheduler);
+        when(mSchedulerProviderMock.io()).thenReturn(testScheduler);
+        when(pahoClientRxWrapMock.publishToTopic(jsonRequest.getBytes(),moduloMock.getUModRequestTopic(),1,false))
+                .thenReturn(Completable.timer(2000L,TimeUnit.MILLISECONDS, testScheduler)
+                        .andThen(Completable.error(new Exception("Publish failed!"))));
+        when(pahoClientRxWrapMock.receivedMessagesObservable())
+                .thenReturn(Observable.just(new MqttMessageWrapper("111",mqttMessage))
+                        .delay(4000L,TimeUnit.MILLISECONDS, testScheduler));
+        //WHEN
+        TestSubscriber testSubscriber = RxJavaInterop.toV2Flowable(simplifiedUModMqttService.publishRPC(moduloMock,request,response.getClass())).test();
+        testScheduler.advanceTimeBy(5,TimeUnit.SECONDS);
+
+        testSubscriber
+               .assertError(throwable -> ((Exception) throwable).getMessage().equals("Failed Publish"));
+
+        TestSubscriber testSubscriber2 = RxJavaInterop.toV2Flowable(simplifiedUModMqttService.publishRPC(moduloMock,request,response.getClass())).test();
+        testScheduler.advanceTimeBy(5,TimeUnit.SECONDS);
+        testSubscriber2
+                .assertError(throwable -> ((Exception) throwable).getMessage().equals("Failed Publish"));
+
+
+    }
+
+    @Test
     public void Given_RecibiendoMensajeInvitacionConUUIDDNulo_When_scanUModInvitations_Then_DevuelvoObservableVacio(){
         //GIVEN
         SimplifiedUModMqttService simplifiedUModMqttServiceSpy= spy(simplifiedUModMqttService);

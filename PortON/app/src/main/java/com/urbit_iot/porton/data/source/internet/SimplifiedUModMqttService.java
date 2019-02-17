@@ -32,6 +32,7 @@ import retrofit2.Response;
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Completable;
 import rx.Observable;
+import rx.subjects.PublishSubject;
 
 /**
  * Created by andresteve07 on 28/10/18.
@@ -47,6 +48,8 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
     private Gson gsonInstance;
     @NonNull
     private BaseSchedulerProvider mSchedulerProvider;
+    @VisibleForTesting
+    PublishSubject<MqttMessageWrapper> publishErrors;
 
     @Inject
     public SimplifiedUModMqttService(@NonNull PahoClientRxWrap pahoClientRxWrap,
@@ -57,6 +60,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
         this.appUsername = username;
         this.gsonInstance = gsonInstance;
         this.mSchedulerProvider = mSchedulerProvider;
+        this.publishErrors = PublishSubject.create();
         this.pahoClientRxWrap.connectToBroker()
                 .subscribeOn(this.mSchedulerProvider.io())//TODO use dagger injected scheduler
                 .subscribe(() -> {},
@@ -104,10 +108,13 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
         String requestTopic = targetUMod.getUModRequestTopic();
         Log.d("publishRPC", "TOPIC: " + requestTopic + " ON: " + Thread.currentThread().getName() + "  Serialized Request: " + serializedRequest );
         return this.pahoClientRxWrap.connectToBroker()
-                .doOnCompleted(() -> Log.d("publishRPC","CONECTADO!" + " ON: " + Thread.currentThread().getName()))
-                .andThen(this.pahoClientRxWrap.publishToTopic(serializedRequest.getBytes(), requestTopic, qos, false))
-                .doOnCompleted(() -> Log.d("publishRPC","PUBLICADO! " + requestTopic + " ON: " + Thread.currentThread().getName()))
-                .andThen(this.pahoClientRxWrap.receivedMessagesObservable())
+                .doOnCompleted(() -> {
+                    Log.d("publishRPC","CONECTADO!" + " ON: " + Thread.currentThread().getName());
+                    publishRoutine(serializedRequest.getBytes(), requestTopic, qos, false);
+                })
+                .andThen(Observable.merge(this.pahoClientRxWrap.receivedMessagesObservable(),
+                        this.publishErrors))
+                .doOnError(throwable -> Log.e("publishRPC", "PUB FAILS!!"))
                 .filter(messageWrapper -> messageWrapper.getMqttMessage().getPayload().length > 0)
                 .filter(messageWrapper -> messageWrapper.getTopic().contains(targetUMod.getUUID()))
                 .flatMap(messageWrapper -> {
@@ -123,7 +130,10 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                         && ((RPC.Response)response).getRequestTag().equalsIgnoreCase(((RPC.Request)request).getRequestTag()))
                 .doOnNext(response -> Log.d("publishRPC","PUB RESPONSE: " + response))
                 .timeout(8000L, TimeUnit.MILLISECONDS,this.mSchedulerProvider.computation())
-                .doOnError(throwable -> Log.e("publishRPC", "FAIL TO PUBLISH: " + serializedRequest + "  TO TOPIC: " + requestTopic + " CAUSE: " + throwable.getClass().getSimpleName() + " ON: " + Thread.currentThread().getName()))
+                .doOnError(throwable -> Log.e("publishRPC", "FAIL TO PUBLISH: "
+                        + serializedRequest + "  TO TOPIC: " + requestTopic + " CAUSE: "
+                        + throwable.getMessage() + " TYPE: " + throwable.getClass().getSimpleName()
+                        +  " ON: " + Thread.currentThread().getName(),throwable))
                 .first()
                 .flatMap(response -> {
                     RPC.ResponseError responseError = ((RPC.Response)response).getResponseError();
@@ -147,6 +157,19 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
                 });
     }
 
+    //TODO add spy internal interaction verifications!...
+    private void publishRoutine(byte[] requestPayload, String requestTopic, int qos, boolean toBeRetained){
+        this.pahoClientRxWrap.publishToTopic(requestPayload, requestTopic, qos, toBeRetained)
+                .subscribeOn(this.mSchedulerProvider.io())
+                .subscribe(() -> Log.d("publishRPC","PUBLISH SUCCESS! " + requestTopic
+                                + " ON: " + Thread.currentThread().getName()),
+                        throwable -> {
+                            Log.e("publishRPC","PUBLISH FAIL TO TOPIC: "
+                                    + requestTopic + " CAUSE: " + throwable.getMessage() + " ON: "
+                                    + Thread.currentThread().getName(),throwable);
+                            publishErrors.onError(new Exception("Failed Publish"));
+                        });
+    }
     @Override
     public Completable testConnectionToBroker() {
         return Completable.defer(() -> Completable.fromEmitter(completableEmitter -> {
