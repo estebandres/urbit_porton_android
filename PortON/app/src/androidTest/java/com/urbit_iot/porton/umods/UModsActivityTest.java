@@ -127,6 +127,7 @@ public class UModsActivityTest {
                     (TestingUModsRepositoryComponent) app.createUModsRepositoryComponentSingleton("5490387154623893", "2f6830a0-55d1-461f-b21a-92863089de80");
             testingComponent.inject(this);
         }
+        Mockito.when(uModsRepositoryMock.getUModGateStatusUpdates()).thenReturn(Observable.never());
         myTargetContext = InstrumentationRegistry
                 .getInstrumentation()
                 .getTargetContext();
@@ -457,6 +458,7 @@ public class UModsActivityTest {
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderText(GlobalConstants.REQUEST_ACCESS_SLIDER_TEXT)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderOuterColour(R.color.request_access_slider_background, myTargetContext)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderInnerColour(R.color.request_access_slider_text, myTargetContext)));
+        onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderTextColor(R.color.request_access_slider_text, myTargetContext)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(not(withSliderLocked())));
     }
 
@@ -472,6 +474,7 @@ public class UModsActivityTest {
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderText(GlobalConstants.PENDING_SLIDER_TEXT)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderOuterColour(R.color.request_access_slider_background, myTargetContext)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderInnerColour(R.color.request_access_slider_text, myTargetContext)));
+        onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderTextColor(R.color.request_access_slider_text, myTargetContext)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderLocked()));
     }
 
@@ -487,13 +490,14 @@ public class UModsActivityTest {
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderText(GlobalConstants.TRIGGER_SLIDER_TEXT)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderOuterColour(R.color.trigger_slider_background, myTargetContext)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderInnerColour(R.color.trigger_slider_text, myTargetContext)));
+        onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(withSliderTextColor(R.color.trigger_slider_text, myTargetContext)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.card_slider)).check(matches(not(withSliderLocked())));
     }
     void checkAuthorizedModuleOnlineLayout(int position, UMod uMod){
         checkAuthorizedModuleLayout(position,uMod);
 
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.item_time_text)).check(matches(not(isDisplayed())));
-        onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.connection_tag_text)).check(matches(withText(GlobalConstants.ONLINE_LOWER_TEXT)));
+        onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.connection_tag_text)).check(matches(withText(GlobalConstants.ONLINE_TAG__TEXT)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.connection_tag_text)).check(matches(withTagTextColor(UModsFragment.UModViewModelColors.ONLINE_TAG_TEXT)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.connection_tag)).check(matches(withTagColor(UModsFragment.UModViewModelColors.ONLINE_TAG)));
     }
@@ -557,6 +561,21 @@ public class UModsActivityTest {
             @Override
             public void describeTo(Description description) {
                 description.appendText ("Slider Inner Color value: " + ContextCompat.getColor(myContext, colour));
+            }
+        };
+    }
+
+    public static Matcher<View> withSliderTextColor(int colour, Context myContext){
+        return new TypeSafeMatcher<View>() {
+            @Override
+            protected boolean matchesSafely(View item) {
+                return ((SlideToActView) item).getTextColor()
+                        == ContextCompat.getColor(myContext, colour);
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText ("Slider Text Color value: " + ContextCompat.getColor(myContext, colour));
             }
         };
     }

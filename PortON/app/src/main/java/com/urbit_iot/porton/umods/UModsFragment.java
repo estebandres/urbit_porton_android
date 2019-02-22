@@ -729,10 +729,13 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             final SlideToActView actionSlider = rowView.findViewById(R.id.card_slider);
 
             if(viewModel.isSliderVisible()){
+                actionSlider.setTextColor(ContextCompat.getColor(this.activityContext,
+                        viewModel.getSliderTextColor().asActualResource()));
                 actionSlider.setOuterColor(
                         ContextCompat.getColor(this.activityContext,
                                 viewModel.getSliderBackgroundColor().asActualResource()));
-                actionSlider.setInnerColor(ContextCompat.getColor(this.activityContext,viewModel.getSliderTextColor().asActualResource()));
+                actionSlider.setInnerColor(ContextCompat.getColor(this.activityContext,
+                        viewModel.getSliderTextColor().asActualResource()));
                 actionSlider.setLocked(!viewModel.isSliderEnabled());
                 actionSlider.setEnabled(viewModel.isSliderEnabled());
                 actionSlider.setText(viewModel.getSliderText());

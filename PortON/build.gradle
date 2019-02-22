@@ -65,7 +65,7 @@ ext {
     googlePlayPlacesVersion = '16.0.0'//latest
 
     //By Independent devs
-    mockitoVersion = '2.+'//latest
+    mockitoVersion = '2.23.4'//This fixes Byte Buddy issue
     hamcrestVersion = '2.1'//latest
     rxDNSSDVersion = '0.9.12'//latest
     rxPreferences = '2.0.0'//latest: uses RX2
@@ -75,4 +75,6 @@ ext {
     rxInteropVersion = '0.13.5'//latest
     reactiveLocation2Version = '2.1@aar'//latest
     lovelyDialogVersion = '1.1.0'//latest
+    byteBuddyVersion = '1.8.22'//This fixed Byte Buddy issue
+    linkedinDexmakerVersion = '2.19.1'//TODO Only version tests pass. Explore issue!
 }

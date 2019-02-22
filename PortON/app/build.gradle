@@ -172,7 +172,7 @@ dependencies {
     implementation 'com.github.MAXDeliveryNG:slideview:1.1.0'
 
     //ping LAN addresses to determine reachable host
-    implementation 'com.github.stealthcopter:AndroidNetworkTools:0.3.08'
+    //implementation 'com.github.stealthcopter:AndroidNetworkTools:0.3.08'
 
     //mqtt paho wrapper uses rxjava2
     //implementation 'net.eusashead.mqtt:rxmqtt:1.1.1.RELEASE' //unused
@@ -198,7 +198,6 @@ dependencies {
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
 
     testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoVersion"
-    //testImplementation "org.mockito:mockito-all:$rootProject.ext.mockitoVersion"
     testImplementation "org.hamcrest:hamcrest:$rootProject.ext.hamcrestVersion"
     testImplementation "org.hamcrest:hamcrest-library:$rootProject.ext.hamcrestVersion"
 
@@ -206,21 +205,20 @@ dependencies {
     androidTestImplementation "com.android.support.test:runner:$rootProject.ext.runnerVersion"
     androidTestImplementation "com.android.support.test:rules:$rootProject.ext.runnerVersion"
     androidTestImplementation "junit:junit:$rootProject.ext.junitVersion"
-    //androidTestImplementation "org.mockito:mockito-android:$rootProject.ext.mockitoVersion"
 
+    //imports mockito to work on instrumentation tests
     androidTestImplementation ("org.mockito:mockito-android:$rootProject.ext.mockitoVersion"){
         exclude group: 'net.bytebuddy', module: 'byte-buddy'
         exclude group: 'net.bytebuddy', module: 'byte-buddy-android'
         exclude group: 'net.bytebuddy', module: 'byte-buddy-agent'
     }
     // Explicitly include byte-buddy 1.8.22 to fix a build error with Mockito 2.23
-    androidTestImplementation 'net.bytebuddy:byte-buddy:1.8.22'
-    androidTestImplementation 'net.bytebuddy:byte-buddy-android:1.8.22'
-    androidTestImplementation 'net.bytebuddy:byte-buddy-agent:1.8.22'
-    
+    androidTestImplementation "net.bytebuddy:byte-buddy:$rootProject.ext.byteBuddyVersion"
+    androidTestImplementation "net.bytebuddy:byte-buddy-android:$rootProject.ext.byteBuddyVersion"
+    androidTestImplementation "net.bytebuddy:byte-buddy-agent:$rootProject.ext.byteBuddyVersion"
 
-    androidTestImplementation "com.linkedin.dexmaker:dexmaker:$rootProject.ext.dexmakerVersion"
-    //androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:$rootProject.ext.dexmakerVersion"
+    //The only way gradle will pass is using dexmaker from linkedin repository...
+    androidTestImplementation "com.linkedin.dexmaker:dexmaker:$rootProject.ext.linkedinDexmakerVersion"
 
     // Espresso UI Testing
     androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.espressoVersion"
