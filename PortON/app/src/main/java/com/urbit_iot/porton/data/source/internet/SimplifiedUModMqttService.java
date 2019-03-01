@@ -1,7 +1,7 @@
 package com.urbit_iot.porton.data.source.internet;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import android.util.Log;
 
 import com.google.common.base.Strings;

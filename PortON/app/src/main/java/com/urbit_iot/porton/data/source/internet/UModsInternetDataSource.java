@@ -16,7 +16,7 @@
 
 package com.urbit_iot.porton.data.source.internet;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;

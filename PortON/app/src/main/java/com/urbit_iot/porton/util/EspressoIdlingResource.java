@@ -16,7 +16,8 @@
 
 package com.urbit_iot.porton.util;
 
-import android.support.test.espresso.IdlingResource;
+import androidx.test.espresso.IdlingResource;
+import androidx.test.espresso.idling.CountingIdlingResource;
 
 /**
  * Contains a static reference to {@link IdlingResource}, only available in the 'mock' build type.

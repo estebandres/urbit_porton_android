@@ -1,6 +1,6 @@
 package com.urbit_iot.porton.umodconfig.domain.usecase;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.google.common.base.Strings;

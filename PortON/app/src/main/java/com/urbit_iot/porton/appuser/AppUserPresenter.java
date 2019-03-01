@@ -1,6 +1,6 @@
 package com.urbit_iot.porton.appuser;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbit_iot.porton.appuser.domain.SaveAppUser;
 

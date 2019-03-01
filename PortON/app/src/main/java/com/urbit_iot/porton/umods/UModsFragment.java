@@ -5,13 +5,13 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.PopupMenu;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.widget.PopupMenu;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -682,7 +682,6 @@ public class UModsFragment extends Fragment implements UModsContract.View {
             final ImageView ongoingNotifIndicator = rowView.findViewById(R.id.card_item_notif_indicator);
 
             RelativeLayout umodTags = rowView.findViewById(R.id.umod_tags);
-
             if (viewModel.isModuleTagsVisible()){
                 RelativeLayout connectionTag = rowView.findViewById(R.id.connection_tag);
                 connectionTag.setBackground(resources.getDrawable(viewModel.getConnectionTagColor().asActualResource()));
@@ -691,11 +690,15 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 connectionTagText.setTextColor(ContextCompat.getColor(activityContext, viewModel.getConnectionTagTextColor().asActualResource()));
 
                 RelativeLayout gateStatusTag = rowView.findViewById(R.id.gate_status_tag);
-                gateStatusTag.setBackground(resources.getDrawable(viewModel.getGateStatusTagColor().asActualResource()));
-                TextView gateStatusTagText = rowView.findViewById(R.id.gate_status_tag_text);
-                gateStatusTagText.setText(viewModel.getGateStatusTagText());
-                gateStatusTagText.setTextColor(ContextCompat.getColor(activityContext, viewModel.getGateStatusTagTextColor().asActualResource()));
-
+                if (viewModel.isGateStatusTagVisible()){
+                    gateStatusTag.setBackground(resources.getDrawable(viewModel.getGateStatusTagColor().asActualResource()));
+                    TextView gateStatusTagText = rowView.findViewById(R.id.gate_status_tag_text);
+                    gateStatusTagText.setText(viewModel.getGateStatusTagText());
+                    gateStatusTagText.setTextColor(ContextCompat.getColor(activityContext, viewModel.getGateStatusTagTextColor().asActualResource()));
+                    gateStatusTag.setVisibility(View.VISIBLE);
+                } else {
+                    gateStatusTag.setVisibility(View.GONE);
+                }
                 umodTags.setVisibility(View.VISIBLE);
             } else {
                 umodTags.setVisibility(View.GONE);

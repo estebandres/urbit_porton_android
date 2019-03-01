@@ -18,7 +18,7 @@ package com.urbit_iot.porton.data.source;
 
 import android.location.Address;
 import android.location.Location;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.rpc.AdminCreateUserRPC;

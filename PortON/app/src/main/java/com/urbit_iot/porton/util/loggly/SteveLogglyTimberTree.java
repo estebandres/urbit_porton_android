@@ -1,6 +1,6 @@
 package com.urbit_iot.porton.util.loggly;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.f2prateek.rx.preferences2.Preference;

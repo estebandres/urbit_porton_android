@@ -17,8 +17,8 @@
 package com.urbit_iot.porton.data;
 
 import android.location.Location;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
@@ -78,6 +78,7 @@ public final class UMod {
         }
     }
     public enum GateStatus {
+        NO_SENSOR(-3),
         DISCONNECTED_SENSOR(-2),
         UNKNOWN(-1),
         CLOSED(0),

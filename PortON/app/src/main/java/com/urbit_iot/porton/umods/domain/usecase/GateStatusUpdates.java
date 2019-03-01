@@ -1,19 +1,17 @@
 package com.urbit_iot.porton.umods.domain.usecase;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbit_iot.porton.RxUseCase;
 import com.urbit_iot.porton.SimpleUseCase;
 import com.urbit_iot.porton.appuser.data.source.AppUserRepository;
 import com.urbit_iot.porton.data.rpc.GetGateStatusRPC;
 import com.urbit_iot.porton.data.source.UModsRepository;
-import com.urbit_iot.porton.util.GlobalConstants;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 
 import javax.inject.Inject;
 
 import rx.Observable;
-import rx.Scheduler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

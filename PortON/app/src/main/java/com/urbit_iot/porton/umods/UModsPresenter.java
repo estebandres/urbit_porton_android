@@ -1,6 +1,6 @@
 package com.urbit_iot.porton.umods;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.f2prateek.rx.preferences2.Preference;
@@ -365,7 +365,8 @@ public class UModsPresenter implements UModsContract.Presenter {
         UModsFragment.UModViewModelColors connectionTagColor,
                 connectionTagTextColor, gateStatusTagColor,
                 gateStatusTagTextColor, sliderBackgroundColor, sliderTextColor;
-        boolean moduleTagsVisible = true;
+        boolean moduleTagsVisible;
+        boolean gateStatusTagVisible = false;
 
         uModUUID = uMod.getUUID();
 
@@ -375,51 +376,11 @@ public class UModsPresenter implements UModsContract.Presenter {
             itemMainText = uModUUID;
         }
 
-        switch (uMod.getGateStatus()){
-            case OPEN:
-                gateStatusText = GlobalConstants.OPEN_GATE__TAG_TEXT;;
-                gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
-                gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
-                break;
-            case CLOSED:
-                gateStatusText = GlobalConstants.CLOSED_GATE__TAG_TEXT;
-                gateStatusTagColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG;
-                gateStatusTagTextColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG_TEXT;
-                break;
-            case CLOSING:
-                gateStatusText = GlobalConstants.CLOSING_GATE__TAG_TEXT;
-                gateStatusTagColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG;
-                gateStatusTagTextColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG_TEXT;
-                break;
-            case OPENING:
-                gateStatusText = GlobalConstants.OPENING_GATE__TAG_TEXT;
-                gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
-                gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
-                break;
-            case PARTIAL_OPENING:
-                gateStatusText = "SEMI ABIERTO";
-                gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
-                gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
-                break;
-            default:
-                gateStatusText = GlobalConstants.UNKNOWN_GATE_STATUS__TAG_TEXT;
-                gateStatusTagColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG;
-                gateStatusTagTextColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG_TEXT;
-                break;
-        }
-
         if (uMod.canBeTriggeredByAppUser() && uMod.getState() != UMod.State.AP_MODE){
             notificationBellVisible = true;
         } else {
             notificationBellVisible = false;
         }
-
-        //Default values
-        sliderText = null;
-        sliderVisible = false;
-        sliderEnabled = false;
-        sliderBackgroundColor = null;
-        sliderTextColor = null;
 
         if (uMod.getState() == UMod.State.STATION_MODE) {
             sliderEnabled = true;
@@ -432,18 +393,23 @@ public class UModsPresenter implements UModsContract.Presenter {
                     sliderEnabled = false;
                     moduleTagsVisible = false;
                     notificationBellVisible = false;
+                    settingsButtonVisible = false;
                     break;
                 case AUTHORIZED:
                     sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
                     sliderBackgroundColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_BACKGROUND;
                     sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
                     sliderVisible = true;
+                    moduleTagsVisible = true;
+                    settingsButtonVisible = true;
                     break;
                 case ADMINISTRATOR:
                     sliderText = GlobalConstants.TRIGGER_SLIDER_TEXT;
                     sliderBackgroundColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_BACKGROUND;
                     sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
                     sliderVisible = true;
+                    moduleTagsVisible = true;
+                    settingsButtonVisible = true;
                     break;
                 case INVITED:
                 case UNAUTHORIZED:
@@ -452,64 +418,97 @@ public class UModsPresenter implements UModsContract.Presenter {
                     sliderTextColor = UModsFragment.UModViewModelColors.ACCESS_REQUEST_SLIDER_TEXT;
                     sliderVisible = true;
                     moduleTagsVisible = false;
+                    settingsButtonVisible = false;
                     break;
                 default:
                     sliderText = "DEFAULT_NON";
                     sliderBackgroundColor = UModsFragment.UModViewModelColors.OFFLINE_TAG;
                     sliderTextColor = UModsFragment.UModViewModelColors.TRIGGER_SLIDER_TEXT;
                     sliderVisible = false;
+                    moduleTagsVisible = false;
+                    settingsButtonVisible = false;
                     break;
             }
-        }
-
-        notificationBellFilled = uMod.isOngoingNotificationEnabled();
-
-        if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
-                || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN || timeText == null){
-            connectionTagText = GlobalConstants.ONLINE_TAG__TEXT;
-            connectionTagColor = UModsFragment.UModViewModelColors.ONLINE_TAG;
-            connectionTagTextColor = UModsFragment.UModViewModelColors.ONLINE_TAG_TEXT;
         } else {
-            connectionTagText = GlobalConstants.OFFLINE_TAG__TEXT;
-            connectionTagColor = UModsFragment.UModViewModelColors.OFFLINE_TAG;
-            connectionTagTextColor = UModsFragment.UModViewModelColors.OFFLINE_TAG_TEXT;
+            //Module is in AP_MODE
+            sliderText = null;
+            sliderVisible = false;
+            sliderEnabled = false;
+            sliderBackgroundColor = null;
+            sliderTextColor = null;
 
-            gateStatusText = "DESCONOCIDO";
-            gateStatusTagColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG;
-            gateStatusTagTextColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG_TEXT;
-
-        }
-
-        //TODO Default until all states are defined i.e. what about BLE_MODE and OTA_UPDATE??
-
-        switch (uMod.getAppUserLevel()){
-            case ADMINISTRATOR:
-                settingsButtonVisible = true;
-                break;
-            case AUTHORIZED:
-                settingsButtonVisible = true;
-                break;
-            case PENDING:
-                settingsButtonVisible = false;
-                break;
-            case INVITED:
-            case UNAUTHORIZED:
-                settingsButtonVisible = false;
-                break;
-            default:
-                settingsButtonVisible = false;
-                break;
-        }
-
-        if (uMod.getState() == UMod.State.AP_MODE){
             settingsButtonVisible = true;
             timeTextVisible = false;
             moduleTagsVisible = false;
         }
 
+        notificationBellFilled = uMod.isOngoingNotificationEnabled();
+
+        if (moduleTagsVisible){
+            //UMod is online or very recently cashed
+            if (uMod.getuModSource() == UMod.UModSource.LAN_SCAN
+                    || uMod.getuModSource() == UMod.UModSource.MQTT_SCAN || timeText == null){
+                connectionTagText = GlobalConstants.ONLINE_TAG__TEXT;
+                connectionTagColor = UModsFragment.UModViewModelColors.ONLINE_TAG;
+                connectionTagTextColor = UModsFragment.UModViewModelColors.ONLINE_TAG_TEXT;
+                gateStatusTagVisible = uMod.getGateStatus() != UMod.GateStatus.NO_SENSOR;
+                switch (uMod.getGateStatus()){
+                    case OPEN:
+                        gateStatusText = GlobalConstants.OPEN_GATE__TAG_TEXT;;
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
+                        break;
+                    case CLOSED:
+                        gateStatusText = GlobalConstants.CLOSED_GATE__TAG_TEXT;
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG_TEXT;
+                        break;
+                    case CLOSING:
+                        gateStatusText = GlobalConstants.CLOSING_GATE__TAG_TEXT;
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.CLOSED_GATE_TAG_TEXT;
+                        break;
+                    case OPENING:
+                        gateStatusText = GlobalConstants.OPENING_GATE__TAG_TEXT;
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
+                        break;
+                    case PARTIAL_OPENING:
+                        gateStatusText = "SEMI ABIERTO";
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.OPEN_GATE_TAG_TEXT;
+                        break;
+                    default:
+                        gateStatusText = GlobalConstants.UNKNOWN_GATE_STATUS__TAG_TEXT;
+                        gateStatusTagColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG;
+                        gateStatusTagTextColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG_TEXT;
+                        break;
+                }
+
+            } else {//UMod is offline i.e. found in chache or DB
+                connectionTagText = GlobalConstants.OFFLINE_TAG__TEXT;
+                connectionTagColor = UModsFragment.UModViewModelColors.OFFLINE_TAG;
+                connectionTagTextColor = UModsFragment.UModViewModelColors.OFFLINE_TAG_TEXT;
+                gateStatusTagVisible = false;
+
+                gateStatusText = GlobalConstants.UNKNOWN_GATE_STATUS__TAG_TEXT;
+                gateStatusTagColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG;
+                gateStatusTagTextColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG_TEXT;
+            }
+        } else {//Defaults for invisible tags
+            connectionTagText = null;
+            connectionTagColor = UModsFragment.UModViewModelColors.OFFLINE_TAG;
+            connectionTagTextColor = UModsFragment.UModViewModelColors.OFFLINE_TAG_TEXT;
+            gateStatusText = null;
+            gateStatusTagColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG;
+            gateStatusTagTextColor = UModsFragment.UModViewModelColors.UNKNOWN_GATE_STATUS_TAG_TEXT;
+        }
+
+
         if (uMod.belongsToAppUser()){
             return new UModViewModel(uModUUID, itemMainText,
                     connectionTagText, connectionTagColor, connectionTagTextColor,
+                    gateStatusTagVisible,
                     gateStatusText, gateStatusTagColor, gateStatusTagTextColor,
                     moduleTagsVisible,
                     timeText, timeTextVisible,
@@ -531,6 +530,7 @@ public class UModsPresenter implements UModsContract.Presenter {
         } else {
             return new UModViewModel(uModUUID, itemMainText,
                     connectionTagText, connectionTagColor, connectionTagTextColor,
+                    gateStatusTagVisible,
                     gateStatusText, gateStatusTagColor, gateStatusTagTextColor,
                     moduleTagsVisible,
                     timeText, timeTextVisible,

@@ -16,8 +16,8 @@
 
 package com.urbit_iot.porton.umodinfo;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.urbit_iot.porton.RxUseCase;
 import com.urbit_iot.porton.umodconfig.domain.usecase.DeleteUMod;

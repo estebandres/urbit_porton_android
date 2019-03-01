@@ -17,7 +17,7 @@
 package com.urbit_iot.porton.umodconfig.domain.usecase;
 
 import android.location.Location;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbit_iot.porton.RxUseCase;
 import com.urbit_iot.porton.SimpleUseCase;

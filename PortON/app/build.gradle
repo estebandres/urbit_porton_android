@@ -117,12 +117,12 @@ android {
 dependencies {
 
     // App's dependencies, including test
-    implementation "com.android.support:appcompat-v7:$rootProject.supportLibraryVersion"
-    implementation "com.android.support:cardview-v7:$rootProject.supportLibraryVersion"
-    implementation "com.android.support:design:$rootProject.supportLibraryVersion"
-    implementation "com.android.support:recyclerview-v7:$rootProject.supportLibraryVersion"
-    implementation "com.android.support:support-v4:$rootProject.supportLibraryVersion"
-    implementation "com.android.support.test.espresso:espresso-idling-resource:$rootProject.espressoVersion"
+    implementation "androidx.appcompat:appcompat:$rootProject.supportLibraryVersion"
+    implementation "androidx.cardview:cardview:1.0.0"
+    implementation "com.google.android.material:material:1.0.0"
+    implementation "androidx.recyclerview:recyclerview:1.0.0"
+    implementation "androidx.legacy:legacy-support-v4:1.0.0"
+    implementation "androidx.test.espresso:espresso-idling-resource:$rootProject.espressoVersion"
     api "com.google.guava:guava:$rootProject.guavaVersion"
 
     //RXJAVA
@@ -202,8 +202,10 @@ dependencies {
     testImplementation "org.hamcrest:hamcrest-library:$rootProject.ext.hamcrestVersion"
 
     // Android Testing Support Library's runner and rules
+    /*
     androidTestImplementation "com.android.support.test:runner:$rootProject.ext.runnerVersion"
     androidTestImplementation "com.android.support.test:rules:$rootProject.ext.runnerVersion"
+    */
     androidTestImplementation "junit:junit:$rootProject.ext.junitVersion"
 
     //imports mockito to work on instrumentation tests
@@ -221,14 +223,23 @@ dependencies {
     androidTestImplementation "com.linkedin.dexmaker:dexmaker:$rootProject.ext.linkedinDexmakerVersion"
 
     // Espresso UI Testing
+    /*
     androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.espressoVersion"
     androidTestImplementation "com.android.support.test.espresso:espresso-contrib:$rootProject.espressoVersion"
     androidTestImplementation "com.android.support.test.espresso:espresso-intents:$rootProject.espressoVersion"
+    */
+
+    androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.espressoVersion"
+    androidTestImplementation "androidx.test:runner:$rootProject.ext.runnerVersion"
+    androidTestImplementation "androidx.test:rules:$rootProject.ext.rulesVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.espressoVersion"
+
+
 
     // Resolve conflicts between main and test APK:
-    androidTestImplementation "com.android.support:support-annotations:$rootProject.supportLibraryVersion"
-    androidTestImplementation "com.android.support:support-v4:$rootProject.supportLibraryVersion"
-    androidTestImplementation "com.android.support:recyclerview-v7:$rootProject.supportLibraryVersion"
-    androidTestImplementation "com.android.support:appcompat-v7:$rootProject.supportLibraryVersion"
-    androidTestImplementation "com.android.support:design:$rootProject.supportLibraryVersion"
+    androidTestImplementation "androidx.annotation:annotation:1.0.0"
+    androidTestImplementation "androidx.legacy:legacy-support-v4:1.0.0"
+    androidTestImplementation "androidx.recyclerview:recyclerview:1.0.0"
+    androidTestImplementation "androidx.appcompat:appcompat:$rootProject.supportLibraryVersion"
+    androidTestImplementation "com.google.android.material:material:1.0.0"
 }

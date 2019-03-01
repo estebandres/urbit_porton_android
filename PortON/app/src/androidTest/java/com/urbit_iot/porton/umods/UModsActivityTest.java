@@ -8,15 +8,9 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.StringRes;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.DataInteraction;
-import android.support.test.espresso.Espresso;
-import android.support.test.espresso.intent.rule.IntentsTestRule;
-import android.support.test.espresso.matcher.ViewMatchers;
-import android.support.test.runner.AndroidJUnit4;
-import android.support.v4.content.ContextCompat;
-import android.test.suitebuilder.annotation.LargeTest;
+import androidx.annotation.StringRes;
+
+import androidx.core.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -38,6 +32,8 @@ import com.urbit_iot.porton.umodconfig.UModConfigActivity;
 import com.urbit_iot.porton.umodconfig.UModConfigFragment;
 import com.urbit_iot.porton.util.EspressoIdlingResource;
 import com.urbit_iot.porton.util.GlobalConstants;
+import com.urbit_iot.porton.util.dagger.Local;
+
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -49,39 +45,43 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Date;
 
 import javax.inject.Inject;
 
+import androidx.test.espresso.Espresso;
+import androidx.test.espresso.intent.rule.IntentsTestRule;
+import androidx.test.espresso.matcher.ViewMatchers;
+import androidx.test.filters.LargeTest;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.runner.AndroidJUnit4;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
-import static android.support.test.espresso.Espresso.onData;
-import static android.support.test.espresso.Espresso.onView;
-import static android.support.test.espresso.action.ViewActions.click;
-import static android.support.test.espresso.action.ViewActions.swipeRight;
-import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
-import static android.support.test.espresso.assertion.ViewAssertions.matches;
-import static android.support.test.espresso.intent.Intents.intended;
-import static android.support.test.espresso.intent.Intents.intending;
-import static android.support.test.espresso.intent.Intents.times;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasExtra;
-import static android.support.test.espresso.intent.matcher.IntentMatchers.hasExtraWithKey;
-import static android.support.test.espresso.matcher.ViewMatchers.hasDescendant;
-import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
-import static android.support.test.espresso.matcher.ViewMatchers.withHint;
-import static android.support.test.espresso.matcher.ViewMatchers.withId;
-import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static junit.framework.Assert.fail;
-import static junit.framework.TestCase.assertTrue;
+
+import static androidx.test.espresso.Espresso.onData;
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.swipeRight;
+import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
+import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.intent.Intents.intended;
+import static androidx.test.espresso.intent.Intents.intending;
+import static androidx.test.espresso.intent.Intents.times;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra;
+import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
+import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
+import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
+
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.any;
 import static org.hamcrest.Matchers.anything;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.Mockito.when;
@@ -138,6 +138,16 @@ public class UModsActivityTest {
         Mockito.reset(uModsRepositoryMock);
         //TODO find out why tests would fail on E/IdlingResourceRegistry: Attempted to register resource with same names:
         Espresso.unregisterIdlingResources(EspressoIdlingResource.getIdlingResource());
+    }
+
+    @Test
+    public void animations_should_be_disabled(){
+
+        Date today = new Date();
+        assertThat(today.getDay(),is(27));
+        assertThat(today.getMonth(),is(2));
+        assertThat(today.getYear(),is(2019));
+        //assertThat("Check testing device has all animations disabled!!",today.isEqual(testerDate),is(true));
     }
 
     @Test
@@ -225,6 +235,7 @@ public class UModsActivityTest {
     @Test
     public void Given_ThereIsUModFoundAndUserIsUnauthorizedAndRequestIsSuccessful_When_AccessIsRequested_Then_SnackbarInformsOKAndUModAppearsWithPendingLayout(){
         //Given
+        Espresso.registerIdlingResources(EspressoIdlingResource.getIdlingResource());
         UMod uMod = new UMod("333333333","555555555");
         uMod.setuModSource(UMod.UModSource.LAN_SCAN);
         uMod.setState(UMod.State.STATION_MODE);
@@ -232,9 +243,9 @@ public class UModsActivityTest {
             //Para initial load
         Mockito.when(uModsRepositoryMock.getUModsOneByOne()).thenReturn(Observable.just(uMod));
             //Para Request Access Use Case
-        when(uModsRepositoryMock.getUMod(uMod.getUUID())).thenReturn(Observable.just(uMod));
+        Mockito.when(uModsRepositoryMock.getUMod(uMod.getUUID())).thenReturn(Observable.just(uMod));
         CreateUserRPC.Result createResult = new CreateUserRPC.Result(APIUserType.Guest);
-        when(uModsRepositoryMock.createUModUser(Mockito.any(UMod.class), Mockito.any(CreateUserRPC.Arguments.class))).
+        Mockito.when(uModsRepositoryMock.createUModUser(Mockito.any(UMod.class), Mockito.any(CreateUserRPC.Arguments.class))).
                 thenReturn(Observable.just(createResult));
             //Para el segundo load
         Mockito.when(uModsRepositoryMock.getUserLevel(Mockito.any(UMod.class), Mockito.any(GetUserLevelRPC.Arguments.class)))
@@ -243,11 +254,11 @@ public class UModsActivityTest {
 
         //When
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(0).onChildView(withId(R.id.card_slider)).perform(swipeRight());
-
+        //try { Thread.sleep(700); } catch (InterruptedException e) { e.printStackTrace(); }
         //Then
         checkPendingModuleLayout(0,uMod);
             //Snackbar
-        onView(allOf(withId(android.support.design.R.id.snackbar_text),withText(R.string.request_access_completed_message))).check(matches(isDisplayed()));
+        onView(allOf(withId(com.google.android.material.R.id.snackbar_text),withText(R.string.request_access_completed_message))).check(matches(isDisplayed()));
     }
 
     @Test
@@ -278,7 +289,7 @@ public class UModsActivityTest {
         //Then
         checkUnauthorizedModuleLayout(0,uMod);
             //Snackbar
-        onView(allOf(withId(android.support.design.R.id.snackbar_text),withText(R.string.request_access_failed_message))).check(matches(isDisplayed()));
+        onView(allOf(withId(com.google.android.material.R.id.snackbar_text),withText(R.string.request_access_failed_message))).check(matches(isDisplayed()));
     }
 
     @Test
@@ -309,7 +320,7 @@ public class UModsActivityTest {
     }
 
     @Test
-    public void Given_SingleOfflineUModWithClosedStatusWasDiscovered_When_ActivityIsLaunched_Then_AuthorizedOfflineLayoutWithUnknownTagIsDisplayed(){
+    public void Given_SingleOfflineUModWithUnknownGateStatusWasRecentlyCached_When_ActivityIsLaunched_Then_AuthorizedOnlineLayoutWithUnknownTagIsDisplayed(){
         //Given
         //When the resource is still busy check the progress bar is visible.
         EspressoIdlingResource.getIdlingResource().registerIdleTransitionCallback(() -> onView(withId(R.id.progress_bar)).check(matches(isDisplayed())));
@@ -319,12 +330,15 @@ public class UModsActivityTest {
         uMod.setuModSource(UMod.UModSource.CACHE);
         uMod.setState(UMod.State.STATION_MODE);
         uMod.setAppUserLevel(UModUser.Level.AUTHORIZED);
+        uMod.setGateStatus(UMod.GateStatus.UNKNOWN);
         Date date = new Date();
         uMod.setLastUpdateDate(date);
         Mockito.when(uModsRepositoryMock.getUModsOneByOne()).thenReturn(Observable.just(uMod));
 
         //When
         mIntentsTestRule.launchActivity(null);
+
+        //try { Thread.sleep(4500); } catch (InterruptedException e) { e.printStackTrace(); }
 
         //Then
         //When the resource is idle check the progress bar doesn't exists.
@@ -356,8 +370,11 @@ public class UModsActivityTest {
         //When
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(0).onChildView(withId(R.id.card_slider)).perform(swipeRight());
 
+        //try { Thread.sleep(4500); } catch (InterruptedException e) { e.printStackTrace(); }
+
         //Then
-        onView(allOf(withId(android.support.design.R.id.snackbar_text),withText(R.string.trigger_success_message))).check(matches(isDisplayed()));
+        //onView(allOf(withId(com.google.android.material.R.id.snackbar_text),withText(R.string.trigger_success_message))).check(matches(isDisplayed()));
+        checkSnackBarDisplayedByMessage(R.string.trigger_success_message);
         checkAuthorizedModuleLayout(0,uMod);
         //Aunque no está obligado a actualizar los módulos, es necesario testear el estado de la puerta?
     }
@@ -394,7 +411,7 @@ public class UModsActivityTest {
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(0).onChildView(withId(R.id.card_slider)).perform(swipeRight());
 
         //Then
-        onView(allOf(withId(android.support.design.R.id.snackbar_text),withText(R.string.trigger_fail_message))).check(matches(isDisplayed()));
+        onView(allOf(withId(com.google.android.material.R.id.snackbar_text),withText(R.string.trigger_fail_message))).check(matches(isDisplayed()));
         //checkNoModulesVisible();
         onView(withId(R.id.umods_list)).check(matches(not(hasDescendant(withText(uMod.getAlias())))));
     }
@@ -422,6 +439,8 @@ public class UModsActivityTest {
 
         //When
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(0).onChildView(withId(R.id.card_slider)).perform(swipeRight());
+
+        //try { Thread.sleep(4500); } catch (InterruptedException e) { e.printStackTrace(); }
 
         //Then
         checkSnackBarDisplayedByMessage(R.string.trigger_fail_message);
@@ -509,7 +528,7 @@ public class UModsActivityTest {
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.connection_tag_text)).check(matches(withTagTextColor(UModsFragment.UModViewModelColors.OFFLINE_TAG_TEXT)));
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.connection_tag)).check(matches(withTagColor(UModsFragment.UModViewModelColors.OFFLINE_TAG)));
 
-        checkGateStatusUnkown(position);
+        onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(position).onChildView(withId(R.id.gate_status_tag)).check(matches(not(isDisplayed())));
     }
 
     /*   TODO SOBRE EL BOTON REFRESH
@@ -665,11 +684,11 @@ public class UModsActivityTest {
         Drawable.ConstantState stateA = drawableA.getConstantState();
         Drawable.ConstantState stateB = drawableB.getConstantState();
         // If the constant state is identical, they are using the same drawable resource.
-        return stateA != null && stateB != null && stateA.equals(stateB);
+        //return stateA != null && stateB != null && stateA.equals(stateB);
         // However, the opposite is not necessarily true.
-        /*
+
         return (stateA != null && stateB != null && stateA.equals(stateB))
-                || getBitmap(drawableA).sameAs(getBitmap(drawableB));*/
+                || getBitmap(drawableA).sameAs(getBitmap(drawableB));
     }
 
     public static Bitmap getBitmap(Drawable drawable) {

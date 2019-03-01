@@ -1,13 +1,10 @@
 package com.urbit_iot.porton.umods.domain.usecase;
 
-import android.support.annotation.NonNull;
-
 import com.urbit_iot.porton.data.source.UModsRepository;
 import com.urbit_iot.porton.util.schedulers.SchedulerProvider;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -17,15 +14,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
-import java.util.concurrent.Executor;
-
-import rx.Scheduler;
-import rx.android.plugins.RxAndroidPlugins;
-import rx.internal.schedulers.ExecutorScheduler;
-import rx.plugins.RxJavaPlugins;
 import rx.schedulers.Schedulers;
-
-import static org.junit.Assert.*;
 
 public class SetOngoingNotificationStatusTest {
 

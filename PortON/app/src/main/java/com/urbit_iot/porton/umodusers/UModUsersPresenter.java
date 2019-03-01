@@ -1,6 +1,6 @@
 package com.urbit_iot.porton.umodusers;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.urbit_iot.porton.data.UModUser;

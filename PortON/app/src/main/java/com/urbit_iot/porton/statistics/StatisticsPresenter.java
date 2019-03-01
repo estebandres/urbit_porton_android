@@ -16,7 +16,7 @@
 
 package com.urbit_iot.porton.statistics;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbit_iot.porton.statistics.domain.model.Statistics;
 import com.urbit_iot.porton.statistics.domain.usecase.GetStatistics;

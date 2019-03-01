@@ -16,14 +16,12 @@
 
 package com.urbit_iot.porton.umods.domain.usecase;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.urbit_iot.porton.RxUseCase;
 import com.urbit_iot.porton.SimpleUseCase;
 import com.urbit_iot.porton.appuser.data.source.AppUserRepository;
-import com.urbit_iot.porton.appuser.domain.AppUser;
-import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.rpc.CreateUserRPC;
 import com.urbit_iot.porton.data.rpc.GetUserLevelRPC;
@@ -37,8 +35,6 @@ import javax.inject.Inject;
 
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Observable;
-import rx.functions.Func1;
-import rx.functions.Func2;
 import rx.subjects.PublishSubject;
 import timber.log.Timber;
 

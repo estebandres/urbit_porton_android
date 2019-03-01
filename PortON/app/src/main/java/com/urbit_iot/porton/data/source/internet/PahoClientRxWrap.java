@@ -1,6 +1,6 @@
 package com.urbit_iot.porton.data.source.internet;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;

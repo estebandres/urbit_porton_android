@@ -1,54 +1,29 @@
 package com.urbit_iot.porton.umodconfig.domain.usecase;
 
 
-import android.location.Location;
-import android.support.v4.util.Pair;
+import androidx.core.util.Pair;
 
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;
-import com.urbit_iot.porton.data.rpc.AdminCreateUserRPC;
-import com.urbit_iot.porton.data.rpc.CreateUserRPC;
-import com.urbit_iot.porton.data.rpc.DeleteUserRPC;
-import com.urbit_iot.porton.data.rpc.FactoryResetRPC;
-import com.urbit_iot.porton.data.rpc.GetUserLevelRPC;
-import com.urbit_iot.porton.data.rpc.GetUsersRPC;
-import com.urbit_iot.porton.data.rpc.OTACommitRPC;
-import com.urbit_iot.porton.data.rpc.RPC;
 import com.urbit_iot.porton.data.rpc.SetWiFiRPC;
-import com.urbit_iot.porton.data.rpc.SysGetInfoRPC;
-import com.urbit_iot.porton.data.rpc.TriggerRPC;
-import com.urbit_iot.porton.data.rpc.UpdateUserRPC;
 import com.urbit_iot.porton.data.source.UModsRepository;
-import com.urbit_iot.porton.data.source.gps.LocationService;
-import com.urbit_iot.porton.data.source.internet.UModMqttServiceContract;
-import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.porton.util.schedulers.SchedulerProvider;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 
-import hu.akarnokd.rxjava.interop.RxJavaInterop;
-import io.reactivex.Flowable;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
 import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.Response;
-import retrofit2.http.HTTP;
 import rx.Observable;
-import rx.Subscriber;
 import rx.observers.AssertableSubscriber;
-import rx.observers.TestSubscriber;
 import rx.schedulers.Schedulers;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
@@ -56,21 +31,15 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
-import rx.schedulers.Schedulers;
-
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atMost;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class UpdateWiFiCredentialsTest {

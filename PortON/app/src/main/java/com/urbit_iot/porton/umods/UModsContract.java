@@ -1,6 +1,6 @@
 package com.urbit_iot.porton.umods;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.urbit_iot.porton.BasePresenter;
 import com.urbit_iot.porton.BaseView;

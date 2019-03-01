@@ -4,15 +4,14 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import android.util.Log;
 import android.util.Pair;
 
 import com.github.pwittchen.reactivewifi.ReactiveWifi;
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;
-import com.urbit_iot.porton.umodconfig.UModConfigFragment;
 import com.urbit_iot.porton.util.GlobalConstants;
 import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 

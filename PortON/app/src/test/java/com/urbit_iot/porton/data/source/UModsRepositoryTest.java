@@ -1,7 +1,7 @@
 package com.urbit_iot.porton.data.source;
 
 import android.location.Location;
-import android.support.v4.util.Pair;
+import androidx.core.util.Pair;
 
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;

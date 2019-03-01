@@ -26,12 +26,14 @@ public abstract class UModViewModel {
     private UModsFragment.UModViewModelColors sliderBackgroundColor;
     private UModsFragment.UModViewModelColors sliderTextColor;
     private boolean moduleTagsVisible;
+    private boolean gateStatusTagVisible;
 
 
     public UModViewModel(String uModUUID, String itemMainText,
                          String connectionTagText,
                          UModsFragment.UModViewModelColors connectionTagColor,
                          UModsFragment.UModViewModelColors connectionTagTextColor,
+                         boolean gateStatusTagVisible,
                          String gateStatusTagText,
                          UModsFragment.UModViewModelColors gateStatusTagColor,
                          UModsFragment.UModViewModelColors gateStatusTagTextColor,
@@ -61,6 +63,7 @@ public abstract class UModViewModel {
         this.sliderBackgroundColor = sliderBackgroundColor;
         this.sliderTextColor = sliderTextColor;
         this.moduleTagsVisible = moduleTagsVisible;
+        this.gateStatusTagVisible = gateStatusTagVisible;
     }
 
     public abstract void onSlideCompleted(UModsContract.Presenter presenter);
@@ -247,5 +250,13 @@ public abstract class UModViewModel {
 
     public void setModuleTagsVisible(boolean moduleTagsVisible) {
         this.moduleTagsVisible = moduleTagsVisible;
+    }
+
+    public boolean isGateStatusTagVisible() {
+        return gateStatusTagVisible;
+    }
+
+    public void setGateStatusTagVisible(boolean gateStatusTagVisible) {
+        this.gateStatusTagVisible = gateStatusTagVisible;
     }
 }

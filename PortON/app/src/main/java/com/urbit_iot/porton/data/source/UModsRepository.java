@@ -18,12 +18,11 @@ package com.urbit_iot.porton.data.source;
 
 import android.location.Address;
 import android.location.Location;
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import android.util.Log;
-import android.support.v4.util.Pair;
+import androidx.core.util.Pair;
 
-import com.google.common.base.Strings;
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.rpc.AdminCreateUserRPC;

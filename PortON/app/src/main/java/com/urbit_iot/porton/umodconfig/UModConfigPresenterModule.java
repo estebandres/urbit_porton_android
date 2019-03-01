@@ -1,6 +1,6 @@
 package com.urbit_iot.porton.umodconfig;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import dagger.Module;
 import dagger.Provides;

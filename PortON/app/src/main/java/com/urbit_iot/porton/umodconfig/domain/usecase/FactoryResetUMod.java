@@ -16,7 +16,7 @@
 
 package com.urbit_iot.porton.umodconfig.domain.usecase;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.urbit_iot.porton.RxUseCase;
@@ -47,6 +47,7 @@ public class FactoryResetUMod extends SimpleUseCase<FactoryResetUMod.RequestValu
 
     private final UModsRepository uModsRepository;
     private final UModMqttServiceContract uModMqttService;
+    private final BaseSchedulerProvider schedulerProvider;
 
     @Inject
     public FactoryResetUMod(@NonNull UModsRepository tasksRepository,
@@ -55,6 +56,7 @@ public class FactoryResetUMod extends SimpleUseCase<FactoryResetUMod.RequestValu
         super(schedulerProvider.io(), schedulerProvider.ui());
         uModsRepository = tasksRepository;
         this.uModMqttService = uModMqttService;
+        this.schedulerProvider =schedulerProvider;
     }
 
     @Override
@@ -73,8 +75,13 @@ public class FactoryResetUMod extends SimpleUseCase<FactoryResetUMod.RequestValu
                             if (listOfNames.isEmpty()){
                                 return Observable.just(uMod);
                             }
-                            return uModMqttService.cancelSeveralUModInvitations(listOfNames,uMod)
-                                    .andThen(Observable.just(uMod));
+                            uModMqttService.cancelSeveralUModInvitations(listOfNames,uMod)
+                                    .subscribeOn(this.schedulerProvider.io())
+                                    .subscribe(() -> {},
+                                            throwable -> Log.e("FACT_RES_UC",
+                                                    "Failed to cancel users invitations " +
+                                                            "on factory reset."));
+                            return Observable.just(uMod);
                         }))
                 .flatMap(uMod -> uModsRepository.factoryResetUMod(uMod,requestArguments)
                         .onErrorResumeNext(throwable -> {

@@ -16,7 +16,7 @@
 
 package com.urbit_iot.porton.umodconfig;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Pair;
 
 import com.urbit_iot.porton.BasePresenter;

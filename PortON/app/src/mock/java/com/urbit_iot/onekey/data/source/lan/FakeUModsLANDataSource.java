@@ -16,7 +16,7 @@
 
 package com.urbit_iot.porton.data.source.lan;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.fernandocejas.frodo.annotation.RxLogObservable;

@@ -1,42 +1,26 @@
 package com.urbit_iot.porton.umodconfig.domain.usecase;
 
-import android.support.annotation.NonNull;
-import android.util.Log;
-import com.urbit_iot.porton.RxUseCase;
-import com.urbit_iot.porton.SimpleUseCase;
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.rpc.APIUserType;
 import com.urbit_iot.porton.data.rpc.FactoryResetRPC;
-import com.urbit_iot.porton.data.rpc.GetUserLevelRPC;
 import com.urbit_iot.porton.data.rpc.GetUsersRPC;
 import com.urbit_iot.porton.data.source.UModsRepository;
 import com.urbit_iot.porton.data.source.internet.UModMqttServiceContract;
-import com.urbit_iot.porton.util.schedulers.BaseSchedulerProvider;
 import com.urbit_iot.porton.util.schedulers.SchedulerProvider;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
 import retrofit2.adapter.rxjava.HttpException;
 import rx.Completable;
 import rx.Observable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import hu.akarnokd.rxjava.interop.RxJavaInterop;
-import io.reactivex.Flowable;
 import okhttp3.MediaType;
 import okhttp3.ResponseBody;
-import retrofit2.adapter.rxjava.HttpException;
 import retrofit2.Response;
-import retrofit2.http.HTTP;
-import rx.Observable;
-import rx.Subscriber;
 import rx.observers.AssertableSubscriber;
-import rx.observers.TestSubscriber;
 import rx.schedulers.Schedulers;
 
 import org.junit.After;
@@ -49,15 +33,12 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
-import static org.junit.Assert.*;
+
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 
@@ -87,7 +68,6 @@ public class FactoryResetUModTest {
     public void tearDown() throws Exception {
         verifyNoMoreInteractions(uModsRepositoryMock);
         verifyNoMoreInteractions(uModMqttServiceContractMock);
-        verify(schedulerProvider,times(1)).io();
         verify(schedulerProvider,times(1)).ui();
         verifyNoMoreInteractions(schedulerProvider);
         reset(uModsRepositoryMock,uModMqttServiceContractMock,schedulerProvider);
@@ -121,6 +101,8 @@ public class FactoryResetUModTest {
         verify(uModsRepositoryMock,times(1)).factoryResetUMod(any(UMod.class),any(FactoryResetRPC.Arguments.class));
 
         verify(uModsRepositoryMock,times(1)).deleteUMod(uMod.getUUID());
+
+        verify(schedulerProvider,times(1)).io();
     }
 
     @Test
@@ -148,6 +130,8 @@ public class FactoryResetUModTest {
         verify(uModsRepositoryMock,times(1)).getUMod(uMod.getUUID());
         verify(uModsRepositoryMock,times(1)).getUModUsers(any(UMod.class),any(GetUsersRPC.Arguments.class));
         verify(uModsRepositoryMock,times(1)).factoryResetUMod(any(UMod.class),any(FactoryResetRPC.Arguments.class));
+
+        verify(schedulerProvider,times(1)).io();
     }
 
     @Test
@@ -183,6 +167,8 @@ public class FactoryResetUModTest {
 
         verify(uModsRepositoryMock,times(1)).refreshUMods();
         verify(uModsRepositoryMock,times(1)).deleteUMod(uMod.getUUID());
+
+        verify(schedulerProvider,times(3)).io();
     }
 
     @Test
@@ -215,6 +201,8 @@ public class FactoryResetUModTest {
         verify(uModsRepositoryMock,times(2)).factoryResetUMod(any(UMod.class),any(FactoryResetRPC.Arguments.class));
 
         verify(uModsRepositoryMock,times(1)).refreshUMods();
+
+        verify(schedulerProvider,times(3)).io();
     }
 
     @Test
@@ -253,5 +241,7 @@ public class FactoryResetUModTest {
         verify(uModMqttServiceContractMock,times(1)).cancelSeveralUModInvitations(any(List.class),any(UMod.class));
         verify(uModsRepositoryMock,times(1)).getUModUsers(any(UMod.class),any(GetUsersRPC.Arguments.class));
         verify(uModsRepositoryMock,times(1)).factoryResetUMod(any(UMod.class),any(FactoryResetRPC.Arguments.class));
+
+        verify(schedulerProvider,times(2)).io();
     }
 }

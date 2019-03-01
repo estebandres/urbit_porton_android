@@ -33,19 +33,19 @@ task clean(type: Delete) {
 ext {
     // Sdk and tools
     minSdkVersion = 18
-    targetSdkVersion = 26
-    compileSdkVersion = 26
+    targetSdkVersion = 28
+    compileSdkVersion = 28
     buildToolsVersion = '28.0.3'
 
     // App dependencies
 
     //By Companies
-    supportLibraryVersion = '27.1.1'
+    supportLibraryVersion = '1.0.2'
     guavaVersion = '27.0.1-android'//latest
     junitVersion = '4.12'//latest
-    runnerVersion = '1.0.2'//latest
-    rulesVersion = '1.0.2'//latest
-    espressoVersion = '3.0.2'//latest
+    runnerVersion = '1.1.1'//latest
+    rulesVersion = '1.1.1'//latest
+    espressoVersion = '3.1.1'//latest
     rxjavaVersion = '1.3.6'//latest for RX1
     rxandroidVersion = '1.2.1'//latest for RX1
     sqlbriteVersion = '1.1.2'//3.2.0 latest to be replaced with SQLDelight
