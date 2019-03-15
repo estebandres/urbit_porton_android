@@ -31,6 +31,16 @@ public class GateStatusUpdates extends SimpleUseCase<GateStatusUpdates.RequestVa
     @Override
     protected Observable<ResponseValues> buildUseCase(RequestValues requestValues) {
         return mUModsRepository.getUModGateStatusUpdates()
+                .flatMap(response -> {//This flatmap filters gate updates for pending modules...
+                    mUModsRepository.cachedFirst();
+                    return mUModsRepository.getUMod(response.getRequestTag()).flatMap(uMod -> {
+                        if (uMod.canBeTriggeredByAppUser()){
+                            return Observable.just(response);
+                        } else {
+                            return Observable.empty();
+                        }
+                    });
+                })
                 .map(response -> new ResponseValues(response.getRequestTag(), response.getResponseResult()));
     }
 
