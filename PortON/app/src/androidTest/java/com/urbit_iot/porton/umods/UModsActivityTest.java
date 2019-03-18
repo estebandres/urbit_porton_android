@@ -45,12 +45,16 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import org.mockito.Mockito;
+
 import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.Date;
 
 import javax.inject.Inject;
 
 import androidx.test.espresso.Espresso;
+import androidx.test.espresso.Root;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.filters.LargeTest;
@@ -64,6 +68,8 @@ import rx.Observable;
 
 import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu;
+import static androidx.test.espresso.Espresso.openContextualActionModeOverflowMenu;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.swipeRight;
 import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
@@ -73,6 +79,7 @@ import static androidx.test.espresso.intent.Intents.intending;
 import static androidx.test.espresso.intent.Intents.times;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra;
+import static androidx.test.espresso.matcher.RootMatchers.isPlatformPopup;
 import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -143,10 +150,11 @@ public class UModsActivityTest {
     @Test
     public void animations_should_be_disabled(){
 
-        Date today = new Date();
-        assertThat(today.getDay(),is(27));
-        assertThat(today.getMonth(),is(2));
-        assertThat(today.getYear(),is(2019));
+        Calendar calendar = Calendar.getInstance();
+
+        assertThat(calendar.get(Calendar.DAY_OF_MONTH),is(18));
+        assertThat(calendar.get(Calendar.MONTH),is(Calendar.MARCH));
+        assertThat(calendar.get(Calendar.YEAR),is(2019));
         //assertThat("Check testing device has all animations disabled!!",today.isEqual(testerDate),is(true));
     }
 
@@ -342,6 +350,9 @@ public class UModsActivityTest {
 
         //Then
         //When the resource is idle check the progress bar doesn't exists.
+        onView(withId(R.id.menu_filter_umods)).perform(click());
+        onView(withText("Todos")).perform(click());
+
         onView(withId(R.id.progress_bar)).check(doesNotExist());
 
         checkAuthorizedModuleOnlineLayout(0,uMod);
@@ -408,10 +419,13 @@ public class UModsActivityTest {
                 .thenReturn(Observable.error(httpException));
 
         //When
+        onView(withId(R.id.menu_filter_umods)).perform(click());
+        onView(withText("Todos")).perform(click());
+
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(0).onChildView(withId(R.id.card_slider)).perform(swipeRight());
 
         //Then
-        onView(allOf(withId(com.google.android.material.R.id.snackbar_text),withText(R.string.trigger_fail_message))).check(matches(isDisplayed()));
+        checkSnackBarDisplayedByMessage(R.string.trigger_fail_message);
         //checkNoModulesVisible();
         onView(withId(R.id.umods_list)).check(matches(not(hasDescendant(withText(uMod.getAlias())))));
     }
@@ -437,6 +451,9 @@ public class UModsActivityTest {
         Mockito.when(uModsRepositoryMock.triggerUMod(Mockito.any(UMod.class),Mockito.any(TriggerRPC.Arguments.class)))
                 .thenReturn(Observable.error(ioException));
 
+        onView(withId(R.id.menu_filter_umods)).perform(click());
+        onView(withText("Todos")).perform(click());
+
         //When
         onData(anything()).inAdapterView(withId(R.id.umods_list)).atPosition(0).onChildView(withId(R.id.card_slider)).perform(swipeRight());
 
@@ -446,6 +463,10 @@ public class UModsActivityTest {
         checkSnackBarDisplayedByMessage(R.string.trigger_fail_message);
         //checkNoModulesVisible();
         checkAuthorizedModuleOfflineLayout(0,uMod);
+    }
+
+    public static Matcher<Root> isPopupWindow() {
+        return isPlatformPopup();
     }
 
     private void checkSnackBarDisplayedByMessage(@StringRes int message) {

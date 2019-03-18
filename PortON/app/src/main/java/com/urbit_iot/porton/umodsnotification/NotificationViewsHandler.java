@@ -57,6 +57,9 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
         this.setupUnconnectedPhoneCollapsedViews();
         this.setupNoConfiguredUModsRemoteViews();
         this.setupAllUModsAreNotifDisabledRemoteViews();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            this.currentChannelID = this.createChannel();
+        }
         this.setNotificationViews(this.controlCollapsedViews);
 
         this.lockState = true;
@@ -65,9 +68,7 @@ public class NotificationViewsHandler implements UModsNotifContract.View{
             this.metrics = mContext.getResources().getDisplayMetrics();
         */
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            this.currentChannelID = this.createChannel();
-        }
+
 
     }
 
