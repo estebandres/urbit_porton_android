@@ -51,6 +51,10 @@ public final class UMod {
         this.locationAddressString = locationAddressString;
     }
 
+    public boolean isOnline() {
+        return uModSource == UModSource.LAN_SCAN || uModSource == UModSource.MQTT_SCAN;
+    }
+
     public enum State {
         AP_MODE(0),
         STATION_MODE(1),

@@ -92,7 +92,9 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
             pahoClientRxWrap.addRequestedSubscriptionTopic(GlobalConstants.URBIT_PREFIX + umod.getUUID() + "/response/" + this.appUsername);
             pahoClientRxWrap.addRequestedSubscriptionTopic(GlobalConstants.URBIT_PREFIX + umod.getUUID() + "/status");
             return;
-        }// TODO should add case when umod is pending and only should subscribe to /response/... but not /status to not receive gate status update this is fixed with a filter on the UC a responsability analysis is required.
+        }// TODO should add case when umod is pending and only should subscribe to /response/... but not /status to not receive gate status update
+
+        // this is fixed with a filter on the UC a responsability analysis is required.
         this.subscribeToUModTopics(umod.getUUID());
     }
 

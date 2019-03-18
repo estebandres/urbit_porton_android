@@ -68,7 +68,7 @@ public class UModsPresenter implements UModsContract.Presenter {
     @NonNull
     private BaseSchedulerProvider mSchedulerProvider;
 
-    private UModsFilterType mCurrentFiltering = UModsFilterType.ALL_UMODS;
+    private UModsFilterType mCurrentFiltering = UModsFilterType.ONLINE_UMODS;
 
     private boolean mFirstLoad = true;
     private String triggeredUModUUID;
@@ -567,11 +567,8 @@ public class UModsPresenter implements UModsContract.Presenter {
 
     private void showFilterLabel() {
         switch (mCurrentFiltering) {
-            case NOTIF_DIS_UMODS:
+            case ONLINE_UMODS:
                 mUModsView.showNotificationDisabledUModsFilterLabel();
-                break;
-            case NOTIF_EN_UMODS:
-                mUModsView.showNotificationEnabledUModsFilterLabel();
                 break;
             default:
                 mUModsView.showAllFilterLabel();
@@ -581,11 +578,8 @@ public class UModsPresenter implements UModsContract.Presenter {
 
     private void processEmptyTasks() {
         switch (mCurrentFiltering) {
-            case NOTIF_DIS_UMODS:
+            case ONLINE_UMODS:
                 mUModsView.showNotificationDisabledUMods();
-                break;
-            case NOTIF_EN_UMODS:
-                mUModsView.showNotificationEnabledUMods();
                 break;
             default:
                 mUModsView.showNoUMods();
@@ -651,11 +645,10 @@ public class UModsPresenter implements UModsContract.Presenter {
     }
 
     /**
-     * Sets the current task filtering type.
+     * Sets the current umods filtering type.
      *
-     * @param requestType Can be {@link UModsFilterType#ALL_UMODS},
-     *                    {@link UModsFilterType#NOTIF_EN_UMODS}, or
-     *                    {@link UModsFilterType#NOTIF_DIS_UMODS}
+     * @param requestType Can be {@link UModsFilterType#ALL_UMODS}, or
+     *                    {@link UModsFilterType#ONLINE_UMODS},
      */
     @Override
     public void setFiltering(UModsFilterType requestType) {

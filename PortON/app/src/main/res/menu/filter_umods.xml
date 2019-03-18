@@ -18,9 +18,6 @@
         android:id="@+id/all_umods"
         android:title="@string/nav_all_umods" />
     <item
-        android:id="@+id/active_umods"
-        android:title="@string/nav_active_umods" />
-    <item
-        android:id="@+id/completed_umods"
-        android:title="@string/nav_completed_umods" />
+        android:id="@+id/online_umods"
+        android:title="@string/nav_online_umods" />
 </menu>

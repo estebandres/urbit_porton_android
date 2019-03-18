@@ -138,19 +138,15 @@ public class GetUModsOneByOne extends SimpleUseCase<GetUModsOneByOne.RequestValu
                             }
                         })
                 )
-                /*
                 .filter(uMod -> {
                     switch (values.getCurrentFiltering()) {
-                        case NOTIF_EN_UMODS:
-                            return uMod.isOngoingNotificationEnabled();
-                        case NOTIF_DIS_UMODS:
-                            return !uMod.isOngoingNotificationEnabled();
+                        case ONLINE_UMODS:
+                            return uMod.isOnline();
                         case ALL_UMODS:
                         default:
                             return true;
                     }
                 })
-                */
                 .map(ResponseValues::new);
 
         return getUModsUseCaseObservable;

@@ -271,22 +271,17 @@ public class UModsFragment extends Fragment implements UModsContract.View {
         PopupMenu popup = new PopupMenu(getContext(), getActivity().findViewById(R.id.menu_filter_umods));
         popup.getMenuInflater().inflate(R.menu.filter_umods, popup.getMenu());
 
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.active_umods:
-                        mPresenter.setFiltering(UModsFilterType.NOTIF_DIS_UMODS);
-                        break;
-                    case R.id.completed_umods:
-                        mPresenter.setFiltering(UModsFilterType.NOTIF_EN_UMODS);
-                        break;
-                    default:
-                        mPresenter.setFiltering(UModsFilterType.ALL_UMODS);
-                        break;
-                }
-                mPresenter.loadUMods(false);
-                return true;
+        popup.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case R.id.online_umods:
+                    mPresenter.setFiltering(UModsFilterType.ONLINE_UMODS);
+                    break;
+                default:
+                    mPresenter.setFiltering(UModsFilterType.ALL_UMODS);
+                    break;
             }
+            mPresenter.loadUMods(true);
+            return true;
         });
 
         popup.show();
@@ -924,12 +919,14 @@ public class UModsFragment extends Fragment implements UModsContract.View {
                 TextView connectionTagText = itemView.findViewById(R.id.connection_tag_text);
                 connectionTagText.setText(GlobalConstants.ONLINE_TAG__TEXT);
                 connectionTagText.setTextColor(ContextCompat.getColor(getActivity(), UModViewModelColors.ONLINE_TAG_TEXT.asActualResource()));
+                connectionTag.setVisibility(View.VISIBLE);
 
                 RelativeLayout gateStatusTag = itemView.findViewById(R.id.gate_status_tag);
                 gateStatusTag.setBackground(getResources().getDrawable(gateStatusTagColor.asActualResource()));
                 TextView gateStatusTagTextView= itemView.findViewById(R.id.gate_status_tag_text);
                 gateStatusTagTextView.setText(gateStatusTagText);
                 gateStatusTagTextView.setTextColor(ContextCompat.getColor(getActivity(), gateStatusTagTextColor.asActualResource()));
+                gateStatusTag.setVisibility(View.VISIBLE);
 
                 umodTags.setVisibility(View.VISIBLE);
             }

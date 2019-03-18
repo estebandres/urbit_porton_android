@@ -26,12 +26,12 @@
 
     <string-array name="list_tasks_array">
         <item>@string/nav_all_umods</item>
-        <item>@string/nav_active_umods</item>
+        <item>@string/nav_online_umods</item>
         <item>@string/nav_completed_umods</item>
     </string-array>
 
     <string name="nav_all_umods">Todos</string>
-    <string name="nav_active_umods">Activos</string>
+    <string name="nav_online_umods">Activos</string>
     <string name="nav_completed_umods">Completados</string>
     <string name="label_umods_all">Todos los Módulos</string>
     <string name="label_umods_active">Fuera de notificación</string>

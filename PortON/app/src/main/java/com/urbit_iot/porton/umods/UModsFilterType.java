@@ -5,17 +5,12 @@ package com.urbit_iot.porton.umods;
  */
 public enum UModsFilterType {
     /**
-     * Do not filter tasks.
+     * Do not filter umods.
      */
     ALL_UMODS,
 
     /**
-     * Filters only the active (not completed yet) tasks.
+     * Filters only the online modules.
      */
-    NOTIF_EN_UMODS,
-
-    /**
-     * Filters only the completed tasks.
-     */
-    NOTIF_DIS_UMODS,
+    ONLINE_UMODS,
 }
