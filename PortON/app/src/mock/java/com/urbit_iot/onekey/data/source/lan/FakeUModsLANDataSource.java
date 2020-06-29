@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package com.urbit_iot.porton.data.source.lan;
+package com.urbit_iot.onekey.data.source.lan;
 
 import androidx.annotation.NonNull;
 import android.util.Log;
 
-import com.fernandocejas.frodo.annotation.RxLogObservable;
-import com.google.common.base.Strings;
+
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-import com.stealthcopter.networktools.SubnetDevices;
-import com.stealthcopter.networktools.subnet.Device;
 import com.urbit_iot.porton.data.UMod;
 import com.urbit_iot.porton.data.UModUser;
 import com.urbit_iot.porton.data.rpc.APIUserType;
