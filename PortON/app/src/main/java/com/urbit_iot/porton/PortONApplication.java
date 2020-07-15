@@ -17,7 +17,7 @@ import com.urbit_iot.porton.appuser.data.source.DaggerAppUserRepositoryComponent
 import com.urbit_iot.porton.util.schedulers.DaggerSchedulerProviderComponent;
 import com.urbit_iot.porton.data.source.DaggerUModsRepositoryComponent;
 
-import io.fabric.sdk.android.Fabric;
+//import io.fabric.sdk.android.Fabric;
 
 /**
  * Even though Dagger2 allows annotating a {@link dagger.Component} as a singleton, the code itself
@@ -62,7 +62,7 @@ public class PortONApplication extends Application {
         //LOGGLY SETUP------------------------------------------------------------------
         //Done in the chooser activity...
         //CRASHLYTICS SETUP------------------------------------------------------------------
-        Fabric.with(this, new Crashlytics());
+        //Fabric.with(this, new Crashlytics());
 
 
 

@@ -1,7 +1,13 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.fernandocejas.frodo'
-apply plugin: 'io.fabric'
+//apply plugin: 'io.fabric'
 apply from: "$project.rootDir/script-git-version.gradle"
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
+// Apply the Crashlytics Gradle plugin
+apply plugin: 'com.google.firebase.crashlytics'
+
+
 
 android {
     signingConfigs {
@@ -115,6 +121,11 @@ android {
  all versions in a single place. This improves readability and helps managing project complexity.
  */
 dependencies {
+    // Recommended: Add the Firebase SDK for Google Analytics.
+    implementation 'com.google.firebase:firebase-analytics:17.2.2'
+    // Add the Firebase Crashlytics SDK.
+    implementation 'com.google.firebase:firebase-crashlytics:17.0.0'
+
 
     // App's dependencies, including test
     implementation "androidx.appcompat:appcompat:$rootProject.supportLibraryVersion"
