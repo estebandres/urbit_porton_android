@@ -45,6 +45,9 @@ android {
         versionName gitVersionName
 
         testInstrumentationRunner 'com.urbit_iot.porton.PortonMockTestRunner'
+        //testApplicationId "com.urbit_iot.porton"//doesnt work still
+        //testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
         multiDexEnabled true
     }
     buildTypes {
@@ -67,6 +70,8 @@ android {
             testProguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguardTest-rules.pro'
         }
     }
+
+    testBuildType "debug"
     // If you need to add more flavors, consider using flavor dimensions.
     productFlavors {
         mock {
@@ -253,4 +258,6 @@ dependencies {
     androidTestImplementation "androidx.recyclerview:recyclerview:1.0.0"
     androidTestImplementation "androidx.appcompat:appcompat:$rootProject.supportLibraryVersion"
     androidTestImplementation "com.google.android.material:material:1.0.0"
+
+    testImplementation project(path: ':app')
 }

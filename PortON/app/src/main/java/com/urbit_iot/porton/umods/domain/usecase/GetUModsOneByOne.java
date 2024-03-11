@@ -18,7 +18,7 @@ import java.net.HttpURLConnection;
 
 import javax.inject.Inject;
 
-import retrofit2.adapter.rxjava.HttpException;
+import retrofit2.HttpException;
 import rx.Completable;
 import rx.Observable;
 
