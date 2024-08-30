@@ -3,7 +3,7 @@ package com.urbit_iot.porton.data.source.lan;
 
 import android.util.Log;
 
-import com.fernandocejas.frodo.annotation.RxLogObservable;
+//import com.fernandocejas.frodo.annotation.RxLogObservable;
 import com.polidea.rxandroidble.RxBleClient;
 import com.polidea.rxandroidble.scan.ScanFilter;
 import com.polidea.rxandroidble.scan.ScanResult;

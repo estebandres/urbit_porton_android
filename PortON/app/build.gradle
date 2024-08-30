@@ -1,5 +1,5 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.fernandocejas.frodo'
+//apply plugin: 'com.fernandocejas.frodo'
 //apply plugin: 'io.fabric'
 apply from: "$project.rootDir/script-git-version.gradle"
 apply plugin: 'com.android.application'
@@ -97,6 +97,7 @@ android {
     }
     // Always show the result of every unit test, even if it passes.
     testOptions.unitTests {
+        //includeAndroidResources = true
         all{
             testLogging {
                 events 'passed', 'skipped', 'failed', 'standardOut', 'standardError'
@@ -156,6 +157,9 @@ dependencies {
 
     //GSON
     implementation "com.google.code.gson:gson:$rootProject.gsonVersion"
+    //implementation files('libs/lovely-dialog-1.1.0-sources.jar')
+    //implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation(name:'lovely-dialog-1.1.0', ext:'aar')
 
     //DAGGER2
     annotationProcessor "com.google.dagger:dagger-compiler:$rootProject.daggerVersion"
@@ -173,7 +177,8 @@ dependencies {
 
     //retrofit
     implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofit"
-    implementation "com.burgstaller:okhttp-digest:$rootProject.okhttpDigest"
+    //implementation "com.burgstaller:okhttp-digest:$rootProject.okhttpDigest"
+    implementation "io.github.rburgst:okhttp-digest:$rootProject.okhttpDigest"
     implementation "com.squareup.retrofit2:converter-gson:$rootProject.retrofitConverterGson"
     implementation "com.squareup.retrofit2:adapter-rxjava:$rootProject.retrofitAdapterRxJava"
 
@@ -208,7 +213,7 @@ dependencies {
     implementation "com.google.android.gms:play-services-location:$rootProject.googlePlayLocationVersion"
     implementation "com.google.android.gms:play-services-places:$rootProject.googlePlayPlacesVersion"
 
-    implementation "com.yarolegovich:lovely-dialog:$rootProject.lovelyDialogVersion"
+    //implementation "com.yarolegovich:lovely-dialog:$rootProject.lovelyDialogVersion"
 
     // Dependencies for local unit tests
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
@@ -259,5 +264,5 @@ dependencies {
     androidTestImplementation "androidx.appcompat:appcompat:$rootProject.supportLibraryVersion"
     androidTestImplementation "com.google.android.material:material:1.0.0"
 
-    testImplementation project(path: ':app')
+    //testImplementation project(path: ':app')
 }
