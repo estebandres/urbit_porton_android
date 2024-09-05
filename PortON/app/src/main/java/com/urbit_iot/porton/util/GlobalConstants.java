@@ -24,6 +24,8 @@ public final class GlobalConstants {
 
     public static final String FIRMWARE_SERVER__IP_ADDRESS = "192.168.0.3";
     public static final String FIRMWARE_SERVER__PORT = "3289";
+
+    public static final String FIRMWARE_SERVER__URL = "https://2ly.link/1zTbK";
     public static final String MQTT_BROKER__IP_ADDRESS = "devbroker.urbit-iot.tk";
     public static final Integer MQTT_BROKER__PORT = 1883;
 

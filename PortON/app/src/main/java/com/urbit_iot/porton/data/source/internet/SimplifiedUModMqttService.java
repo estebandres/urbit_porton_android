@@ -201,6 +201,7 @@ public class SimplifiedUModMqttService implements UModMqttServiceContract {
         return this.pahoClientRxWrap.receivedMessagesObservable()
                 .subscribeOn(this.mSchedulerProvider.io())
                 .doOnSubscribe(this::resetInvitationTopic)
+                .filter(mqttMessageWrapper -> mqttMessageWrapper.getTopic().contains("invitation"))
                 .doOnNext(messageWrapper -> Log.d("MQTT_SERVICE", "INVITATION: "
                         + new String(messageWrapper.getMqttMessage().getPayload())
                         + " ON: " + Thread.currentThread().getName()))

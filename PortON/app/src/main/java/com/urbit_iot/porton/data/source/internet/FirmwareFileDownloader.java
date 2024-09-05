@@ -28,12 +28,14 @@ public class FirmwareFileDownloader {
 
     public Observable<File> downloadFirmwareFile(){
         return Observable.defer(() -> {
+            /*
             String downloadUrl = "http://"
                     + GlobalConstants.FIRMWARE_SERVER__IP_ADDRESS
                     + ":"
                     + GlobalConstants.FIRMWARE_SERVER__PORT
                     + "/firmware_update";
-
+             */
+            String downloadUrl = GlobalConstants.FIRMWARE_SERVER__URL;
             File firmwareFile = new File(this.appContext.getFilesDir(), "firmware_update.zip");
             try{
                 FileUtils.copyURLToFile(new URL(downloadUrl),firmwareFile,8000,20000);

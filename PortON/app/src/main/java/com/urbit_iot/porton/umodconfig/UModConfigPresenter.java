@@ -245,11 +245,11 @@ public class UModConfigPresenter implements UModConfigContract.Presenter {
                             GlobalConstants.URBIT_PREFIX+mUModUUID)){
                         launchPopulationAfterReconnection = Completable.timer(2500L, TimeUnit.MILLISECONDS)
                                 .doOnCompleted(() -> Log.d("CONFIG_PRES","TIMER COMP"))
-                                .andThen(Completable.timer(500L, TimeUnit.MILLISECONDS)
+                                .andThen(Completable.timer(1000L, TimeUnit.MILLISECONDS)
                                         .doOnCompleted(() -> Log.d("CONFIG_PRES","MINI-TIMER COMP"))
                                         .andThen(TCPScanClient.tcpEchoCompletable(GlobalConstants.AP_DEFAULT_IP_ADDRESS,
                                                 GlobalConstants.UMOD__TCP_ECHO_PORT))
-                                        .retry(16))
+                                        .retry(10))
                                 .doOnCompleted(() -> populateUModSettings())
                                 .subscribe(() -> {},
                                         throwable -> Log.e("CONFIG_PRES","Could not connect to module!",throwable));
